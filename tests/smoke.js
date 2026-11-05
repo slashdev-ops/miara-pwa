@@ -22,7 +22,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v}};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -67,7 +67,7 @@ function mkCtx(o = {}) {
   D[ago(0)] = { ...(o.today || {}) };
   return {
     now, key, seen: o.seen || SEEN_ALL, reviewed: !!o.reviewed,
-    pet: { kind: 'gaska', name: o.name != null ? o.name : 'Kluska', since: ago(hist) },
+    pet: { kind: 'gaska', name: o.name != null ? o.name : 'Kluska', since: ago(hist), peak: o.peak || 0 },
     dayPts: (k) => (D[k] || {}).pts || 0,
     entries: (k) => { const x = D[k] || {}; return [...Array(x.meals || 0)].map(() => ({ kind: 'm' })).concat(x.train ? [{ kind: 't' }] : []); },
     meas: (k) => { const x = D[k] || {}; return { w: x.w, steps: x.steps, sleep: x.sleep }; },
@@ -159,6 +159,30 @@ tryc('pet.demo: dane przykładowe przechodzą render wszystkich widoków', () =>
 tryc('pet.screen: brak podpowiedzi etapu, gdy nic nie brakuje', () => !P().screen({ ...st(mkCtx()), stage: 'chick', active: 9 }, { kind: 'gaska', name: 'A' }, { ...SUM, badges: [] }, T.esc).includes('Do etapu'));
 tryc('pet.demo: talia i kontur zmieniają się między startem a teraz', () => { const d = P().demo(new Date('2026-11-05T12:00:00')).S; const b = P().body(d.meas, new Date('2026-11-05T12:00:00'), T.num); const m = b.svg.match(/d="([^"]+)"/g); return b.ok && m.length === 2 && m[0] !== m[1]; });
 tryc('tryb demo: save() nie zapisuje', () => { let n = 0; const o = sandbox.localStorage.setItem; sandbox.localStorage.setItem = () => { n++; }; T.setDemo(true); T.save(); T.setDemo(false); T.save(); sandbox.localStorage.setItem = o; return n === 1; });
+
+// Poprawki po przeglądzie końcowym (I1-I5)
+const PETA = { kind: 'gaska', name: 'A', since: '2026-11-01' }, REV = { r: { a: 'x', d: '2026-11-01' } };
+const CLEAN = () => ({ days: {}, meas: {}, hab: {}, urges: {}, reviews: {}, mode: 'redukcja', petCeleb: null }), NOREV = SEEN_ALL.filter((x) => x !== 'review1');
+tryc('I1: świętowanie trwa do obejrzenia ekranu zwierzaka', () => {
+  const d1 = view('day', { ...CLEAN(), pet: { ...PETA }, petSeen: [...NOREV], reviews: REV }), d2 = view('day');
+  const p1 = view('pet'), d3 = view('day');
+  return d1.includes('pet-celebrate') && d2.includes('pet-celebrate') && p1.includes('pet-celebrate') && !d3.includes('pet-celebrate') && T.S().petSeen.includes('review1');
+});
+tryc('I1: przerysowanie przy wpisywaniu nie zalicza kamienia milowego', () => { T.setRedraw(true); try { view('day', { ...CLEAN(), pet: { ...PETA }, petSeen: [...NOREV], reviews: REV }); } finally { T.setRedraw(false); } return !T.S().petSeen.includes('review1'); });
+tryc('I2: etap nie cofa się po usunięciu starych dni (peak)', () => st(mkCtx({ history: 0, peak: 40 })).stage === 'adult');
+tryc('I2: aplikacja zapamiętuje najwyższą liczbę aktywnych dni', () => { view('day', { ...CLEAN(), pet: { ...PETA, peak: 33 }, petSeen: [...SEEN_ALL] }); return T.S().pet.peak === 33 && view('pet').includes('Dorosła'); });
+tryc('I3: zdobyta odznaka zostaje po przerwaniu serii', () => view('pet', { ...CLEAN(), pet: { ...PETA }, petSeen: ['streak30'] }).includes('<span class="badge got">Seria 30 dni</span>'));
+tryc('I4: tryb demo nie wysyła punktów do wspólnego wyzwania', () => {
+  const C = T.ch(), keep = { state: C.state, me: C.me, db: C.db, lastSent: C.lastSent }; let n = 0;
+  Object.assign(C, { state: 'on', me: 'x', lastSent: '', db: { doc: () => ({ set: () => { n++; return Promise.resolve(); } }) } });
+  T.setDemo(true); try { T.chSync(); } finally { T.setDemo(false); Object.assign(C, keep); }
+  return n === 0;
+});
+tryc('I5: punkty zwierzaka bez nawyku „średnia waga w paśmie”', () => {
+  const S = T.S(), k = T.todayKey(); S.mode = 'utrzymanie'; S.maintRef = '80'; S.hab[k] = {}; S.days[k] = [];
+  for (let i = 0; i < 7; i++) { const d = new Date(Date.now() - i * 864e5); const kk = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); S.meas[kk] = { ...(S.meas[kk] || {}), w: '80' }; }
+  const r = T.dayPts(k) - T.petCtx().dayPts(k); S.mode = 'redukcja'; return r === 10;
+});
 
 console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
 process.exit(bad ? 1 : 0);

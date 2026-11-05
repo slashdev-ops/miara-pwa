@@ -55,10 +55,10 @@ var PET = (function () {
     const pen = 35 * przerwa;
     const meters = { food: clamp(food - pen), energy: clamp(energy - pen), mood: clamp(mood - pen) };
     const milestone = milestones(c).find((id) => !(c.seen || []).includes(id)) || null;
-    const active = sinceKeys(c).filter((x) => c.dayPts(x) >= 30).length;
+    const active = Math.max(sinceKeys(c).filter((x) => c.dayPts(x) >= 30).length, (c.pet && c.pet.peak) || 0);
     const stage = active >= 30 ? 'adult' : active >= 7 ? 'young' : active >= 1 ? 'chick' : 'egg';
     let md = 'ok';
-    if (milestone) md = 'celebrate';
+    if (milestone || c.celeb) md = 'celebrate';
     else if (h >= 22 || h < 6) md = 'sleep';
     else if (przerwa >= 2 && isEmpty(c, k)) md = 'sad';
     else if (h >= 12 && meals === 0) md = 'hungry';
