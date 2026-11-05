@@ -53,6 +53,7 @@ button{font:inherit;color:inherit}
 .field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;min-height:52px}
 .field + .field{border-top:1px solid var(--line)}
 .field label{flex:1}
+.field input.bad{border-color:var(--warn-ink);background:var(--warn-bg)}
 .field input[type=text]{width:96px;text-align:right;font:inherit;font-size:17px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
 .field .unit{width:44px;color:var(--muted);font-size:14px}
 .switch{appearance:none;width:51px;height:31px;border-radius:16px;background:var(--line);position:relative;flex:none;margin:0;cursor:pointer}

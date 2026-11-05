@@ -143,8 +143,8 @@ function measuredTdee(){
 function dataGap(){let w=0,i=0;lastKeys(28).forEach(k=>{const m=(S.meas||{})[k];if(m&&num(m.w)>0)w++;if((S.days[k]||[]).filter(e=>e.kind==='m').length>=3)i++});return {w,i}}
 function measHtml(){
   const k=todayKey(),m=S.meas[k]||(S.meas[k]={});
-  const f=(lab,key,unit,mode)=>`<div class="field"><label for="m_${key}">${lab}</label><input type="text" inputmode="${mode||'decimal'}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}"><span class="unit">${unit}</span></div>`;
-  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, po toalecie, przed jedzeniem. Kroki i sen przepisz z zegarka. Obwody co 2 tygodnie.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+f('Sen (zegarek)','sleep','h')+'</div>'+cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej zawsze w tych samych warunkach: rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). Wpisany BMR z pomiaru BIA zastępuje wzór przez 90 dni, a waga z pomiarów zastępuje wagę z ustawień.</p></details>';
+  const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label><input type="text" inputmode="${mode||'decimal'}" placeholder="${ph||''}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}"><span class="unit">${unit}</span></div>`;
+  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, po toalecie, przed jedzeniem. Kroki i sen przepisz z zegarka. Obwody co 2 tygodnie. Sen w godzinach: 7 h 30 min to 7,5 albo 7:30.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+f('Sen (zegarek)','sleep','h','decimal','np. 7,5')+'</div>'+cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej zawsze w tych samych warunkach: rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). Wpisany BMR z pomiaru BIA zastępuje wzór przez 90 dni, a waga z pomiarów zastępuje wagę z ustawień.</p></details>';
   const ks=lastKeys(28).reverse(),val=(x,key)=>{const v=num((S.meas[x]||{})[key]);return v>0?v:null};
   const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
   const ws=ks.map(x=>val(x,'w')),w1=avg(ws.slice(-7)),w0=avg(ws.slice(-14,-7)),st=avg(ks.slice(-7).map(x=>val(x,'steps'))),sl=avg(ks.slice(-7).map(x=>val(x,'sleep')));
@@ -360,7 +360,7 @@ function renderIntro(){
   let h='<div style="display:flex;gap:8px;justify-content:center;margin:8px 0 16px" aria-label="Krok '+(s+1)+' z 4">'+[0,1,2,3].map(i=>`<span style="width:${i===s?24:8}px;height:8px;border-radius:4px;background:${i===s?'var(--green)':'var(--line)'}"></span>`).join('')+'</div>';
   if(s===0)h+='<h2 style="font-size:24px">Plan na zdrową wagę, bez kartki i wyrzutów</h2><p>Aplikacja podpowiada, co zjeść, liczy kalorie z Twoich danych i pokazuje, dokąd prowadzą wybory.</p>'+next('intronext','Dalej');
   if(s===1)h+='<h2 style="font-size:24px">Codziennie tylko 3 rzeczy</h2><div class="panel"><div class="entry"><span class="txt"><b>1.</b> Zważ się rano</span></div><div class="entry"><span class="txt"><b>2.</b> Zapisz posiłki jednym dotknięciem „Zjem”</span></div><div class="entry"><span class="txt"><b>3.</b> Ruch: trening albo kroki z zegarka</span></div></div><p>Gdy łapie ochota na przekąskę, naciśnij przycisk „Mam ochotę coś przekąsić”. Reszta jest opcjonalna.</p>'+next('intronext','Dalej');
-  if(s===2)h+='<h2 style="font-size:24px">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm')+field('Wiek','age',S.age,'lat')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+next('intronext','Dalej');
+  if(s===2)h+='<h2 style="font-size:24px">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+next('intronext','Dalej');
   if(s>=3)h+='<h2 style="font-size:24px">Gotowe</h2><p>Dane zostają tylko w tym telefonie. Badania, suplementy i wiedzę znajdziesz w zakładce Zdrowie. Wprowadzenie otworzysz ponownie w Ustawieniach.</p>'+next('introdone','Zaczynam');
   if(s<3)h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
   document.getElementById('main').innerHTML=h;
@@ -607,7 +607,11 @@ let S=load();
 const open=new Set();
 
 // ---------- Obliczenia ----------
-const num=v=>{const x=parseFloat(String(v).replace(',','.'));return isFinite(x)?x:0};
+const num=v=>{const s=String(v).trim().replace(/(\d)[\s\u00a0]+(?=\d{3}(\D|$))/g,'$1'),t=s.match(/^(\d{1,2})\s*(?::|h)\s*(\d{1,2})?\s*(?:m|min)?$/i);if(t)return +t[1]+(+(t[2]||0))/60;const x=parseFloat(s.replace(',','.'));return isFinite(x)?x:0};
+// Pola liczbowe: format i zakres (ostatni człon klucza data-k). Wpis błędny lub poza zakresem nie trafia do danych.
+const LIM={kg:[35,250],goal:[35,250],w:[35,250],cm:[120,220],age:[16,90],steps:[0,60000],sleep:[0,16],waist:[30,200],hip:[30,200],thigh:[20,120],fat:[3,60],ffm:[25,120],ecw:[30,50],bmr:[900,3000],min:[1,300],speed:[1,20],grade:[0,25],watts:[20,500]};
+const INT_K=new Set(['steps','bmr','age','min']);
+function checkNum(k,raw){const key=String(k).split('.').pop();let s=String(raw).trim();if(s==='')return {s};if(INT_K.has(key))s=s.replace(/[\s\u00a0.](?=\d{3}(\D|$))/g,'');const core=key==='sleep'?s:s.replace(/\s*(kg|cm|h|%|kcal|lat|min|km\/h|w|g|zł)$/i,'');const ok=key==='sleep'?/^(\d{1,2}([.,]\d+)?|\d{1,2}\s*(:|h)\s*(\d{1,2})?\s*(m|min)?)$/i.test(s):/^\d+([.,]\d+)?$/.test(core);if(!ok)return {s,err:key==='sleep'?'Sen w godzinach, np. 7,5 albo 7:30':'Wpisz samą liczbę, np. 82,4'};const r=LIM[key],v=num(core);if(r&&(v<r[0]||v>r[1]))return {s,err:'Dozwolone '+fmt1(r[0])+'-'+fmt1(r[1])};return {s:core}}
 const fmt=x=>Math.round(x).toLocaleString('pl-PL');
 const fmt1=x=>(Math.round(x*10)/10).toLocaleString('pl-PL');
 const kg=()=>{const ks=Object.keys(S.meas||{}).sort().reverse();for(const k of ks){const v=num(S.meas[k].w);if(v>0)return v}return num(S.kg)||78};
@@ -629,11 +633,11 @@ const HABITS=[
   {id:'pasmo',n:'Średnia waga w paśmie ±1 kg (liczy się samo)',pts:10,auto:'u'},
   {id:'woda',n:'Woda do każdego posiłku',pts:5},
   {id:'stres',n:'Przy ochocie najpierw plan (liczy się samo z przycisku ochoty)',pts:10,auto:'s'},
-  {id:'sen',n:'Sen 7 h lub dłużej',pts:10}
+  {id:'sen',n:'Sen 7 h lub dłużej (liczy się sam z pomiarów)',pts:10,auto:'z'}
 ];
 const LEVELS=[[0,'Start'],[100,'Brąz'],[180,'Srebro'],[260,'Złoto'],[340,'Platyna']];
 function keyOf(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function habOn(x,h,ents,k){if(x.auto==='t')return ents.some(e=>e.kind==='t')||!!h[x.id];if(x.auto==='m')return ents.filter(e=>e.kind==='m').length>=3;if(x.auto==='s')return ((S.urges||{})[k]||[]).some(u=>u.out!=='inne')||!!h[x.id];if(x.auto==='u'){if(S.mode!=='utrzymanie')return false;const a=avg7at(k),r=num(S.maintRef)||kg();return a!=null&&Math.abs(a-r)<=1}return !!h[x.id]}
+function habOn(x,h,ents,k){if(x.auto==='z')return num((S.meas[k]||{}).sleep)>=7||!!h[x.id];if(x.auto==='t')return ents.some(e=>e.kind==='t')||!!h[x.id];if(x.auto==='m')return ents.filter(e=>e.kind==='m').length>=3;if(x.auto==='s')return ((S.urges||{})[k]||[]).some(u=>u.out!=='inne')||!!h[x.id];if(x.auto==='u'){if(S.mode!=='utrzymanie')return false;const a=avg7at(k),r=num(S.maintRef)||kg();return a!=null&&Math.abs(a-r)<=1}return !!h[x.id]}
 function dayPts(k){const h=(S.hab&&S.hab[k])||{},ents=S.days[k]||[];return HABITS.reduce((a,x)=>a+(habOn(x,h,ents,k)?x.pts:0),0)}
 function weekPts(){const d=new Date(),dow=(d.getDay()+6)%7;let s=0;for(let i=0;i<=dow;i++){const x=new Date(d);x.setDate(d.getDate()-i);s+=dayPts(keyOf(x))}return s}
 function level(p){let l=LEVELS[0];for(const x of LEVELS)if(p>=x[0])l=x;return l}
@@ -705,7 +709,7 @@ function renderTabs(){const tb=document.getElementById('tabs');if(tb&&tb.style)t
 }
 function seg(items,cur,attr,cls=''){return `<div class="seg ${cls}">`+items.map(([v,l])=>`<button class="${String(cur)===String(v)?'on':''}" data-${attr}="${v}">${l}</button>`).join('')+'</div>'}
 function optList(list,cur,attr){return '<div class="panel">'+list.map(o=>`<button class="opt ${o.id===cur?'on':''}" data-${attr}="${o.id}"><span class="dot"></span><span>${o.n}</span>${o.met?`<span class="met">MET ${fmt1(o.met)}</span>`:''}</button>`).join('')+'</div>'}
-function field(label,key,val,unit){return `<div class="field"><label for="f_${key}">${label}</label><input type="text" inputmode="decimal" id="f_${key}" data-k="${key}" value="${val}"><span class="unit">${unit}</span></div>`}
+function field(label,key,val,unit,mode){return `<div class="field"><label for="f_${key}">${label}</label><input type="text" inputmode="${mode||'decimal'}" id="f_${key}" data-k="${key}" value="${esc(val)}"><span class="unit">${unit}</span></div>`}
 
 function renderMeals(){
   const cm=carbMult(),n=trainNet();
@@ -783,7 +787,7 @@ function renderDay(){
 
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
-  let h='<div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm')+field('Wiek','age',S.age,'lat')+field('Waga docelowa','goal',S.goal,'kg')+'</div>';
+  let h='<div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>';
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex');
   h+='<h2>Tryb</h2>'+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie']],S.mode,'mode');
   h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div></div>
@@ -875,10 +879,21 @@ document.addEventListener('input',e=>{
     renderMealList();return}
   const k=el.dataset.k;if(!k)return;
   if(el.type==='checkbox'){setPath(k,el.checked);save();render();return}
-  setPath(k,el.value);save();
-  const pos=el.selectionStart;render();
+  let v=el.value;const im=el.getAttribute('inputmode');
+  if(im==='decimal'||im==='numeric'){const c=checkNum(k,v);el.classList.toggle('bad',!!c.err);el.setAttribute('aria-invalid',c.err?'true':'false');el.title=c.err||'';if(c.err)return}
+  setPath(k,v);save();
+  const pos=el.selectionStart;REDRAW=true;try{render()}finally{REDRAW=false}
   const n=document.querySelector(`[data-k="${k}"]`);if(n){n.focus({preventScroll:true});try{n.setSelectionRange(pos,pos)}catch(_){}}
 });
+// Wartość sprzed edycji pola: render() po każdym znaku odtwarza pole i ponownie wywołuje focusin, więc zapis tylko przy zmianie pola
+let EDIT=null,REDRAW=false;
+document.addEventListener('focusin',e=>{const k=e.target.dataset&&e.target.dataset.k;if(k&&(!EDIT||EDIT.k!==k))EDIT={k,v:k.split('.').reduce((o,x)=>o==null?o:o[x],S)}});
+// Wyjście z pola liczbowego: błędny wpis wraca do wartości sprzed edycji, poprawny jest normalizowany (10 000 -> 10000, 82,4 kg -> 82,4).
+// Pełne przerysowanie dopiero, gdy żadne pole nie jest aktywne, żeby nie zamykać klawiatury przy przejściu do następnego pola.
+document.addEventListener('focusout',e=>{const el=e.target,k=el.dataset&&el.dataset.k,im=el.getAttribute&&el.getAttribute('inputmode');if(REDRAW||!k||(im!=='decimal'&&im!=='numeric'))return;
+  if(el.classList.contains('bad')){const v=EDIT&&EDIT.k===k&&EDIT.v!=null?EDIT.v:'';setPath(k,v);el.value=v;el.classList.remove('bad');el.setAttribute('aria-invalid','false');toast((el.title||'Popraw wartość')+'. Zostaje poprzednia wartość.')}
+  else{const c=checkNum(k,el.value);if(c.s!==el.value){setPath(k,c.s);el.value=c.s}}
+  EDIT=null;save();setTimeout(()=>{const a=document.activeElement;if(!(a&&a.dataset&&a.dataset.k))render()},0)});
 document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.labsel){S.labSel=e.target.value;save();render()}});
 // usuń dni starsze niż 60
 (function(){const lim=Date.now()-60*864e5;for(const k in S.days){if(new Date(k).getTime()<lim)delete S.days[k]}save()})();
