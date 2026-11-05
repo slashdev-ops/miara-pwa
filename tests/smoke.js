@@ -184,5 +184,9 @@ tryc('I5: punkty zwierzaka bez nawyku „średnia waga w paśmie”', () => {
   const r = T.dayPts(k) - T.petCtx().dayPts(k); S.mode = 'redukcja'; return r === 10;
 });
 
+// Drobiazgi przed scaleniem (M2, M4)
+tryc('M2: nieznany rodzaj zwierzaka z kopii nie trafia do HTML', () => { const v = P().svg('x"><img src=x>', 'young', 'ok', null); return !v.includes('<img') && v.includes('pet-gaska'); });
+tryc('M4: etykieta karty zawiera zdanie stanu', () => P().card(st(mkCtx({ today: { sleep: 7, steps: 7000 } })), { kind: 'gaska', name: 'Kluska' }, T.esc).includes('aria-label="Mój zwierzak: Kluska. Kluska jest głodna. Zapisz posiłek."'));
+
 console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
 process.exit(bad ? 1 : 0);

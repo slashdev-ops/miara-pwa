@@ -89,7 +89,8 @@ var PET = (function () {
     if (a === 'korona') return `<path class="acc korona" d="M${hx - 12} ${hy - 12}l4 -12l6 7l4 -9l4 9l6 -7l-2 12z"/>`;
     return '';
   }
-  function svg(kind, stage, mood, a, big) {
+  function svg(kindIn, stage, mood, a, big) {
+    const kind = kindIn === 'kaczka' ? 'kaczka' : 'gaska'; // rodzaj może pochodzić z importowanej kopii: tylko znane wartości
     const cls = `pet pet-${mood} pet-${stage} pet-${kind}${big ? ' big' : ''}`, label = `${KIND_PL[kind] || 'Zwierzak'}: ${MOOD_PL[mood] || ''}`;
     let fig;
     if (stage === 'egg') {
@@ -133,7 +134,7 @@ var PET = (function () {
   const nameOf = (pet) => (pet && String(pet.name || '').trim()) || 'Kluska';
 
   function card(st, pet, esc) {
-    return `<button class="petcard" data-tab="pet" aria-label="Mój zwierzak: ${esc(nameOf(pet))}">${svg(pet.kind, st.stage, st.mood, st.acc)}`
+    return `<button class="petcard" data-tab="pet" aria-label="Mój zwierzak: ${esc(nameOf(pet))}. ${esc(st.line)}">${svg(pet.kind, st.stage, st.mood, st.acc)}`
       + `<span class="petinfo"><b>${esc(nameOf(pet))}</b><span class="small">${esc(st.line)}</span>${bars(st.meters)}</span></button>`;
   }
   function screen(st, pet, sum, esc) {
