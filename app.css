@@ -212,3 +212,19 @@ details.fold .panel,details.fold .meal{margin:0;border-radius:0}
 .petbody-svg .body-head{fill:none;stroke:var(--muted);stroke-width:1.5}
 .petbody-svg .body-start{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3;stroke-linejoin:round}
 .petbody-svg .body-now{fill:var(--green);fill-opacity:.14;stroke:var(--green);stroke-width:2;stroke-linejoin:round}
+
+/* Pierwsze kroki i czytelne akcje „Dziś” */
+.guide{padding:12px 16px;margin-bottom:12px;border:2px solid var(--green)}
+.guidehead{display:flex;justify-content:space-between;align-items:baseline}
+.guidehead h2{margin:0}
+.guide .petbar{margin:8px 0 4px}
+.step{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.step .box{width:24px;height:24px;border-radius:7px;border:2px solid var(--line);display:grid;place-items:center;font-size:15px;flex:none;color:var(--on-green)}
+.step.done .box{background:var(--green);border-color:var(--green)}
+.step .lab,.opt .lab{flex:1;display:flex;flex-direction:column}
+.step.done .lab{color:var(--muted)}
+.step.next .lab{font-weight:600}
+.hint{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:2px}
+.btn.small{padding:6px 12px;min-height:36px;font-size:14px;width:auto;flex:none}
+.opt.hab.next{box-shadow:inset 4px 0 0 var(--green)}
+.opt .chev{color:var(--muted);font-size:22px;line-height:1;margin-left:4px}

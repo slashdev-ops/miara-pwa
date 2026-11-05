@@ -135,7 +135,7 @@ var PET = (function () {
 
   function card(st, pet, esc) {
     return `<button class="petcard" data-tab="pet" aria-label="Mój zwierzak: ${esc(nameOf(pet))}. ${esc(st.line)}">${svg(pet.kind, st.stage, st.mood, st.acc)}`
-      + `<span class="petinfo"><b>${esc(nameOf(pet))}</b><span class="small">${esc(st.line)}</span>${bars(st.meters)}</span></button>`;
+      + `<span class="petinfo"><b>${esc(nameOf(pet))}</b><span class="small">${esc(st.line)}</span>${st.stage === 'egg' ? '<span class="small muted">Jajo wykluje się po dniu z co najmniej 30 punktami.</span>' : ''}${bars(st.meters)}</span></button>`;
   }
   function screen(st, pet, sum, esc) {
     const nx = NEXT_STAGE[st.stage], row = (a, b) => `<div class="entry"><span class="txt">${a}</span><span class="val">${b}</span></div>`;
@@ -222,7 +222,7 @@ var PET = (function () {
       if (i % 14 === 0 && i > 0) Object.assign(meas[k], { waist: (89 + i / 14 * 1.2).toFixed(1), hip: (100 + i / 14 * 0.8).toFixed(1), thigh: (58 + i / 14 * 0.5).toFixed(1) });
       hab[k] = { sniad: true, woda: true, spacer: i % 3 === 0 };
     }
-    const S = { onb: true, tab: 'day', sex: 'K', kg: '80,1', cm: '170', age: '35', goal: '72', days, meas, hab, urges: {}, body: true, petSeen: [],
+    const S = { onb: true, tab: 'day', guide: { hidden: true, dataOk: true, seenPet: true }, sex: 'K', kg: '80,1', cm: '170', age: '35', goal: '72', days, meas, hab, urges: {}, body: true, petSeen: [],
       pet: { kind: 'kaczka', name: 'Kluska', since: key(75) }, reviews: { demo: { a: 'Przekąska w torbie', b: 'Podjadanie wieczorem', c: 'Herbata o 20:00', d: key(7) } } };
     return { S, frames: FRAMES.slice() };
   }
