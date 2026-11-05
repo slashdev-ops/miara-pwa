@@ -9,10 +9,10 @@ const root = path.join(__dirname, '..');
 const code = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
-const els = {};
+const els = {}, lis = {};
 const mk = (id) => els[id] || (els[id] = { id, innerHTML: '', textContent: '', value: '', checked: false, style: {}, classList: { add() {}, remove() {} } });
 const sandbox = {
-  document: { getElementById: mk, querySelector: () => null, addEventListener() {} },
+  document: { getElementById: mk, querySelector: () => null, addEventListener(t, f) { (lis[t] = lis[t] || []).push(f); } },
   window: { scrollTo() {} },
   localStorage: { getItem: () => null, setItem() {} },
   navigator: {},
@@ -89,7 +89,7 @@ tryc('pet: -2% średniej wagi, w2 niewidziane => celebrate', () => { const s = s
 tryc('pet: wzrost wagi nie zmienia humoru', () => st(mkCtx({ today: { pts: 40, w: 80 } })).meters.mood === st(mkCtx({ today: { pts: 40, w: 84 } })).meters.mood);
 tryc('pet: 30 aktywnych dni + 10 pustych => adult', () => st(mkCtx({ active: 30, empty: 10 })).stage === 'adult');
 tryc('pet: Brąz w tygodniu => szalik', () => st(mkCtx({ weekPts: 120 })).acc === 'szalik');
-tryc('pet: zdanie stanu z imieniem, rodzaj żeński', () => st(mkCtx({ today: { sleep: 7, steps: 7000 }, seen: ['week1'] })).line === 'Kluska jest głodna. Zapisz posiłek.');
+tryc('pet: zdanie stanu z imieniem, rodzaj żeński', () => st(mkCtx({ today: { sleep: 7, steps: 7000 }, seen: ['week1'] })).line === 'Kluska czeka na wpis posiłku.');
 tryc('pet: nowy zwierzak bez historii nie tęskni (przerwa liczona od startu)', () => { const s = st(mkCtx({ history: 0, empty: 0 })); return s.przerwa === 0 && s.mood !== 'sad'; });
 
 // Zwierzak: wygląd (PET.svg, PET.card, PET.screen, CSS)
@@ -186,7 +186,7 @@ tryc('I5: punkty zwierzaka bez nawyku „średnia waga w paśmie”', () => {
 
 // Drobiazgi przed scaleniem (M2, M4)
 tryc('M2: nieznany rodzaj zwierzaka z kopii nie trafia do HTML', () => { const v = P().svg('x"><img src=x>', 'young', 'ok', null); return !v.includes('<img') && v.includes('pet-gaska'); });
-tryc('M4: etykieta karty zawiera zdanie stanu', () => P().card(st(mkCtx({ today: { sleep: 7, steps: 7000 } })), { kind: 'gaska', name: 'Kluska' }, T.esc).includes('aria-label="Mój zwierzak: Kluska. Kluska jest głodna. Zapisz posiłek."'));
+tryc('M4: etykieta karty zawiera zdanie stanu', () => P().card(st(mkCtx({ today: { sleep: 7, steps: 7000 } })), { kind: 'gaska', name: 'Kluska' }, T.esc).includes('aria-label="Mój zwierzak: Kluska. Kluska czeka na wpis posiłku."'));
 
 // Prowadzenie nowej osoby: pierwsze kroki, czytelne „Dziś”, bez ślepych zaułków
 const NEWU = () => ({ ...CLEAN(), pet: null, petSeen: [...SEEN_ALL], guide: { hidden: false, dataOk: false, seenPet: false }, onb: true });
@@ -208,6 +208,20 @@ tryc('bez ślepych zaułków: przyciski do Treningu i Posiłków', () => { const
 tryc('karta: jajo mówi, jak się wykluć', () => view('day', { ...NEWU(), pet: { ...PETA } }).includes('wykluje się'));
 tryc('wprowadzenie: ostatni ekran zapowiada pierwsze kroki', () => view('intro', { introStep: 4 }).includes('pierwsze kroki'));
 tryc('komunikat po akcji wskazuje następny krok', () => { view('day', { ...NEWU(), pet: { ...PETA } }); return T.guideToast('Dodano do dnia') === 'Dodano do dnia. Dalej: sprawdź swoje dane.'; });
+
+// Rada 05.11.2026, P1: wskaźnik mierzy zapisywanie, nie jedzenie; wybór zwierzaka nie świętuje dawnych osiągnięć
+const click = (data) => (lis.click || []).forEach((f) => f({ target: { closest: () => ({ dataset: data }) } }));
+tryc('P1-1: pasek nazywa się Posiłki, bez słowa Najedzenie', () => { const h = P().card(st(mkCtx({ today: { sleep: 7, steps: 7000 } })), { kind: 'gaska', name: 'Kluska' }, T.esc); return h.includes('Posiłki') && !h.includes('Najedzenie'); });
+tryc('P1-1: mina bez posiłku nie mówi o głodzie i nie pokazuje miski', () => { const s = st(mkCtx({ today: { sleep: 7, steps: 7000 } })), c = { kind: 'gaska', name: 'Kluska' }; const h = P().card(s, c, T.esc) + P().screen(s, c, { today: { done: 0, pts: 0 }, week: { pts: 0, level: 'Start', next: null }, all: { active: 1, streak: 0, dw: null, waist: null, pct: null }, badges: [], body: '' }, T.esc); return s.mood === 'hungry' && !/głodn/i.test(h) && !h.includes('class="bowl"') && h.includes('class="note"'); });
+tryc('P1-2: pierwszy wybór zwierzaka zalicza dawne osiągnięcia bez świętowania', () => {
+  view('set', { ...CLEAN(), pet: null, petSeen: [], reviews: REV }); click({ petkind: 'gaska' });
+  return T.S().petSeen.includes('review1') && !view('day').includes('pet-celebrate');
+});
+tryc('P1-2: to samo po odtworzeniu starej kopii bez petSeen', () => {
+  const S = T.S(); view('set', { ...CLEAN(), pet: null, reviews: REV }); delete S.petSeen; click({ petkind: 'kaczka' });
+  return (T.S().petSeen || []).includes('review1') && !view('day').includes('pet-celebrate');
+});
+tryc('P1-2: zmiana rodzaju istniejącego zwierzaka nie zmienia odznak', () => { view('set', { ...CLEAN(), pet: { ...PETA }, petSeen: ['week1'], reviews: REV }); click({ petkind: 'kaczka' }); return T.S().petSeen.join() === 'week1' && T.S().pet.kind === 'kaczka'; });
 
 console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
 process.exit(bad ? 1 : 0);

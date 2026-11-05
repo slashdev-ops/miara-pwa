@@ -159,7 +159,8 @@ details.fold .panel,details.fold .meal{margin:0;border-radius:0}
 .pet .neck-o{fill:none;stroke:var(--goose-line);stroke-width:17;stroke-linecap:round}
 .pet .neck{fill:none;stroke:var(--goose);stroke-width:14;stroke-linecap:round}
 .pet .bubble circle{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
-.pet .bubble .bowl{fill:var(--f)}
+.pet .bubble .note rect{fill:var(--surface);stroke:var(--muted);stroke-width:1.5}
+.pet .bubble .note path{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linecap:round}
 .pet-kaczka .body,.pet-kaczka .head{fill:var(--duck);stroke:var(--f)}
 .pet .wing{fill:#E3E9E5}
 .pet-kaczka .wing{fill:var(--f);opacity:.35}

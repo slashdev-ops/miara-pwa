@@ -901,7 +901,7 @@ document.addEventListener('click',e=>{
     if(navigator.share){navigator.share({text:t}).catch(()=>{})}
     else if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>toast('Skopiowano do schowka'),()=>toast('Nie udało się skopiować'))}
     return}
-  else if(d.petkind){S.pet={kind:d.petkind,name:(S.pet&&S.pet.name)||'',since:(S.pet&&S.pet.since)||todayKey()}}
+  else if(d.petkind){const first=!S.pet;S.pet={kind:d.petkind,name:(S.pet&&S.pet.name)||'',since:(S.pet&&S.pet.since)||todayKey()};if(first)S.petSeen=[...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])]}
   else if(d.petpick){S.tab='set';window.scrollTo(0,0)}
   else if(d.guidehide){S.guide.hidden=true}
   else if(d.demoexit){location.hash='';location.reload();return}

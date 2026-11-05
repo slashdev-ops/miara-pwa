@@ -48,7 +48,7 @@ petSeen: []                                                    // id kamieni mil
 
 | Wskaźnik | Dzisiejszy wkład | Nie zależy od |
 | --- | --- | --- |
-| Najedzenie | zapisane posiłki: 0/1/2/3+ to 0/40/70/100 | kalorii, rodzaju jedzenia |
+| Posiłki | zapisane posiłki: 0/1/2/3+ to 0/40/70/100 | kalorii, rodzaju jedzenia |
 | Energia | sen: `min(sleep/7,1)*60`; ruch: trening dziś albo kroki ≥ 6000 to +40, kroki 3000-5999 to +20 | wagi |
 | Humor | `min(dayPts/50,1)*80` + 20 przy serii ≥ 3 | wagi |
 
@@ -59,7 +59,7 @@ Wartość wskaźnika = `max(10, min(100, wkład dzisiejszy - 35 × przerwa))`.
 
 Skutek: po przerwie pierwszy dzień z wpisami odrabia część strat, drugi dzień (przerwa = 0) przywraca pełne wartości.
 
-Przed 9:00 przy braku posiłków dziś Najedzenie wynosi 50 (bez kary za poranek); kara za przerwę działa nadal.
+Przed 9:00 przy braku posiłków dziś wskaźnik Posiłki wynosi 50 (bez kary za poranek); kara za przerwę działa nadal.
 
 ### Miny (pierwsza pasująca)
 
@@ -71,7 +71,10 @@ Przed 9:00 przy braku posiłków dziś Najedzenie wynosi 50 (bez kary za poranek
 6. `happy`: wszystkie wskaźniki ≥ 70.
 7. `ok`: pozostałe przypadki.
 
-Każda mina ma jedno zdanie stanu z podpowiedzią działania (np. `hungry`: „{imię} jest głodna. Zapisz posiłek.”).
+Każda mina ma jedno zdanie stanu z podpowiedzią działania (np. `hungry`: „{imię} czeka na wpis posiłku.”).
+Zmiana 06.11.2026 (rada projektu, warunek dietetyka): wskaźnik mierzy zapisywanie, nie jedzenie, dlatego nazwa „Posiłki”
+zamiast „Najedzenie”, mina `hungry` opisana jako „czeka na wpis”, a w dymku kartka z ołówkiem zamiast miski.
+Pierwszy wybór zwierzaka zalicza bez świętowania osiągnięcia zdobyte wcześniej.
 Rodzaj gramatyczny: gąska i kaczuszka są rodzaju żeńskiego.
 
 ### Rozwój
@@ -150,8 +153,8 @@ wszystkie miny, etapy, dodatki i świętowanie. Pasek „Tryb pokazowy, dane prz
 `tests/smoke.js`:
 
 - brak wpisów 3 dni: `sad`, wskaźniki ≥ 10; po jednym posiłku dziś: nie `sad`,
-- przed 9:00 bez posiłków i bez przerwy: Najedzenie 50,
-- 3 posiłki dziś: Najedzenie 100,
+- przed 9:00 bez posiłków i bez przerwy: Posiłki 50,
+- 3 posiłki dziś: Posiłki 100,
 - 23:00: `sleep`,
 - -2% średniej wagi, `w2` nie w `petSeen`: `celebrate`,
 - wzrost wagi przy tych samych nawykach: Humor bez zmian,

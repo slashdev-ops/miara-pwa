@@ -3,7 +3,7 @@
 var PET = (function () {
   const LINES = {
     celebrate: '{n} świętuje! Nowa odznaka.', sleep: '{n} śpi. Dobranoc.', sad: '{n} tęskni. Zapisz cokolwiek, a odżyje.',
-    hungry: '{n} jest głodna. Zapisz posiłek.', tired: '{n} jest zmęczona. Sen albo spacer doda jej energii.',
+    hungry: '{n} czeka na wpis posiłku.', tired: '{n} jest zmęczona. Sen albo spacer doda jej energii.',
     happy: '{n} jest w świetnej formie.', ok: '{n} ma się dobrze.'
   };
   const ACC = { 'Brąz': 'szalik', 'Srebro': 'czapka', 'Złoto': 'okulary', 'Platyna': 'korona' };
@@ -72,7 +72,7 @@ var PET = (function () {
 
   // ---------- Rysunek: SVG 120×120, kolory z CSS (klasy), animacje w app.css ----------
   const SCALE = { chick: 0.7, young: 0.85, adult: 1 };
-  const MOOD_PL = { celebrate: 'świętuje', sleep: 'śpi', sad: 'tęskni', hungry: 'głodna', tired: 'zmęczona', happy: 'szczęśliwa', ok: 'zadowolona' };
+  const MOOD_PL = { celebrate: 'świętuje', sleep: 'śpi', sad: 'tęskni', hungry: 'czeka na wpis', tired: 'zmęczona', happy: 'szczęśliwa', ok: 'zadowolona' };
   const KIND_PL = { gaska: 'Gąska', kaczka: 'Kaczuszka' };
 
   function eyes(x, y, mood) {
@@ -106,7 +106,7 @@ var PET = (function () {
       const s = SCALE[stage] || 1;
       if (s !== 1) fig = `<g transform="translate(${60 * (1 - s)} ${104 * (1 - s)}) scale(${s})">${fig}</g>`;
     }
-    const bubble = mood === 'hungry' ? '<g class="bubble"><circle cx="24" cy="26" r="14"/><circle cx="38" cy="44" r="3"/><path class="bowl" d="M15 24h18a9 7 0 0 1 -18 0z"/></g>' : '';
+    const bubble = mood === 'hungry' ? '<g class="bubble"><circle cx="24" cy="26" r="14"/><circle cx="38" cy="44" r="3"/><g class="note"><rect x="16" y="16" width="14" height="19" rx="2"/><path d="M19 22h8M19 26h8M19 30h4M27 34l6-10"/></g></g>' : '';
     const conf = mood === 'celebrate' ? [...Array(12)].map((_, i) => `<rect class="conf c${i % 4}" x="${8 + i * 9}" y="${4 + (i * 7) % 20}" width="5" height="8" style="animation-delay:${(i % 6) * 0.15}s"/>`).join('') : '';
     return `<svg class="${cls}" viewBox="0 0 120 120" role="img" aria-label="${label}"><ellipse class="shadow" cx="60" cy="106" rx="30" ry="4"/><g class="figure">${fig}</g>${bubble}${conf}</svg>`;
   }
@@ -128,7 +128,7 @@ var PET = (function () {
 
   function badgeList(got) { return BADGES.map(([id, label]) => ({ id, label, got: got.includes(id) })); }
   function bars(m) {
-    return '<span class="petbars">' + [['Najedzenie', m.food], ['Energia', m.energy], ['Humor', m.mood]].map(([l, v]) =>
+    return '<span class="petbars">' + [['Posiłki', m.food], ['Energia', m.energy], ['Humor', m.mood]].map(([l, v]) =>
       `<span class="petbarrow"><span class="petlab">${l}</span><span class="petbar${v < 40 ? ' low' : ''}" role="meter" aria-label="${l} ${v} ze 100" aria-valuenow="${v}" aria-valuemin="0" aria-valuemax="100"><i style="width:${v}%"></i></span></span>`).join('') + '</span>';
   }
   const nameOf = (pet) => (pet && String(pet.name || '').trim()) || 'Kluska';

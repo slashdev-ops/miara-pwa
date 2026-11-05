@@ -12,7 +12,7 @@ tested in GitHub Actions, deployable on Vercel or nginx.
 
 ## Zwierzak i postęp
 
-Gąska albo kaczuszka w stylu Tamagotchi reaguje na wpisy użytkownika. Trzy wskaźniki (Najedzenie, Energia, Humor)
+Gąska albo kaczuszka w stylu Tamagotchi reaguje na wpisy użytkownika. Trzy wskaźniki (Posiłki, Energia, Humor)
 wynikają z zapisanych posiłków, snu, ruchu i nawyków, nigdy z wagi ani kalorii. W dni bez wpisów wskaźniki spadają,
 po powrocie odrabiają straty w 1-2 dni; zwierzak nie umiera i nie cofa się w rozwoju (jajo, pisklę, młoda, dorosła).
 Ekran postępu pokazuje dzień, tydzień i całość od startu z odznakami kamieni milowych; sylwetka z obwodów jest opcjonalna.
