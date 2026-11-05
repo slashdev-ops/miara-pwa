@@ -4,7 +4,7 @@ Aplikacja webowa (PWA) wspierająca redukcję masy ciała: plan posiłków z prz
 pomiary, wyniki badań, 12-tygodniowy program ćwiczeń kolana, przegląd tygodnia i widok „Mój wpływ”.
 Działa offline, instaluje się na ekranie początkowym telefonu i nie wysyła danych poza urządzenie.
 
-**Wersja na żywo:** https://miara-pwa.vercel.app (najlepiej na telefonie: Safari, „Dodaj do ekranu początkowego”)
+**Wersja na żywo:** [miara-pwa.vercel.app](https://miara-pwa.vercel.app) (najlepiej na telefonie: Safari, „Dodaj do ekranu początkowego”)
 
 **EN summary:** offline-first Progressive Web App in plain JavaScript (no framework, no npm dependencies).
 Health data never leaves the device. Hardened with a strict Content Security Policy and security headers,
@@ -31,9 +31,11 @@ tested in GitHub Actions, deployable on Vercel or nginx.
   To świadomy kompromis: skrypty pozostają ograniczone do własnej domeny.
 - `X-Robots-Tag: noindex, nofollow`: aplikacja nie trafia do wyszukiwarek.
 - Te same nagłówki są w `vercel.json` i w `deploy/nginx.conf`. Do sprawdzenia po wdrożeniu:
+
   ```bash
-  curl -sI https://ADRES | grep -iE 'content-security|strict-transport|x-content-type|referrer|permissions|x-frame|x-robots'
+  curl -sI https://miara-pwa.vercel.app | grep -iE 'content-security|strict-transport|x-content-type|referrer|permissions|x-frame|x-robots'
   ```
+
 - Kopie danych (`miara-kopia-*.json`) zawierają dane zdrowotne, dlatego `.gitignore` blokuje je przed commitem.
 
 ## Struktura
