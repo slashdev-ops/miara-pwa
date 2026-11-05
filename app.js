@@ -357,12 +357,13 @@ function renderReview(){
 }
 function renderIntro(){
   const s=S.introStep||0,next=(a,l)=>`<p><button class="btn" style="width:100%" data-${a}="1">${l}</button></p>`;
-  let h='<div style="display:flex;gap:8px;justify-content:center;margin:8px 0 16px" aria-label="Krok '+(s+1)+' z 4">'+[0,1,2,3].map(i=>`<span style="width:${i===s?24:8}px;height:8px;border-radius:4px;background:${i===s?'var(--green)':'var(--line)'}"></span>`).join('')+'</div>';
+  let h='<div style="display:flex;gap:8px;justify-content:center;margin:8px 0 16px" aria-label="Krok '+(s+1)+' z 5">'+[0,1,2,3,4].map(i=>`<span style="width:${i===s?24:8}px;height:8px;border-radius:4px;background:${i===s?'var(--green)':'var(--line)'}"></span>`).join('')+'</div>';
   if(s===0)h+='<h2 style="font-size:24px">Plan na zdrową wagę, bez kartki i wyrzutów</h2><p>Aplikacja podpowiada, co zjeść, liczy kalorie z Twoich danych i pokazuje, dokąd prowadzą wybory.</p>'+next('intronext','Dalej');
   if(s===1)h+='<h2 style="font-size:24px">Codziennie tylko 3 rzeczy</h2><div class="panel"><div class="entry"><span class="txt"><b>1.</b> Zważ się rano</span></div><div class="entry"><span class="txt"><b>2.</b> Zapisz posiłki jednym dotknięciem „Zjem”</span></div><div class="entry"><span class="txt"><b>3.</b> Ruch: trening albo kroki z zegarka</span></div></div><p>Gdy łapie ochota na przekąskę, naciśnij przycisk „Mam ochotę coś przekąsić”. Reszta jest opcjonalna.</p>'+next('intronext','Dalej');
-  if(s===2)h+='<h2 style="font-size:24px">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+next('intronext','Dalej');
-  if(s>=3)h+='<h2 style="font-size:24px">Gotowe</h2><p>Dane zostają tylko w tym telefonie. Badania, suplementy i wiedzę znajdziesz w zakładce Zdrowie. Wprowadzenie otworzysz ponownie w Ustawieniach.</p>'+next('introdone','Zaczynam');
-  if(s<3)h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
+  if(s===2)h+='<h2 style="font-size:24px">Wybierz towarzysza</h2><p>Gąska albo kaczuszka reaguje na Twoje wpisy: posiłki, ruch, sen i nawyki. Imię nadasz od razu albo później w Ustawieniach.</p>'+petPickHtml()+next('intronext','Dalej');
+  if(s===3)h+='<h2 style="font-size:24px">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+next('intronext','Dalej');
+  if(s>=4)h+='<h2 style="font-size:24px">Gotowe</h2><p>Dane zostają tylko w tym telefonie. Badania, suplementy i wiedzę znajdziesz w zakładce Zdrowie. Wprowadzenie otworzysz ponownie w Ustawieniach.</p>'+next('introdone','Zaczynam');
+  if(s<4)h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
   document.getElementById('main').innerHTML=h;
 }
 
@@ -598,12 +599,15 @@ const LS='talerz-trening-v1';
 const DEF={kg:'80',cm:'170',age:'35',sex:'K',goal:'72',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,petSeen:[],legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),JSON.parse(r));}catch(e){}return clone(DEF)}
-function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
-let S=load();
+function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
+// Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
+let DEMO=typeof location!=='undefined'&&location.hash==='#demo',DEMO_I=0;
+let S=DEMO?merge(clone(DEF),PET.demo().S):load();
+if(DEMO)setInterval(()=>{DEMO_I++;const a=document.activeElement;if((S.tab==='day'||S.tab==='pet')&&!(a&&a.dataset&&a.dataset.k))render()},3000);
 const open=new Set();
 
 // ---------- Obliczenia ----------
@@ -694,6 +698,17 @@ function filtered(){
     .sort((a,b)=>(b.hits-a.hits)||sorters[S.f.sort](a,b));
 }
 
+// ---------- Zwierzak (pet.js): dane dla PET.state, karta, wybór, ekran postępu ----------
+function petCtx(now){return {now:now||new Date(),pet:S.pet,seen:S.petSeen||[],key:keyOf,dayPts,entries:k=>S.days[k]||[],meas:k=>S.meas[k]||{},habs:k=>(S.hab||{})[k]||{},urges:k=>(S.urges||{})[k]||[],reviewed:Object.keys(S.reviews||{}).length>0,streak,weekPts,level,stage:stageInfo,avgW:(a,b)=>avgAgo(a,b,'w'),startW:(stageInfo()||{}).start||null,num}}
+// Kamień milowy świętowany raz: trafia do petSeen przy pierwszym pokazaniu
+function petState(){if(DEMO){const fr=PET.demo().frames,f=fr[DEMO_I%fr.length];S.pet.kind=f.kind;return PET.state(Object.assign(petCtx(),{force:f}))}const st=PET.state(petCtx());if(st.milestone){S.petSeen=(S.petSeen||[]).concat(st.milestone);save()}return st}
+function petCardHtml(){if(!S.pet)return `<button class="petcard" data-petpick="1">${PET.svg('gaska','egg','ok',null)}<span class="petinfo"><b>Wybierz towarzysza</b><span class="small">Gąska albo kaczuszka będzie reagować na Twoje wpisy.</span></span></button>`;return PET.card(petState(),S.pet,esc)}
+function petPickHtml(){const p=S.pet;return `<div class="petstage">${PET.svg(p?p.kind:'gaska',p?'chick':'egg','happy',null)}</div>`+seg([['gaska','Gąska'],['kaczka','Kaczuszka']],p?p.kind:'','petkind')+(p?`<div class="panel"><div class="field"><label for="petname">Imię</label><input type="text" id="petname" data-k="pet.name" value="${esc(p.name||'')}" placeholder="Kluska" maxlength="20"></div></div>`:'')}
+function waistDelta(){const ks=Object.keys(S.meas||{}).filter(k=>num(S.meas[k].waist)>0).sort();if(ks.length<2)return null;const t0=Date.parse(ks[0]),t1=Date.parse(ks.at(-1));if(t1-t0<14*864e5)return null;const av=a=>a.reduce((s,k)=>s+num(S.meas[k].waist),0)/a.length;return av(ks.filter(k=>Date.parse(k)>=t1-27*864e5))-av(ks.filter(k=>Date.parse(k)<=t0+27*864e5))}
+function petSum(st){const k=todayKey(),m=S.meas[k]||{},d=day(),done=[num(m.w)>0,d.filter(e=>e.kind==='m').length>=3,d.some(e=>e.kind==='t')||num(m.steps)>0].filter(Boolean).length,wp=weekPts(),nx=LEVELS.find(x=>x[0]>wp),si=stageInfo(),a7=avgAgo(0,7,'w');
+  return {today:{done,pts:dayPts(k)},week:{pts:wp,level:level(wp)[1],next:nx?{name:nx[1],need:nx[0]-wp}:null},all:{active:st.active,streak:streak(),dw:si&&a7!=null?a7-si.start:null,waist:waistDelta(),pct:si?si.pct:null},badges:PET.badgeList(PET.milestones(petCtx())),body:S.body?petBodyHtml():''}}
+function petBodyHtml(){const b=PET.body(S.meas,new Date(),num);return '<h2>Sylwetka</h2>'+(b.ok?`<div class="panel petbody">${b.svg}<p class="small muted">Linia przerywana: start (pierwsze 4 tygodnie pomiarów). Pełna: ostatnie 4 tygodnie. Kontur ze średnich obwodów talii, bioder i uda.</p></div>`:`<p class="small muted">${b.msg}. Potrzebne są 2 pomiary obwodów odległe o co najmniej 14 dni.</p>`)}
+function renderPet(){if(!S.pet){S.tab='set';return renderSet()}const st=petState();document.getElementById('main').innerHTML=PET.screen(st,S.pet,petSum(st),esc)}
 // ---------- Widoki ----------
 const TABS=[
   ['meals','Posiłki','<path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5"/>'],
@@ -704,7 +719,7 @@ const TABS=[
 ];
 function renderTabs(){const tb=document.getElementById('tabs');if(tb&&tb.style)tb.style.display=S.tab==='intro'?'none':'';
   document.getElementById('tabs').innerHTML=TABS.map(([k,l,ic])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}" aria-label="${l}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>${l}</button>`).join('');
-  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{sos:'Ochota na przekąskę',labs:'Moje badania',intro:'Wprowadzenie',review:'Przegląd tygodnia',recipe:'Przepis',knee:'Program kolana',impact:'Mój wpływ',challenge:'Wspólne wyzwanie'}[S.tab]||''])[1];
+  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{sos:'Ochota na przekąskę',labs:'Moje badania',intro:'Wprowadzenie',review:'Przegląd tygodnia',recipe:'Przepis',knee:'Program kolana',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
   document.getElementById('who').textContent=new Date().toLocaleDateString('pl-PL',{weekday:'short',day:'numeric',month:'numeric'});
 }
 function seg(items,cur,attr,cls=''){return `<div class="seg ${cls}">`+items.map(([v,l])=>`<button class="${String(cur)===String(v)?'on':''}" data-${attr}="${v}">${l}</button>`).join('')+'</div>'}
@@ -771,7 +786,7 @@ function renderDay(){
   const net=tr.reduce((a,e)=>a+e.net,0),eat={k:0,p:0,f:0,c:0};ml.forEach(e=>{eat.k+=e.k;eat.p+=e.p;eat.f+=e.f;eat.c+=e.c});
   const R=rmr(),target=targetKcal(),pT=1.4*(num(S.goal)||68);
   const bar=(lab,v,max,unit)=>{const pc=Math.min(100,v/max*100);return `<div class="prog"><div class="top"><span>${lab}</span><span>${fmt(v)} / ${fmt(max)} ${unit}</span></div><div class="track"><div class="fill ${v>max*1.05?'over':''}" style="width:${pc}%"></div></div></div>`};
-  let h='<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>'+changeHtml()+modeHtml()+reviewPromptHtml()+kneeBannerHtml()+focusHtml()+legHtml()+`<div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
+  let h=petCardHtml()+'<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>'+changeHtml()+modeHtml()+reviewPromptHtml()+kneeBannerHtml()+focusHtml()+legHtml()+`<div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
   h+=measHtml();
   h+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
   h+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
@@ -789,6 +804,7 @@ function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
   let h='<div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>';
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex');
+  h+='<h2>Towarzysz</h2>'+petPickHtml()+(S.pet?`<div class="panel"><div class="field"><label for="body">Sylwetka z pomiarów na ekranie zwierzaka</label><input type="checkbox" class="switch" id="body" data-k="body" ${S.body?'checked':''}></div></div>`:'');
   h+='<h2>Tryb</h2>'+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie']],S.mode,'mode');
   h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div></div>
 ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź objawy nóg (lipodemia)</label><input type="checkbox" class="switch" id="lip" data-k="lip" ${S.lip?'checked':''}></div></div>`:''}
@@ -806,7 +822,7 @@ ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź ob
   document.getElementById('main').innerHTML=h;
 }
 
-function render(){renderTabs();({meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge}[S.tab]||renderDay)()}
+function render(){renderTabs();({meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują. <button class="btn ghost" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),1600)}
 function setPath(p,v){const a=p.split('.');let o=S;for(let i=0;i<a.length-1;i++)o=o[a[i]];o[a[a.length-1]]=v}
 
@@ -816,20 +832,20 @@ document.addEventListener('click',e=>{
   if(d.tab){S.tab=d.tab;if(d.tab==='sos'){S.sosStep='trig';sosEnd=0;clearInterval(sosT)}window.scrollTo(0,0)}
   else if(d.trig){S.sosTrig=d.trig;S.sosStep='plan'}
   else if(d.sosstart){sosEnd=Date.now()+600000;clearInterval(sosT);sosT=setInterval(()=>{const l=Math.max(0,Math.ceil((sosEnd-Date.now())/1000)),el=document.getElementById('sosclock');if(el)el.textContent=mmss(l);if(l<=0){clearInterval(sosT);toast('Minęło 10 minut')}},1000)}
-  else if(d.sosout){const out=d.sosout;if(out==='inne'){S.sosStep='inne'}else{logUrge(out);if(out==='plan'){const pid=PLAN[new Date().getDay()][3],m=MEALS.find(x=>x.id===pid),x=macros(m,1,1);day().push({kind:'m',id:pid,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c})}S.tab='day';sosEnd=0;clearInterval(sosT);toast(out==='minela'?'Zapisano: ochota minęła':'Zapisano przekąskę')}}
+  else if(d.sosout){const out=d.sosout;if(out==='inne'){S.sosStep='inne'}else{logUrge(out);PET.react('urge');if(out==='plan'){const pid=PLAN[new Date().getDay()][3],m=MEALS.find(x=>x.id===pid),x=macros(m,1,1);day().push({kind:'m',id:pid,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c})}S.tab='day';sosEnd=0;clearInterval(sosT);toast(out==='minela'?'Zapisano: ochota minęła':'Zapisano przekąskę')}}
   else if(d.sossave){const k=num(document.getElementById('s_k').value),n=document.getElementById('s_n').value.trim();if(k>0)day().push({kind:'m',label:n||'Przekąska',k,p:0,f:0,c:0});logUrge('inne');S.tab='day';sosEnd=0;clearInterval(sosT);toast('Zapisano')}
   else if(d.type){S.f.type=d.type}
   else if(d.chip){const s=S.f.chips[d.chip]||0;const n=s===0?1:s===1?-1:0;if(n)S.f.chips[d.chip]=n;else delete S.f.chips[d.chip]}
   else if(d.carb){S.f.carb=d.carb}
   else if(d.sort){S.f.sort=d.sort}
   else if(d.toggle){open.has(d.toggle)?open.delete(d.toggle):open.add(d.toggle);renderMealList();return}
-  else if(d.addmeal){const m=MEALS.find(x=>x.id===d.addmeal),x=macros(m,carbMult(),num(S.f.portion)||1);day().push({kind:'m',id:m.id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c});save();toast('Dodano do dnia');return}
+  else if(d.addmeal){const m=MEALS.find(x=>x.id===d.addmeal),x=macros(m,carbMult(),num(S.f.portion)||1);day().push({kind:'m',id:m.id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c});PET.react('meal');save();toast('Dodano do dnia');return}
   else if(d.cat){S.tr.cat=d.cat}
   else if(d.opt){S.tr.opt[S.tr.cat]=d.opt}
   else if(d.bmode){S.tr.bMode=d.bmode;if(d.bmode==='bieg'&&num(S.tr.speed)<8)S.tr.speed='8';if(d.bmode==='marsz'&&num(S.tr.speed)>6.5)S.tr.speed='5'}
   else if(d.smode){S.tr.sMode=d.smode}
   else if(d.sclass){S.tr.sClass=d.sclass}
-  else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m);day().push({kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net});save();toast('Dodano do dnia');return}
+  else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m);day().push({kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net});PET.react('train');save();toast('Dodano do dnia');return}
   else if(d.del!=null){day().splice(+d.del,1)}
   else if(d.clear){S.days[todayKey()]=[]}
   else if(d.intronext){S.introStep=(S.introStep||0)+1;window.scrollTo(0,0)}
@@ -849,7 +865,7 @@ document.addEventListener('click',e=>{
   else if(d.kstart){S.knee.start=todayKey()}
   else if(d.kpain){S.knee.tmpPain=+d.kpain}
   else if(d.kcramp){const K=S.knee,dn=K.sessions.find(x=>x.d===todayKey()),cur=K.tmpCramp!=null?K.tmpCramp:(dn?dn.cramp:false);K.tmpCramp=!cur}
-  else if(d.ksave){const K=S.knee,t=todayKey(),dn=K.sessions.find(x=>x.d===t),pain=K.tmpPain!=null?K.tmpPain:(dn?dn.pain:null);if(pain==null){toast('Zaznacz ból kolana 0-10');return}const cramp=K.tmpCramp!=null?K.tmpCramp:(dn?dn.cramp:false);if(!K.start)K.start=t;if(dn){dn.pain=pain;dn.cramp=cramp}else{K.sessions.push({d:t,pain,cramp});const sp={met:3.5},kk=kcal(sp,60);day().push({kind:'t',label:'Program kolana (rower, ćwiczenia nerwowo-mięśniowe i siłowe)',min:60,gross:kk.gross,net:kk.net,knee:1})}K.tmpPain=null;K.tmpCramp=null;toast('Zapisano sesję')}
+  else if(d.ksave){const K=S.knee,t=todayKey(),dn=K.sessions.find(x=>x.d===t),pain=K.tmpPain!=null?K.tmpPain:(dn?dn.pain:null);if(pain==null){toast('Zaznacz ból kolana 0-10');return}const cramp=K.tmpCramp!=null?K.tmpCramp:(dn?dn.cramp:false);if(!K.start)K.start=t;if(dn){dn.pain=pain;dn.cramp=cramp}else{K.sessions.push({d:t,pain,cramp});const sp={met:3.5},kk=kcal(sp,60);day().push({kind:'t',label:'Program kolana (rower, ćwiczenia nerwowo-mięśniowe i siłowe)',min:60,gross:kk.gross,net:kk.net,knee:1})}K.tmpPain=null;K.tmpCramp=null;PET.react('train');toast('Zapisano sesję')}
   else if(d.kmorn){S.knee.morning[todayKey()]=d.kmorn;toast('Zapisano')}
   else if(d.kday){const v=+d.kday,a=S.knee.days;S.knee.days=a.includes(v)?a.filter(x=>x!==v):[...a,v]}
   else if(d.swap!=null){const i=+d.swap,k=todayKey(),orig=PLAN[new Date().getDay()][i],cur=planIds()[i],t=MEALS.find(m=>m.id===orig).t,bk=macros(MEALS.find(m=>m.id===orig),1,1).k,c=MEALS.filter(m=>m.t===t).sort((a,b)=>(a.id===orig?-1:b.id===orig?1:0)||Math.abs(macros(a,1,1).k-bk)-Math.abs(macros(b,1,1).k-bk)||a.id.localeCompare(b.id)).map(m=>m.id),nx=c[(c.indexOf(cur)+1)%c.length];S.swaps=S.swaps||{};S.swaps[k]=S.swaps[k]||{};if(nx===orig)delete S.swaps[k][i];else S.swaps[k][i]=nx}
@@ -859,13 +875,16 @@ document.addEventListener('click',e=>{
   else if(d.labdel){S.labs=S.labs.filter(e=>e.id!==d.labdel)}
   else if(d.labcopy){const t=LABS.map(x=>{const es=S.labs.filter(e=>e.test===x.id).sort((a,b)=>a.date.localeCompare(b.date));return es.length?x.n+': '+es.map(e=>fmtDate(e.date)+' '+e.val+' '+e.unit).join('; '):''}).filter(Boolean).join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
   else if(d.quick){const n=document.getElementById('q_n').value.trim(),k=num(document.getElementById('q_k').value);if(k<=0){toast('Wpisz liczbę kalorii');return}day().push({kind:'m',label:n||'Szybki wpis',k,p:0,f:0,c:0})}
-  else if(d.repeat){const y=(S.days[keyOf(new Date(Date.now()-864e5))]||[]).filter(e=>e.kind==='m');if(!y.length){toast('Wczoraj nie ma zapisanych posiłków');return}y.forEach(e=>day().push(Object.assign({},e)))}
+  else if(d.repeat){const y=(S.days[keyOf(new Date(Date.now()-864e5))]||[]).filter(e=>e.kind==='m');if(!y.length){toast('Wczoraj nie ma zapisanych posiłków');return}y.forEach(e=>day().push(Object.assign({},e)));PET.react('meal')}
   else if(d.copy){const m=MEALS.find(x=>x.id===d.copy),x=macros(m,carbMult(),num(S.f.portion)||1),t=m.n+'\n'+x.items.map(i=>i.n+': '+Math.round(i.g/5)*5+' g').join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano składniki'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
-  else if(d.hab){const k=todayKey();S.hab[k]=S.hab[k]||{};S.hab[k][d.hab]=!S.hab[k][d.hab]}
+  else if(d.hab){const k=todayKey();S.hab[k]=S.hab[k]||{};S.hab[k][d.hab]=!S.hab[k][d.hab];if(S.hab[k][d.hab])PET.react('habit',(HABITS.find(x=>x.id===d.hab)||{}).pts||0)}
   else if(d.share){const wp=weekPts(),t=`Mój tydzień w aplikacji Miara: ${wp} pkt, poziom ${level(wp)[1]}, seria ${streak()} dni. Robimy wspólne wyzwanie na przyszły tydzień?`;
     if(navigator.share){navigator.share({text:t}).catch(()=>{})}
     else if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>toast('Skopiowano do schowka'),()=>toast('Nie udało się skopiować'))}
     return}
+  else if(d.petkind){S.pet={kind:d.petkind,name:(S.pet&&S.pet.name)||'',since:(S.pet&&S.pet.since)||todayKey()}}
+  else if(d.petpick){S.tab='set';window.scrollTo(0,0)}
+  else if(d.demoexit){location.hash='';location.reload();return}
   else if(d.sex){S.sex=d.sex}
   else if(d.reset){const days=S.days;S=clone(DEF);S.days=days;S.tab='set'}
   else return;
@@ -878,7 +897,7 @@ document.addEventListener('input',e=>{
     if(lab)lab.textContent=k==='minP'?v+' g':k==='maxK'?(v>=1000?'bez limitu':v+' kcal'):k==='maxC'?(v>=130?'bez limitu':v+' g'):'×'+fmt1(v);
     renderMealList();return}
   const k=el.dataset.k;if(!k)return;
-  if(el.type==='checkbox'){setPath(k,el.checked);save();render();return}
+  if(el.type==='checkbox'){setPath(k,el.checked);if(k==='body'&&el.checked)toast('Sylwetka pokazuje trend 4 tygodni. Pojedyncze pomiary się wahają.');save();render();return}
   let v=el.value;const im=el.getAttribute('inputmode');
   if(im==='decimal'||im==='numeric'){const c=checkNum(k,v);el.classList.toggle('bad',!!c.err);el.setAttribute('aria-invalid',c.err?'true':'false');el.title=c.err||'';if(c.err)return}
   setPath(k,v);save();
@@ -892,7 +911,8 @@ document.addEventListener('focusin',e=>{const k=e.target.dataset&&e.target.datas
 // Pełne przerysowanie dopiero, gdy żadne pole nie jest aktywne, żeby nie zamykać klawiatury przy przejściu do następnego pola.
 document.addEventListener('focusout',e=>{const el=e.target,k=el.dataset&&el.dataset.k,im=el.getAttribute&&el.getAttribute('inputmode');if(REDRAW||!k||(im!=='decimal'&&im!=='numeric'))return;
   if(el.classList.contains('bad')){const v=EDIT&&EDIT.k===k&&EDIT.v!=null?EDIT.v:'';setPath(k,v);el.value=v;el.classList.remove('bad');el.setAttribute('aria-invalid','false');toast((el.title||'Popraw wartość')+'. Zostaje poprzednia wartość.')}
-  else{const c=checkNum(k,el.value);if(c.s!==el.value){setPath(k,c.s);el.value=c.s}}
+  else{const c=checkNum(k,el.value);if(c.s!==el.value){setPath(k,c.s);el.value=c.s}
+    if(/^meas\.[^.]+\.w$/.test(k)&&num(c.s)>0)PET.react('weigh');if(/^meas\.[^.]+\.sleep$/.test(k)&&num(c.s)>=7)PET.react('sleepok')}
   EDIT=null;save();setTimeout(()=>{const a=document.activeElement;if(!(a&&a.dataset&&a.dataset.k))render()},0)});
 document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.labsel){S.labSel=e.target.value;save();render()}});
 // usuń dni starsze niż 60

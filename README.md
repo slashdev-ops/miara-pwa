@@ -10,6 +10,19 @@ Działa offline, instaluje się na ekranie początkowym telefonu i nie wysyła d
 Health data never leaves the device. Hardened with a strict Content Security Policy and security headers,
 tested in GitHub Actions, deployable on Vercel or nginx.
 
+## Zwierzak i postęp
+
+Gąska albo kaczuszka w stylu Tamagotchi reaguje na wpisy użytkownika. Trzy wskaźniki (Najedzenie, Energia, Humor)
+wynikają z zapisanych posiłków, snu, ruchu i nawyków, nigdy z wagi ani kalorii. W dni bez wpisów wskaźniki spadają,
+po powrocie odrabiają straty w 1-2 dni; zwierzak nie umiera i nie cofa się w rozwoju (jajo, pisklę, młoda, dorosła).
+Ekran postępu pokazuje dzień, tydzień i całość od startu z odznakami kamieni milowych; sylwetka z obwodów jest opcjonalna.
+
+**Tryb pokazowy:** [miara-pwa.vercel.app/#demo](https://miara-pwa.vercel.app/#demo) przechodzi przez wszystkie stany
+na danych przykładowych, bez zapisu w telefonie.
+
+Stan zwierzaka nie jest zapisywany: liczy go czysta funkcja `PET.state(ctx)` w `pet.js` z danych aplikacji,
+więc moduł jest testowany bez przeglądarki (`tests/smoke.js`). Projekt i plan: `docs/specs/`, `docs/plans/`.
+
 ## Założenia projektu
 
 | Obszar | Rozwiązanie |
@@ -44,6 +57,7 @@ tested in GitHub Actions, deployable on Vercel or nginx.
 | --- | --- |
 | `index.html` | szkielet strony, manifest, ikony |
 | `app.js`, `app.css` | logika i wygląd aplikacji |
+| `pet.js` | zwierzak: stan, rysunek SVG, reakcje, ekran postępu, tryb pokazowy |
 | `sw.js`, `sw-register.js` | działanie offline; rejestracja tylko na HTTPS lub localhost |
 | `manifest.webmanifest`, `icons/` | instalacja na ekranie początkowym |
 | `brand/` | logo w SVG: logotyp jasny i ciemny, znak, ikona, favicon |

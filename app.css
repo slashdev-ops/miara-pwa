@@ -1,7 +1,7 @@
 :root{
   --bg:#ECF1EE; --surface:#FFFFFF; --surface2:#DFE8E3; --ink:#16231C; --muted:#56675D; --line:#C9D6CE;
   --green:#2B6A55; --on-green:#FFFFFF; --plum:#7B3B6A; --warn-ink:#7A4A00; --warn-bg:#FCEFD3;
-  --p:#2B6A55; --f:#C08A2E; --c:#5563B0;
+  --p:#2B6A55; --f:#C08A2E; --c:#5563B0; --duck:#F2D45C;
   color-scheme:light;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
@@ -11,14 +11,14 @@
   :root:not([data-theme="light"]){
     --bg:#0F1613; --surface:#18221D; --surface2:#22302A; --ink:#E4EDE8; --muted:#9BB0A4; --line:#2F4038;
     --green:#62B597; --on-green:#0B1510; --plum:#D691C5; --warn-ink:#F4C47A; --warn-bg:#3A2B12;
-    --p:#62B597; --f:#E2AE55; --c:#93A0EE;
+    --p:#62B597; --f:#E2AE55; --c:#93A0EE; --duck:#CDB04A;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0F1613; --surface:#18221D; --surface2:#22302A; --ink:#E4EDE8; --muted:#9BB0A4; --line:#2F4038;
   --green:#62B597; --on-green:#0B1510; --plum:#D691C5; --warn-ink:#F4C47A; --warn-bg:#3A2B12;
-  --p:#62B597; --f:#E2AE55; --c:#93A0EE;
+  --p:#62B597; --f:#E2AE55; --c:#93A0EE; --duck:#CDB04A;
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:inherit}
@@ -148,4 +148,67 @@ details.fold>summary::-webkit-details-marker{display:none}
 details.fold>summary::after{content:'+';color:var(--muted);font-size:20px}
 details.fold[open]>summary::after{content:'\2212'}
 details.fold .panel,details.fold .meal{margin:0;border-radius:0}
-@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}.pet,.pet *{animation:none!important}}
+
+/* Zwierzak (pet.js): kolory z motywu, animacje wyłączane przy prefers-reduced-motion */
+.pet{width:96px;height:96px;flex:none;overflow:visible}
+.pet.big{width:180px;height:180px;display:block;margin:0 auto}
+.pet .shadow{fill:var(--line);opacity:.6}
+.pet{--goose:#F7F8F5;--goose-line:#C3CFC8;--pet-eye:#1B2420}
+.pet .body,.pet .head,.pet .egg{fill:var(--goose);stroke:var(--goose-line);stroke-width:2}
+.pet .neck-o{fill:none;stroke:var(--goose-line);stroke-width:17;stroke-linecap:round}
+.pet .neck{fill:none;stroke:var(--goose);stroke-width:14;stroke-linecap:round}
+.pet .bubble circle{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.pet .bubble .bowl{fill:var(--f)}
+.pet-kaczka .body,.pet-kaczka .head{fill:var(--duck);stroke:var(--f)}
+.pet .wing{fill:#E3E9E5}
+.pet-kaczka .wing{fill:var(--f);opacity:.35}
+.pet .beak,.pet .feet{fill:var(--f)}
+.pet .crack{fill:none;stroke:#8A9A90;stroke-width:2;stroke-linejoin:round}
+.pet .eye{fill:var(--pet-eye)}
+.pet .glint{fill:#FFFFFF}
+.pet .lid{fill:none;stroke:var(--pet-eye);stroke-width:2.2;stroke-linecap:round}
+.pet .zz{fill:var(--muted);font:700 12px system-ui,sans-serif;animation:petz 2.4s ease-in-out infinite}
+.pet .z2{animation-delay:1.2s}
+.pet .acc.szalik{fill:var(--plum)}
+.pet .acc.czapka{fill:var(--c)}
+.pet .acc.okulary{fill:none;stroke:var(--pet-eye);stroke-width:2}
+.pet .acc.korona{fill:var(--f);stroke:var(--warn-ink);stroke-width:1}
+.pet .conf{animation:petconf 1.6s ease-out infinite}
+.pet .c0{fill:var(--p)}.pet .c1{fill:var(--f)}.pet .c2{fill:var(--c)}.pet .c3{fill:var(--plum)}
+.pet .figure{transform-origin:60px 104px;transform-box:view-box;animation:petbreath 3.2s ease-in-out infinite}
+.pet .eyes{transform-box:fill-box;transform-origin:center;animation:petblink 4s infinite}
+.pet-sleep .figure{animation-duration:5s}
+.pet-sad .figure{animation:none;transform:rotate(-4deg)}
+.pet-celebrate .figure{animation:pethop .6s ease-in-out 3}
+.pet.react-meal .figure{animation:petpeck .35s ease-in-out 4}
+.pet.react-train .figure{animation:pethop .45s ease-in-out 3}
+.pet.react-weigh .figure{animation:petnod .5s ease-in-out 2}
+.pet.react-sleepok .figure{animation:petstretch .8s ease-in-out 1}
+.petfx{position:absolute;left:50%;top:0;pointer-events:none;font-weight:700;color:var(--green);animation:petfloat 1.4s ease-out forwards}
+@keyframes petbreath{50%{transform:scaleY(1.035)}}
+@keyframes petblink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes pethop{50%{transform:translateY(-12px)}}
+@keyframes petpeck{50%{transform:rotate(10deg)}}
+@keyframes petnod{50%{transform:rotate(-6deg)}}
+@keyframes petstretch{50%{transform:scale(1.08,.94)}}
+@keyframes petconf{from{transform:translateY(0);opacity:1}to{transform:translateY(60px) rotate(160deg);opacity:0}}
+@keyframes petz{0%{opacity:0;transform:translateY(4px)}50%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+@keyframes petfloat{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-40px)}}
+.petcard{position:relative;display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 14px;margin:0 0 12px;color:var(--ink);font:inherit;cursor:pointer}
+.petinfo{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.petbars{display:grid;gap:5px;margin-top:4px}
+.petbarrow{display:grid;grid-template-columns:86px 1fr;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.petbar{height:7px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.petbar i{display:block;height:100%;background:var(--green);border-radius:4px}
+.petbar.low i{background:var(--warn-ink)}
+.petstage{position:relative;text-align:center;padding:8px 0 4px}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:16px}
+.badge{padding:10px 12px;border-radius:12px;background:var(--surface2);color:var(--muted);font-size:14px}
+.badge.got{background:var(--green);color:var(--on-green)}
+.field input#petname{width:170px;text-align:left}
+.petbody{padding:12px 16px;text-align:center}
+.petbody-svg{width:160px;height:200px}
+.petbody-svg .body-head{fill:none;stroke:var(--muted);stroke-width:1.5}
+.petbody-svg .body-start{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3;stroke-linejoin:round}
+.petbody-svg .body-now{fill:var(--green);fill-opacity:.14;stroke:var(--green);stroke-width:2;stroke-linejoin:round}
