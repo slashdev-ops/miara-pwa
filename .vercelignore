@@ -1,0 +1,8 @@
+# Na Vercel trafiają tylko pliki aplikacji; narzędzia, testy i konfiguracja serwera zostają w repozytorium.
+.github
+tests
+tools
+deploy
+README.md
+WDROZENIE.md
+*.py

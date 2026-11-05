@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Miara: plan posiłków, ruch i pomiary w jednym miejscu. Dane zostają w telefonie.">
+<meta name="theme-color" content="#2B6A55" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1613" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Miara">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Miara</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="brand/miara-favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header><h1 id="title">Posiłki</h1><span class="who" id="who"></span></header>
+<main id="main"></main>
+<div class="toast" id="toast"></div>
+<nav class="tabs" id="tabs"></nav>
+<noscript><p style="padding:16px">Miara wymaga włączonego JavaScriptu.</p></noscript>
+<script src="app.js"></script>
+<script src="sw-register.js"></script>
+</body>
+</html>
