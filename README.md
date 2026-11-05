@@ -4,6 +4,8 @@ Aplikacja webowa (PWA) wspierająca redukcję masy ciała: plan posiłków z prz
 pomiary, wyniki badań, 12-tygodniowy program ćwiczeń kolana, przegląd tygodnia i widok „Mój wpływ”.
 Działa offline, instaluje się na ekranie początkowym telefonu i nie wysyła danych poza urządzenie.
 
+**Wersja na żywo:** https://miara-pwa.vercel.app (najlepiej na telefonie: Safari, „Dodaj do ekranu początkowego”)
+
 **EN summary:** offline-first Progressive Web App in plain JavaScript (no framework, no npm dependencies).
 Health data never leaves the device. Hardened with a strict Content Security Policy and security headers,
 tested in GitHub Actions, deployable on Vercel or nginx.
