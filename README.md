@@ -44,6 +44,17 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 - **Trening z zegarka:** czas i kalorie z zegarka sportowego zamiast wyboru rodzaju treningu; do bilansu trafia netto,
   czyli kalorie z zegarka minus spoczynek w tym czasie. Pola mają limity i tę samą walidację co reszta aplikacji.
 
+## Przewodnik i wpisy bez klawiatury
+
+- **Pomoc** w nagłówku każdego ekranu: lista „Co chcesz zrobić?”; każde zadanie przenosi na właściwy ekran,
+  rozwija zwinięty fragment i podświetla miejsce. Test sprawdza, że każdy cel istnieje na ekranie docelowym.
+- **Komunikaty** trwają 3-12 s zależnie od długości tekstu, mają przycisk zamknięcia i przejścia do następnego kroku;
+  w Ustawieniach można je wydłużyć albo zostawić do zamknięcia (WCAG 2.2.1, `role="status"`).
+- **Pola liczbowe** mają przyciski − i +: puste pole zaczyna od ostatniej wartości (waga z ostatniego ważenia),
+  krok zależy od pola, limity jak przy wpisywaniu. Czas treningu jednym dotknięciem: 30, 45, 60, 90 min.
+- **Gotuję to dziś** w przepisie wstawia danie do planu dnia; plan tygodnia ma dwa rytmy: obiady do 20 min
+  w dni robocze i jedno większe danie w weekend, z filtrem „Na co dzień” i „Na weekend”.
+
 ## Założenia projektu
 
 | Obszar | Rozwiązanie |
