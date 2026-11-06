@@ -17,12 +17,13 @@ const sandbox = {
   localStorage: { getItem: () => null, setItem() {} },
   navigator: {},
   console, setTimeout, clearTimeout, setInterval, clearInterval, Date, Math, JSON, Promise, URL, Blob,
+  crypto: globalThis.crypto, TextEncoder, TextDecoder, btoa, atob,
 };
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -278,7 +279,7 @@ tryc('wskazówki: Ustawienia przywracają wskazówki', () => { view('set', { ...
 
 // Rada 06.11.2026 (ekran startowy): dzień z bólem głowy i karty „Co się dzieje”
 const dk = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-const BASE = (o) => ({ ...CLEAN(), pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, tips: { day: true, health: true, set: true }, pain: {}, cardsOk: {}, discreet: false, once: false, visit: null, ...o });
+const BASE = (o) => ({ ...CLEAN(), consent: null, kopia: null, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, tips: { day: true, health: true, set: true }, pain: {}, cardsOk: {}, discreet: false, once: false, visit: null, ...o });
 const cards = (h) => (h.match(/data-card="[a-z_]+"/g) || []).map((x) => x.slice(11, -1));
 const ONCE_OK = () => [{ kind: 'm', id: 's1', label: 'x', k: 400, p: 20, f: 5, c: 30 }];
 tryc('ból: Mój dzień ma przycisk Boli mnie głowa', () => view('day', BASE()).includes('data-pain="today"'));
@@ -328,6 +329,93 @@ tryc('favicon: zaokrąglony kafel i grubsza kreska niż ikona', () => /<rect[^>]
 tryc('ikony z wersją omijają pamięć podręczną (brand/ i icons/ mają max-age 7 dni)', () => /<link rel="icon" href="brand\/miara-favicon\.svg\?v=2"/.test(html) && /<link rel="apple-touch-icon" href="icons\/apple-touch-icon\.png\?v=2"/.test(html) && (fs.readFileSync(path.join(root, 'manifest.webmanifest'), 'utf8').match(/\.png\?v=2"/g) || []).length === 3);
 
 tryc('ikona ekranu początkowego = favicon bez zaokrąglenia (iOS sam zaokrągla rogi)', () => brandSvg('miara-ikona.svg') === brandSvg('miara-favicon.svg').replace(' rx="22"', ''));
+// Rada 06.11.2026 (kopia w chmurze): zgoda zgodna z RODO i szyfrowanie kopii w telefonie (AES-GCM, PBKDF2)
+let chain = Promise.resolve();
+const tryAsync = (name, fn) => { chain = chain.then(fn).then((r) => check(name, r, ''), (e) => check(name, false, e.message)); };
+tryc('zgoda: treść z wersją, celem, prawami i niezaznaczonym polem', () => { const h = view('set', BASE({ consent: null, kopia: null })); return h.includes('Zgoda na zaszyfrowaną kopię danych dla rady (wersja 1)') && h.includes('wycofać') && h.includes('dane o zdrowiu') && /<input type="checkbox" id="c_ok">/.test(h) && h.includes('data-consent="1"'); });
+tryc('zgoda: bez zaznaczenia nie zapisuje, z zaznaczeniem zapisuje wersję i datę', () => {
+  view('set', BASE({ consent: null, kopia: null })); els.c_ok = { checked: false }; click({ consent: '1' }); const none = !T.S().consent;
+  els.c_ok = { checked: true }; click({ consent: '1' }); const c = T.S().consent; return none && c.v === 1 && /^\d{4}-\d{2}-\d{2}T/.test(c.at);
+});
+tryc('zgoda: nowa wersja treści wymaga ponownej zgody', () => view('set', BASE({ consent: { v: 0, at: '2026-01-01T00:00:00Z' } })).includes('data-consent="1"'));
+tryc('zgoda: wycofanie usuwa zgodę i ustawienia klucza', () => { view('set', BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: { salt: 'eA==', at: '2026-11-06T10:00:00Z' } })); click({ consentoff: '1' }); return !T.S().consent && !T.S().kopia; });
+const PASS = 'dobre-haslo-123', TXT = JSON.stringify({ app: 'talerz-i-trening', v: 1, data: { kg: '80', pain: { '2026-11-06': { aura: true } }, n: 'zażółć' } });
+tryAsync('szyfrowanie: odszyfrowanie hasłem daje te same dane, szyfrogram bez treści', async () => {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), key = await T.kopiaDerive(PASS, salt), env = await T.kopiaEncrypt(key, salt, TXT);
+  return (await T.kopiaDecrypt(PASS, env)) === TXT && !env.includes('aura') && JSON.parse(env).app === 'miara-szyfr' && JSON.parse(env).iter >= 600000;
+});
+tryAsync('szyfrowanie: złe hasło daje czytelny błąd', async () => {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), env = await T.kopiaEncrypt(await T.kopiaDerive(PASS, salt), salt, TXT);
+  try { await T.kopiaDecrypt('zle-haslo-0000', env); return false; } catch (e) { return e.message.startsWith('Złe hasło'); }
+});
+tryAsync('szyfrowanie: ta sama treść daje za każdym razem inny szyfrogram', async () => {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), key = await T.kopiaDerive(PASS, salt);
+  return JSON.parse(await T.kopiaEncrypt(key, salt, TXT)).data !== JSON.parse(await T.kopiaEncrypt(key, salt, TXT)).data;
+});
+tryAsync('klucz: hasło za krótkie albo różne w dwóch polach odrzucone', async () => {
+  view('set', BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: null }));
+  els.k_p1 = { value: 'krotkie' }; els.k_p2 = { value: 'krotkie' }; let a = false, b = false;
+  try { await T.kopiaSetup(); } catch (e) { a = e.message.includes('12 znaków'); }
+  els.k_p1 = { value: PASS }; els.k_p2 = { value: PASS + 'x' };
+  try { await T.kopiaSetup(); } catch (e) { b = e.message.includes('różnią'); }
+  return a && b && !T.S().kopia;
+});
+tryAsync('klucz: zapisany w telefonie, hasło nigdzie nie zostaje, pola wyczyszczone', async () => {
+  view('set', BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: null })); els.k_p1 = { value: PASS }; els.k_p2 = { value: PASS }; els.k_tok = { value: 'tajny-token-urzadzenia-123456' };
+  await T.kopiaSetup(); const k = await T.KS.get();
+  return !!T.S().kopia && !!T.S().kopia.salt && !!k && !JSON.stringify(T.S()).includes(PASS) && els.k_p1.value === '' && els.k_p2.value === '';
+});
+tryAsync('klucz: bez zgody nie da się ustawić', async () => { view('set', BASE({ consent: null, kopia: null })); els.k_p1 = { value: PASS }; els.k_p2 = { value: PASS }; try { await T.kopiaSetup(); return false; } catch (e) { return e.message.includes('zgod'); } });
+
+// Funkcja Vercel api/kopia.js: token, kształt koperty, zapis prywatny, limity, 4 ostatnie kopie
+const API = require(path.join(root, 'api', 'kopia.js'));
+const TOK = 'tajny-token-urzadzenia-123456';
+const ENV1 = { app: 'miara-szyfr', v: 1, kdf: 'PBKDF2-SHA-256', iter: 600000, salt: 'AAAA', iv: 'AAAA', consentV: 1, created: '2026-11-06T10:00:00Z', data: 'QUJD' };
+const fakeRes = () => ({ statusCode: 0, headers: {}, body: '', setHeader(k, v) { this.headers[k.toLowerCase()] = v; }, end(b) { this.body = b; } });
+const mkApi = (blobs = []) => { const calls = { put: [], del: [] }; return { calls, h: API.makeHandler({ token: () => TOK, list: async () => ({ blobs }), put: async (n, b, o) => { calls.put.push({ n, b, o }); }, del: async (u) => { calls.del.push(u); } }) }; };
+const apiReq = (o) => ({ method: 'POST', headers: { 'x-miara-token': TOK, 'content-type': 'application/json' }, body: ENV1, ...o });
+const ago = (d) => new Date(Date.now() - d * 864e5).toISOString();
+tryAsync('api: tylko POST', async () => { const { h } = mkApi(), r = fakeRes(); await h(apiReq({ method: 'GET' }), r); return r.statusCode === 405 && r.headers.allow === 'POST'; });
+tryAsync('api: zły albo brak tokenu = 401 i nic nie zapisuje', async () => {
+  const { h, calls } = mkApi(), r1 = fakeRes(), r2 = fakeRes();
+  await h(apiReq({ headers: { 'x-miara-token': 'zly', 'content-type': 'application/json' } }), r1); await h(apiReq({ headers: { 'content-type': 'application/json' } }), r2);
+  return r1.statusCode === 401 && r2.statusCode === 401 && calls.put.length === 0;
+});
+tryAsync('api: odrzuca jawną treść, za mało iteracji i dane spoza base64', async () => API.validEnvelope(ENV1) && !API.validEnvelope({ ...ENV1, meas: { w: 80 } }) && !API.validEnvelope({ ...ENV1, iter: 1000 }) && !API.validEnvelope({ ...ENV1, data: '{"kg":80}' }) && !API.validEnvelope([ENV1]));
+tryAsync('api: koperta z jawną treścią = 422', async () => { const { h, calls } = mkApi(), r = fakeRes(); await h(apiReq({ body: { ...ENV1, pain: {} } }), r); return r.statusCode === 422 && calls.put.length === 0; });
+tryAsync('api: zapis prywatny pod losową nazwą, bez pamięci podręcznej', async () => {
+  const { h, calls } = mkApi(), r = fakeRes(); await h(apiReq(), r); const c = calls.put[0];
+  return r.statusCode === 201 && c.o.access === 'private' && /^kopie\/\d{4}-\d{2}-\d{2}-[0-9a-f]{32}\.json$/.test(c.n) && JSON.parse(c.b).data === 'QUJD' && r.headers['cache-control'] === 'no-store';
+});
+tryAsync('api: trzyma 4 ostatnie kopie (usuwa najstarszą)', async () => {
+  const blobs = [10, 11, 12, 13].map((d) => ({ url: 'u' + d, uploadedAt: ago(d) })), { h, calls } = mkApi(blobs), r = fakeRes();
+  await h(apiReq(), r); return r.statusCode === 201 && calls.del.length === 1 && calls.del[0].length === 1 && calls.del[0][0] === 'u13';
+});
+tryAsync('api: limit 3 wysyłek na dobę = 429', async () => { const { h, calls } = mkApi([1, 2, 3].map((i) => ({ url: 'n' + i, uploadedAt: ago(0.1 * i) }))), r = fakeRes(); await h(apiReq(), r); return r.statusCode === 429 && calls.put.length === 0; });
+tryAsync('api: kopia powyżej 1 MB = 413', async () => { const { h } = mkApi(), r = fakeRes(); await h(apiReq({ body: JSON.stringify({ ...ENV1, data: 'A'.repeat(1100000) }) }), r); return r.statusCode === 413; });
+
+// Aplikacja: token wysyłki, termin co 7 dni, wysyłka zaszyfrowanej kopii
+const KOPIA_OK = () => BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: { salt: 'AAAAAAAAAAAAAAAAAAAAAA==', at: '2026-11-06T10:00:00Z', token: TOK } });
+tryAsync('klucz: bez tokenu wysyłki odrzucone', async () => { view('set', BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: null })); els.k_p1 = { value: PASS }; els.k_p2 = { value: PASS }; els.k_tok = { value: '' }; try { await T.kopiaSetup(); return false; } catch (e) { return e.message.includes('token'); } });
+tryc('kopia: token wysyłki nie trafia do pliku kopii', () => { view('set', KOPIA_OK()); return !T.bkBuild(false).includes(TOK) && T.S().kopia.token === TOK; });
+tryc('kopia: termin co 7 dni, tylko przy zgodzie', () => {
+  const st = (o) => { view('set', KOPIA_OK()); Object.assign(T.S().kopia, o.kopia || {}); if ('consent' in o) T.S().consent = o.consent; return T.kopiaDue(); };
+  return st({}) === true && st({ kopia: { sent: ago(8) } }) === true && st({ kopia: { sent: ago(2) } }) === false && st({ consent: null }) === false;
+});
+tryAsync('kopia: wysyłka szyfruje, wysyła z tokenem i zapisuje datę', async () => {
+  view('set', KOPIA_OK()); const salt = crypto.getRandomValues(new Uint8Array(16)); await T.KS.set(await T.kopiaDerive(PASS, salt)); T.S().kopia.salt = Buffer.from(salt).toString('base64');
+  let call = null; sandbox.fetch = async (u, o) => { call = { u, o }; return { ok: true, json: async () => ({ ok: true }) }; };
+  try { await T.kopiaSend(); } finally { delete sandbox.fetch; }
+  const body = JSON.parse(call.o.body);
+  return call.u === 'api/kopia' && call.o.method === 'POST' && call.o.headers['x-miara-token'] === TOK && body.app === 'miara-szyfr' && !call.o.body.includes('"kg"') && JSON.parse(await T.kopiaDecrypt(PASS, call.o.body)).app === 'talerz-i-trening' && !!T.S().kopia.sent;
+});
+tryAsync('kopia: błąd serwera zapisany do pokazania, bez daty wysyłki', async () => {
+  view('set', KOPIA_OK()); const salt = crypto.getRandomValues(new Uint8Array(16)); await T.KS.set(await T.kopiaDerive(PASS, salt));
+  sandbox.fetch = async () => ({ ok: false, json: async () => ({ error: 'Brak uprawnień' }) });
+  let r; try { r = await T.kopiaAuto(); } finally { delete sandbox.fetch; }
+  return r === false && T.S().kopia.err.includes('Brak uprawnień') && !T.S().kopia.sent && view('set').includes('Brak uprawnień');
+});
+
 // Rada 06.11.2026 (do czasu wizyty): umówiona wizyta, karta z 3 działaniami na dziś, lista na wizytę z dziennika
 const ahead = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 tryc('wizyta: karta z liczbą dni do wizyty i listą na wizytę', () => { const h = view('day', BASE({ visit: { who: 'ginekolog', date: ahead(12) } })); return cards(h).includes('wizyta') && h.includes('za 12 dni') && h.includes('data-tab="visit"'); });
@@ -348,5 +436,7 @@ tryc('lista na wizytę: za mało dni cyklu daje „za mało danych”', () => vi
 tryc('wizyta: kopia bez danych zdrowotnych nie zawiera wizyty', () => { view('health', BASE({ visit: { who: 'x', date: ahead(5) } })); return !JSON.parse(T.bkBuild(true)).data.visit && !!JSON.parse(T.bkBuild(false)).data.visit; });
 
 tryc('lista na wizytę: ekran ma tytuł w nagłówku', () => { view('visit', BASE()); return (els.title || {}).textContent === 'Lista na wizytę'; });
-console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
-process.exit(bad ? 1 : 0);
+chain.then(() => {
+  console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
+  process.exit(bad ? 1 : 0);
+});
