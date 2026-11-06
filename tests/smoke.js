@@ -17,12 +17,13 @@ const sandbox = {
   localStorage: { getItem: () => null, setItem() {} },
   navigator: {},
   console, setTimeout, clearTimeout, setInterval, clearInterval, Date, Math, JSON, Promise, URL, Blob,
+  crypto: globalThis.crypto, TextEncoder, TextDecoder, btoa, atob,
 };
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -278,7 +279,7 @@ tryc('wskazówki: Ustawienia przywracają wskazówki', () => { view('set', { ...
 
 // Rada 06.11.2026 (ekran startowy): dzień z bólem głowy i karty „Co się dzieje”
 const dk = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-const BASE = (o) => ({ ...CLEAN(), pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, tips: { day: true, health: true, set: true }, pain: {}, cardsOk: {}, discreet: false, once: false, ...o });
+const BASE = (o) => ({ ...CLEAN(), consent: null, kopia: null, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, tips: { day: true, health: true, set: true }, pain: {}, cardsOk: {}, discreet: false, once: false, ...o });
 const cards = (h) => (h.match(/data-card="[a-z_]+"/g) || []).map((x) => x.slice(11, -1));
 const ONCE_OK = () => [{ kind: 'm', id: 's1', label: 'x', k: 400, p: 20, f: 5, c: 30 }];
 tryc('ból: Mój dzień ma przycisk Boli mnie głowa', () => view('day', BASE()).includes('data-pain="today"'));
@@ -328,5 +329,45 @@ tryc('favicon: zaokrąglony kafel i grubsza kreska niż ikona', () => /<rect[^>]
 tryc('ikony z wersją omijają pamięć podręczną (brand/ i icons/ mają max-age 7 dni)', () => /<link rel="icon" href="brand\/miara-favicon\.svg\?v=2"/.test(html) && /<link rel="apple-touch-icon" href="icons\/apple-touch-icon\.png\?v=2"/.test(html) && (fs.readFileSync(path.join(root, 'manifest.webmanifest'), 'utf8').match(/\.png\?v=2"/g) || []).length === 3);
 
 tryc('ikona ekranu początkowego = favicon bez zaokrąglenia (iOS sam zaokrągla rogi)', () => brandSvg('miara-ikona.svg') === brandSvg('miara-favicon.svg').replace(' rx="22"', ''));
-console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
-process.exit(bad ? 1 : 0);
+// Rada 06.11.2026 (kopia w chmurze): zgoda zgodna z RODO i szyfrowanie kopii w telefonie (AES-GCM, PBKDF2)
+let chain = Promise.resolve();
+const tryAsync = (name, fn) => { chain = chain.then(fn).then((r) => check(name, r, ''), (e) => check(name, false, e.message)); };
+tryc('zgoda: treść z wersją, celem, prawami i niezaznaczonym polem', () => { const h = view('set', BASE({ consent: null, kopia: null })); return h.includes('Zgoda na zaszyfrowaną kopię danych dla rady (wersja 1)') && h.includes('wycofać') && h.includes('dane o zdrowiu') && /<input type="checkbox" id="c_ok">/.test(h) && h.includes('data-consent="1"'); });
+tryc('zgoda: bez zaznaczenia nie zapisuje, z zaznaczeniem zapisuje wersję i datę', () => {
+  view('set', BASE({ consent: null, kopia: null })); els.c_ok = { checked: false }; click({ consent: '1' }); const none = !T.S().consent;
+  els.c_ok = { checked: true }; click({ consent: '1' }); const c = T.S().consent; return none && c.v === 1 && /^\d{4}-\d{2}-\d{2}T/.test(c.at);
+});
+tryc('zgoda: nowa wersja treści wymaga ponownej zgody', () => view('set', BASE({ consent: { v: 0, at: '2026-01-01T00:00:00Z' } })).includes('data-consent="1"'));
+tryc('zgoda: wycofanie usuwa zgodę i ustawienia klucza', () => { view('set', BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: { salt: 'eA==', at: '2026-11-06T10:00:00Z' } })); click({ consentoff: '1' }); return !T.S().consent && !T.S().kopia; });
+const PASS = 'dobre-haslo-123', TXT = JSON.stringify({ app: 'talerz-i-trening', v: 1, data: { kg: '80', pain: { '2026-11-06': { aura: true } }, n: 'zażółć' } });
+tryAsync('szyfrowanie: odszyfrowanie hasłem daje te same dane, szyfrogram bez treści', async () => {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), key = await T.kopiaDerive(PASS, salt), env = await T.kopiaEncrypt(key, salt, TXT);
+  return (await T.kopiaDecrypt(PASS, env)) === TXT && !env.includes('aura') && JSON.parse(env).app === 'miara-szyfr' && JSON.parse(env).iter >= 600000;
+});
+tryAsync('szyfrowanie: złe hasło daje czytelny błąd', async () => {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), env = await T.kopiaEncrypt(await T.kopiaDerive(PASS, salt), salt, TXT);
+  try { await T.kopiaDecrypt('zle-haslo-0000', env); return false; } catch (e) { return e.message.startsWith('Złe hasło'); }
+});
+tryAsync('szyfrowanie: ta sama treść daje za każdym razem inny szyfrogram', async () => {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), key = await T.kopiaDerive(PASS, salt);
+  return JSON.parse(await T.kopiaEncrypt(key, salt, TXT)).data !== JSON.parse(await T.kopiaEncrypt(key, salt, TXT)).data;
+});
+tryAsync('klucz: hasło za krótkie albo różne w dwóch polach odrzucone', async () => {
+  view('set', BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: null }));
+  els.k_p1 = { value: 'krotkie' }; els.k_p2 = { value: 'krotkie' }; let a = false, b = false;
+  try { await T.kopiaSetup(); } catch (e) { a = e.message.includes('12 znaków'); }
+  els.k_p1 = { value: PASS }; els.k_p2 = { value: PASS + 'x' };
+  try { await T.kopiaSetup(); } catch (e) { b = e.message.includes('różnią'); }
+  return a && b && !T.S().kopia;
+});
+tryAsync('klucz: zapisany w telefonie, hasło nigdzie nie zostaje, pola wyczyszczone', async () => {
+  view('set', BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: null })); els.k_p1 = { value: PASS }; els.k_p2 = { value: PASS };
+  await T.kopiaSetup(); const k = await T.KS.get();
+  return !!T.S().kopia && !!T.S().kopia.salt && !!k && !JSON.stringify(T.S()).includes(PASS) && els.k_p1.value === '' && els.k_p2.value === '';
+});
+tryAsync('klucz: bez zgody nie da się ustawić', async () => { view('set', BASE({ consent: null, kopia: null })); els.k_p1 = { value: PASS }; els.k_p2 = { value: PASS }; try { await T.kopiaSetup(); return false; } catch (e) { return e.message.includes('zgod'); } });
+
+chain.then(() => {
+  console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
+  process.exit(bad ? 1 : 0);
+});

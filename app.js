@@ -599,7 +599,7 @@ function bkHtml(){
   h+=fold('bkpaste','albo wklej tekst kopii','<textarea id="bk_text" rows="3" aria-label="Tekst kopii" style="width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)"></textarea><p><button class="btn ghost" data-bkpaste="1">Sprawdź kopię</button></p>');
   if(BK_PENDING)h+=`<div class="note warn"><b>Kopia z ${fmtDate(String(BK_PENDING.created||'').slice(0,10))}${BK_PENDING.noHealth?', bez danych zdrowotnych':''}:</b> ${bkSummary(BK_PENDING.data)}. Wczytanie zastąpi wszystkie dane w tym telefonie.<p><button class="btn" data-bkapply="1">Zastąp dane</button> <button class="btn ghost" data-bkcancel="1">Anuluj</button></p></div>`;
   h+='<p class="small muted">Plik nie jest zaszyfrowany i zawiera dane zdrowotne. Trzymaj go w prywatnym folderze. Włączona Zaawansowana ochrona danych w iCloud szyfruje iCloud Drive tak, że klucze mają tylko Twoje urządzenia (wiedza ogólna, niesprawdzone).</p></div>';
-  return h;
+  return h+radaKopiaHtml();
 }
 document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'||!t.files||!t.files[0])return;const r=new FileReader();r.onload=()=>{const o=bkParse(String(r.result));if(!o){BK_PENDING=null;toast('To nie jest kopia tej aplikacji');return}BK_PENDING=o;render()};r.readAsText(t.files[0])});
 
@@ -608,7 +608,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'80',cm:'170',age:'35',sex:'K',goal:'72',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,tips:{},pain:{},cardsOk:{},discreet:false,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),JSON.parse(r));}catch(e){}return clone(DEF)}
@@ -782,6 +782,39 @@ function cardsHtml(where){const all=CARDS.filter(c=>c.when());
 function painHtml(){const k=todayKey(),p=painAt(k),py=painAt(nAgo(1));
   if(!p)return `<p class="painrow" id="painrow"><button class="btn ghost small" data-pain="today">Boli mnie głowa</button>${py?'':' <button class="btn ghost small" data-pain="yday">Wczoraj bolała mnie głowa</button>'}</p>`;
   return `<div class="note painrow" id="painrow"><b>Dzień z bólem głowy.</b> Dziś bez celu deficytu: jedz regularnie i pij wodę. Seria się nie przerywa.<p class="cardact"><button class="btn small${p.aura?'':' ghost'}" data-painaura="1" aria-pressed="${!!p.aura}">Była aura</button><button class="btn small${p.med?'':' ghost'}" data-painmed="1" aria-pressed="${!!p.med}">Lek przyjęty</button><button class="btn ghost small" data-painoff="1">Cofnij</button></p></div>`}
+// ---------- Kopia dla rady: zgoda (RODO art. 7 i 9 ust. 2 lit. a) i szyfrowanie w telefonie (AES-GCM 256, klucz z hasła PBKDF2) ----------
+const CONSENT_V=1,KDF_ITER=600000;
+const CONSENT_TXT=['<b>Co:</b> wszystkie dane z Miary w tym telefonie, w tym dane o zdrowiu (waga, sen, cykl, ból głowy, wizyty).',
+  '<b>Po co:</b> przegląd przez właściciela aplikacji i radę projektu, żeby dobrać wskazówki i ulepszać aplikację. Nie do innych celów i nie dla innych osób.',
+  '<b>Jak:</b> kopia jest szyfrowana w tym telefonie hasłem, które zna tylko właściciel aplikacji. Na serwerze (Vercel) leży wyłącznie zaszyfrowany plik.',
+  '<b>Jak długo:</b> najwyżej 4 ostatnie kopie; każda jest usuwana po przeglądzie.',
+  '<b>Twoje prawa:</b> zgoda jest dobrowolna. Możesz ją wycofać w każdej chwili w tym miejscu; wycofanie zatrzymuje wysyłanie i jest prośbą o usunięcie kopii. Nie wpływa na zgodność z prawem wcześniejszego przetwarzania. Masz prawo dostępu do danych, ich sprostowania i usunięcia.'];
+function b64(u){let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)}
+function unb64(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+// Klucz w telefonie: obiekt CryptoKey bez możliwości odczytu (IndexedDB), w testach w pamięci
+function idbKey(mode,fn){return new Promise((res,rej)=>{const o=indexedDB.open('miara-klucz',1);o.onupgradeneeded=()=>o.result.createObjectStore('k');o.onerror=()=>rej(o.error);o.onsuccess=()=>{const tx=o.result.transaction('k',mode),r=fn(tx.objectStore('k'));tx.oncomplete=()=>res(r&&r.result);tx.onerror=()=>rej(tx.error)}})}
+const KS={mem:null,get:()=>globalThis.indexedDB?idbKey('readonly',s=>s.get('kopia')):Promise.resolve(KS.mem),
+  set:k=>globalThis.indexedDB?idbKey('readwrite',s=>s.put(k,'kopia')):Promise.resolve(KS.mem=k),
+  del:()=>globalThis.indexedDB?idbKey('readwrite',s=>s.delete('kopia')):Promise.resolve(KS.mem=null)};
+async function kopiaDerive(pass,salt,iter){const c=crypto.subtle,base=await c.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);
+  return c.deriveKey({name:'PBKDF2',hash:'SHA-256',salt,iterations:iter||KDF_ITER},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function kopiaEncrypt(key,salt,text){const iv=crypto.getRandomValues(new Uint8Array(12)),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(text));
+  return JSON.stringify({app:'miara-szyfr',v:1,kdf:'PBKDF2-SHA-256',iter:KDF_ITER,salt:b64(salt),iv:b64(iv),consentV:CONSENT_V,created:new Date().toISOString(),data:b64(new Uint8Array(ct))})}
+async function kopiaDecrypt(pass,env){const o=JSON.parse(env);if(!o||o.app!=='miara-szyfr'||o.v!==1)throw new Error('To nie jest zaszyfrowana kopia Miary');
+  try{const key=await kopiaDerive(pass,unb64(o.salt),o.iter);return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(o.iv)},key,unb64(o.data)))}
+  catch(e){throw new Error('Złe hasło albo uszkodzona kopia')}}
+async function kopiaSetup(){const c=S.consent;if(!c||c.v!==CONSENT_V)throw new Error('Najpierw potrzebna jest zgoda');
+  const g=id=>document.getElementById(id),p1=String(g('k_p1').value||''),p2=String(g('k_p2').value||'');
+  if(p1.length<12)throw new Error('Hasło musi mieć co najmniej 12 znaków');if(p1!==p2)throw new Error('Hasła w obu polach różnią się');
+  const salt=crypto.getRandomValues(new Uint8Array(16));await KS.set(await kopiaDerive(p1,salt));
+  g('k_p1').value='';g('k_p2').value='';S.kopia={salt:b64(salt),at:new Date().toISOString()}}
+function radaKopiaHtml(){const c=S.consent;let h='<h3>Kopia dla rady (zaszyfrowana)</h3>';
+  if(!c||c.v!==CONSENT_V)return h+`<div class="note"><p><b>Zgoda na zaszyfrowaną kopię danych dla rady (wersja ${CONSENT_V})</b></p><ul>${CONSENT_TXT.map(x=>`<li>${x}</li>`).join('')}</ul><p><label><input type="checkbox" id="c_ok"> Przeczytałam(-em) i wyrażam zgodę na przetwarzanie moich danych o zdrowiu w tym celu.</label></p><p><button class="btn small" data-consent="1">Wyrażam zgodę</button></p></div>`;
+  h+=`<p class="small">Zgoda z ${fmtDate(String(c.at).slice(0,10))}, wersja ${c.v}. <button class="btn ghost small" data-consentshow="1">Pokaż treść</button></p>`;
+  if(S.consentShow)h+=`<div class="note"><ul>${CONSENT_TXT.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+  h+=S.kopia?`<p class="small">Klucz zapisany w tym telefonie ${fmtDate(String(S.kopia.at).slice(0,10))}. Kopia wyśle się sama przy otwarciu aplikacji, najwyżej raz na 7 dni, po podłączeniu magazynu.</p>`
+    :'<div class="panel"><div class="field"><label for="k_p1">Hasło kopii</label><input type="password" id="k_p1" autocomplete="new-password" style="width:170px"></div><div class="field"><label for="k_p2">Powtórz hasło</label><input type="password" id="k_p2" autocomplete="new-password" style="width:170px"></div><p class="small muted">Co najmniej 12 znaków. Hasło zna tylko właściciel aplikacji; bez niego kopii nie da się odczytać. Telefon zapisuje klucz, którego nie da się z niego odczytać, a nie hasło.</p><p><button class="btn small" data-kopiakey="1">Zapisz klucz w tym telefonie</button></p></div>';
+  return h+'<p><button class="btn ghost small" data-consentoff="1">Wycofaj zgodę</button></p>'}
 // ---------- Widoki ----------
 const TABS=[
   ['meals','Posiłki','<path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5"/>'],
@@ -984,6 +1017,10 @@ document.addEventListener('click',e=>{
   else if(d.pain){const k=d.pain==='yday'?nAgo(1):todayKey();S.pain=S.pain||{};S.pain[k]=S.pain[k]||{aura:false,med:false};toast(d.pain==='yday'?'Wczoraj zapisany jako dzień z bólem':'Dzień z bólem: seria się nie przerwie',2400)}
   else if(d.painaura||d.painmed){const p=painAt(todayKey());if(p){const f=d.painaura?'aura':'med';p[f]=!p[f]}}
   else if(d.painoff){if(S.pain)delete S.pain[todayKey()]}
+  else if(d.consent){if(!(document.getElementById('c_ok')||{}).checked){toast('Zaznacz pole zgody');return}S.consent={v:CONSENT_V,at:new Date().toISOString()};toast('Zgoda zapisana. Teraz ustaw hasło kopii.',2400)}
+  else if(d.consentshow){S.consentShow=!S.consentShow}
+  else if(d.consentoff){S.consent=null;S.kopia=null;KS.del().catch(()=>{});toast('Zgoda wycofana. Wysyłanie zatrzymane; kopie zostaną usunięte.',3200)}
+  else if(d.kopiakey){kopiaSetup().then(()=>{toast('Klucz zapisany w tym telefonie');save();render()},e=>toast(e.message,3200));return}
   else if(d.cardok){S.cardsOk=S.cardsOk||{};S.cardsOk[d.cardok]=todayKey()}
   else if(d.tipok){S.tips=S.tips||{};S.tips[d.tipok]=true}
   else if(d.tipsreset){S.tips={};toast('Wskazówki pokażą się ponownie')}
