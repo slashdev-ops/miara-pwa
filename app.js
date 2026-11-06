@@ -126,7 +126,8 @@ const SPIN=[
 ];
 
 // ---------- Plan tygodnia: stały jadłospis, mniej decyzji ----------
-const PLAN={1:['s1','o1','k1','p2'],2:['s2','o3','k4','p1'],3:['s3','o8','k2','p5'],4:['s1','o2','k3','p3'],5:['s4','o4','k1','p6'],6:['s2','o9','k2','p4'],0:['s5','o5','k5','p1']};
+// Dwa rytmy: w dni robocze obiad do 20 min, w sobotę i niedzielę jedno większe danie
+const PLAN={1:['s1','o1','k1','p2'],2:['s2','o6','k4','p1'],3:['s3','o16','k2','p5'],4:['s1','o14','k3','p3'],5:['s4','o7','k1','p6'],6:['s2','o9','k2','p4'],0:['s5','o5','k5','p1']};
 const SLOT_T={sniadanie:'Śniadanie',obiad:'Obiad',kolacja:'Kolacja',przekaska:'Przekąska'};
 function slotNow(){const h=new Date().getHours();return h<11?'sniadanie':h<18?'obiad':'kolacja'}
 function targetKcal(){const R=rmr(),M=measuredTdee(),f=S.mode==='utrzymanie'?1:0.8;if(M)return Math.max(R,M.tdee*f);return Math.max(R,(R*1.3+trainNet())*f)}
@@ -143,7 +144,7 @@ function measuredTdee(){
 function dataGap(){let w=0,i=0;lastKeys(28).forEach(k=>{const m=(S.meas||{})[k];if(m&&num(m.w)>0)w++;if((S.days[k]||[]).filter(e=>e.kind==='m').length>=3)i++});return {w,i}}
 function measHtml(){
   const k=todayKey(),m=S.meas[k]||(S.meas[k]={});
-  const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label><input type="text" inputmode="${mode||'decimal'}" placeholder="${ph||''}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}"><span class="unit">${unit}</span></div>`;
+  const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" placeholder="${ph||''}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`;
   let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, po toalecie, przed jedzeniem. Kroki i sen przepisz z zegarka. Obwody co 2 tygodnie. Sen w godzinach: 7 h 30 min to 7,5 albo 7:30.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+f('Sen (zegarek)','sleep','h','decimal','np. 7,5')+'</div>'+cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej zawsze w tych samych warunkach: rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). Wpisany BMR z pomiaru BIA zastępuje wzór przez 90 dni, a waga z pomiarów zastępuje wagę z ustawień.</p></details>';
   const ks=lastKeys(28).reverse(),val=(x,key)=>{const v=num((S.meas[x]||{})[key]);return v>0?v:null};
   const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
@@ -162,14 +163,15 @@ function measHtml(){
 }
 function planIds(){const sw=(S.swaps||{})[todayKey()]||{};return PLAN[new Date().getDay()].map((id,i)=>sw[i]||id)}
 function shopLines(){const agg={};for(const d of [0,1,2,3,4,5,6])PLAN[d].forEach(id=>MEALS.find(m=>m.id===id).ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g}));return Object.keys(ING).filter(i=>agg[i]).map(i=>i==='jajko'?`Jajka: ${Math.ceil(agg[i]/60)} szt.`:`${ING[i].n}: ${Math.ceil(agg[i]/10)*10} g`)}
-function shopHtml(){const L=shopLines();return `<details class="fold"><summary>Lista zakupów na tydzień z planu (${L.length} pozycji)</summary><div class="panel">`+L.map(l=>{const [a,b]=l.split(': ');return `<div class="entry"><span class="txt">${a}</span><span class="val">${b}</span></div>`}).join('')+'</div><p class="small muted" style="padding:0 16px">Ilości dla 7 dni planu, bez zamian i bez dodatkowych porcji węglowodanów po treningu. Przyprawy, sól i cytryna poza listą.</p><p style="padding:0 16px 12px"><button class="btn ghost" data-shop="1">Kopiuj listę</button></p></details>'}
+function shopHtml(){const L=shopLines();return `<details class="fold" id="zakupy"><summary>Lista zakupów na tydzień z planu (${L.length} pozycji)</summary><div class="panel">`+L.map(l=>{const [a,b]=l.split(': ');return `<div class="entry"><span class="txt">${a}</span><span class="val">${b}</span></div>`}).join('')+'</div><p class="small muted" style="padding:0 16px">Ilości dla 7 dni planu, bez zamian i bez dodatkowych porcji węglowodanów po treningu. Przyprawy, sól i cytryna poza listą.</p><p style="padding:0 16px 12px"><button class="btn ghost" data-shop="1">Kopiuj listę</button></p></details>'}
 function planHtml(){
   const ids=planIds(),d=day(),cm=carbMult(),por=num(S.f.portion)||1,ms=d.filter(e=>e.kind==='m'),logged=new Set(ms.map(e=>e.id));
   const left=targetKcal()-ms.reduce((a,e)=>a+e.k,0),now=slotNow();
   const rec=ids.map(id=>MEALS.find(m=>m.id===id)).find(m=>m.t===now&&!logged.has(m.id));
-  let h=`<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p><h2>Dziś według planu</h2><p class="small muted">${left>=0?`Zostało ok. ${fmt(left)} kcal na dziś.`:`Cel dnia przekroczony o ok. ${fmt(-left)} kcal.`} Jedno dotknięcie zapisuje posiłek.</p><div class="panel">`;
+  let h=`<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p><h2 id="plan">Dziś według planu</h2><p class="small muted">${[0,6].includes(new Date().getDay())?'Weekend: jedno większe danie, jest więcej czasu.':'Dzień roboczy: obiad do 20 min.'} ${left>=0?`Zostało ok. ${fmt(left)} kcal na dziś.`:`Cel dnia przekroczony o ok. ${fmt(-left)} kcal.`} Jedno dotknięcie zapisuje posiłek.</p><div class="panel">`;
   const pk=ids.map(id=>macros(MEALS.find(m=>m.id===id),cm,por)),tk=pk.reduce((a,b)=>a+b.k,0),tp=pk.reduce((a,b)=>a+b.p,0),room=targetKcal()-tk;
-  h+=ids.map((id,i)=>{const m=MEALS.find(x=>x.id===id),x=macros(m,cm,por),done=logged.has(id);return `<div class="entry"><span class="txt"><span class="small muted">${SLOT_T[m.t]}${m.t==='kolacja'&&postTrain()?', po treningu':''}${rec&&rec.id===id?', polecane teraz':''}</span><br><button class="linkbtn" data-recipe="${id}">${m.n}</button>${done?'':`<br><button class="linkbtn small" data-swap="${i}" style="color:var(--muted);font-size:13px">zamień na inne</button>`}</span><span class="val">${fmt(x.k)} kcal</span>${done?'<span class="val">✓</span>':`<button class="btn" data-addmeal="${id}">Zjem</button>`}</div>`}).join('');
+  const base=PLAN[new Date().getDay()];
+  h+=ids.map((id,i)=>{const m=MEALS.find(x=>x.id===id),x=macros(m,cm,por),done=logged.has(id);return `<div class="entry"><span class="txt"><span class="small muted">${SLOT_T[m.t]}${m.t==='kolacja'&&postTrain()?', po treningu':''}${id!==base[i]?', Twój wybór':''}${rec&&rec.id===id?', polecane teraz':''}</span><br><button class="linkbtn" data-recipe="${id}">${m.n}</button>${done?'':`<br><button class="linkbtn small" data-swap="${i}" style="color:var(--muted);font-size:13px">zamień na inne</button>`}</span><span class="val">${fmt(x.k)} kcal</span>${done?'<span class="val">✓</span>':`<button class="btn" data-addmeal="${id}">Zjem</button>`}</div>`}).join('');
   h+=`<p class="small muted" style="padding:0 16px 12px">Plan dnia: ${fmt(tk)} kcal i ${fmt(tp)} g białka przy celu ${fmt(targetKcal())} kcal.${room>=50?` Zostaje ok. ${fmt(room)} kcal na dodatek albo większą porcję.`:''}</p>`;
   return h+'</div>';
 }
@@ -472,7 +474,7 @@ function renderRecipe(){
   if(cm!==1||por!==1)h+=`<p class="small muted">Porcja przeliczona: węglowodany ×${fmt1(cm)}, wielkość ×${fmt1(por)}.</p>`;
   h+='<h3 class="rh">Przygotowanie</h3><ol class="steps">'+steps.map(s=>`<li>${s}</li>`).join('')+'</ol>';
   h+=tipsHtml(m,x);
-  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz co najmniej 4 godziny po leku (wiedza ogólna, niesprawdzone).</p>':''}<p><button class="btn" data-addmeal="${m.id}" style="width:100%">Zjem, zapisz</button></p><p><button class="btn ghost" data-copy="${m.id}" style="width:100%">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
+  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz co najmniej 4 godziny po leku (wiedza ogólna, niesprawdzone).</p>':''}${planIds().includes(m.id)?'<p class="small muted">W planie na dziś. Wieczorem „Według planu” zapisze to danie.</p>':`<p><button class="btn" data-cook="${m.id}" style="width:100%">Gotuję to dziś</button></p>`}<p><button class="btn${planIds().includes(m.id)?'':' ghost'}" data-addmeal="${m.id}" style="width:100%">Zjem, zapisz</button></p><p><button class="btn ghost" data-copy="${m.id}" style="width:100%">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
   document.getElementById('main').innerHTML=h;
 }
 
@@ -595,7 +597,7 @@ async function bkExport(){
   toast('Zapis pliku i schowek są niedostępne w tym widoku');
 }
 function bkHtml(){
-  let h=`<h2>Kopia danych</h2><div class="panel" style="padding:4px 16px 12px"><p class="small">Kopia to plik ze wszystkimi danymi z tego telefonu. Zapisz go w aplikacji Pliki na iCloud Drive, a na drugim telefonie wczytaj z tego samego miejsca.</p><p class="small muted">Ostatnia kopia: ${S.lastBackup?fmtDate(S.lastBackup):'jeszcze nie było'}. Dobry moment: dzień pomiaru BIA, raz na 4 tygodnie.</p><div class="field" style="padding:8px 0"><label for="bk_nh">Bez danych zdrowotnych (do udostępnienia innej osobie)</label><input type="checkbox" class="switch" id="bk_nh" data-k="bkNoHealth" ${S.bkNoHealth?'checked':''}></div><p><button class="btn" data-bkexp="1" style="width:100%">Zapisz kopię</button></p><p style="margin:14px 0 6px">Wczytaj kopię</p><label class="btn ghost" style="display:flex;align-items:center;justify-content:center;width:100%">Wybierz plik kopii z Plików<input type="file" id="bk_file" accept=".json,application/json" style="display:none"></label>`;
+  let h=`<h2 id="kopia">Kopia danych</h2><div class="panel" style="padding:4px 16px 12px"><p class="small">Kopia to plik ze wszystkimi danymi z tego telefonu. Zapisz go w aplikacji Pliki na iCloud Drive, a na drugim telefonie wczytaj z tego samego miejsca.</p><p class="small muted">Ostatnia kopia: ${S.lastBackup?fmtDate(S.lastBackup):'jeszcze nie było'}. Dobry moment: dzień pomiaru BIA, raz na 4 tygodnie.</p><div class="field" style="padding:8px 0"><label for="bk_nh">Bez danych zdrowotnych (do udostępnienia innej osobie)</label><input type="checkbox" class="switch" id="bk_nh" data-k="bkNoHealth" ${S.bkNoHealth?'checked':''}></div><p><button class="btn" data-bkexp="1" style="width:100%">Zapisz kopię</button></p><p style="margin:14px 0 6px">Wczytaj kopię</p><label class="btn ghost" style="display:flex;align-items:center;justify-content:center;width:100%">Wybierz plik kopii z Plików<input type="file" id="bk_file" accept=".json,application/json" style="display:none"></label>`;
   h+=fold('bkpaste','albo wklej tekst kopii','<textarea id="bk_text" rows="3" aria-label="Tekst kopii" style="width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)"></textarea><p><button class="btn ghost" data-bkpaste="1">Sprawdź kopię</button></p>');
   if(BK_PENDING)h+=`<div class="note warn"><b>Kopia z ${fmtDate(String(BK_PENDING.created||'').slice(0,10))}${BK_PENDING.noHealth?', bez danych zdrowotnych':''}:</b> ${bkSummary(BK_PENDING.data)}. Wczytanie zastąpi wszystkie dane w tym telefonie.<p><button class="btn" data-bkapply="1">Zastąp dane</button> <button class="btn ghost" data-bkcancel="1">Anuluj</button></p></div>`;
   h+='<p class="small muted">Plik nie jest zaszyfrowany i zawiera dane zdrowotne. Trzymaj go w prywatnym folderze. Włączona Zaawansowana ochrona danych w iCloud szyfruje iCloud Drive tak, że klucze mają tylko Twoje urządzenia (wiedza ogólna, niesprawdzone).</p></div>';
@@ -608,7 +610,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'80',cm:'170',age:'35',sex:'K',goal:'72',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),JSON.parse(r));}catch(e){}return clone(DEF)}
@@ -622,6 +624,11 @@ const open=new Set();
 // ---------- Obliczenia ----------
 const num=v=>{const s=String(v).trim().replace(/(\d)[\s\u00a0]+(?=\d{3}(\D|$))/g,'$1'),t=s.match(/^(\d{1,2})\s*(?::|h)\s*(\d{1,2})?\s*(?:m|min)?$/i);if(t)return +t[1]+(+(t[2]||0))/60;const x=parseFloat(s.replace(',','.'));return isFinite(x)?x:0};
 // Pola liczbowe: format i zakres (ostatni człon klucza data-k). Wpis błędny lub poza zakresem nie trafia do danych.
+const STEP={kg:.1,goal:.5,w:.1,cm:1,age:1,steps:500,sleep:.5,waist:.5,hip:.5,thigh:.5,fat:.1,ffm:.1,ecw:.1,bmr:10,min:5,wmin:5,wk:10,speed:.5,grade:.5,watts:5};
+const STP0={sleep:7,steps:5000,wmin:45,wk:300,min:45,speed:5,grade:0,watts:100,cm:165,age:30};
+// Pierwsze naciśnięcie pustego pola: ostatnia zapisana wartość (waga z ostatniego ważenia), inaczej typowa
+function stpStart(k){const a=k.split('.'),f=a[a.length-1];if(a[0]==='meas'){const ks=Object.keys(S.meas||{}).filter(x=>x<a[1]&&num((S.meas[x]||{})[f])>0).sort();if(ks.length)return num(S.meas[ks[ks.length-1]][f]);if(f==='w')return kg()}if(f==='goal')return kg();if(f==='kg')return kg();return STP0[f]!=null?STP0[f]:LIM[f][0]}
+function stpFmt(v,st){return st<1?String(Math.round(v*10)/10).replace('.',','):String(Math.round(v))}
 const LIM={kg:[35,250],goal:[35,250],w:[35,250],cm:[120,220],age:[16,90],steps:[0,60000],sleep:[0,16],waist:[30,200],hip:[30,200],thigh:[20,120],fat:[3,60],ffm:[25,120],ecw:[30,50],bmr:[900,3000],min:[1,300],wmin:[1,300],wk:[10,3000],speed:[1,20],grade:[0,25],watts:[20,500]};
 const INT_K=new Set(['steps','bmr','age','min','wmin','wk']);
 function checkNum(k,raw){const key=String(k).split('.').pop();let s=String(raw).trim();if(s==='')return {s};if(INT_K.has(key))s=s.replace(/[\s\u00a0.](?=\d{3}(\D|$))/g,'');const core=key==='sleep'?s:s.replace(/\s*(kg|cm|h|%|kcal|lat|min|km\/h|w|g|zł)$/i,'');const ok=key==='sleep'?/^(\d{1,2}([.,]\d+)?|\d{1,2}\s*(:|h)\s*(\d{1,2})?\s*(m|min)?)$/i.test(s):/^\d+([.,]\d+)?$/.test(core);if(!ok)return {s,err:key==='sleep'?'Sen w godzinach, np. 7,5 albo 7:30':'Wpisz samą liczbę, np. 82,4'};const r=LIM[key],v=num(core);if(r&&(v<r[0]||v>r[1]))return {s,err:'Dozwolone '+fmt1(r[0])+'-'+fmt1(r[1])};return {s:core}}
@@ -709,7 +716,8 @@ function filtered(){
   const cm=carbMult(),por=num(S.f.portion)||1;
   const inc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===1),exc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===-1);
   const sorters={p:(a,b)=>b.x.p/b.x.k-a.x.p/a.x.k,k:(a,b)=>a.x.k-b.x.k,t:(a,b)=>a.m.min-b.m.min};
-  return MEALS.filter(m=>S.f.type==='all'||m.t===S.f.type)
+  const pc=S.f.pace||'all';
+  return MEALS.filter(m=>(S.f.type==='all'||m.t===S.f.type)&&(pc==='all'||(pc==='quick'?m.min<=20:m.min>=25)))
     .map(m=>({m,x:macros(m,cm,por),ch:chipsOf(m)}))
     .filter(o=>!exc.some(c=>o.ch.has(c)))
     .filter(o=>!inc.length||inc.some(c=>o.ch.has(c)))
@@ -735,7 +743,7 @@ function guideSteps(){const g=S.guide||{},anyMeas=f=>Object.values(S.meas||{}).s
   return [
     {id:'data',label:'Sprawdź swoje dane',hint:'Waga, wzrost, wiek i cel liczą Twoje kalorie. Na końcu naciśnij Zapisz i sprawdź.',btn:'Ustawienia',act:'tab',arg:'set',done:!!g.dataOk||past},
     {id:'pet',label:'Wybierz towarzysza',hint:'Gąska albo kaczuszka będzie reagować na Twoje wpisy.',btn:'Wybierz',act:'tab',arg:'set',done:!!S.pet},
-    {id:'weight',label:'Wpisz dzisiejszą wagę',hint:'Pole Waga w Pomiarach dnia, niżej na tym ekranie.',btn:'Wpisz wagę',act:'goto',arg:'m_w',done:anyMeas('w')},
+    {id:'weight',label:'Wpisz dzisiejszą wagę',hint:'Pole Waga w Pomiarach dnia, niżej na tym ekranie.',btn:'Wpisz wagę',act:'nav',arg:'day#m_w',done:anyMeas('w')},
     {id:'meal',label:'Zapisz pierwszy posiłek',hint:'W Posiłkach naciśnij Zjem przy daniu.',btn:'Posiłki',act:'tab',arg:'meals',done:anyDay('m')},
     {id:'move',label:'Dodaj ruch',hint:'Zapisz trening albo wpisz kroki w Pomiarach dnia.',btn:'Trening',act:'tab',arg:'train',done:anyDay('t')||anyMeas('steps')},
     {id:'seepet',label:'Poznaj zwierzaka',hint:'Zobacz, jak rośnie i co zdobywa.',btn:'Mój zwierzak',act:'tab',arg:'pet',done:!!g.seenPet}]}
@@ -745,6 +753,7 @@ function guideHtml(){if(!guideActive())return '';const st=guideSteps(),n=st.filt
     +st.map(x=>`<div class="step${x.done?' done':''}${x===nx?' next':''}"><span class="box">${x.done?'✓':''}</span><span class="lab">${x.label}${x.done?'':`<small class="hint">${x.hint}</small>`}</span>${x.done?'':`<button class="btn small${x===nx?'':' ghost'}" data-${x.act}="${x.arg}">${x.btn}</button>`}</div>`).join('')
     +'<p style="text-align:right;margin:8px 0 0"><button class="btn ghost small" data-guidehide="1">Ukryj</button></p></div>'}
 // Komunikat po akcji z następnym krokiem, dopóki trwają pierwsze kroki
+function guideAct(){if(!guideActive())return null;const nx=guideSteps().find(x=>!x.done);return {act:nx.act,arg:nx.arg,label:nx.btn}}
 function guideToast(base){if(!guideActive())return base;const nx=guideSteps().find(x=>!x.done);return `${base}. Dalej: ${nx.label.charAt(0).toLowerCase()+nx.label.slice(1)}.`}
 // ---------- Karty „Co się dzieje”: reguły z danych w telefonie; każda mówi, na czym się opiera ----------
 function nAgo(n){const d=new Date();d.setDate(d.getDate()-n);return keyOf(d)}
@@ -856,17 +865,19 @@ const TABS=[
 ];
 function renderTabs(){const tb=document.getElementById('tabs');if(tb&&tb.style)tb.style.display=S.tab==='intro'?'none':'';
   document.getElementById('tabs').innerHTML=TABS.map(([k,l,ic])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}" aria-label="${l}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>${l}</button>`).join('');
-  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{sos:'Ochota na przekąskę',labs:'Moje badania',visit:'Lista na wizytę',intro:'Wprowadzenie',review:'Przegląd tygodnia',recipe:'Przepis',knee:'Program kolana',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
+  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{help:'Pomoc',sos:'Ochota na przekąskę',labs:'Moje badania',visit:'Lista na wizytę',intro:'Wprowadzenie',review:'Przegląd tygodnia',recipe:'Przepis',knee:'Program kolana',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
   document.getElementById('who').textContent=new Date().toLocaleDateString('pl-PL',{weekday:'short',day:'numeric',month:'numeric'});
 }
 function seg(items,cur,attr,cls=''){return `<div class="seg ${cls}">`+items.map(([v,l])=>`<button class="${String(cur)===String(v)?'on':''}" data-${attr}="${v}">${l}</button>`).join('')+'</div>'}
 function optList(list,cur,attr){return '<div class="panel">'+list.map(o=>`<button class="opt ${o.id===cur?'on':''}" data-${attr}="${o.id}"><span class="dot"></span><span>${o.n}</span>${o.met?`<span class="met">MET ${fmt1(o.met)}</span>`:''}</button>`).join('')+'</div>'}
-function field(label,key,val,unit,mode){return `<div class="field"><label for="f_${key}">${label}</label><input type="text" inputmode="${mode||'decimal'}" id="f_${key}" data-k="${key}" value="${esc(val)}"><span class="unit">${unit}</span></div>`}
+// Przyciski − i + przy polu liczbowym: wpis bez klawiatury; klawiatura zostaje dla chętnych
+function stpWrap(label,key,inp){const f=key.split('.').pop();return STEP[f]?`<span class="num"><button class="stp" data-stp="${key}" data-d="-1" aria-label="${label}: mniej">−</button>${inp}<button class="stp" data-stp="${key}" data-d="1" aria-label="${label}: więcej">+</button></span>`:inp}
+function field(label,key,val,unit,mode){return `<div class="field"><label for="f_${key}">${label}</label>${stpWrap(label,key,`<input type="text" inputmode="${mode||'decimal'}" id="f_${key}" data-k="${key}" value="${esc(val)}">`)}<span class="unit">${unit}</span></div>`}
 
 function renderMeals(){
   const cm=carbMult(),n=trainNet();
   const carbTxt=S.f.carb==='auto'?(n>0?`Automatycznie z dzisiejszych treningów (${fmt(n)} kcal netto): węglowodany ×${fmt1(cm)}.`:'Automatycznie: brak treningu w dzienniku dnia, węglowodany ×1.'):`Ustawione ręcznie: węglowodany ×${fmt1(cm)}.`;
-  let h=planHtml()+shopHtml()+'<h2>Albo wybierz sam</h2>'+seg([['sniadanie','Śniadanie'],['obiad','Obiad'],['kolacja','Kolacja'],['przekaska','Przekąska'],['all','Wszystkie']],S.f.type,'type','scroll');
+  let h=planHtml()+shopHtml()+'<h2>Albo wybierz sam</h2>'+seg([['sniadanie','Śniadanie'],['obiad','Obiad'],['kolacja','Kolacja'],['przekaska','Przekąska'],['all','Wszystkie']],S.f.type,'type','scroll')+'<div id="rytm">'+seg([['all','Każdy czas'],['quick','Na co dzień, do 20 min'],['big','Na weekend, więcej czasu']],S.f.pace||'all','pace','scroll')+'</div>';
   h+='<details class="fold" data-fold="filtry"'+(OPEN_F.has('filtry')?' open':'')+'><summary>Filtry i sortowanie</summary><div style="padding:0 12px 12px">';
   h+='<h2>Produkty</h2><p class="small muted">Dotknij raz: chcę. Drugi raz: bez tego. Trzeci: bez znaczenia.</p><div class="chips">'+CHIPS.map(c=>{const s=S.f.chips[c]||0;return `<button class="chip ${s===1?'inc':s===-1?'exc':''}" data-chip="${c}">${c}</button>`}).join('')+'</div>';
   h+='<h2>Pod trening</h2>'+seg([['auto','Auto'],['1','Bez treningu'],['1.25','Lekki'],['1.5','Siłownia, cardio']],S.f.carb,'carb','scroll')+`<p class="small muted">${carbTxt} Zmienia tylko porcję kaszy, ryżu, ziemniaków, pieczywa i płatków.</p>`;
@@ -897,7 +908,7 @@ function renderMealList(){
 function renderTrain(){
   const t=S.tr;
   let h=''
-    +'<h2>Trening z zegarka</h2><div class="panel">'+field('Czas','tr.wmin',t.wmin||'','min','numeric')+field('Kalorie z zegarka','tr.wk',t.wk||'','kcal','numeric')+'<p><button class="btn" data-addwatch="1" style="width:100%">Dodaj trening z zegarka</button></p></div>'
+    +'<h2>Trening z zegarka</h2><div class="panel">'+field('Czas','tr.wmin',t.wmin||'','min','numeric')+'<div class="chips quick">'+[30,45,60,90].map(v=>`<button class="chip${String(t.wmin)===String(v)?' inc':''}" data-setv="tr.wmin" data-v="${v}">${v} min</button>`).join('')+'</div>'+field('Kalorie z zegarka','tr.wk',t.wk||'','kcal','numeric')+'<p><button class="btn" data-addwatch="1" style="width:100%">Dodaj trening z zegarka</button></p></div>'
     +'<p class="small muted">Zegarek też szacuje kalorie, zwykle z tętna, a błąd bywa większy niż 20%. Do bilansu liczy się netto: kalorie z zegarka minus spoczynek w tym czasie.</p><h2>Albo oszacuj z rodzaju treningu</h2>'+seg([['silownia','Siłownia'],['plywanie','Pływanie'],['bieznia','Bieżnia'],['spinning','Spinning'],['inne','Inne']],t.cat,'cat','scroll');
   if(t.cat==='bieznia'){
     h+=seg([['marsz','Marsz'],['bieg','Bieg']],t.bMode,'bmode');
@@ -968,14 +979,15 @@ function dataHtml(){const c=dataCheck(),ok=S.guide&&S.guide.dataOk,w=c.warn.map(
   if(!ok)return '<p class="small muted">Sprawdź, czy to Twoje wartości, a nie przykładowe, i naciśnij Zapisz i sprawdź.</p>'+w+btn;
   return `<div class="note">✓ Dane zapisane: ${fmt1(num(S.kg))} kg, ${fmt(num(S.cm))} cm, wiek ${fmt(num(S.age))}, cel ${fmt1(num(S.goal))} kg.</div>`+w+nextHtml('set')}
 function nextHtml(cur){const g=guideActive()?guideSteps().find(x=>!x.done):null,lc=x=>x.charAt(0).toLowerCase()+x.slice(1);let a='tab',v='day',t='Przejdź do Mojego dnia';
-  if(g){if(cur==='set'&&g.id==='data'){a='goto';v='dane';t='Dalej: sprawdź i zapisz dane na górze'}else if(cur==='set'&&g.id==='pet'){a='goto';v='towarzysz';t='Dalej: wybierz towarzysza niżej'}else if(!(g.act==='tab'&&g.arg===cur)){a='tab';v=g.act==='goto'?'day':g.arg;t='Dalej: '+lc(g.label)}}
+  if(g){if(cur==='set'&&g.id==='data'){a='goto';v='dane';t='Dalej: sprawdź i zapisz dane na górze'}else if(cur==='set'&&g.id==='pet'){a='goto';v='towarzysz';t='Dalej: wybierz towarzysza niżej'}else if(!(g.act==='tab'&&g.arg===cur)){a=g.act==='nav'?'nav':'tab';v=g.act==='goto'?'day':g.arg;t='Dalej: '+lc(g.label)}}
   else if(cur==='day')return '';
   return `<p class="nextbar"><button class="btn" data-${a}="${v}" style="width:100%">${t}</button></p>`}
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
   let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>';
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+dataHtml();
-  h+=`<h2>Wpisy</h2><div class="panel"><div class="field"><label for="once">Wpisuję raz dziennie, wieczorem</label><input type="checkbox" class="switch" id="once" data-k="once" ${S.once?'checked':''}></div></div><p class="small muted">Mój dzień pokaże jeden wpis dnia, a zwierzak przypomni o posiłkach dopiero od 19:00.</p>`;
+  h+=`<h2 id="wpisy">Wpisy</h2><div class="panel"><div class="field"><label for="once">Wpisuję raz dziennie, wieczorem</label><input type="checkbox" class="switch" id="once" data-k="once" ${S.once?'checked':''}></div></div><p class="small muted">Mój dzień pokaże jeden wpis dnia, a zwierzak przypomni o posiłkach dopiero od 19:00.</p>`;
+  h+='<h2 id="komunikaty">Komunikaty</h2>'+seg([['std','Zwykle'],['long','Dłużej'],['stay','Do zamknięcia']],S.toastLen||'std','toastlen')+'<p class="small muted">Jak długo widać dymek po zapisie. Każdy zamkniesz przyciskiem ×.</p>';
   h+=`<div class="panel"><div class="field"><label for="discreet">Tryb dyskretny: karty o migrenie i antykoncepcji tylko w Zdrowiu</label><input type="checkbox" class="switch" id="discreet" data-k="discreet" ${S.discreet?'checked':''}></div></div>`;
   h+='<h2 id="towarzysz">Towarzysz</h2>'+petPickHtml()+(S.pet?`<div class="panel"><div class="field"><label for="body">Sylwetka z pomiarów na ekranie zwierzaka</label><input type="checkbox" class="switch" id="body" data-k="body" ${S.body?'checked':''}></div></div>`:'');
   h+='<h2>Tryb</h2>'+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie']],S.mode,'mode');
@@ -995,13 +1007,51 @@ ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź ob
   document.getElementById('main').innerHTML=h;
 }
 
-function render(){renderTabs();({meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują. <button class="btn ghost" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
-function toast(t,ms){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),ms||1600)}
+// ---------- Przewodnik „Co chcesz zrobić?”: każde zadanie przenosi na ekran i podświetla miejsce ----------
+const HELP=[
+  ['Posiłki','Zapisać zjedzony posiłek','W planie dnia naciśnij Zjem przy daniu.','meals#plan'],
+  ['Posiłki','Wybrać, co gotuję dziś','Otwórz przepis i naciśnij Gotuję to dziś. Wieczorem Według planu zapisze to danie.','meals#plan'],
+  ['Posiłki','Znaleźć szybkie danie albo większe na weekend','Nad listą dań wybierz Na co dzień albo Na weekend.','meals#rytm'],
+  ['Posiłki','Zrobić zakupy na tydzień','Lista zakupów z planu jest pod planem dnia.','meals#zakupy'],
+  ['Mój dzień','Wpisać wagę','Pomiary dnia. Przyciski − i + zaczynają od ostatniego ważenia.','day#m_w'],
+  ['Mój dzień','Wpisać sen i kroki','Pomiary dnia: przepisz z zegarka albo telefonu.','day#m_sleep'],
+  ['Mój dzień','Zapisać ból głowy','Naciśnij Boli mnie głowa, potem zaznacz aurę i lek.','day#painrow'],
+  ['Mój dzień','Zapisać obwody','Co 2 tygodnie: talia, biodra, udo.','day#m_waist#obwody'],
+  ['Mój dzień','Poradzić sobie z ochotą na przekąskę','10 minut z podpowiedziami, bez oceniania.','sos'],
+  ['Trening','Dodać trening z zegarka','Czas wybierzesz jednym dotknięciem, kalorie przepisz z zegarka.','train#f_tr.wmin'],
+  ['Zdrowie','Przygotować listę na wizytę','Objawy i pytania do skopiowania dla lekarza.','visit'],
+  ['Ustawienia','Zmienić wagę, wzrost, wiek albo cel','Twoje dane. Na końcu naciśnij Zapisz i sprawdź.','set#dane'],
+  ['Ustawienia','Wpisywać raz dziennie','Jeden wieczorny wpis zamiast kilku w ciągu dnia.','set#wpisy'],
+  ['Ustawienia','Ustawić, jak długo widać komunikaty','Zwykle, dłużej albo do zamknięcia.','set#komunikaty'],
+  ['Ustawienia','Zrobić kopię danych','Plik kopii albo zaszyfrowana kopia.','set#kopia']];
+function renderHelp(){let h='<h2>Co chcesz zrobić?</h2><p class="small muted">Naciśnij Pokaż: Miara przeniesie Cię na właściwy ekran i podświetli miejsce.</p>',g='';
+  HELP.forEach(([grp,lab,how,to])=>{if(grp!==g){h+=(g?'</div>':'')+`<h3 class="rh">${grp}</h3><div class="panel" style="padding:0 16px">`;g=grp}h+=`<div class="step"><span class="lab">${lab}<small class="hint">${how}</small></span><button class="btn small ghost" data-${to.includes('#')?'nav':'tab'}="${to}">Pokaż</button></div>`});
+  h+='</div><h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
+  document.getElementById('main').innerHTML=h}
+function render(){renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują. <button class="btn ghost" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+// Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
+// Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
+function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
+function toastHide(){const el=document.getElementById('toast');clearTimeout(toast._t);el.classList.remove('show')}
+function toast(t,o){const el=document.getElementById('toast'),a=o&&typeof o==='object'&&o.act?o:null;
+  el.innerHTML=`<span class="tmsg">${esc(t)}</span><button class="tclose" data-toastclose="1" aria-label="Zamknij komunikat">×</button>`+(a?`<button class="btn small" data-${a.act}="${esc(a.arg)}">${esc(a.label)}</button>`:'');
+  el.classList.add('show');clearTimeout(toast._t);const ms=toastMs(t);if(ms)toast._t=setTimeout(()=>el.classList.remove('show'),Math.max(ms,typeof o==='number'?o:0));
+  if(o&&o.focus){const f=document.getElementById(o.focus);if(f&&f.scrollIntoView)f.scrollIntoView({behavior:'smooth',block:'center'});if(f&&f.focus)f.focus({preventScroll:true})}}
 function setPath(p,v){const a=p.split('.');let o=S;for(let i=0;i<a.length-1;i++)o=o[a[i]];o[a[a.length-1]]=v}
 
 // ---------- Zdarzenia ----------
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.toastclose){toastHide();return}
+  if(b.parentNode&&b.parentNode.id==='toast')toastHide();
+  if(d.nav){const [tab,id,fd]=d.nav.split('#');S.tab=tab;if(fd)OPEN_F.add(fd);save();render();const el=id&&document.getElementById(id);
+    if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.classList){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2400)}}else window.scrollTo(0,0);return}
+  if(d.stp){const k=d.stp,f=k.split('.').pop(),st=STEP[f],L=LIM[f],a=k.split('.');if(!st)return;if(a[0]==='meas'){S.meas[a[1]]=S.meas[a[1]]||{}}
+    const raw=k.split('.').reduce((o,x)=>o==null?o:o[x],S),has=raw!=null&&String(raw).trim()!=='';let v=has?num(raw)+(+d.d)*st:stpStart(k);v=Math.min(L[1],Math.max(L[0],v));setPath(k,stpFmt(v,st));
+    if(/^meas\.[^.]+\.w$/.test(k))PET.react('weigh');if(/^meas\.[^.]+\.sleep$/.test(k)&&v>=7)PET.react('sleepok');save();render();return}
+  if(d.cook){const m=MEALS.find(x=>x.id===d.cook),k=todayKey(),base=PLAN[new Date().getDay()],i=m?base.findIndex(id=>MEALS.find(x=>x.id===id).t===m.t):-1;if(i<0)return;
+    S.swaps=S.swaps||{};S.swaps[k]=S.swaps[k]||{};if(base[i]===m.id)delete S.swaps[k][i];else S.swaps[k][i]=m.id;save();render();
+    toast(`${SLOT_T[m.t]} na dziś: ${m.n}. Wieczorem „Według planu” zapisze to danie.`,{act:'tab',arg:'meals',label:'Plan dnia'});return}
   if(d.tab){S.tab=d.tab;if(d.tab==='sos'){S.sosStep='trig';sosEnd=0;clearInterval(sosT)}window.scrollTo(0,0)}
   else if(d.trig){S.sosTrig=d.trig;S.sosStep='plan'}
   else if(d.sosstart){sosEnd=Date.now()+600000;clearInterval(sosT);sosT=setInterval(()=>{const l=Math.max(0,Math.ceil((sosEnd-Date.now())/1000)),el=document.getElementById('sosclock');if(el)el.textContent=mmss(l);if(l<=0){clearInterval(sosT);toast('Minęło 10 minut')}},1000)}
@@ -1012,16 +1062,16 @@ document.addEventListener('click',e=>{
   else if(d.carb){S.f.carb=d.carb}
   else if(d.sort){S.f.sort=d.sort}
   else if(d.toggle){open.has(d.toggle)?open.delete(d.toggle):open.add(d.toggle);renderMealList();return}
-  else if(d.addmeal){const m=MEALS.find(x=>x.id===d.addmeal),x=macros(m,carbMult(),num(S.f.portion)||1);day().push({kind:'m',id:m.id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c});PET.react('meal');save();toast(guideToast('Dodano do dnia'),3200);return}
+  else if(d.addmeal){const m=MEALS.find(x=>x.id===d.addmeal),x=macros(m,carbMult(),num(S.f.portion)||1);day().push({kind:'m',id:m.id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c});PET.react('meal');save();toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
   else if(d.cat){S.tr.cat=d.cat}
   else if(d.opt){S.tr.opt[S.tr.cat]=d.opt}
   else if(d.bmode){S.tr.bMode=d.bmode;if(d.bmode==='bieg'&&num(S.tr.speed)<8)S.tr.speed='8';if(d.bmode==='marsz'&&num(S.tr.speed)>6.5)S.tr.speed='5'}
   else if(d.smode){S.tr.sMode=d.smode}
   else if(d.sclass){S.tr.sClass=d.sclass}
-  else if(d.addwatch){const m=num(S.tr.wmin),w=num(S.tr.wk);if(!(m>=1&&m<=300)){toast('Wpisz czas w minutach');return}if(!(w>=10&&w<=3000)){toast('Wpisz kalorie z zegarka, od 10 do 3000');return}day().push({kind:'t',label:'Trening z zegarka',min:m,gross:w,net:Math.max(0,Math.round(w-baseH()*m/60)),src:'zegarek'});S.tr.wk='';PET.react('train');save();toast(guideToast('Dodano do dnia'),3200);return}
+  else if(d.addwatch){const m=num(S.tr.wmin),w=num(S.tr.wk);if(!(m>=1&&m<=300)){toast('Wpisz czas w minutach',{focus:'f_tr.wmin'});return}if(!(w>=10&&w<=3000)){toast('Wpisz kalorie z zegarka, od 10 do 3000',{focus:'f_tr.wk'});return}day().push({kind:'t',label:'Trening z zegarka',min:m,gross:w,net:Math.max(0,Math.round(w-baseH()*m/60)),src:'zegarek'});S.tr.wk='';PET.react('train');save();toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
   else if(d.dayplan){const lg=new Set(day().filter(e=>e.kind==='m').map(e=>e.id));let n=0;planIds().forEach(id=>{if(lg.has(id))return;const m=MEALS.find(x=>x.id===id),x=macros(m,carbMult(),num(S.f.portion)||1);day().push({kind:'m',id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c,plan:true});lg.add(id);n++});if(n)PET.react('meal');save();toast(n?`Dodano ${n} ${n===1?'posiłek':'posiłki'} z planu, wartości szacunkowe`:'Plan na dziś jest już zapisany',3200);return}
   else if(d.dayother){OPEN_F.add('szybki')}
-  else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m);day().push({kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net});PET.react('train');save();toast(guideToast('Dodano do dnia'),3200);return}
+  else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m);day().push({kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net});PET.react('train');save();toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
   else if(d.del!=null){day().splice(+d.del,1)}
   else if(d.clear){S.days[todayKey()]=[]}
   else if(d.intronext){if((S.introStep||0)===3&&S.guide)S.guide.dataOk=true;S.introStep=(S.introStep||0)+1;window.scrollTo(0,0)}
@@ -1075,6 +1125,10 @@ document.addEventListener('click',e=>{
   else if(d.tipok){S.tips=S.tips||{};S.tips[d.tipok]=true}
   else if(d.tipsreset){S.tips={};toast('Wskazówki pokażą się ponownie')}
   else if(d.guidehide){S.guide.hidden=true}
+  else if(d.guideshow){S.guide=S.guide||{};S.guide.hidden=false;S.tab='day';window.scrollTo(0,0);if(!guideActive())toast('Wszystkie pierwsze kroki są już zrobione')}
+  else if(d.toastlen){S.toastLen=d.toastlen;toast(d.toastlen==='stay'?'Komunikat zostanie, dopóki go nie zamkniesz.':'Tak długo będzie widać komunikat.')}
+  else if(d.setv){setPath(d.setv,d.v)}
+  else if(d.pace){S.f.pace=d.pace}
   else if(d.demoexit){location.hash='';location.reload();return}
   else if(d.sex){S.sex=d.sex}
   else if(d.reset){const days=S.days;S=clone(DEF);S.days=days;S.tab='set'}

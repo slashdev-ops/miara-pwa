@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -256,7 +256,7 @@ tryc('dane: Zapisz z poprawnymi danymi zalicza krok i prowadzi do sekcji Towarzy
 tryc('dane: pusta waga nie przechodzi i mówi, co uzupełnić', () => { view('set', { ...NEWU(), ...OKD, kg: '' }); click({ datasave: '1' }); return T.S().guide.dataOk === false && mainHtml().includes('Uzupełnij wagę'); });
 tryc('dane: w redukcji cel musi być niższy od wagi', () => { view('set', { ...NEWU(), ...OKD, goal: '90' }); click({ datasave: '1' }); return T.S().guide.dataOk === false && mainHtml().includes('Waga docelowa w redukcji powinna być niższa od obecnej'); });
 tryc('dane: cel z BMI poniżej 18,5 daje ostrzeżenie, ale zapisuje', () => { view('set', { ...NEWU(), ...OKD, goal: '50' }); click({ datasave: '1' }); return T.S().guide.dataOk === true && mainHtml().includes('BMI poniżej 18,5'); });
-tryc('dalej: ze zwierzakiem prowadzi do następnego kroku w Moim dniu', () => view('set', { ...NEWU(), ...OKD, pet: { ...PETA }, guide: { hidden: false, dataOk: true, seenPet: false } }).includes('<button class="btn" data-tab="day" style="width:100%">Dalej: wpisz dzisiejszą wagę</button>'));
+tryc('dalej: ze zwierzakiem prowadzi do następnego kroku w Moim dniu', () => view('set', { ...NEWU(), ...OKD, pet: { ...PETA }, guide: { hidden: false, dataOk: true, seenPet: false } }).includes('<button class="btn" data-nav="day#m_w" style="width:100%">Dalej: wpisz dzisiejszą wagę</button>'));
 tryc('dalej: po pierwszych krokach dwa przyciski do Mojego dnia w Ustawieniach', () => { const h = view('set', { ...CLEAN(), ...OKD, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 2 && h.includes('Przejdź do Mojego dnia'); });
 tryc('dalej: ekran zwierzaka kończy się przyciskiem do Mojego dnia', () => { const h = view('pet', { ...CLEAN(), pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 1 && h.includes('Przejdź do Mojego dnia'); });
 
@@ -482,6 +482,42 @@ tryc('układ: Stan dziś na górze, karty pod nim, potem Dziś, zwierzak niżej;
 });
 
 tryc('układ Treningu: główne zadanie na górze, program kolana niżej jako przycisk konturowy', () => { const h = view('train', BASE()), k = h.indexOf('data-tab="knee"'); return k > h.indexOf('data-addtrain') && h.indexOf('data-addwatch') < h.indexOf('data-addtrain') && /<button class="btn ghost" data-tab="knee"/.test(h); });
+
+// Zgłoszenie 06.11.2026: przewodnik, komunikaty do przeczytania i zamknięcia, pola bez klawiatury, Gotuję to dziś, dwa rytmy planu
+const NAVS = (h) => [...h.matchAll(/data-nav="([^"]+)"/g)].map((m) => m[1]);
+tryc('pomoc: przycisk Pomoc w nagłówku każdego ekranu', () => /<header>[\s\S]*data-tab="help"[\s\S]*<\/header>/.test(html));
+tryc('przewodnik: co najmniej 10 zadań, każde prowadzi do celu, który istnieje na ekranie docelowym', () => {
+  const L = NAVS(view('help', BASE()));
+  if (L.length < 10) throw new Error('zadań: ' + L.length);
+  const miss = L.filter((n) => { const [tab, id] = n.split('#'); return id && !view(tab, BASE({ tips: { day: true, health: true, set: true, meals: true, train: true } })).includes(`id="${id}"`); });
+  if (miss.length) throw new Error('brak celu: ' + miss.join(' '));
+  return true;
+});
+tryc('przewodnik: przejście ustawia ekran i rozwija zwinięty fragment', () => { view('help', BASE()); click({ nav: 'day#m_waist#obwody' }); return T.S().tab === 'day' && mainHtml().includes('data-fold="obwody" open'); });
+tryc('przewodnik: przywraca pierwsze kroki i wskazówki', () => { const h = view('help', BASE()); click({ guideshow: '1' }); return h.includes('data-tipsreset') && T.S().guide.hidden === false; });
+tryc('komunikat: czas z długości tekstu, od 3 do 12 s', () => { const a = T.toastMs('Zapisano'), b = T.toastMs('x'.repeat(120)), c = T.toastMs('x'.repeat(2000)); return a >= 3000 && b > a && c === 12000; });
+tryc('komunikat: dłużej podwaja czas, do zamknięcia bez czasu', () => { const S = T.S(), a = T.toastMs('Zapisano'); S.toastLen = 'long'; const b = T.toastMs('Zapisano'); S.toastLen = 'stay'; const c = T.toastMs('Zapisano'); S.toastLen = 'std'; return b === 2 * a && c === 0; });
+tryc('komunikat: przycisk zamknięcia i przejścia, rola status', () => { T.toast('Dodano', { act: 'tab', arg: 'meals', label: 'Plan dnia' }); const h = els.toast.innerHTML; return h.includes('data-toastclose') && h.includes('data-tab="meals"') && h.includes('Plan dnia') && /id="toast"[^>]*role="status"|role="status"[^>]*id="toast"/.test(html); });
+tryc('komunikat: tekst jest escapowany', () => { T.toast('<img src=x>'); return !els.toast.innerHTML.includes('<img'); });
+tryc('komunikat: Ustawienia mają wybór czasu komunikatów', () => { const h = view('set', BASE()); return h.includes('id="komunikaty"') && h.includes('data-toastlen="stay"'); });
+tryc('komunikat: po zapisie posiłku w pierwszych krokach przycisk do następnego kroku', () => { view('meals', { ...NEWU(), kg: '82', guide: { hidden: false, dataOk: true, seenPet: false }, pet: { ...PETA } }); click({ addmeal: 's1' }); return /data-(tab|goto|nav)="/.test(els.toast.innerHTML); });
+tryc('pola: Ustawienia mają przyciski − i + przy wadze i wzroście', () => { const h = view('set', BASE()); return h.includes('data-stp="kg"') && h.includes('data-stp="cm"'); });
+tryc('pola: + przy wadze dodaje 0,1 kg', () => { view('set', BASE({ kg: '82' })); click({ stp: 'kg', d: '1' }); return T.S().kg === '82,1'; });
+tryc('pola: − przy wadze odejmuje 0,1 kg', () => { view('set', BASE({ kg: '82' })); click({ stp: 'kg', d: '-1' }); return T.S().kg === '81,9'; });
+tryc('pola: krok nie wychodzi poza limit', () => { view('set', BASE({ cm: '220' })); click({ stp: 'cm', d: '1' }); return T.S().cm === '220'; });
+tryc('pola: puste pole wagi dnia zaczyna od ostatniego ważenia, potem krok', () => {
+  const k = `meas.${dk(0)}.w`; view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } })); click({ stp: k, d: '1' }); const a = T.S().meas[dk(0)].w; click({ stp: k, d: '1' }); return a === '80,4' && T.S().meas[dk(0)].w === '80,5';
+});
+tryc('pola: sen zaczyna od 7 h i idzie co pół godziny', () => { const k = `meas.${dk(0)}.sleep`; view('day', BASE()); click({ stp: k, d: '1' }); click({ stp: k, d: '1' }); return T.S().meas[dk(0)].sleep === '7,5'; });
+tryc('pola: Pomiary dnia mają przyciski przy wadze, krokach i śnie', () => { const h = view('day', BASE()); return ['w', 'steps', 'sleep'].every((x) => h.includes(`data-stp="meas.${dk(0)}.${x}"`)); });
+tryc('trening: szybki wybór czasu 30, 45, 60, 90 min', () => { const h = view('train', BASE()); if (![30, 45, 60, 90].every((v) => h.includes(`data-setv="tr.wmin" data-v="${v}"`))) return false; click({ setv: 'tr.wmin', v: '45' }); return T.S().tr.wmin === '45'; });
+tryc('gotuję: przepis ma przycisk Gotuję to dziś', () => { T.S().recipe = 'o10'; return view('recipe', BASE()).includes('data-cook="o10"'); });
+tryc('gotuję: danie trafia do planu dnia w miejsce posiłku tego samego rodzaju', () => { view('recipe', BASE({ swaps: {} })); click({ cook: 'o10' }); const ids = T.planIds(); return ids.includes('o10') && ids.filter((id) => T.MEALS.find((m) => m.id === id).t === 'obiad').length === 1; });
+tryc('gotuję: Według planu zapisuje wybrane danie, plan pokazuje Twój wybór', () => { view('recipe', BASE({ swaps: {}, once: true })); click({ cook: 'o10' }); const h = view('meals', {}); click({ dayplan: '1' }); return h.includes('Twój wybór') && (T.S().days[T.todayKey()] || []).some((e) => e.id === 'o10'); });
+tryc('rytm: filtr Na co dzień pokazuje dania do 20 min', () => { const S = T.S(); view('meals', BASE()); S.f.type = 'all'; S.f.pace = 'quick'; const L = T.filtered(); S.f.pace = 'all'; S.f.type = 'obiad'; return L.length > 5 && L.every((o) => o.m.min <= 20); });
+tryc('rytm: filtr Na weekend pokazuje dania od 25 min', () => { const S = T.S(); S.f.type = 'obiad'; S.f.pace = 'big'; const L = T.filtered(); S.f.pace = 'all'; return L.length > 3 && L.every((o) => o.m.min >= 25); });
+tryc('rytm: Posiłki mają wybór Na co dzień i Na weekend', () => { const h = view('meals', BASE()); return h.includes('id="rytm"') && h.includes('data-pace="quick"') && h.includes('data-pace="big"'); });
+tryc('plan: obiady w dni robocze do 20 min, w weekend większe danie', () => [1, 2, 3, 4, 5].every((d) => T.PLAN[d].map((id) => T.MEALS.find((m) => m.id === id)).filter((m) => m.t === 'obiad').every((m) => m.min <= 20)) && [6, 0].every((d) => T.PLAN[d].map((id) => T.MEALS.find((m) => m.id === id)).some((m) => m.t === 'obiad' && m.min >= 25)));
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
