@@ -33,7 +33,7 @@ const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.webmanifes
 const missing = manifest.icons.map((i) => i.src).concat(['icons/apple-touch-icon.png']).filter((f) => !fs.existsSync(path.join(root, f)));
 check('manifest: nazwa Miara i wszystkie ikony istnieją', manifest.name === 'Miara' && !missing.length, missing.join(', '));
 const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-const swMissing = [...sw.matchAll(/'\.\/([^']+)'/g)].map((m) => m[1]).filter((f) => f && !fs.existsSync(path.join(root, f)));
+const swMissing = [...sw.matchAll(/'\.\/([^']+)'/g)].map((m) => m[1].split('?')[0]).filter((f) => f && !fs.existsSync(path.join(root, f)));
 check('service worker: każdy plik z listy istnieje', !swMissing.length, swMissing.join(', '));
 check('zgodność danych: klucz pamięci i identyfikator kopii bez zmian', code.includes("'talerz-trening-v1'") && code.includes("app:'talerz-i-trening'"));
 check('app.js: brak atrybutów on...= (CSP)', !/\son[a-z]+=["']/i.test(code));
@@ -237,6 +237,10 @@ tryc('dane: cel z BMI poniżej 18,5 daje ostrzeżenie, ale zapisuje', () => { vi
 tryc('dalej: ze zwierzakiem prowadzi do następnego kroku w Moim dniu', () => view('set', { ...NEWU(), ...OKD, pet: { ...PETA }, guide: { hidden: false, dataOk: true, seenPet: false } }).includes('<button class="btn" data-tab="day" style="width:100%">Dalej: wpisz dzisiejszą wagę</button>'));
 tryc('dalej: po pierwszych krokach dwa przyciski do Mojego dnia w Ustawieniach', () => { const h = view('set', { ...CLEAN(), ...OKD, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 2 && h.includes('Przejdź do Mojego dnia'); });
 tryc('dalej: ekran zwierzaka kończy się przyciskiem do Mojego dnia', () => { const h = view('pet', { ...CLEAN(), pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 1 && h.includes('Przejdź do Mojego dnia'); });
+
+// Favicon zgodny z logo: kafel jak ikona aplikacji, trzy łuki, linia trendu i kropka; nowa wersja omija pamięć podręczną
+tryc('favicon: kafel, trzy łuki, linia trendu i kropka jak w logo', () => { const f = fs.readFileSync(path.join(root, 'brand/miara-favicon.svg'), 'utf8'); return /<rect[^>]*rx="22"[^>]*fill="#2B6A55"/.test(f) && (f.match(/A33 33/g) || []).length === 3 && /<path d="M[\d.]+ [\d.]+L[\d.]+ [\d.]+L[\d.]+ [\d.]+L[\d.]+ [\d.]+"/.test(f) && f.includes('<circle'); });
+tryc('favicon: odnośnik z wersją omija pamięć podręczną (brand/ ma max-age 7 dni)', () => /<link rel="icon" href="brand\/miara-favicon\.svg\?v=2"/.test(html));
 
 console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
 process.exit(bad ? 1 : 0);

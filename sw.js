@@ -10,7 +10,7 @@ const ASSETS = [
   './pet.js',
   './sw-register.js',
   './manifest.webmanifest',
-  './brand/miara-favicon.svg',
+  './brand/miara-favicon.svg?v=2',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png'
