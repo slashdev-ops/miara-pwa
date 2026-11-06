@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -589,6 +589,24 @@ tryc('liczby: czas treningu 1:75 odrzucony', () => !!cn('tr.wmin', '1:75').err);
 tryc('liczby: komunikat błędu z przykładem dla tego pola, nie wagi', () => !/82,4/.test(cn('meas.d.steps', 'abc').err) && /82,4/.test(cn('meas.d.w', 'abc').err));
 tryc('sen: 6:75 w tekście odrzucone przez walidację', () => !!cn('meas.d.sleep', '6:75').err && !cn('meas.d.sleep', '6:59').err);
 tryc('sen: karty piszą sen w godzinach i minutach', () => view('day', BASE({ meas: { [dk(0)]: { sleep: '5:20' }, [dk(1)]: { sleep: '5:45' } } })).includes('sen: 5 h 45 min i 5 h 20 min'));
+
+// Zgłoszenie 06.11.2026: przytrzymanie − i +, pola według WCAG 2.2, scenariusze do sprawdzania bez wpisywania
+tryc('przytrzymanie: krok ze wspólnej funkcji, większy krok przy długim trzymaniu', () => { view('set', BASE({ kg: '82' })); T.stpApply('kg', 1, 1); const a = T.S().kg; T.stpApply('kg', 1, 5); return a === '82,1' && T.S().kg === '82,6'; });
+tryc('przytrzymanie: obsługa wciśnięcia i puszczenia przycisku', () => /addEventListener\('pointerdown'/.test(code) && /addEventListener\('pointerup'/.test(code) && /addEventListener\('pointercancel'/.test(code));
+tryc('przytrzymanie: po puszczeniu fokus wraca na ten sam przycisk', () => /data-stp="\$\{[^}]+\}"\]\[data-d="\$\{[^}]+\}"\]/.test(code) && /\.focus\(\{preventScroll:true\}\)/.test(code));
+tryc('przytrzymanie: przyciski bez zaznaczania tekstu i z szybkim dotykiem', () => /\.stp\{[^}]*touch-action:manipulation/.test(sysCss) && /\.stp\{[^}]*user-select:none/.test(sysCss));
+tryc('klawiatura: strzałka w górę w polu zwiększa wartość o krok', () => { view('set', BASE({ kg: '82' })); let pd = false; (lis.keydown || []).forEach((f) => f({ key: 'ArrowUp', target: { dataset: { k: 'kg' }, value: '82' }, preventDefault: () => { pd = true; } })); return pd && T.S().kg === '82,1'; });
+tryc('podpowiedź: puste pole wagi dnia pokazuje ostatnie ważenie', () => /id="m_w"[^>]*|placeholder="80,4"/.test(view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } }))) && view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } })).includes('placeholder="80,4"'));
+tryc('fokus niezasłonięty: przewijanie z marginesem na dolny pasek', () => /html\{[^}]*scroll-padding-bottom:/.test(sysCss));
+tryc('komunikat dla czytnika: obszar aria-live na wartości pól', () => /id="sr"[^>]*aria-live="polite"|aria-live="polite"[^>]*id="sr"/.test(html));
+tryc('błąd pod polem: komunikat powiązany z polem', () => /aria-describedby/.test(code) && /class="err"|className='err'/.test(code));
+tryc('scenariusze: co najmniej 5, każdy z opisem, co sprawdzić', () => { const k = Object.keys(T.SCEN); return k.length >= 5 && k.every((n) => T.SCEN[n].t && T.SCEN[n].chk && T.SCEN[n].chk.length > 30); });
+tryc('scenariusze: Pomoc ma przyciski do każdego scenariusza', () => { const h = view('help', BASE()); return Object.keys(T.SCEN).every((n) => h.includes(`data-scen="${n}"`)); });
+tryc('scenariusz migrena: najpierw przeciwwskazanie, licznik dni z lekiem', () => { const h = view('health', T.scenS('migrena')); return firstAct(h).includes('przeciwwskazanie') && planOf(h).includes('10 dni z lekiem'); });
+tryc('scenariusz minitabletka: bez przeciwwskazania', () => { const h = view('health', T.scenS('minitabletka')); return !planOf(h).includes('przeciwwskazanie') && planOf(h).includes('dopuszczalna'); });
+tryc('scenariusz hashimoto: TSH i talia osobno', () => { const h = planOf(view('health', T.scenS('hashimoto'))); return h.includes('TSH 6-8 tygodni') && h.includes('osobno'); });
+tryc('scenariusz wpisy: + przy wadze zaczyna od wczorajszego ważenia', () => { view('day', T.scenS('wpisy')); click({ stp: `meas.${dk(0)}.w`, d: '1' }); return T.S().meas[dk(0)].w === '80,4'; });
+tryc('scenariusz start: pierwsze wejście', () => T.scenS('start').onb === false);
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);

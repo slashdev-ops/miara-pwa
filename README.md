@@ -56,6 +56,12 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
   w Ustawieniach można je wydłużyć albo zostawić do zamknięcia (WCAG 2.2.1, `role="status"`).
 - **Pola liczbowe** mają przyciski − i +: puste pole zaczyna od ostatniej wartości (waga z ostatniego ważenia),
   krok zależy od pola, limity jak przy wpisywaniu. Czas treningu jednym dotknięciem: 30, 45, 60, 90 min.
+- **Przytrzymanie − i +** zmienia wartość coraz szybciej; po puszczeniu fokus zostaje na przycisku, przycisk nie przesuwa
+  się pod palcem, a nowa wartość trafia do czytnika ekranu. Strzałki w górę i w dół działają w polu, błąd widać od razu
+  pod polem (WCAG 2.2: 2.4.3, 2.4.11, 3.3.1, 3.3.7, 4.1.3).
+- **Scenariusze do sprawdzania** (Pomoc → Sprawdź działanie, albo adres `#demo-migrena`, `#demo-wpisy`,
+  `#demo-hashimoto`, `#demo-minitabletka`, `#demo-start`): gotowe dane przykładowe z opisem, co powinno się pokazać;
+  nic się nie zapisuje.
 - **Gotuję to dziś** w przepisie wstawia danie do planu dnia; plan tygodnia ma dwa rytmy: obiady do 20 min
   w dni robocze i jedno większe danie w weekend, z filtrem „Na co dzień” i „Na weekend”.
 

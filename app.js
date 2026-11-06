@@ -146,14 +146,14 @@ function dataGap(){let w=0,i=0;lastKeys(28).forEach(k=>{const m=(S.meas||{})[k];
 function hm(v){let H=Math.floor(v),M=Math.round((v-H)*60);if(M===60){H++;M=0}return [H,M]}
 function fmtSleep(v){const [H,M]=hm(v);return M?`${H} h ${M} min`:`${H} h`}
 function sleepFmt(v){const [H,M]=hm(v);return `${H}:${String(M).padStart(2,'0')}`}
-function sleepField(k,m){const has=String(m.sleep||'').trim()!=='',[H,M]=has?hm(num(m.sleep)):['',''];
+function sleepField(k,m){const has=String(m.sleep||'').trim()!=='',[H,M]=has?hm(num(m.sleep)):['',''],ls=lastMeas('sleep',k),[pH,pM]=ls?hm(num(ls)):[7,0];
   return `<div class="field sleep"><label for="m_sleep">Sen</label><span class="num"><button class="stp" data-stp="meas.${k}.sleep" data-d="-1" aria-label="Sen: mniej o 15 minut">−</button>`
-    +`<input type="text" inputmode="numeric" id="m_sleep" data-sl="h" data-day="${k}" value="${H}" placeholder="7" aria-label="Sen, godziny"><span class="unit">h</span>`
-    +`<input type="text" inputmode="numeric" id="m_sleepm" data-sl="m" data-day="${k}" value="${has?M:''}" placeholder="0" aria-label="Sen, minuty"><span class="unit">min</span>`
+    +`<input type="text" inputmode="numeric" id="m_sleep" data-sl="h" data-day="${k}" value="${H}" placeholder="${pH}" aria-label="Sen, godziny"><span class="unit">h</span>`
+    +`<input type="text" inputmode="numeric" id="m_sleepm" data-sl="m" data-day="${k}" value="${has?M:''}" placeholder="${pM}" aria-label="Sen, minuty"><span class="unit">min</span>`
     +`<button class="stp" data-stp="meas.${k}.sleep" data-d="1" aria-label="Sen: więcej o 15 minut">+</button></span></div>`}
 function measHtml(){
   const k=todayKey(),m=S.meas[k]||(S.meas[k]={});
-  const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" placeholder="${ph||''}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`;
+  const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" placeholder="${ph||lastMeas(key,k)}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`;
   let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, po toalecie, przed jedzeniem. Kroki i sen przepisz z zegarka. Obwody co 2 tygodnie. Sen wpisz w godzinach i minutach, tak jak pokazuje zegarek.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+sleepField(k,m)+'</div>'+cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej zawsze w tych samych warunkach: rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). Wpisany BMR z pomiaru BIA zastępuje wzór przez 90 dni, a waga z pomiarów zastępuje wagę z ustawień.</p></details>';
   const ks=lastKeys(28).reverse(),val=(x,key)=>{const v=num((S.meas[x]||{})[key]);return v>0?v:null};
   const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
@@ -625,9 +625,22 @@ function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.is
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),JSON.parse(r));}catch(e){}return clone(DEF)}
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
-let DEMO=typeof location!=='undefined'&&location.hash==='#demo',DEMO_I=0;
-let S=DEMO?merge(clone(DEF),PET.demo().S):load();
-if(DEMO)setInterval(()=>{DEMO_I++;const a=document.activeElement;if((S.tab==='day'||S.tab==='pet')&&!(a&&a.dataset&&a.dataset.k))render()},3000);
+// ---------- Scenariusze do sprawdzania: dane przykładowe pod #demo-<nazwa>, nic się nie zapisuje ----------
+const SCEN={
+  start:{t:'Pierwsze wejście',chk:'Wprowadzenie, potem „Pierwsze kroki 0 z 6” w Moim dniu i wskazówka „Pierwszy raz tutaj?” na każdym ekranie.',f:()=>({onb:false,guide:{hidden:false,dataOk:false,seenPet:false},tips:{},pet:null,petSeen:[],days:{},meas:{},hab:{},reviews:{}})},
+  wpisy:{t:'Wpisy dnia',tab:'day',chk:'Mój dzień, Pomiary dnia: + przy wadze wstawia wczorajsze 80,4 kg, przytrzymanie zmienia wartość coraz szybciej, sen wpisujesz cyframi (6 i 13), minuty 75 pokazują błąd pod polem i wracają.',
+    f:b=>{const m=Object.assign({},b.meas);m[nAgo(0)]={};m[nAgo(1)]=Object.assign({},m[nAgo(1)],{w:'80,4',sleep:'6:13',steps:'8500'});return {meas:m}}},
+  migrena:{t:'Migrena z aurą i Yaz',tab:'health',chk:'Zdrowie: „Najpierw” każe porozmawiać z ginekologiem, bo Yaz zawiera estrogen; licznik 10 dni z lekiem w 30 dniach; w 12 tygodniach ocena 3 cykli. Mój dzień: dzień z bólem i karta „Po krótkich nocach”.',f:b=>migPain(b,'yaz')},
+  minitabletka:{t:'Migrena z aurą i minitabletka',tab:'health',chk:'Zdrowie: bez przeciwwskazania, zamiast niego „Twoja tabletka jest dopuszczalna przy aurze”; „Najpierw” to licznik dni z lekiem.',f:b=>migPain(b,'cerazette')},
+  hashimoto:{t:'Hashimoto, lipodemia, insulinooporność',tab:'health',chk:'Zdrowie: TSH 6-8 tygodni po zmianie tabletek (Yasmin), lewotyroksyna na czczo, talia i uda osobno, cel 5-7% masy ciała; w 12 tygodniach przedziały wagi.',f:()=>({prof:{cond:{hashi:true,lip:true,io:true},pill:'yasmin'},lip:true,goal:'70'})},
+  pokaz:{t:'Pełny pokaz',tab:'day',chk:'70 dni danych: Stan dziś, trendy, zwierzak z odznakami, przegląd tygodnia; zakładki działają jak na co dzień.',f:()=>({})}};
+function migPain(b,pill){const pain={},m=Object.assign({},b.meas);for(let i=0;i<12;i++)pain[nAgo(i*2)]={aura:i<3,med:i<10};[1,3,5].forEach(i=>{m[nAgo(i)]=Object.assign({},m[nAgo(i)],{cyc:'P'})});
+  m[nAgo(0)]=Object.assign({},m[nAgo(0)],{sleep:'5:20'});m[nAgo(1)]=Object.assign({},m[nAgo(1)],{sleep:'5:45'});return {prof:{cond:{aura:true,mig:true},pill},pain,meas:m}}
+function scenS(n){const b=PET.demo().S,sc=SCEN[n];if(!sc)return b;return Object.assign(b,sc.f(b),sc.tab?{tab:sc.tab}:{})}
+const DEMO_N=typeof location!=='undefined'&&/^#demo-/.test(location.hash)&&SCEN[location.hash.slice(6)]?location.hash.slice(6):'';
+let DEMO=typeof location!=='undefined'&&(location.hash==='#demo'||!!DEMO_N),DEMO_I=0;
+let S=DEMO?merge(clone(DEF),DEMO_N?scenS(DEMO_N):PET.demo().S):load();
+if(DEMO&&!DEMO_N)setInterval(()=>{DEMO_I++;const a=document.activeElement;if((S.tab==='day'||S.tab==='pet')&&!HOLD&&!(a&&a.dataset&&(a.dataset.k||a.dataset.sl)))render()},3000);
 const open=new Set();
 
 // ---------- Obliczenia ----------
@@ -637,6 +650,24 @@ const STEP={kg:.1,goal:.5,w:.1,cm:1,age:1,steps:500,sleep:.25,waist:.5,hip:.5,th
 const STP0={sleep:7,steps:5000,wmin:45,wk:300,min:45,speed:5,grade:0,watts:100,cm:165,age:30};
 // Pierwsze naciśnięcie pustego pola: ostatnia zapisana wartość (waga z ostatniego ważenia), inaczej typowa
 function stpStart(k){const a=k.split('.'),f=a[a.length-1];if(a[0]==='meas'){const ks=Object.keys(S.meas||{}).filter(x=>x<a[1]&&num((S.meas[x]||{})[f])>0).sort();if(ks.length)return num(S.meas[ks[ks.length-1]][f]);if(f==='w')return kg()}if(f==='goal')return kg();if(f==='kg')return kg();return STP0[f]!=null?STP0[f]:LIM[f][0]}
+// Krok − i +: jedna funkcja dla dotknięcia, przytrzymania i strzałek; mult to mnożnik kroku przy długim trzymaniu
+function stpApply(k,dir,mult){const f=k.split('.').pop(),st=STEP[f],L=LIM[f],a=k.split('.');if(!st)return false;if(a[0]==='meas'){S.meas[a[1]]=S.meas[a[1]]||{}}
+  const raw=k.split('.').reduce((o,x)=>o==null?o:o[x],S),has=raw!=null&&String(raw).trim()!=='';let v=has?num(raw)+dir*st*(mult||1):stpStart(k);v=Math.min(L[1],Math.max(L[0],v));setPath(k,f==='sleep'?sleepFmt(v):stpFmt(v,st));return true}
+function stpVal(k){return k.split('.').reduce((o,x)=>o==null?o:o[x],S)}
+// W trakcie przytrzymania zmienia się tylko pole, bez przerysowania ekranu (przycisk zostaje pod palcem)
+function stpShow(k){if(/\.sleep$/.test(k)){const [H,M]=hm(num(stpVal(k))),a=document.getElementById('m_sleep'),b=document.getElementById('m_sleepm');if(a)a.value=H;if(b)b.value=M;return}
+  const el=document.querySelector(`[data-k="${k}"]`);if(el)el.value=stpVal(k)}
+// Po zmianie: przerysowanie, fokus na tym samym przycisku (WCAG 2.4.3), nowa wartość dla czytnika ekranu (4.1.3)
+// Przycisk zostaje w tym samym miejscu ekranu, nawet gdy nad nim pojawi się nowa karta (bez przesunięcia pod palcem)
+function stpDone(k,d){const v=num(stpVal(k)),sel=`[data-stp="${k}"][data-d="${d}"]`,o=document.querySelector(sel),y0=o&&o.getBoundingClientRect?o.getBoundingClientRect().top:null;
+  if(/^meas\.[^.]+\.w$/.test(k))PET.react('weigh');if(/^meas\.[^.]+\.sleep$/.test(k)&&v>=7)PET.react('sleepok');render();
+  const b=document.querySelector(sel);if(b&&y0!=null&&b.getBoundingClientRect)window.scrollBy(0,b.getBoundingClientRect().top-y0);if(b&&b.focus)b.focus({preventScroll:true});
+  const sr=document.getElementById('sr'),fl=b&&b.closest&&b.closest('.field'),lab=fl&&fl.querySelector('label');if(sr)sr.textContent=(lab?lab.textContent+': ':'')+(/\.sleep$/.test(k)?fmtSleep(v):String(stpVal(k)))}
+// Błąd widoczny od razu pod polem i powiązany z nim (WCAG 3.3.1, 3.3.3)
+function fieldErr(el,msg){const f=el.closest&&el.closest('.field');if(!f)return;let s=f.querySelector('.err');
+  if(msg){if(!s){s=document.createElement('small');s.className='err';s.id='err_'+(el.id||'pole');f.appendChild(s)}s.textContent=msg;f.classList.add('haserr');el.setAttribute('aria-describedby',s.id)}
+  else if(s){s.remove();f.classList.remove('haserr');el.removeAttribute('aria-describedby')}}
+function lastMeas(f,k){const ks=Object.keys(S.meas||{}).filter(x=>x<k&&String((S.meas[x]||{})[f]||'').trim()!=='').sort();return ks.length?String(S.meas[ks[ks.length-1]][f]):''}
 function stpFmt(v,st){return st<1?String(Math.round(v*10)/10).replace('.',','):String(Math.round(v))}
 const LIM={kg:[35,250],goal:[35,250],w:[35,250],cm:[120,220],age:[16,90],steps:[0,60000],sleep:[0,16],waist:[30,200],hip:[30,200],thigh:[20,120],fat:[3,60],ffm:[25,120],ecw:[30,50],bmr:[900,3000],min:[1,300],wmin:[1,300],wk:[10,3000],speed:[1,20],grade:[0,25],watts:[20,500]};
 const INT_K=new Set(['steps','bmr','age','min','wmin','wk']);
@@ -745,7 +776,7 @@ function filtered(){
 function petPts(k){const x=HABITS.find(h=>h.id==='pasmo');return dayPts(k)-(habOn(x,(S.hab||{})[k]||{},S.days[k]||[],k)?x.pts:0)}
 function petCtx(now){return {now:now||new Date(),pet:S.pet,once:!!S.once,pain:k=>!!(S.pain||{})[k],seen:S.petSeen||[],celeb:S.petCeleb&&S.petCeleb.day===todayKey()?S.petCeleb.id:null,key:keyOf,dayPts:k=>S.once&&onceDone(k)?Math.max(30,petPts(k)):petPts(k),entries:k=>S.days[k]||[],meas:k=>S.meas[k]||{},habs:k=>(S.hab||{})[k]||{},urges:k=>(S.urges||{})[k]||[],reviewed:Object.keys(S.reviews||{}).length>0,streak,weekPts,level,stage:stageInfo,avgW:(a,b)=>avgAgo(a,b,'w'),startW:(stageInfo()||{}).start||null,num}}
 // Kamień milowy zaliczany poza przerysowaniem przy wpisywaniu (REDRAW); świętowanie widoczne do obejrzenia ekranu zwierzaka
-function petState(){if(DEMO){const fr=PET.demo().frames,f=fr[DEMO_I%fr.length];S.pet.kind=f.kind;return PET.state(Object.assign(petCtx(),{force:f}))}const st=PET.state(petCtx());let ch=false;if(st.milestone&&!REDRAW){S.petSeen=(S.petSeen||[]).concat(st.milestone);S.petCeleb={id:st.milestone,day:todayKey()};ch=true}if(S.pet&&st.active>(S.pet.peak||0)){S.pet.peak=st.active;ch=true}if(ch)save();return st}
+function petState(){if(DEMO&&!DEMO_N){const fr=PET.demo().frames,f=fr[DEMO_I%fr.length];S.pet.kind=f.kind;return PET.state(Object.assign(petCtx(),{force:f}))}const st=PET.state(petCtx());let ch=false;if(st.milestone&&!REDRAW){S.petSeen=(S.petSeen||[]).concat(st.milestone);S.petCeleb={id:st.milestone,day:todayKey()};ch=true}if(S.pet&&st.active>(S.pet.peak||0)){S.pet.peak=st.active;ch=true}if(ch)save();return st}
 function petCardHtml(){if(!S.pet)return `<button class="petcard" data-petpick="1">${PET.svg('gaska','egg','ok',null)}<span class="petinfo"><b>Wybierz towarzysza</b><span class="small">Gąska albo kaczuszka będzie reagować na Twoje wpisy.</span></span></button>`;return PET.card(petState(),S.pet,esc)}
 function petPickHtml(){const p=S.pet;return `<div class="petstage">${PET.svg(p?p.kind:'gaska',p?'chick':'egg','happy',null)}</div>`+seg([['gaska','Gąska'],['kaczka','Kaczuszka']],p?p.kind:'','petkind')+(p?`<div class="panel"><div class="field"><label for="petname">Imię</label><input type="text" id="petname" data-k="pet.name" value="${esc(p.name||'')}" placeholder="Kluska" maxlength="20"></div></div>`:'')}
 function waistDelta(){const ks=Object.keys(S.meas||{}).filter(k=>num(S.meas[k].waist)>0).sort();if(ks.length<2)return null;const t0=Date.parse(ks[0]),t1=Date.parse(ks.at(-1));if(t1-t0<14*864e5)return null;const av=a=>a.reduce((s,k)=>s+num(S.meas[k].waist),0)/a.length;return av(ks.filter(k=>Date.parse(k)>=t1-27*864e5))-av(ks.filter(k=>Date.parse(k)<=t0+27*864e5))}
@@ -1105,9 +1136,10 @@ const HELP=[
 function renderHelp(){let h='<h2>Co chcesz zrobić?</h2><p class="small muted">Naciśnij Pokaż: Miara przeniesie Cię na właściwy ekran i podświetli miejsce.</p>',g='';
   HELP.forEach(([grp,lab,how,to])=>{if(grp!==g){h+=(g?'</div>':'')+`<h3 class="rh">${grp}</h3><div class="panel" style="padding:0 16px">`;g=grp}h+=`<div class="step"><span class="lab">${lab}<small class="hint">${how}</small></span><button class="btn small ghost" data-${to.includes('#')?'nav':'tab'}="${to}">Pokaż</button></div>`});
   h+='</div><h2>Co to znaczy?</h2><div class="panel" style="padding:0 16px">'+GLOSS.map(([,t,w,to])=>`<div class="step"><span class="lab">${t}<small class="hint">${w}</small></span><button class="btn small ghost" data-${to.includes('#')?'nav':'tab'}="${to}">Pokaż</button></div>`).join('');
+  h+='</div><h2>Sprawdź działanie</h2><p class="small muted">Dane przykładowe: nic się nie zapisuje, Twoje dane zostają. Wyjdź wraca do nich.</p><div class="panel" style="padding:0 16px">'+Object.entries(SCEN).map(([n,s])=>`<div class="step"><span class="lab">${s.t}<small class="hint">${s.chk}</small></span><button class="btn small ghost" data-scen="${n}">Otwórz</button></div>`).join('');
   h+='</div><h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
   document.getElementById('main').innerHTML=h}
-function render(){renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+function render(){renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -1125,9 +1157,7 @@ document.addEventListener('click',e=>{
   if(b.parentNode&&b.parentNode.id==='toast')toastHide();
   if(d.nav){const [tab,id,fd]=d.nav.split('#');S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
     if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.classList){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2400)}}else window.scrollTo(0,0);return}
-  if(d.stp){const k=d.stp,f=k.split('.').pop(),st=STEP[f],L=LIM[f],a=k.split('.');if(!st)return;if(a[0]==='meas'){S.meas[a[1]]=S.meas[a[1]]||{}}
-    const raw=k.split('.').reduce((o,x)=>o==null?o:o[x],S),has=raw!=null&&String(raw).trim()!=='';let v=has?num(raw)+(+d.d)*st:stpStart(k);v=Math.min(L[1],Math.max(L[0],v));setPath(k,f==='sleep'?sleepFmt(v):stpFmt(v,st));
-    if(/^meas\.[^.]+\.w$/.test(k))PET.react('weigh');if(/^meas\.[^.]+\.sleep$/.test(k)&&v>=7)PET.react('sleepok');save();render();return}
+  if(d.stp){if(STP_SKIP){STP_SKIP=false;return}if(!stpApply(d.stp,+d.d,1))return;save();stpDone(d.stp,d.d);return}
   if(d.cook){const m=MEALS.find(x=>x.id===d.cook),k=todayKey(),base=PLAN[new Date().getDay()],i=m?base.findIndex(id=>MEALS.find(x=>x.id===id).t===m.t):-1;if(i<0)return;
     S.swaps=S.swaps||{};S.swaps[k]=S.swaps[k]||{};if(base[i]===m.id)delete S.swaps[k][i];else S.swaps[k][i]=m.id;save();render();
     toast(`${SLOT_T[m.t]} na dziś: ${m.n}. Wieczorem „Według planu” zapisze to danie.`,{act:'tab',arg:'meals',label:'Plan dnia'});return}
@@ -1210,11 +1240,25 @@ document.addEventListener('click',e=>{
   else if(d.pace){S.f.pace=d.pace}
   else if(d.cond){S.prof=S.prof||{cond:{},pill:''};S.prof.cond=S.prof.cond||{};S.prof.cond[d.cond]=!S.prof.cond[d.cond];if(d.cond==='lip'&&S.prof.cond.lip)S.lip=true}
   else if(d.demoexit){location.hash='';location.reload();return}
+  else if(d.scen){location.hash='#demo-'+d.scen;location.reload();return}
   else if(d.sex){S.sex=d.sex}
   else if(d.reset){const days=S.days;S=clone(DEF);S.days=days;S.tab='set'}
   else return;
   save();render();
 });
+// Przytrzymanie − i +: krok od razu, po 0,4 s powtarzanie co 0,15 s, po 12 krokach co 0,08 s, po 40 krokach krokiem ×5;
+// zwykłe dotknięcie działa jak dotąd. Przerysowanie dopiero po kliknięciu, które przeglądarka wysyła po puszczeniu palca,
+// żeby kliknięcie nie trafiło w element przesunięty przez przerysowanie.
+let HOLD=null,STP_SKIP=false;
+const holdGap=n=>n>12?80:150,holdMult=n=>n>40?5:1;
+document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest('.stp');if(!b||e.button>0)return;e.preventDefault();
+  const k=b.dataset.stp,d=+b.dataset.d;if(!stpApply(k,d,1))return;stpShow(k);let n=0;try{b.setPointerCapture(e.pointerId)}catch(_){}
+  const rep=()=>{n++;stpApply(k,d,holdMult(n));stpShow(k);HOLD.t=setTimeout(rep,holdGap(n))};HOLD={k,d:b.dataset.d,t:setTimeout(rep,400)}});
+function holdEnd(){if(!HOLD)return;clearTimeout(HOLD.t);const h=HOLD;HOLD=null;STP_SKIP=true;save();setTimeout(()=>{STP_SKIP=false;stpDone(h.k,h.d)},350)}
+document.addEventListener('pointerup',holdEnd);document.addEventListener('pointercancel',holdEnd);
+// Strzałki w górę i w dół w polu liczbowym zmieniają wartość o krok (wzorzec spinbutton)
+document.addEventListener('keydown',e=>{const el=e.target;if(!el||!el.dataset||(e.key!=='ArrowUp'&&e.key!=='ArrowDown'))return;
+  const k=el.dataset.sl?`meas.${el.dataset.day}.sleep`:el.dataset.k;if(!k||!STEP[k.split('.').pop()])return;e.preventDefault();if(!stpApply(k,e.key==='ArrowUp'?1:-1,1))return;stpShow(k);save()});
 document.addEventListener('input',e=>{
   const el=e.target;
   if(el.dataset.r){const k=el.dataset.r,v=num(el.value);S.f[k]=v;save();
@@ -1223,12 +1267,12 @@ document.addEventListener('input',e=>{
     renderMealList();return}
   if(el.dataset.sl){const k=el.dataset.day,hs=String(document.getElementById('m_sleep').value).trim(),ms=String(document.getElementById('m_sleepm').value).trim();
     const bad=!/^\d{0,2}$/.test(hs)||!/^\d{0,2}$/.test(ms)?'Wpisz same cyfry':+ms>59?'Minuty od 0 do 59':(+hs||0)+(+ms||0)/60>16?'Sen najwyżej 16 godzin':'';
-    el.classList.toggle('bad',!!bad);el.setAttribute('aria-invalid',bad?'true':'false');el.title=bad;if(bad)return;
+    el.classList.toggle('bad',!!bad);el.setAttribute('aria-invalid',bad?'true':'false');el.title=bad;fieldErr(el,bad);if(bad)return;
     S.meas[k]=S.meas[k]||{};S.meas[k].sleep=hs===''&&ms===''?'':`${+hs||0}:${String(+ms||0).padStart(2,'0')}`;save();return}
   const k=el.dataset.k;if(!k)return;
   if(el.type==='checkbox'){setPath(k,el.checked);if(k==='body'&&el.checked)toast('Sylwetka pokazuje trend 4 tygodni. Pojedyncze pomiary się wahają.');save();render();return}
   let v=el.value;const im=el.getAttribute('inputmode');
-  if(im==='decimal'||im==='numeric'){const c=checkNum(k,v);el.classList.toggle('bad',!!c.err);el.setAttribute('aria-invalid',c.err?'true':'false');el.title=c.err||'';if(c.err)return}
+  if(im==='decimal'||im==='numeric'){const c=checkNum(k,v);el.classList.toggle('bad',!!c.err);el.setAttribute('aria-invalid',c.err?'true':'false');el.title=c.err||'';fieldErr(el,c.err||'');if(c.err)return}
   setPath(k,v);save();
   const pos=el.selectionStart;REDRAW=true;try{render()}finally{REDRAW=false}
   const n=document.querySelector(`[data-k="${k}"]`);if(n){n.focus({preventScroll:true});try{n.setSelectionRange(pos,pos)}catch(_){}}
