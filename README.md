@@ -59,6 +59,16 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 - **Gotuję to dziś** w przepisie wstawia danie do planu dnia; plan tygodnia ma dwa rytmy: obiady do 20 min
   w dni robocze i jedno większe danie w weekend, z filtrem „Na co dzień” i „Na weekend”.
 
+## Profil zdrowia i plan działań
+
+- W Zdrowiu osoba zaznacza choroby (Hashimoto, lipodemia, migrena z aurą, migrena, insulinooporność) i tabletki
+  antykoncepcyjne z listy 13 popularnych preparatów; profil zostaje w telefonie, kopia bez danych zdrowotnych go pomija.
+- „Twój plan” to reguły z dowodami i liczbami z wpisów, np. migrena z aurą i tabletka z estrogenem jako pierwsze
+  działanie (kategoria 4 w kryteriach WHO), licznik dni z lekiem (ICHD-3), TSH po zmianie tabletek przy Hashimoto.
+  Każde działanie podaje siłę dowodów.
+- „12 tygodni”: waga w przedziale z deficytu planu i kamienie milowe; aplikacja celowo nie prognozuje wyników badań,
+  bólu ani samopoczucia, tylko pokazuje je z wpisów.
+
 ## Założenia projektu
 
 | Obszar | Rozwiązanie |
