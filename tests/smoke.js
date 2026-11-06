@@ -489,7 +489,7 @@ tryc('pomoc: przycisk Pomoc w nagłówku każdego ekranu', () => /<header>[\s\S]
 tryc('przewodnik: co najmniej 10 zadań, każde prowadzi do celu, który istnieje na ekranie docelowym', () => {
   const L = NAVS(view('help', BASE()));
   if (L.length < 10) throw new Error('zadań: ' + L.length);
-  const miss = L.filter((n) => { const [tab, id] = n.split('#'); return id && !view(tab, BASE({ tips: { day: true, health: true, set: true, meals: true, train: true } })).includes(`id="${id}"`); });
+  const miss = L.filter((n) => { const [tab, id] = n.split('#'); return id && !view(tab, BASE({ sex: 'K', tips: { day: true, health: true, set: true, meals: true, train: true } })).includes(`id="${id}"`); });
   if (miss.length) throw new Error('brak celu: ' + miss.join(' '));
   return true;
 });
@@ -540,6 +540,31 @@ tryc('po co: Makro na porcję i Pod trening z wyjaśnieniem', () => { const h = 
 tryc('po co: przejście otwiera zagnieżdżone zwinięcia', () => { view('help', BASE()); click({ nav: 'day#fold_prognoza#wiecej,prognoza' }); const h = mainHtml(); return h.includes('data-fold="wiecej" open') && h.includes('data-fold="prognoza" open') && h.includes('id="fold_prognoza"'); });
 
 tryc('przyciski: ten sam rozmiar w zwiniętych sekcjach (box-sizing bez dziedziczenia przez details)', () => sysCss.includes('*,*::before,*::after{box-sizing:border-box}') && !sysCss.includes('box-sizing:inherit'));
+
+// Zgłoszenie 06.11.2026: Tydzień cyklu wyjaśniony; profil zdrowia, plan działań z danych, 12 tygodni bez zmyślonych prognoz
+const PROF = (cond, pill) => ({ prof: { cond: Object.fromEntries(cond.map((c) => [c, true])), pill: pill || '' } });
+const planOf = (h) => { const m = h.match(/<section class="plan[^"]*"[\s\S]*?<\/section>/); return m ? m[0] : ''; };
+const firstAct = (h) => { const m = planOf(h).match(/<div class="act first">[\s\S]*?<\/div>/); return m ? m[0] : ''; };
+tryc('cykl: Tydzień cyklu dziś ma Po co', () => /Tydzień cyklu dziś[\s\S]{0,120}Po co:/.test(view('day', BASE({ sex: 'K' }))));
+tryc('cykl: Pomoc ma hasło Tydzień cyklu', () => view('help', BASE()).includes('Tydzień cyklu dziś'));
+tryc('profil: Zdrowie ma wybór chorób i co najmniej 12 tabletek, w tym Yaz i minitabletkę', () => { const h = view('health', BASE()); return h.includes('id="profil"') && ['hashi', 'lip', 'aura', 'mig', 'io'].every((c) => h.includes(`data-cond="${c}"`)) && (h.match(/<option value="[a-z_]+"/g) || []).length >= 12 && h.includes('value="yaz"') && h.includes('value="cerazette"'); });
+tryc('profil: zaznaczenie choroby zapisuje się w profilu', () => { view('health', BASE()); click({ cond: 'hashi' }); const a = T.S().prof.cond.hashi === true; click({ cond: 'hashi' }); return a && T.S().prof.cond.hashi === false; });
+tryc('plan: bez profilu prosi o zaznaczenie chorób', () => planOf(view('health', BASE({ prof: { cond: {}, pill: '' } }))).includes('Zaznacz wyżej'));
+tryc('plan: aura i Yaz: najpierw przeciwwskazanie WHO, kategoria 4', () => { const f = firstAct(view('health', BASE(PROF(['aura'], 'yaz')))); return f.includes('przeciwwskazanie') && f.includes('kategoria 4'); });
+tryc('plan: dni z aurą w dzienniku działają jak zaznaczona aura', () => firstAct(view('health', BASE({ ...PROF(['mig'], 'jeanine'), pain: { [dk(3)]: { aura: true } } }))).includes('przeciwwskazanie'));
+tryc('plan: aura i minitabletka bez przeciwwskazania', () => { const h = planOf(view('health', BASE(PROF(['aura'], 'cerazette')))); return !h.includes('przeciwwskazanie') && h.includes('dopuszczalna'); });
+tryc('plan: Hashimoto i tabletka z estrogenem: TSH 6-8 tygodni', () => planOf(view('health', BASE(PROF(['hashi'], 'yaz')))).includes('TSH 6-8 tygodni'));
+tryc('plan: drospirenon z ryzykiem zakrzepicy w liczbach', () => planOf(view('health', BASE(PROF([], 'yaz')))).includes('9-12 na 10 000'));
+tryc('plan: 10 dni z lekiem w 30 dniach: ostrzeżenie o nadużywaniu leków z liczbą', () => {
+  const pain = {}; for (let i = 0; i < 10; i++) pain[dk(i * 2)] = { med: true };
+  const f = firstAct(view('health', BASE({ ...PROF(['mig'], ''), pain }))); return f.includes('10 dni z lekiem') && f.includes('nadużywania');
+});
+tryc('plan: 4 dni z bólem w 30 dniach: pytanie o leczenie zapobiegawcze', () => { const pain = {}; for (let i = 0; i < 4; i++) pain[dk(i)] = {}; return planOf(view('health', BASE({ ...PROF(['mig'], ''), pain }))).includes('zapobiegawcze'); });
+tryc('plan: lipodemia: talia i uda osobno, kompresja', () => { const h = planOf(view('health', BASE(PROF(['lip'], '')))); return h.includes('kompresja') && h.includes('osobno'); });
+tryc('plan: każde działanie podaje siłę dowodów', () => { const h = planOf(view('health', BASE(PROF(['hashi', 'lip', 'mig', 'io'], 'yaz')))), n = (h.match(/<div class="act/g) || []).length, e = (h.match(/class="ev"/g) || []).length; return n >= 8 && n === e; });
+tryc('12 tygodni: tabela 12 tygodni z wagą w przedziale', () => { const h = view('health', BASE({ ...PROF(['hashi'], ''), kg: '80', goal: '70' })), m = h.match(/<table class="weeks"[\s\S]*?<\/table>/); return !!m && (m[0].match(/<tr class="wk"/g) || []).length === 12 && /7[0-9],[0-9]-7[0-9],[0-9] kg/.test(m[0]); });
+tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h = view('health', BASE({ ...PROF(['hashi', 'mig'], 'yaz'), kg: '80', goal: '70' })), m = (h.match(/<table class="weeks"[\s\S]*?<\/table>/) || [''])[0]; return !/TSH (spadnie|wyniesie)|samopoczucie (wzro|popraw)/.test(m) && h.includes('nie prognozuje'); });
+tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof.pill && !Object.keys(d.prof.cond).length; });
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
