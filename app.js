@@ -239,6 +239,7 @@ const SUPP=[
 function protCost(){return PROT.map(([id,n,pp])=>{const r=S.prices[id]||{},p=num(r.p),g=num(r.g);return {id,n,pp,c:p>0&&g>0?p/(g*pp/100)*20:null}})}
 function renderHealth(){
   let h='<p><button class="btn" data-tab="labs" style="width:100%">Moje badania</button></p><div class="note"><b>Co realne.</b> Przy chorobach przewlekłych, np. tarczycy, celem jest dobra kontrola wyników i objawów, nie wyleczenie. Insulinooporność często wyraźnie się poprawia przy spadku masy ciała, ruchu i śnie. Niedobory wyrównuje się według wyników badań.</div>';
+  h+=cardsHtml('health');
   const box=(title,items)=>`<details class="fold"><summary>${title}</summary><div class="panel">`+items.map(([a,b])=>`<div class="entry"><span class="txt"><b>${a}.</b> ${b}</span></div>`).join('')+'</div></details>';
   h+=box('Woda, uda i pośladki',[
     ['Waga skacze z dnia na dzień','Wahania o 1-2 kg to głównie woda: sól, węglowodany, cykl, trening (wiedza ogólna). Dlatego aplikacja patrzy na średnią z tygodnia i trend z 2-4 tygodni.'],
@@ -582,7 +583,7 @@ document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.datas
 // ---------- Kopia danych: eksport i import pliku (np. przez iCloud Drive) ----------
 const BK_SKIP=['tab','introStep','sosStep','sosTrig','recipe','recipeBack','labSel'];
 let BK_PENDING=null;
-function bkBuild(noHealth){const d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){d.labs=[];d.urges={};d.legs={};Object.values(d.meas||{}).forEach(m=>{delete m.fat;delete m.ffm;delete m.ecw;delete m.bmr;delete m.cyc})}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
+function bkBuild(noHealth){const d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){d.labs=[];d.urges={};d.legs={};d.pain={};Object.values(d.meas||{}).forEach(m=>{delete m.fat;delete m.ffm;delete m.ecw;delete m.bmr;delete m.cyc})}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
 function bkParse(text){try{const o=JSON.parse(text);if(!o||o.app!=='talerz-i-trening'||o.v!==1||!o.data||typeof o.data!=='object'||Array.isArray(o.data))return null;return o}catch(e){return null}}
 function bkSummary(d){return `${Object.keys(d.days||{}).length} dni z wpisami, ${Object.keys(d.meas||{}).length} dni z pomiarami, ${(d.labs||[]).length} wyników badań, ${((d.knee||{}).sessions||[]).length} sesji kolana, ${Object.keys(d.legs||{}).length} wpisów nóg`}
 async function bkExport(){
@@ -607,7 +608,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'80',cm:'170',age:'35',sex:'K',goal:'72',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,tips:{},petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,tips:{},pain:{},cardsOk:{},discreet:false,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),JSON.parse(r));}catch(e){}return clone(DEF)}
@@ -664,7 +665,7 @@ function tipHtml(tab){if(DEMO||!TIPS[tab]||(S.tips||{})[tab]||(tab==='day'&&guid
 // Dzień aktywny: 30 pkt albo, w trybie raz dziennie, zapisany wpis dnia (posiłki oraz trening albo kroki)
 function onceDone(k){const e=S.days[k]||[];return e.some(x=>x.kind==='m')&&(e.some(x=>x.kind==='t')||num((S.meas[k]||{}).steps)>0)}
 function dayOk(k){return dayPts(k)>=30||(!!S.once&&onceDone(k))}
-function streak(){let n=0,miss=0;const d=new Date();for(let i=0;i<366;i++){const x=new Date(d);x.setDate(d.getDate()-i);if(dayOk(keyOf(x))){n++;miss=0}else if(i===0){continue}else{miss++;if(miss>=2)break}}return n}
+function streak(){let n=0,miss=0;const d=new Date();for(let i=0;i<366;i++){const x=new Date(d);x.setDate(d.getDate()-i);if(dayOk(keyOf(x))){n++;miss=0}else if(i===0||(S.pain||{})[keyOf(x)]){continue}else{miss++;if(miss>=2)break}}return n}
 function habitsHtml(trained){
   const hk=todayKey(),hh=S.hab[hk]||{},wp=weekPts(),lv=level(wp),nx=LEVELS.find(x=>x[0]>wp);
   let g='<h2>Nawyki dnia</h2><div class="panel">'+HABITS.filter(x=>x.auto!=='u'||S.mode==='utrzymanie').map(x=>{const on=habOn(x,hh,day(),hk);return `<button class="opt hab ${on?'on':''}" data-hab="${x.id}" aria-pressed="${!!on}"><span class="box">${on?'✓':''}</span><span>${x.n}</span><span class="met">+${x.pts}</span></button>`}).join('')+'</div>';
@@ -719,7 +720,7 @@ function filtered(){
 
 // ---------- Zwierzak (pet.js): dane dla PET.state, karta, wybór, ekran postępu ----------
 function petPts(k){const x=HABITS.find(h=>h.id==='pasmo');return dayPts(k)-(habOn(x,(S.hab||{})[k]||{},S.days[k]||[],k)?x.pts:0)}
-function petCtx(now){return {now:now||new Date(),pet:S.pet,once:!!S.once,seen:S.petSeen||[],celeb:S.petCeleb&&S.petCeleb.day===todayKey()?S.petCeleb.id:null,key:keyOf,dayPts:k=>S.once&&onceDone(k)?Math.max(30,petPts(k)):petPts(k),entries:k=>S.days[k]||[],meas:k=>S.meas[k]||{},habs:k=>(S.hab||{})[k]||{},urges:k=>(S.urges||{})[k]||[],reviewed:Object.keys(S.reviews||{}).length>0,streak,weekPts,level,stage:stageInfo,avgW:(a,b)=>avgAgo(a,b,'w'),startW:(stageInfo()||{}).start||null,num}}
+function petCtx(now){return {now:now||new Date(),pet:S.pet,once:!!S.once,pain:k=>!!(S.pain||{})[k],seen:S.petSeen||[],celeb:S.petCeleb&&S.petCeleb.day===todayKey()?S.petCeleb.id:null,key:keyOf,dayPts:k=>S.once&&onceDone(k)?Math.max(30,petPts(k)):petPts(k),entries:k=>S.days[k]||[],meas:k=>S.meas[k]||{},habs:k=>(S.hab||{})[k]||{},urges:k=>(S.urges||{})[k]||[],reviewed:Object.keys(S.reviews||{}).length>0,streak,weekPts,level,stage:stageInfo,avgW:(a,b)=>avgAgo(a,b,'w'),startW:(stageInfo()||{}).start||null,num}}
 // Kamień milowy zaliczany poza przerysowaniem przy wpisywaniu (REDRAW); świętowanie widoczne do obejrzenia ekranu zwierzaka
 function petState(){if(DEMO){const fr=PET.demo().frames,f=fr[DEMO_I%fr.length];S.pet.kind=f.kind;return PET.state(Object.assign(petCtx(),{force:f}))}const st=PET.state(petCtx());let ch=false;if(st.milestone&&!REDRAW){S.petSeen=(S.petSeen||[]).concat(st.milestone);S.petCeleb={id:st.milestone,day:todayKey()};ch=true}if(S.pet&&st.active>(S.pet.peak||0)){S.pet.peak=st.active;ch=true}if(ch)save();return st}
 function petCardHtml(){if(!S.pet)return `<button class="petcard" data-petpick="1">${PET.svg('gaska','egg','ok',null)}<span class="petinfo"><b>Wybierz towarzysza</b><span class="small">Gąska albo kaczuszka będzie reagować na Twoje wpisy.</span></span></button>`;return PET.card(petState(),S.pet,esc)}
@@ -745,6 +746,42 @@ function guideHtml(){if(!guideActive())return '';const st=guideSteps(),n=st.filt
     +'<p style="text-align:right;margin:8px 0 0"><button class="btn ghost small" data-guidehide="1">Ukryj</button></p></div>'}
 // Komunikat po akcji z następnym krokiem, dopóki trwają pierwsze kroki
 function guideToast(base){if(!guideActive())return base;const nx=guideSteps().find(x=>!x.done);return `${base}. Dalej: ${nx.label.charAt(0).toLowerCase()+nx.label.slice(1)}.`}
+// ---------- Karty „Co się dzieje”: reguły z danych w telefonie; każda mówi, na czym się opiera ----------
+function nAgo(n){const d=new Date();d.setDate(d.getDate()-n);return keyOf(d)}
+function sleepAt(k){const v=num((S.meas[k]||{}).sleep);return v>0?v:null}
+function wAt(k){const v=num((S.meas[k]||{}).w);return v>0?v:null}
+function wAvg(a,b){const v=[];for(let i=a;i<=b;i++){const x=wAt(nAgo(i));if(x)v.push(x)}return {n:v.length,avg:v.length?v.reduce((s,x)=>s+x,0)/v.length:null}}
+function painAt(k){return (S.pain||{})[k]||null}
+function auraDays(){return Object.entries(S.pain||{}).filter(([k,p])=>p&&p.aura&&k>=nAgo(90)).length}
+function urges3(){return [0,1,2].reduce((a,i)=>a+((S.urges||{})[nAgo(i)]||[]).length,0)}
+const EV={m:'dowody mocne',u:'dowody umiarkowane',w:'wiedza ogólna'};
+const CARDS=[
+  {id:'aura',sens:1,ev:'m',when:()=>auraDays()>0,src:()=>`${auraDays()} ${auraDays()===1?'dzień':'dni'} z aurą w ostatnich 90 dniach (dziennik bólu)`,
+    t:'Migrena z aurą: porozmawiaj z ginekologiem',why:'Przy migrenie z aurą tabletki antykoncepcyjne z estrogenem zwiększają ryzyko udaru i w zaleceniach WHO są przeciwwskazaniem. Nie odstawiaj ich bez planu innej antykoncepcji: zmianę ustala lekarz.',
+    more:'Dzwoń 112, gdy aura trwa dłużej niż godzinę albo jest inna niż zwykle, gdy słabnie lub drętwieje jedna strona ciała, przy zaburzeniach mowy albo nagłym, najsilniejszym w życiu bólu.'},
+  {id:'bol_hormony',sens:1,ev:'m',when:()=>{const k=todayKey();return !!painAt(k)&&(S.meas[k]||{}).cyc==='P'},src:()=>'dziś: dzień z bólem głowy i zaznaczone dni bez hormonów',
+    t:'Ból głowy w dniach bez hormonów',why:'Spadek estrogenu w dniach bez hormonów często wyzwala migrenę. To znany wzorzec, a nie Twoja słabość.',todo:['Zaznacz aurę i lek','goto','painrow']},
+  {id:'bez_sil',ev:'u',when:()=>!!painAt(todayKey())||(sleepAt(todayKey())!=null&&sleepAt(todayKey())<6),src:()=>painAt(todayKey())?'dziś: dzień z bólem głowy':`sen ostatniej nocy: ${fmt1(sleepAt(todayKey()))} h (pomiary dnia)`,
+    t:'Mało sił na trening',why:'W dniu ataku migreny ruch zwykle nasila ból, a po złej nocy trening idzie gorzej. Regularny, umiarkowany ruch w lepsze dni może zmniejszać częstość migren.',todo:['Dziś odpoczywam','cardok','bez_sil']},
+  {id:'zla_noc',ev:'u',when:()=>{const a=sleepAt(todayKey()),b=sleepAt(nAgo(1));return a!=null&&b!=null&&a<6&&b<6},src:()=>`sen: ${fmt1(sleepAt(nAgo(1)))} h i ${fmt1(sleepAt(todayKey()))} h (2 ostatnie noce, pomiary dnia)`,
+    t:'Po krótkich nocach chce się jeść więcej',why:'Krótki sen zwiększa apetyt, zwłaszcza na słodkie i tłuste. To fizjologia, nie brak silnej woli.',todo:['Śniadanie z białkiem','tab','meals']},
+  {id:'stres',ev:'u',when:()=>urges3()>=2,src:()=>`${urges3()} wpisy ochoty w 3 dni (przycisk ochoty)`,
+    t:'Stres i ochota na jedzenie',why:'Przewlekły stres, w tym kortyzol, często przesuwa wybory w stronę jedzenia kalorycznego i psuje sen. Działa to przez zachowanie, a nie z dnia na dzień.',todo:['Plan na ochotę','tab','sos']},
+  {id:'skok_wagi',ev:'m',when:()=>{const w=wAt(todayKey()),a=wAvg(1,7);return w!=null&&a.n>=3&&w-a.avg>=0.8},src:()=>{const a=wAvg(1,7);return `dziś ${fmt1(wAt(todayKey()))} kg, średnia z ${a.n} ważeń w 7 dni ${fmt1(a.avg)} kg`},
+    t:'Skok wagi to zwykle woda',why:'Sól, węglowodany, cykl i trening wiążą wodę. Kilogram tłuszczu to około 7700 kcal nadwyżki, więc jeden dzień go nie zrobi.'},
+  {id:'waga_stoi',ev:'u',when:()=>{const a=wAvg(0,6),b=wAvg(21,27);return a.n>=2&&b.n>=2&&Math.abs(a.avg-b.avg)<0.2},src:()=>{const a=wAvg(0,6),b=wAvg(21,27);return `średnia teraz ${fmt1(a.avg)} kg (${a.n} ważeń), 3 tygodnie temu ${fmt1(b.avg)} kg (${b.n} ważeń)`},
+    t:'Waga stoi mimo starań',why:'Woda i cykl potrafią przez 1-2 tygodnie maskować spadek tłuszczu, a nowe leki mogą zmieniać masę ciała. Obwód talii pokazuje zmianę niezależnie od wody.',todo:['Wpisz obwód talii','goto','m_waist']}
+];
+function cardHtml(c,day){return `<div class="card panel" data-card="${c.id}"><h3>${c.t}</h3><p>${c.why}</p>${c.more?`<p class="small">${c.more}</p>`:''}<p class="small muted">Na podstawie: ${c.src()}. <span class="ev">${EV[c.ev]}</span></p>`
+  +((c.todo||day)?`<p class="cardact">${c.todo?`<button class="btn small" data-${c.todo[1]}="${c.todo[2]}">${c.todo[0]}</button>`:''}${day&&!(c.todo&&c.todo[1]==='cardok')?`<button class="btn ghost small" data-cardok="${c.id}">Rozumiem</button>`:''}</p>`:'')+'</div>'}
+function cardsHtml(where){const all=CARDS.filter(c=>c.when());
+  if(where==='health')return '<h2>Dlaczego tak się czuję</h2>'+(all.length?all.map(c=>cardHtml(c,false)).join(''):'<p class="small muted">Teraz nic szczególnego. Karty pojawią się, gdy dane coś pokażą.</p>');
+  const ok=S.cardsOk||{},list=all.filter(c=>ok[c.id]!==todayKey()&&!(S.discreet&&c.sens)).slice(0,2);
+  return list.length?'<h2>Co się dzieje</h2>'+list.map(c=>cardHtml(c,true)).join(''):''}
+// Dzień z bólem głowy: neutralny dla serii i zwierzaka, bez celu deficytu
+function painHtml(){const k=todayKey(),p=painAt(k),py=painAt(nAgo(1));
+  if(!p)return `<p class="painrow" id="painrow"><button class="btn ghost small" data-pain="today">Boli mnie głowa</button>${py?'':' <button class="btn ghost small" data-pain="yday">Wczoraj bolała mnie głowa</button>'}</p>`;
+  return `<div class="note painrow" id="painrow"><b>Dzień z bólem głowy.</b> Dziś bez celu deficytu: jedz regularnie i pij wodę. Seria się nie przerywa.<p class="cardact"><button class="btn small${p.aura?'':' ghost'}" data-painaura="1" aria-pressed="${!!p.aura}">Była aura</button><button class="btn small${p.med?'':' ghost'}" data-painmed="1" aria-pressed="${!!p.med}">Lek przyjęty</button><button class="btn ghost small" data-painoff="1">Cofnij</button></p></div>`}
 // ---------- Widoki ----------
 const TABS=[
   ['meals','Posiłki','<path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5"/>'],
@@ -825,7 +862,7 @@ function renderDay(){
   const R=rmr(),target=targetKcal(),pT=1.4*(num(S.goal)||68);
   const bar=(lab,v,max,unit)=>{const pc=Math.min(100,v/max*100);return `<div class="prog"><div class="top"><span>${lab}</span><span>${fmt(v)} / ${fmt(max)} ${unit}</span></div><div class="track"><div class="fill ${v>max*1.05?'over':''}" style="width:${pc}%"></div></div></div>`};
   const sos='<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>',ga=guideActive();
-  let h=guideHtml()+petCardHtml()+(ga?'':sos)+changeHtml()+modeHtml()+reviewPromptHtml()+kneeBannerHtml()+focusHtml()+(ga?sos:'')+legHtml()+`<div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
+  let h=guideHtml()+cardsHtml('day')+petCardHtml()+(ga?'':sos)+changeHtml()+modeHtml()+reviewPromptHtml()+kneeBannerHtml()+focusHtml()+painHtml()+(ga?sos:'')+legHtml()+`<div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
   h+=measHtml();
   h+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
   h+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
@@ -859,6 +896,7 @@ function renderSet(){
   let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>';
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+dataHtml();
   h+=`<h2>Wpisy</h2><div class="panel"><div class="field"><label for="once">Wpisuję raz dziennie, wieczorem</label><input type="checkbox" class="switch" id="once" data-k="once" ${S.once?'checked':''}></div></div><p class="small muted">Mój dzień pokaże jeden wpis dnia, a zwierzak przypomni o posiłkach dopiero od 19:00.</p>`;
+  h+=`<div class="panel"><div class="field"><label for="discreet">Tryb dyskretny: karty o migrenie i antykoncepcji tylko w Zdrowiu</label><input type="checkbox" class="switch" id="discreet" data-k="discreet" ${S.discreet?'checked':''}></div></div>`;
   h+='<h2 id="towarzysz">Towarzysz</h2>'+petPickHtml()+(S.pet?`<div class="panel"><div class="field"><label for="body">Sylwetka z pomiarów na ekranie zwierzaka</label><input type="checkbox" class="switch" id="body" data-k="body" ${S.body?'checked':''}></div></div>`:'');
   h+='<h2>Tryb</h2>'+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie']],S.mode,'mode');
   h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div></div>
@@ -943,6 +981,10 @@ document.addEventListener('click',e=>{
   else if(d.petkind){const first=!S.pet;S.pet={kind:d.petkind,name:(S.pet&&S.pet.name)||'',since:(S.pet&&S.pet.since)||todayKey()};if(first)S.petSeen=[...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])]}
   else if(d.petpick){S.tab='set';window.scrollTo(0,0)}
   else if(d.datasave){const c=dataCheck();if(c.err.length){toast(c.err[0],3200);const el=document.getElementById('f_'+c.first);if(el&&el.focus)el.focus()}else{S.guide=S.guide||{};S.guide.dataOk=true;save();toast('Dane zapisane')}}
+  else if(d.pain){const k=d.pain==='yday'?nAgo(1):todayKey();S.pain=S.pain||{};S.pain[k]=S.pain[k]||{aura:false,med:false};toast(d.pain==='yday'?'Wczoraj zapisany jako dzień z bólem':'Dzień z bólem: seria się nie przerwie',2400)}
+  else if(d.painaura||d.painmed){const p=painAt(todayKey());if(p){const f=d.painaura?'aura':'med';p[f]=!p[f]}}
+  else if(d.painoff){if(S.pain)delete S.pain[todayKey()]}
+  else if(d.cardok){S.cardsOk=S.cardsOk||{};S.cardsOk[d.cardok]=todayKey()}
   else if(d.tipok){S.tips=S.tips||{};S.tips[d.tipok]=true}
   else if(d.tipsreset){S.tips={};toast('Wskazówki pokażą się ponownie')}
   else if(d.guidehide){S.guide.hidden=true}

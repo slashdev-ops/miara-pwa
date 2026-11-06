@@ -3,7 +3,7 @@
 var PET = (function () {
   const LINES = {
     celebrate: '{n} świętuje! Nowa odznaka.', sleep: '{n} śpi. Dobranoc.', sad: '{n} tęskni. Zapisz cokolwiek, a odżyje.',
-    hungry: '{n} czeka na wpis posiłku.', tired: '{n} jest zmęczona. Sen albo spacer doda jej energii.',
+    hungry: '{n} czeka na wpis posiłku.', rest: '{n} odpoczywa razem z Tobą. Dziś liczy się odpoczynek.', tired: '{n} jest zmęczona. Sen albo spacer doda jej energii.',
     happy: '{n} jest w świetnej formie.', ok: '{n} ma się dobrze.'
   };
   const ACC = { 'Brąz': 'szalik', 'Srebro': 'czapka', 'Złoto': 'okulary', 'Platyna': 'korona' };
@@ -12,6 +12,7 @@ var PET = (function () {
   function dayKey(c, n) { const d = c.now; return c.key(new Date(d.getFullYear(), d.getMonth(), d.getDate() - n, 12)); }
   // Dzień pusty: bez posiłków, treningów, pomiarów, nawyków i ochot
   function isEmpty(c, k) {
+    if (c.pain && c.pain(k)) return false; // dzień z bólem głowy nie jest przerwą
     if (c.entries(k).length || c.dayPts(k) > 0 || c.urges(k).length) return false;
     if (Object.values(c.meas(k) || {}).some((v) => c.num(v) > 0)) return false;
     return !Object.values(c.habs(k) || {}).some(Boolean);
@@ -58,7 +59,9 @@ var PET = (function () {
     const active = Math.max(sinceKeys(c).filter((x) => c.dayPts(x) >= 30).length, (c.pet && c.pet.peak) || 0);
     const stage = active >= 30 ? 'adult' : active >= 7 ? 'young' : active >= 1 ? 'chick' : 'egg';
     let md = 'ok';
+    const rest = !!(c.pain && c.pain(k));
     if (milestone || c.celeb) md = 'celebrate';
+    else if (rest) md = 'sleep';
     else if (h >= 22 || h < 6) md = 'sleep';
     else if (przerwa >= 2 && isEmpty(c, k)) md = 'sad';
     else if (h >= (c.once ? 19 : 12) && meals === 0) md = 'hungry';
@@ -67,7 +70,7 @@ var PET = (function () {
     const name = (c.pet && String(c.pet.name || '').trim()) || 'Kluska';
     // Tryb pokazowy: klatka narzuca minę, etap i dodatek; bez kamienia milowego (nic nie trafia do petSeen)
     if (c.force) return { meters, przerwa, mood: c.force.mood, stage: c.force.stage, acc: c.force.acc || null, active, milestone: null, line: LINES[c.force.mood].replace('{n}', name) };
-    return { meters, przerwa, mood: md, stage, acc: ACC[c.level(c.weekPts())[1]] || null, active, milestone, line: LINES[md].replace('{n}', name) };
+    return { meters, przerwa, mood: md, stage, acc: ACC[c.level(c.weekPts())[1]] || null, active, milestone, line: LINES[rest && md === 'sleep' ? 'rest' : md].replace('{n}', name) };
   }
 
   // ---------- Rysunek: SVG 120×120, kolory z CSS (klasy), animacje w app.css ----------
