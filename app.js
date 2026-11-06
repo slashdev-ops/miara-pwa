@@ -70,25 +70,28 @@ const MEALS=[
   {id:'o14',t:'obiad',n:'Ziemniaki z twarożkiem i ogórkiem',min:20,ing:[['twarog',200],['jogurt',50],['ziemniaki',250,1],['ogorek',150]],how:'Ziemniaki w misce z 3 łyżkami wody, mikrofala pod przykryciem 8-10 min. Twaróg wymieszać z jogurtem, szczypiorkiem i koperkiem.'},
   {id:'o15',t:'obiad',n:'Kasza jęczmienna z kurczakiem i pieczarkami',min:25,ing:[['kurczak_piers',150],['pieczarki',150],['cebula',50],['kasza_jecz',60,1],['jogurt',50],['oliwa',8]],how:'Kurczaka, pieczarki i cebulę piec 25 min w 200°C, wymieszać z kaszą z mikrofali i jogurtem.'},
   {id:'o16',t:'obiad',n:'Indyk z cukinią i kaszą gryczaną',min:20,ing:[['indyk_piers',150],['cukinia',200],['kasza_gr',60,1],['oliwa',8]],how:'Indyka w paskach i cukinię z ziołami piec 20 min w 210°C. Kasza z mikrofali.'},
-  {id:'s1',t:'sniadanie',n:'Owsianka białkowa z owocami leśnymi',min:7,ing:[['platki',50,1],['mleko',200],['skyr',150],['owoce',100],['orzechy',10]],how:'Płatki z mlekiem w dużym kubku do mikrofali, 2 min z przerwą na zamieszanie, potem wmieszać skyr, owoce i orzechy.'},
+  {id:'s1',sw:1,t:'sniadanie',n:'Owsianka białkowa z owocami leśnymi',min:7,ing:[['platki',50,1],['mleko',200],['skyr',150],['owoce',100],['orzechy',10]],how:'Płatki z mlekiem w dużym kubku do mikrofali, 2 min z przerwą na zamieszanie, potem wmieszać skyr, owoce i orzechy.'},
   {id:'s2',t:'sniadanie',n:'Jajecznica ze szpinakiem i chlebem żytnim',min:10,ing:[['jajko',180],['szpinak',100],['chleb',50,1],['pomidor',100],['oliwa',3]],how:'Jajka roztrzepać ze szpinakiem w misce, mikrofala 2-3 min, mieszając co 30 s.'},
-  {id:'s3',t:'sniadanie',n:'Miska skyru z płatkami, siemieniem i jabłkiem',min:3,ing:[['skyr',300],['platki',30,1],['siemie',10],['jablko',120]],how:'Wymieszać w misce. Można przygotować wieczorem.'},
+  {id:'s3',sw:1,t:'sniadanie',n:'Miska skyru z płatkami, siemieniem i jabłkiem',min:3,ing:[['skyr',300],['platki',30,1],['siemie',10],['jablko',120]],how:'Wymieszać w misce. Można przygotować wieczorem.'},
   {id:'s4',t:'sniadanie',n:'Kanapki z twarożkiem i warzywami',min:5,ing:[['chleb',80,1],['twarog',150],['papryka',100],['ogorek',100]],how:'Twaróg z ziołami na chleb, warzywa obok.'},
-  {id:'s5',t:'sniadanie',n:'Muffinki owsiane z jogurtem',min:15,ing:[['platki',50,1],['jajko',120],['banan',60],['jogurt',100]],how:'Płatki, jajka i banan zmiksować blenderem, przelać do foremek na muffinki, piec 18-20 min w 180°C. Starcza na 3 dni.'},
+  {id:'s5',sw:1,t:'sniadanie',n:'Muffinki owsiane z jogurtem',min:15,ing:[['platki',50,1],['jajko',120],['banan',60],['jogurt',100]],how:'Płatki, jajka i banan zmiksować blenderem, przelać do foremek na muffinki, piec 18-20 min w 180°C. Starcza na 3 dni.'},
   {id:'k1',t:'kolacja',n:'Twarożek z rzodkiewką i chlebem żytnim',min:5,ing:[['twarog',200],['rzodkiewka',80],['chleb',40,1]],how:'Twaróg ze szczypiorkiem, rzodkiewka w plastrach.'},
   {id:'k2',t:'kolacja',n:'Sałatka z tuńczykiem i fasolą',min:7,ing:[['tunczyk',120],['fasola',80],['ogorek',100],['pomidor',100],['oliwa',8]],how:'Wymieszać, doprawić cytryną i pieprzem.'},
   {id:'k3',t:'kolacja',n:'Omlet z warzywami',min:12,ing:[['jajko',180],['warzywa',150],['oliwa',5],['chleb',30,1]],how:'Warzywa i roztrzepane jajka w misce, mikrofala 3 min, mieszając co minutę.'},
   {id:'k4',t:'kolacja',n:'Pasta z makreli i jajka na chlebie',min:7,ing:[['makrela',70],['jajko',60],['jogurt',30],['chleb',60,1],['ogorek',100]],how:'Makrelę bez ości rozgnieść z jajkiem i jogurtem, dodać szczypiorek.'},
   {id:'k5',t:'kolacja',n:'Tofu z warzywami z patelni',min:15,ing:[['tofu',150],['warzywa',200],['oliwa',5]],how:'Tofu i warzywa z czosnkiem piec 25 min w 210°C.'},
-  {id:'p1',t:'przekaska',n:'Skyr z owocami leśnymi',min:2,ing:[['skyr',150],['owoce',100]],how:'Owoce rozmrozić w mikrofali albo dodać zamrożone.'},
+  {id:'p1',sw:1,t:'przekaska',n:'Skyr z owocami leśnymi',min:2,ing:[['skyr',150],['owoce',100]],how:'Owoce rozmrozić w mikrofali albo dodać zamrożone.'},
   {id:'p2',t:'przekaska',n:'Jajka na twardo i ogórek',min:1,ing:[['jajko',120],['ogorek',150]],how:'Z zapasu w lodówce.'},
   {id:'p3',t:'przekaska',n:'Marchewka z hummusem',min:3,ing:[['marchew',150],['hummus',50]],how:'Marchew w słupki.'},
-  {id:'p4',t:'przekaska',n:'Jabłko z masłem orzechowym',min:2,ing:[['jablko',150],['maslo_orz',15]],how:'Jabłko w ćwiartkach, łyżka masła orzechowego.'},
+  {id:'p4',sw:1,t:'przekaska',n:'Jabłko z masłem orzechowym',min:2,ing:[['jablko',150],['maslo_orz',15]],how:'Jabłko w ćwiartkach, łyżka masła orzechowego.'},
   {id:'p5',t:'przekaska',n:'Orzechy i mandarynka',min:1,ing:[['orzechy',20],['mandarynka',100]],how:'Odliczona garść, nie z całej paczki.'},
   {id:'o17',t:'obiad',n:'Zupa krem z soczewicy i marchewki z jajkiem',min:25,ing:[['soczewica',60],['marchew',200],['cebula',50],['oliwa',8],['jajko',60],['chleb',40,1]],how:'Soczewicę, marchew i cebulę w plastrach zalać 600 ml wody w dużej misce, mikrofala pod przykryciem 18-20 min, zmiksować blenderem. Jajko na twardo z zapasu.'},
   {id:'o18',t:'obiad',n:'Bulgur z pieczonym kurczakiem i papryką',min:30,ing:[['kurczak_piers',150],['papryka',200],['cebula',50],['bulgur',60,1],['jogurt',50],['oliwa',8]],how:'Kurczaka, paprykę i cebulę piec 25 min w 200°C. Bulgur zalać podwójną ilością wrzątku z mikrofali i przykryć na 15 min.'},
-  {id:'s6',t:'sniadanie',n:'Jaglanka z jabłkiem, cynamonem i skyrem',min:12,ing:[['jaglana',40,1],['mleko',250],['jablko',120],['skyr',150]],how:'Kaszę przelać wrzątkiem na sicie (usuwa gorycz), z mlekiem do mikrofali na 8-10 min, mieszając co 2 min. Dodać starte jabłko, cynamon i skyr.'},
-  {id:'p6',t:'przekaska',n:'Koktajl ze skyru, owoców i płatków',min:3,ing:[['skyr',200],['owoce',100],['platki',20,1]],how:'Zmiksować blenderem z odrobiną wody.'}
+  {id:'s6',sw:1,t:'sniadanie',n:'Jaglanka z jabłkiem, cynamonem i skyrem',min:12,ing:[['jaglana',40,1],['mleko',250],['jablko',120],['skyr',150]],how:'Kaszę przelać wrzątkiem na sicie (usuwa gorycz), z mlekiem do mikrofali na 8-10 min, mieszając co 2 min. Dodać starte jabłko, cynamon i skyr.'},
+  {id:'s7',sw:1,t:'sniadanie',n:'Pieczone placuszki twarogowe z jabłkiem i cynamonem',min:20,ing:[['twarog',150],['jajko',60],['platki',30,1],['jablko',100]],how:'Twaróg, jajko i płatki rozgnieść widelcem, dodać starte jabłko i cynamon. Łyżką nakładać małe placki na blachę z papierem do pieczenia, piec 15 min w 190°C. Słodycz daje jabłko, bez cukru.'},
+  {id:'s8',sw:1,t:'sniadanie',n:'Twarożek waniliowy z owocami i orzechami',min:3,ing:[['twarog',200],['owoce',150],['orzechy',10]],how:'Twaróg rozetrzeć z łyżką mleka i kilkoma kroplami aromatu waniliowego, na wierzch owoce i posiekane orzechy. Bez cukru: słodycz dają owoce.'},
+  {id:'s9',sw:1,t:'sniadanie',n:'Owsianka nocna z jabłkiem i cynamonem',min:5,ing:[['platki',40,1],['skyr',150],['mleko',100],['jablko',100],['orzechy',10]],how:'Wieczorem wymieszać w słoiku płatki, skyr, mleko i starte jabłko z cynamonem, rano posypać orzechami. Na zimno albo 1 min w mikrofali.'},
+  {id:'p6',sw:1,t:'przekaska',n:'Koktajl ze skyru, owoców i płatków',min:3,ing:[['skyr',200],['owoce',100],['platki',20,1]],how:'Zmiksować blenderem z odrobiną wody.'}
 ];
 
 // ---------- Dane: aktywności. MET z Compendium; "niesprawdzone" = wartość nie weryfikowana ze źródłem ----------
@@ -450,6 +453,9 @@ const STEPS={
   s3:['Do skyru wsyp płatki i siemię, wymieszaj.','Dodaj pokrojone jabłko.','Możesz przygotować wieczorem i trzymać w lodówce.'],
   s4:['Twaróg rozgnieć z solą i ziołami.','Posmaruj chleb.','Paprykę i ogórka pokrój i podaj obok.'],
   s5:['Płatki, jajka i banana zmiksuj blenderem na gładko.','Przelej do foremek na muffinki do 3/4 wysokości.','Piecz 18-20 min w 180°C.','Podawaj z jogurtem. Zapas wystarczy na 3 dni w lodówce.'],
+  s7:['Twaróg, jajko i płatki rozgnieć widelcem w misce.','Dodaj starte jabłko i cynamon, wymieszaj.','Łyżką nałóż 6-8 małych placków na blachę z papierem do pieczenia.','Piecz 15 min w 190°C. Słodycz daje jabłko, bez cukru.'],
+  s8:['Twaróg rozetrzyj widelcem z łyżką mleka i kilkoma kroplami aromatu waniliowego.','Na wierzch wyłóż owoce, mrożone rozmroź 1 min w mikrofali.','Posyp posiekanymi orzechami. Bez cukru: słodycz dają owoce.'],
+  s9:['Wieczorem wymieszaj w słoiku płatki, skyr, mleko, starte jabłko i cynamon.','Zamknij i wstaw do lodówki na noc.','Rano posyp orzechami. Jedz na zimno albo podgrzej 1 min w mikrofali.'],
   s6:['Kaszę przelej wrzątkiem na sicie, to usuwa gorycz.','Z mlekiem do dużej miski, mikrofala 8-10 min, mieszaj co 2 min.','Dodaj starte jabłko, cynamon i skyr.'],
   k1:['Twaróg rozgnieć ze szczypiorkiem i solą.','Rzodkiewkę pokrój w plasterki.','Podaj z chlebem.'],
   k2:['Odsącz tuńczyka i fasolę.','Pokrój ogórka i pomidora.','Wymieszaj z oliwą, sokiem z cytryny i pieprzem.'],
@@ -477,8 +483,9 @@ function tipsHtml(m,x){
 function leftTxt(k){const l=targetKcal()-eatenToday()-k;return l>=0?`Po tym posiłku zostanie ok. ${fmt(l)} kcal na dziś.`:`Ten posiłek przekroczy dzisiejszy cel o ok. ${fmt(-l)} kcal. Jeden dzień nie zmienia trendu; ważny jest zapis.`}
 function renderRecipe(){
   const m=MEALS.find(x=>x.id===S.recipe)||MEALS[0],cm=carbMult(),por=num(S.f.portion)||1,x=macros(m,cm,por),tot=x.p*4+x.f*9+x.c*4||1,steps=STEPS[m.id]||[m.how];
-  let h=`<p><button class="btn ghost" data-tab="${S.recipeBack||'meals'}">Wróć</button></p><div class="rec"><h2 class="rt">${m.n}</h2><div class="chips">`+[`${m.min} min`,...eqOf(m),...(m.prep?['z zapasu']:[])].map(t=>`<span class="chip">${t}</span>`).join('')+'</div>';
+  let h=`<p><button class="btn ghost" data-tab="${S.recipeBack||'meals'}">Wróć</button></p><div class="rec"><h2 class="rt">${m.n}</h2><div class="chips">`+[`${m.min} min`,...eqOf(m),...(m.prep?['z zapasu']:[]),...mealTags(m,x).map(t=>t[0])].map(t=>`<span class="chip">${t}</span>`).join('')+'</div>';
   h+=`<div class="panel" style="padding:12px 16px"><div class="mnum" style="padding:0"><span><b>${fmt(x.k)}</b> kcal</span><span class="p">B ${fmt(x.p)} g</span><span class="f">T ${fmt(x.f)} g</span><span class="c">W ${fmt(x.c)} g</span></div><div class="bar" style="margin:10px 0 0" aria-hidden="true"><i style="width:${x.p*4/tot*100}%;background:var(--p)"></i><i style="width:${x.f*9/tot*100}%;background:var(--f)"></i><i style="width:${x.c*4/tot*100}%;background:var(--c)"></i></div></div>`;
+  if(((S.prof||{}).cond||{}).io&&m.t!=='przekaska'&&!ioFit(m,x)){const cs=x.items.filter(i=>i.isC).map(i=>i.n.toLowerCase());h+=`<div class="note"><b>Przy insulinooporności:</b> to danie ma ${fmt(x.c)} g węglowodanów i ${fmt(x.p)} g białka. ${cs.length?`Zmniejsz porcję: ${cs.join(', ')} ×0,75`:'Zmniejsz porcję produktu skrobiowego'}${x.p<20?' i dołóż 100 g skyru':''}: wtedy pasuje do reguły „Przy IO”.</div>`}
   h+='<h3 class="rh">Składniki, 1 porcja</h3><div class="panel">'+x.items.map((it,i)=>`<div class="entry"><span class="txt">${it.n}</span><span class="val">${hhm(m.ing[i][0],it.g)}</span></div>`).join('')+'</div>';
   if(cm!==1||por!==1)h+=`<p class="small muted">Porcja przeliczona: węglowodany ×${fmt1(cm)}, wielkość ×${fmt1(por)}.</p>`;
   h+='<h3 class="rh">Przygotowanie</h3><ol class="steps">'+steps.map(s=>`<li>${s}</li>`).join('')+'</ol>';
@@ -617,7 +624,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
 const DEF={kg:'80',cm:'170',age:'35',sex:'K',goal:'72',korekta:true,tab:'meals',
-  f:{type:'obiad',chips:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
+  f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
@@ -758,6 +765,12 @@ function macros(m,cm,por){
 }
 const CHIPS=[...new Set(Object.values(ING).map(i=>i.chip).filter(Boolean))];
 function chipsOf(m){return new Set(m.ing.map(x=>ING[x[0]].chip).filter(Boolean))}
+// Oznaczenia przepisów liczone z reguł (rada/2026-11-06_oznaczenia-przepisow); tylko oznaczenia pozytywne
+function ioFit(m,x){return m.t==='przekaska'?x.c<=20&&(x.p>=10||x.f>=8):x.p>=20&&x.c<=50}
+function mealTags(m,x){const t=[];if(m.sw)t.push(['Słodkie','danie na słodko, słodycz z owoców']);
+  if(ioFit(m,x))t.push(['Przy IO',m.t==='przekaska'?'do 20 g węglowodanów z białkiem albo tłuszczem':'co najmniej 20 g białka i do 50 g węglowodanów']);
+  if(((S.prof||{}).cond||{}).hashi&&m.ing.some(i=>i[0]==='tofu'))t.push(['Soja: 4 h po leku','soja zmniejsza wchłanianie lewotyroksyny']);return t}
+function tagsHtml(m,x){const t=mealTags(m,x);return t.length?'<span class="mtags">'+t.map(([l,w])=>`<span class="mtag" title="${w}">${l}</span>`).join('')+'</span>':''}
 function filtered(){
   const cm=carbMult(),por=num(S.f.portion)||1;
   const inc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===1),exc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===-1);
@@ -765,6 +778,7 @@ function filtered(){
   const pc=S.f.pace||'all';
   return MEALS.filter(m=>(S.f.type==='all'||m.t===S.f.type)&&(pc==='all'||(pc==='quick'?m.min<=20:m.min>=25)))
     .map(m=>({m,x:macros(m,cm,por),ch:chipsOf(m)}))
+    .filter(o=>(!(S.f.tags||{}).sw||o.m.sw)&&(!(S.f.tags||{}).io||ioFit(o.m,o.x)))
     .filter(o=>!exc.some(c=>o.ch.has(c)))
     .filter(o=>!inc.length||inc.some(c=>o.ch.has(c)))
     .filter(o=>o.x.p>=S.f.minP&&o.x.k<=S.f.maxK&&o.x.c<=S.f.maxC)
@@ -837,6 +851,7 @@ function planActs(){const c=(S.prof||{}).cond||{},P=pillOf(),pn=P[1].split(' (')
     a(10,'Ruch w wodzie albo rower i kompresja','Ruch o małym obciążeniu stawów zmniejsza ból i ciężkość nóg; kompresja dobrana przez specjalistę pomaga w objawach.','s');
     if(est)a(15,'Estrogen a objawy lipodemii','Objawy często narastają przy zmianach hormonalnych. Dane są słabe, ale powiedz o lipodemii przy wyborze antykoncepcji.','s')}
   if(c.io){a(11,`Cel: 5-7% mniej masy ciała, czyli ${fmt1(kg()*0.05)}-${fmt1(kg()*0.07)} kg`,'Taki spadek z ruchem w programie DPP zmniejszył ryzyko cukrzycy o ok. 58%.','m');
+    a(12,'Słodkie śniadanie może zostać','Ważne, żeby miało co najmniej 20 g białka (skyr, twaróg, jajka) i owoce w całości zamiast cukru, soku czy dżemu. W Posiłkach filtr „Słodkie” i „Przy IO” pokazuje takie przepisy.','u');
     a(13,'150 minut ruchu tygodniowo, sen 7 godzin','Ruch i sen poprawiają wrażliwość na insulinę niezależnie od wagi; trening siłowy 2 razy w tygodniu pomaga mięśniom zużywać glukozę.','m')}
   if(P[3])a(16,'Drospirenon: ryzyko zakrzepicy','Ok. 9-12 na 10 000 kobiet rocznie wobec 5-7 przy tabletkach z lewonorgestrelem i ok. 2 bez tabletek (EMA 2013). Ból i obrzęk jednej łydki albo nagła duszność: pilnie do lekarza.','m');
   if(P[0])a(17,'Waga a tabletki','Przeglądy badań (Cochrane) nie potwierdzają dużego przyrostu masy ciała przez tabletki; wahania to zwykle woda w cyklu.','m');
@@ -968,7 +983,7 @@ function field(label,key,val,unit,mode){return `<div class="field"><label for="f
 function renderMeals(){
   const cm=carbMult(),n=trainNet();
   const carbTxt=S.f.carb==='auto'?(n>0?`Automatycznie z dzisiejszych treningów (${fmt(n)} kcal netto): węglowodany ×${fmt1(cm)}.`:'Automatycznie: brak treningu w dzienniku dnia, węglowodany ×1.'):`Ustawione ręcznie: węglowodany ×${fmt1(cm)}.`;
-  let h=planHtml()+shopHtml()+'<h2>Albo wybierz sam</h2>'+seg([['sniadanie','Śniadanie'],['obiad','Obiad'],['kolacja','Kolacja'],['przekaska','Przekąska'],['all','Wszystkie']],S.f.type,'type','scroll')+'<div id="rytm">'+seg([['all','Każdy czas'],['quick','Na co dzień, do 20 min'],['big','Na weekend, więcej czasu']],S.f.pace||'all','pace','scroll')+'</div>';
+  let h=planHtml()+shopHtml()+'<h2>Albo wybierz sam</h2>'+seg([['sniadanie','Śniadanie'],['obiad','Obiad'],['kolacja','Kolacja'],['przekaska','Przekąska'],['all','Wszystkie']],S.f.type,'type','scroll')+'<div id="oznaczenia"><p class="small" style="margin:8px 8px 4px"><b>Oznaczenia</b></p>'+whyP('oznaczenia')+'<div class="chips">'+[['sw','Słodkie'],['io','Przy IO']].map(([v,l])=>`<button class="chip${(S.f.tags||{})[v]?' inc':''}" data-ftag="${v}" aria-pressed="${!!(S.f.tags||{})[v]}">${l}</button>`).join('')+'</div></div>'+'<div id="rytm">'+seg([['all','Każdy czas'],['quick','Na co dzień, do 20 min'],['big','Na weekend, więcej czasu']],S.f.pace||'all','pace','scroll')+'</div>';
   h+='<details class="fold" data-fold="filtry"'+(OPEN_F.has('filtry')?' open':'')+'><summary>Filtry i sortowanie</summary><div style="padding:0 12px 12px">';
   h+='<h2>Produkty</h2><p class="small muted">Dotknij raz: chcę. Drugi raz: bez tego. Trzeci: bez znaczenia.</p><div class="chips">'+CHIPS.map(c=>{const s=S.f.chips[c]||0;return `<button class="chip ${s===1?'inc':s===-1?'exc':''}" data-chip="${c}">${c}</button>`}).join('')+'</div>';
   h+='<h2 id="podtrening">Pod trening</h2>'+whyP('podtrening')+seg([['auto','Auto'],['1','Bez treningu'],['1.25','Lekki'],['1.5','Siłownia, cardio']],S.f.carb,'carb','scroll')+`<p class="small muted">${carbTxt} Zmienia tylko porcję kaszy, ryżu, ziemniaków, pieczywa i płatków.</p>`;
@@ -989,7 +1004,7 @@ function renderMealList(){
   if(!L.length){el.innerHTML='<div class="note">Żaden posiłek nie spełnia tych warunków. Poluzuj limit kalorii lub białka albo odznacz produkt wykluczony.</div>';return}
   el.innerHTML=`<h2>${L.length} ${L.length===1?'propozycja':(L.length%10>=2&&L.length%10<=4&&(L.length%100<10||L.length%100>=20)?'propozycje':'propozycji')}</h2>`+L.map(({m,x})=>{
     const tot=x.p*4+x.f*9+x.c*4||1,isOpen=open.has(m.id);
-    return `<article class="meal"><button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div><div class="meta">${S.f.type==='all'?TN[m.t]+', ':''}${m.min} min${m.prep?', z gotowania na zapas':''}</div><div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Składniki i przygotowanie</div></button>
+    return `<article class="meal"><button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div><div class="meta">${S.f.type==='all'?TN[m.t]+', ':''}${m.min} min${m.prep?', z gotowania na zapas':''}</div>${tagsHtml(m,x)}<div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Składniki i przygotowanie</div></button>
       <div class="mnum"><span><b>${fmt(x.k)}</b> kcal</span><span class="p">B ${fmt(x.p)} g</span><span class="f">T ${fmt(x.f)} g</span><span class="c">W ${fmt(x.c)} g</span></div>
       <div class="bar" aria-hidden="true"><i style="width:${x.p*4/tot*100}%;background:var(--p)"></i><i style="width:${x.f*9/tot*100}%;background:var(--f)"></i><i style="width:${x.c*4/tot*100}%;background:var(--c)"></i></div>
       ${isOpen?`<div class="mdet"><ul>${x.items.map(i=>`<li><span>${i.n}</span><span>${fmt(Math.round(i.g/5)*5)} g</span></li>`).join('')}</ul><p class="small">${m.how}</p><p class="small muted">${leftTxt(x.k)} ${fmt(x.k)} kcal to ok. ${fmt(x.k/walkPerMin())} min spaceru.</p><p><button class="btn" data-addmeal="${m.id}">Dodaj do dnia</button> <button class="btn ghost" data-copy="${m.id}">Kopiuj składniki do Fitatu</button></p></div>`:''}
@@ -1113,6 +1128,7 @@ const GLOSS=[
   ['ochoty','Twoje ochoty','Podsumowanie zapisanych ochot na przekąskę. Pomaga zauważyć, kiedy przychodzą najczęściej, i zaplanować coś wcześniej.','sos#ochoty'],
   ['tryb','Tryb: redukcja albo utrzymanie','Redukcja ustawia cel kalorii ok. 20% poniżej zapotrzebowania. Utrzymanie trzyma osiągniętą wagę: cel równa się zapotrzebowaniu.','set#tryb'],
   ['korekta','Korekta na spoczynkowe zużycie energii','Dokładniejsze kalorie z treningu: spoczynek liczony ze wzoru dla Twojej płci, wieku i wagi zamiast przybliżenia 1 kcal na kg na godzinę.','set#korekta'],
+  ['oznaczenia','Oznaczenia przepisów','Słodkie: danie na słodko, słodycz z owoców. Przy IO: co najmniej 20 g białka i do 50 g węglowodanów na porcję, a przekąska do 20 g węglowodanów z białkiem albo tłuszczem; takie danie podnosi cukier wolniej. Zaznacz oba, żeby zobaczyć słodkie śniadania dobre przy insulinooporności.','meals#oznaczenia'],
   ['cykl','Tydzień cyklu dziś','Zaznacz, który to tydzień cyklu; przy tabletkach to tydzień opakowania, a „Przerwa w tabletkach” to dni bez hormonów. Miara łączy to z bólem głowy i wagą: ból w dniach przerwy to typowy wzorzec migreny po spadku estrogenu, a przed miesiączką waga bywa wyższa o wodę. Po 3 cyklach widać, czy bóle trzymają się tych dni.','day#cykl'],
   ['profil','Mój profil zdrowia','Zaznacz choroby i tabletki, a Miara ułoży plan działań z Twoich wpisów i zaleceń. Profil zostaje w tym telefonie; kopia bez danych zdrowotnych go pomija.','health#profil'],
   ['dyskretny','Tryb dyskretny','Karty o migrenie i antykoncepcji pokazują się tylko w Zdrowiu, nie na ekranie Mój dzień.','set#discreet']];
@@ -1238,6 +1254,7 @@ document.addEventListener('click',e=>{
   else if(d.toastlen){S.toastLen=d.toastlen;toast(d.toastlen==='stay'?'Komunikat zostanie, dopóki go nie zamkniesz.':'Tak długo będzie widać komunikat.')}
   else if(d.setv){setPath(d.setv,d.v)}
   else if(d.pace){S.f.pace=d.pace}
+  else if(d.ftag){S.f.tags=S.f.tags||{};S.f.tags[d.ftag]=!S.f.tags[d.ftag]}
   else if(d.cond){S.prof=S.prof||{cond:{},pill:''};S.prof.cond=S.prof.cond||{};S.prof.cond[d.cond]=!S.prof.cond[d.cond];if(d.cond==='lip'&&S.prof.cond.lip)S.lip=true}
   else if(d.demoexit){location.hash='';location.reload();return}
   else if(d.scen){location.hash='#demo-'+d.scen;location.reload();return}
@@ -1246,14 +1263,15 @@ document.addEventListener('click',e=>{
   else return;
   save();render();
 });
-// Przytrzymanie − i +: krok od razu, po 0,4 s powtarzanie co 0,15 s, po 12 krokach co 0,08 s, po 40 krokach krokiem ×5;
+// Przytrzymanie − i +: krok od razu, po 0,3 s powtarzanie co 0,08 s, po 8 krokach co 0,04 s, po 30 krokach krokiem ×5
+// (15 kroków w ok. 1,2 s, np. 1,5 kg wagi albo 7500 kroków);
 // zwykłe dotknięcie działa jak dotąd. Przerysowanie dopiero po kliknięciu, które przeglądarka wysyła po puszczeniu palca,
 // żeby kliknięcie nie trafiło w element przesunięty przez przerysowanie.
 let HOLD=null,STP_SKIP=false;
-const holdGap=n=>n>12?80:150,holdMult=n=>n>40?5:1;
+const HOLD_DELAY=300,holdGap=n=>n>8?40:80,holdMult=n=>n>30?5:1;
 document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest('.stp');if(!b||e.button>0)return;e.preventDefault();
   const k=b.dataset.stp,d=+b.dataset.d;if(!stpApply(k,d,1))return;stpShow(k);let n=0;try{b.setPointerCapture(e.pointerId)}catch(_){}
-  const rep=()=>{n++;stpApply(k,d,holdMult(n));stpShow(k);HOLD.t=setTimeout(rep,holdGap(n))};HOLD={k,d:b.dataset.d,t:setTimeout(rep,400)}});
+  const rep=()=>{n++;stpApply(k,d,holdMult(n));stpShow(k);HOLD.t=setTimeout(rep,holdGap(n))};HOLD={k,d:b.dataset.d,t:setTimeout(rep,HOLD_DELAY)}});
 function holdEnd(){if(!HOLD)return;clearTimeout(HOLD.t);const h=HOLD;HOLD=null;STP_SKIP=true;save();setTimeout(()=>{STP_SKIP=false;stpDone(h.k,h.d)},350)}
 document.addEventListener('pointerup',holdEnd);document.addEventListener('pointercancel',holdEnd);
 // Strzałki w górę i w dół w polu liczbowym zmieniają wartość o krok (wzorzec spinbutton)

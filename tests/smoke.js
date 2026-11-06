@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -607,6 +607,20 @@ tryc('scenariusz minitabletka: bez przeciwwskazania', () => { const h = view('he
 tryc('scenariusz hashimoto: TSH i talia osobno', () => { const h = planOf(view('health', T.scenS('hashimoto'))); return h.includes('TSH 6-8 tygodni') && h.includes('osobno'); });
 tryc('scenariusz wpisy: + przy wadze zaczyna od wczorajszego ważenia', () => { view('day', T.scenS('wpisy')); click({ stp: `meas.${dk(0)}.w`, d: '1' }); return T.S().meas[dk(0)].w === '80,4'; });
 tryc('scenariusz start: pierwsze wejście', () => T.scenS('start').onb === false);
+
+// Pytanie 06.11.2026: słodkie śniadania przy insulinooporności; oznaczenia przepisów liczone z reguł
+const M = (id) => T.MEALS.find((m) => m.id === id), TG = (id) => T.mealTags(M(id), T.macros(M(id), 1, 1)).map((t) => t[0]);
+tryc('oznaczenia: słodkie śniadania z bazy mają Słodkie', () => ['s1', 's3', 's5', 's6'].every((id) => TG(id).includes('Słodkie')) && !TG('s2').includes('Słodkie'));
+tryc('oznaczenia: Przy IO z reguły 20 g białka i do 50 g węglowodanów', () => TG('s3').includes('Przy IO') && TG('s5').includes('Przy IO') && !TG('s6').includes('Przy IO') && !TG('s1').includes('Przy IO'));
+tryc('oznaczenia: przekąska Przy IO do 20 g węglowodanów z białkiem albo tłuszczem', () => TG('p1').includes('Przy IO') && TG('p5').includes('Przy IO') && !TG('p6').includes('Przy IO'));
+tryc('oznaczenia: każde danie z tagiem Przy IO spełnia regułę', () => T.MEALS.filter((m) => m.t).every((m) => { const x = T.macros(m, 1, 1), io = T.mealTags(m, x).some((t) => t[0] === 'Przy IO'); if (!io) return true; return m.t === 'przekaska' ? x.c <= 20 && (x.p >= 10 || x.f >= 8) : x.p >= 20 && x.c <= 50; }));
+tryc('oznaczenia: 3 nowe słodkie śniadania Przy IO', () => ['s7', 's8', 's9'].every((id) => M(id) && M(id).t === 'sniadanie' && TG(id).includes('Słodkie') && TG(id).includes('Przy IO')));
+tryc('oznaczenia: soja tylko przy Hashimoto w profilu', () => { T.S().prof = { cond: {}, pill: '' }; const a = TG('k5').some((t) => /Soja/.test(t)); T.S().prof = { cond: { hashi: true }, pill: '' }; const b = TG('k5').some((t) => /Soja/.test(t)); T.S().prof = { cond: {}, pill: '' }; return !a && b; });
+tryc('oznaczenia: lista dań pokazuje znaczniki, filtr Słodkie i Przy IO', () => { const S = T.S(); view('meals', BASE()); S.f.type = 'sniadanie'; S.f.tags = { sw: true, io: true }; const L = T.filtered(); const h = view('meals', {}); S.f.tags = {}; S.f.type = 'obiad'; return L.length >= 5 && L.every((o) => TG(o.m.id).includes('Słodkie') && TG(o.m.id).includes('Przy IO')) && h.includes('id="oznaczenia"') && h.includes('data-ftag="io"') && els.mlist.innerHTML.includes('class="mtag"'); });
+tryc('oznaczenia: przepis poza regułą przy IO podpowiada zmianę porcji', () => { T.S().recipe = 's6'; const h = view('recipe', BASE({ prof: { cond: { io: true }, pill: '' } })); return h.includes('×0,75') && h.includes('60 g węglowodanów'); });
+tryc('oznaczenia: plan przy IO mówi, że słodkie śniadanie może zostać', () => planOf(view('health', BASE(PROF(['io'], '')))).includes('Słodkie śniadanie może zostać'));
+
+tryc('przytrzymanie: 15 kroków w mniej niż 1,5 s, 30 kroków w mniej niż 2 s', () => { const tAt = (n) => { let t = T.HOLD_DELAY; for (let i = 1; i < n - 1; i++) t += T.holdGap(i); return t; }; return tAt(15) < 1500 && tAt(30) < 2000; });
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
