@@ -22,7 +22,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -75,7 +75,7 @@ function mkCtx(o = {}) {
     streak: () => o.streak || 0, weekPts: () => o.weekPts || 0, level: T.level,
     stage: () => (o.pct != null ? { pct: o.pct } : null),
     avgW: (a) => (a === 0 && o.avgW != null ? o.avgW : null), startW: o.startW != null ? o.startW : null,
-    num: T.num, once: !!o.once,
+    num: T.num, once: !!o.once, pain: o.painAll ? () => true : undefined,
   };
 }
 const st = (c) => sandbox.PET.state(c);
@@ -275,6 +275,50 @@ tryc('wskazówki: po Rozumiem znika na stałe', () => { view('train', TIPST()); 
 tryc('wskazówki: na Moim dniu nie ma jej, gdy są pierwsze kroki', () => !view('day', { ...TIPST(), guide: { hidden: false, dataOk: false, seenPet: false } }).includes('data-tipok'));
 tryc('wskazówki: w trybie demo ich nie ma', () => { T.setDemo(true); let h = ''; try { h = view('meals', TIPST()); } finally { T.setDemo(false); } return !h.includes('data-tipok'); });
 tryc('wskazówki: Ustawienia przywracają wskazówki', () => { view('set', { ...TIPST(), tips: { meals: true, set: true } }); click({ tipsreset: '1' }); return Object.keys(T.S().tips).length === 0; });
+
+// Rada 06.11.2026 (ekran startowy): dzień z bólem głowy i karty „Co się dzieje”
+const dk = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const BASE = (o) => ({ ...CLEAN(), pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, tips: { day: true, health: true, set: true }, pain: {}, cardsOk: {}, discreet: false, once: false, ...o });
+const cards = (h) => (h.match(/data-card="[a-z_]+"/g) || []).map((x) => x.slice(11, -1));
+const ONCE_OK = () => [{ kind: 'm', id: 's1', label: 'x', k: 400, p: 20, f: 5, c: 30 }];
+tryc('ból: Mój dzień ma przycisk Boli mnie głowa', () => view('day', BASE()).includes('data-pain="today"'));
+tryc('ból: zapis dnia, aura, lek i cofnięcie', () => {
+  view('day', BASE()); click({ pain: 'today' }); const k = T.todayKey(), a = !!T.S().pain[k];
+  click({ painaura: '1' }); click({ painmed: '1' }); const b = T.S().pain[k].aura === true && T.S().pain[k].med === true;
+  click({ painoff: '1' }); return a && b && !T.S().pain[k];
+});
+tryc('ból: Wczoraj bolała zapisuje wczoraj', () => { view('day', BASE()); click({ pain: 'yday' }); return !!T.S().pain[dk(1)] && !T.S().pain[T.todayKey()]; });
+tryc('ból: dwa dni z bólem nie przerywają serii', () => {
+  const days = { [dk(0)]: ONCE_OK(), [dk(3)]: ONCE_OK(), [dk(4)]: ONCE_OK() }, meas = { [dk(0)]: { steps: '7000' }, [dk(3)]: { steps: '7000' }, [dk(4)]: { steps: '7000' } };
+  view('day', BASE({ once: true, days, meas, pain: { [dk(1)]: {}, [dk(2)]: {} } })); const withPain = T.streak();
+  view('day', BASE({ once: true, days, meas, pain: {} })); return withPain === 3 && T.streak() === 1;
+});
+tryc('ból: zwierzak odpoczywa w dniu z bólem', () => { view('day', BASE({ pain: { [dk(0)]: {} } })); const s = P().state(T.petCtx()); return s.mood === 'sleep' && s.line.includes('odpoczywa'); });
+tryc('ból: dni z bólem nie liczą się do przerwy zwierzaka', () => st(mkCtx({ empty: 3, painAll: true })).przerwa === 0);
+tryc('ból: dzień z bólem jest bez celu deficytu', () => view('day', BASE({ pain: { [dk(0)]: {} } })).includes('Dziś bez celu deficytu'));
+tryc('ból: kopia bez danych zdrowotnych nie zawiera dni z bólem', () => { view('day', BASE({ pain: { [dk(0)]: { aura: true } } })); return Object.keys(JSON.parse(T.bkBuild(true)).data.pain || {}).length === 0 && !!JSON.parse(T.bkBuild(false)).data.pain[dk(0)]; });
+tryc('karty: ból w dniach bez hormonów pokazuje się tylko z zaznaczonym cyklem', () => cards(view('day', BASE({ pain: { [dk(0)]: {} }, meas: { [dk(0)]: { cyc: 'P' } } }))).includes('bol_hormony') && !cards(view('day', BASE({ pain: { [dk(0)]: {} } }))).includes('bol_hormony'));
+tryc('karty: aura w ostatnich 90 dniach, starsza nie', () => cards(view('health', BASE({ pain: { [dk(10)]: { aura: true } } }))).includes('aura') && !cards(view('health', BASE({ pain: { [dk(120)]: { aura: true } } }))).includes('aura'));
+tryc('karty: zła noc po 2 krótkich nocach, nie przy braku jednej', () => cards(view('day', BASE({ meas: { [dk(0)]: { sleep: '5' }, [dk(1)]: { sleep: '5,5' } } }))).includes('zla_noc') && !cards(view('day', BASE({ meas: { [dk(0)]: { sleep: '5' } } }))).includes('zla_noc'));
+tryc('karty: stres po 2 ochotach w 3 dni', () => cards(view('day', BASE({ urges: { [dk(0)]: [{ out: 'plan' }], [dk(2)]: [{ out: 'plan' }] } }))).includes('stres') && !cards(view('day', BASE({ urges: { [dk(0)]: [{ out: 'plan' }] } }))).includes('stres'));
+tryc('karty: mało sił w dniu z bólem', () => cards(view('day', BASE({ pain: { [dk(0)]: {} } }))).includes('bez_sil'));
+tryc('karty: skok wagi od 0,8 kg nad średnią, nie przy 2 ważeniach', () => {
+  const m = { [dk(0)]: { w: '81' }, [dk(1)]: { w: '80' }, [dk(2)]: { w: '80' }, [dk(3)]: { w: '80' } }, m2 = { [dk(0)]: { w: '81' }, [dk(1)]: { w: '80' }, [dk(2)]: { w: '80' } };
+  return cards(view('health', BASE({ meas: m }))).includes('skok_wagi') && !cards(view('health', BASE({ meas: m2 }))).includes('skok_wagi');
+});
+tryc('karty: waga stoi przez 3 tygodnie, nie przy spadku ani za małej liczbie ważeń', () => {
+  const m = (now) => ({ [dk(1)]: { w: now }, [dk(3)]: { w: now }, [dk(22)]: { w: '80' }, [dk(24)]: { w: '80' } });
+  return cards(view('health', BASE({ meas: m('80,1') }))).includes('waga_stoi') && !cards(view('health', BASE({ meas: m('79') }))).includes('waga_stoi') && !cards(view('health', BASE({ meas: { [dk(1)]: { w: '80' }, [dk(22)]: { w: '80' } } }))).includes('waga_stoi');
+});
+const MANY = () => BASE({ pain: { [dk(0)]: {} }, meas: { [dk(0)]: { cyc: 'P', sleep: '5' }, [dk(1)]: { sleep: '5' } }, urges: { [dk(0)]: [{ out: 'plan' }, { out: 'plan' }] } });
+tryc('karty: najwyżej 2 na Moim dniu, wszystkie w Zdrowiu', () => cards(view('day', MANY())).length === 2 && cards(view('health', MANY())).length >= 4);
+tryc('karty: Rozumiem chowa kartę z Mojego dnia do końca dnia, Zdrowie ją zostawia', () => {
+  view('day', BASE({ meas: { [dk(0)]: { sleep: '5' }, [dk(1)]: { sleep: '5' } } })); click({ cardok: 'zla_noc' });
+  return !cards(mainHtml()).includes('zla_noc') && cards(view('health')).includes('zla_noc');
+});
+tryc('karty: tryb dyskretny chowa karty wrażliwe z Mojego dnia', () => { const o = { pain: { [dk(0)]: {} }, meas: { [dk(0)]: { cyc: 'P' } } }; return cards(view('day', BASE(o))).includes('bol_hormony') && !cards(view('day', BASE({ ...o, discreet: true }))).includes('bol_hormony') && cards(view('health', BASE({ ...o, discreet: true }))).includes('bol_hormony'); });
+tryc('karty: każda karta mówi, na czym się opiera, i podaje siłę dowodów', () => { const h = view('health', MANY()), n = cards(h).length; return n >= 4 && (h.match(/Na podstawie: /g) || []).length === n && (h.match(/class="ev"/g) || []).length === n; });
+tryc('Ustawienia: przełącznik trybu dyskretnego', () => view('set', BASE()).includes('data-k="discreet"'));
 
 console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
 process.exit(bad ? 1 : 0);
