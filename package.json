@@ -1,0 +1,12 @@
+{
+  "name": "miara-pwa",
+  "private": true,
+  "description": "Zależność tylko dla funkcji Vercel api/kopia.js (magazyn zaszyfrowanych kopii); aplikacja w przeglądarce nie ma zależności.",
+  "type": "commonjs",
+  "dependencies": {
+    "@vercel/blob": "2.8.2"
+  },
+  "overrides": {
+    "zod": "4.6.6"
+  }
+}

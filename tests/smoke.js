@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -361,11 +361,60 @@ tryAsync('klucz: hasło za krótkie albo różne w dwóch polach odrzucone', asy
   return a && b && !T.S().kopia;
 });
 tryAsync('klucz: zapisany w telefonie, hasło nigdzie nie zostaje, pola wyczyszczone', async () => {
-  view('set', BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: null })); els.k_p1 = { value: PASS }; els.k_p2 = { value: PASS };
+  view('set', BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: null })); els.k_p1 = { value: PASS }; els.k_p2 = { value: PASS }; els.k_tok = { value: 'tajny-token-urzadzenia-123456' };
   await T.kopiaSetup(); const k = await T.KS.get();
   return !!T.S().kopia && !!T.S().kopia.salt && !!k && !JSON.stringify(T.S()).includes(PASS) && els.k_p1.value === '' && els.k_p2.value === '';
 });
 tryAsync('klucz: bez zgody nie da się ustawić', async () => { view('set', BASE({ consent: null, kopia: null })); els.k_p1 = { value: PASS }; els.k_p2 = { value: PASS }; try { await T.kopiaSetup(); return false; } catch (e) { return e.message.includes('zgod'); } });
+
+// Funkcja Vercel api/kopia.js: token, kształt koperty, zapis prywatny, limity, 4 ostatnie kopie
+const API = require(path.join(root, 'api', 'kopia.js'));
+const TOK = 'tajny-token-urzadzenia-123456';
+const ENV1 = { app: 'miara-szyfr', v: 1, kdf: 'PBKDF2-SHA-256', iter: 600000, salt: 'AAAA', iv: 'AAAA', consentV: 1, created: '2026-11-06T10:00:00Z', data: 'QUJD' };
+const fakeRes = () => ({ statusCode: 0, headers: {}, body: '', setHeader(k, v) { this.headers[k.toLowerCase()] = v; }, end(b) { this.body = b; } });
+const mkApi = (blobs = []) => { const calls = { put: [], del: [] }; return { calls, h: API.makeHandler({ token: () => TOK, list: async () => ({ blobs }), put: async (n, b, o) => { calls.put.push({ n, b, o }); }, del: async (u) => { calls.del.push(u); } }) }; };
+const apiReq = (o) => ({ method: 'POST', headers: { 'x-miara-token': TOK, 'content-type': 'application/json' }, body: ENV1, ...o });
+const ago = (d) => new Date(Date.now() - d * 864e5).toISOString();
+tryAsync('api: tylko POST', async () => { const { h } = mkApi(), r = fakeRes(); await h(apiReq({ method: 'GET' }), r); return r.statusCode === 405 && r.headers.allow === 'POST'; });
+tryAsync('api: zły albo brak tokenu = 401 i nic nie zapisuje', async () => {
+  const { h, calls } = mkApi(), r1 = fakeRes(), r2 = fakeRes();
+  await h(apiReq({ headers: { 'x-miara-token': 'zly', 'content-type': 'application/json' } }), r1); await h(apiReq({ headers: { 'content-type': 'application/json' } }), r2);
+  return r1.statusCode === 401 && r2.statusCode === 401 && calls.put.length === 0;
+});
+tryAsync('api: odrzuca jawną treść, za mało iteracji i dane spoza base64', async () => API.validEnvelope(ENV1) && !API.validEnvelope({ ...ENV1, meas: { w: 80 } }) && !API.validEnvelope({ ...ENV1, iter: 1000 }) && !API.validEnvelope({ ...ENV1, data: '{"kg":80}' }) && !API.validEnvelope([ENV1]));
+tryAsync('api: koperta z jawną treścią = 422', async () => { const { h, calls } = mkApi(), r = fakeRes(); await h(apiReq({ body: { ...ENV1, pain: {} } }), r); return r.statusCode === 422 && calls.put.length === 0; });
+tryAsync('api: zapis prywatny pod losową nazwą, bez pamięci podręcznej', async () => {
+  const { h, calls } = mkApi(), r = fakeRes(); await h(apiReq(), r); const c = calls.put[0];
+  return r.statusCode === 201 && c.o.access === 'private' && /^kopie\/\d{4}-\d{2}-\d{2}-[0-9a-f]{32}\.json$/.test(c.n) && JSON.parse(c.b).data === 'QUJD' && r.headers['cache-control'] === 'no-store';
+});
+tryAsync('api: trzyma 4 ostatnie kopie (usuwa najstarszą)', async () => {
+  const blobs = [10, 11, 12, 13].map((d) => ({ url: 'u' + d, uploadedAt: ago(d) })), { h, calls } = mkApi(blobs), r = fakeRes();
+  await h(apiReq(), r); return r.statusCode === 201 && calls.del.length === 1 && calls.del[0].length === 1 && calls.del[0][0] === 'u13';
+});
+tryAsync('api: limit 3 wysyłek na dobę = 429', async () => { const { h, calls } = mkApi([1, 2, 3].map((i) => ({ url: 'n' + i, uploadedAt: ago(0.1 * i) }))), r = fakeRes(); await h(apiReq(), r); return r.statusCode === 429 && calls.put.length === 0; });
+tryAsync('api: kopia powyżej 1 MB = 413', async () => { const { h } = mkApi(), r = fakeRes(); await h(apiReq({ body: JSON.stringify({ ...ENV1, data: 'A'.repeat(1100000) }) }), r); return r.statusCode === 413; });
+
+// Aplikacja: token wysyłki, termin co 7 dni, wysyłka zaszyfrowanej kopii
+const KOPIA_OK = () => BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: { salt: 'AAAAAAAAAAAAAAAAAAAAAA==', at: '2026-11-06T10:00:00Z', token: TOK } });
+tryAsync('klucz: bez tokenu wysyłki odrzucone', async () => { view('set', BASE({ consent: { v: 1, at: '2026-11-06T10:00:00Z' }, kopia: null })); els.k_p1 = { value: PASS }; els.k_p2 = { value: PASS }; els.k_tok = { value: '' }; try { await T.kopiaSetup(); return false; } catch (e) { return e.message.includes('token'); } });
+tryc('kopia: token wysyłki nie trafia do pliku kopii', () => { view('set', KOPIA_OK()); return !T.bkBuild(false).includes(TOK) && T.S().kopia.token === TOK; });
+tryc('kopia: termin co 7 dni, tylko przy zgodzie', () => {
+  const st = (o) => { view('set', KOPIA_OK()); Object.assign(T.S().kopia, o.kopia || {}); if ('consent' in o) T.S().consent = o.consent; return T.kopiaDue(); };
+  return st({}) === true && st({ kopia: { sent: ago(8) } }) === true && st({ kopia: { sent: ago(2) } }) === false && st({ consent: null }) === false;
+});
+tryAsync('kopia: wysyłka szyfruje, wysyła z tokenem i zapisuje datę', async () => {
+  view('set', KOPIA_OK()); const salt = crypto.getRandomValues(new Uint8Array(16)); await T.KS.set(await T.kopiaDerive(PASS, salt)); T.S().kopia.salt = Buffer.from(salt).toString('base64');
+  let call = null; sandbox.fetch = async (u, o) => { call = { u, o }; return { ok: true, json: async () => ({ ok: true }) }; };
+  try { await T.kopiaSend(); } finally { delete sandbox.fetch; }
+  const body = JSON.parse(call.o.body);
+  return call.u === 'api/kopia' && call.o.method === 'POST' && call.o.headers['x-miara-token'] === TOK && body.app === 'miara-szyfr' && !call.o.body.includes('"kg"') && JSON.parse(await T.kopiaDecrypt(PASS, call.o.body)).app === 'talerz-i-trening' && !!T.S().kopia.sent;
+});
+tryAsync('kopia: błąd serwera zapisany do pokazania, bez daty wysyłki', async () => {
+  view('set', KOPIA_OK()); const salt = crypto.getRandomValues(new Uint8Array(16)); await T.KS.set(await T.kopiaDerive(PASS, salt));
+  sandbox.fetch = async () => ({ ok: false, json: async () => ({ error: 'Brak uprawnień' }) });
+  let r; try { r = await T.kopiaAuto(); } finally { delete sandbox.fetch; }
+  return r === false && T.S().kopia.err.includes('Brak uprawnień') && !T.S().kopia.sent && view('set').includes('Brak uprawnień');
+});
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);

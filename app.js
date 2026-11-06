@@ -583,7 +583,7 @@ document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.datas
 // ---------- Kopia danych: eksport i import pliku (np. przez iCloud Drive) ----------
 const BK_SKIP=['tab','introStep','sosStep','sosTrig','recipe','recipeBack','labSel'];
 let BK_PENDING=null;
-function bkBuild(noHealth){const d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){d.labs=[];d.urges={};d.legs={};d.pain={};Object.values(d.meas||{}).forEach(m=>{delete m.fat;delete m.ffm;delete m.ecw;delete m.bmr;delete m.cyc})}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
+function bkBuild(noHealth){const d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.kopia)delete d.kopia.token;if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){d.labs=[];d.urges={};d.legs={};d.pain={};Object.values(d.meas||{}).forEach(m=>{delete m.fat;delete m.ffm;delete m.ecw;delete m.bmr;delete m.cyc})}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
 function bkParse(text){try{const o=JSON.parse(text);if(!o||o.app!=='talerz-i-trening'||o.v!==1||!o.data||typeof o.data!=='object'||Array.isArray(o.data))return null;return o}catch(e){return null}}
 function bkSummary(d){return `${Object.keys(d.days||{}).length} dni z wpisami, ${Object.keys(d.meas||{}).length} dni z pomiarami, ${(d.labs||[]).length} wyników badań, ${((d.knee||{}).sessions||[]).length} sesji kolana, ${Object.keys(d.legs||{}).length} wpisów nóg`}
 async function bkExport(){
@@ -806,14 +806,26 @@ async function kopiaDecrypt(pass,env){const o=JSON.parse(env);if(!o||o.app!=='mi
 async function kopiaSetup(){const c=S.consent;if(!c||c.v!==CONSENT_V)throw new Error('Najpierw potrzebna jest zgoda');
   const g=id=>document.getElementById(id),p1=String(g('k_p1').value||''),p2=String(g('k_p2').value||'');
   if(p1.length<12)throw new Error('Hasło musi mieć co najmniej 12 znaków');if(p1!==p2)throw new Error('Hasła w obu polach różnią się');
+  const tok=String((g('k_tok')||{}).value||'').trim();if(tok.length<20)throw new Error('Wpisz token wysyłki (MIARA_UPLOAD_TOKEN z ustawień Vercel)');
   const salt=crypto.getRandomValues(new Uint8Array(16));await KS.set(await kopiaDerive(p1,salt));
-  g('k_p1').value='';g('k_p2').value='';S.kopia={salt:b64(salt),at:new Date().toISOString()}}
+  g('k_p1').value='';g('k_p2').value='';g('k_tok').value='';S.kopia={salt:b64(salt),at:new Date().toISOString(),token:tok}}
+// Wysyłka na Vercel (api/kopia): przy otwarciu aplikacji, najwyżej raz na 7 dni, tylko przy ważnej zgodzie
+function kopiaDue(){const k=S.kopia,c=S.consent;return !DEMO&&!!c&&c.v===CONSENT_V&&!!k&&!!k.token&&(!k.sent||Date.now()-Date.parse(k.sent)>=7*864e5)}
+async function kopiaSend(){const k=S.kopia,c=S.consent;if(DEMO||!c||c.v!==CONSENT_V||!k||!k.token)throw new Error('Kopia dla rady nie jest skonfigurowana');
+  const key=await KS.get();if(!key)throw new Error('Brak klucza w tym telefonie: ustaw hasło kopii ponownie');
+  const env=await kopiaEncrypt(key,unb64(k.salt),bkBuild(false));
+  const r=await fetch('api/kopia',{method:'POST',headers:{'content-type':'application/json','x-miara-token':k.token},body:env});
+  if(!r.ok){let m='';try{m=(await r.json()).error||''}catch(e){}throw new Error('Wysyłka nieudana'+(m?': '+m:''))}
+  k.sent=new Date().toISOString();delete k.err;save()}
+function kopiaAuto(){if(!kopiaDue()||typeof fetch!=='function'||(typeof navigator!=='undefined'&&navigator.onLine===false))return Promise.resolve(false);
+  return kopiaSend().then(()=>true,e=>{if(S.kopia){S.kopia.err=e.message;save()}return false})}
+
 function radaKopiaHtml(){const c=S.consent;let h='<h3>Kopia dla rady (zaszyfrowana)</h3>';
   if(!c||c.v!==CONSENT_V)return h+`<div class="note"><p><b>Zgoda na zaszyfrowaną kopię danych dla rady (wersja ${CONSENT_V})</b></p><ul>${CONSENT_TXT.map(x=>`<li>${x}</li>`).join('')}</ul><p><label><input type="checkbox" id="c_ok"> Przeczytałam(-em) i wyrażam zgodę na przetwarzanie moich danych o zdrowiu w tym celu.</label></p><p><button class="btn small" data-consent="1">Wyrażam zgodę</button></p></div>`;
   h+=`<p class="small">Zgoda z ${fmtDate(String(c.at).slice(0,10))}, wersja ${c.v}. <button class="btn ghost small" data-consentshow="1">Pokaż treść</button></p>`;
   if(S.consentShow)h+=`<div class="note"><ul>${CONSENT_TXT.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
-  h+=S.kopia?`<p class="small">Klucz zapisany w tym telefonie ${fmtDate(String(S.kopia.at).slice(0,10))}. Kopia wyśle się sama przy otwarciu aplikacji, najwyżej raz na 7 dni, po podłączeniu magazynu.</p>`
-    :'<div class="panel"><div class="field"><label for="k_p1">Hasło kopii</label><input type="password" id="k_p1" autocomplete="new-password" style="width:170px"></div><div class="field"><label for="k_p2">Powtórz hasło</label><input type="password" id="k_p2" autocomplete="new-password" style="width:170px"></div><p class="small muted">Co najmniej 12 znaków. Hasło zna tylko właściciel aplikacji; bez niego kopii nie da się odczytać. Telefon zapisuje klucz, którego nie da się z niego odczytać, a nie hasło.</p><p><button class="btn small" data-kopiakey="1">Zapisz klucz w tym telefonie</button></p></div>';
+  h+=S.kopia?`<p class="small">Klucz zapisany w tym telefonie ${fmtDate(String(S.kopia.at).slice(0,10))}. Kopia wysyła się sama przy otwarciu aplikacji, najwyżej raz na 7 dni. Ostatnia wysyłka: ${S.kopia.sent?fmtDate(S.kopia.sent.slice(0,10)):'jeszcze nie było'}.</p>${S.kopia.err?`<div class="note warn">${esc(S.kopia.err)}</div>`:''}<p><button class="btn small" data-kopiasend="1">Wyślij teraz</button></p>`
+    :'<div class="panel"><div class="field"><label for="k_p1">Hasło kopii</label><input type="password" id="k_p1" autocomplete="new-password" style="width:170px"></div><div class="field"><label for="k_p2">Powtórz hasło</label><input type="password" id="k_p2" autocomplete="new-password" style="width:170px"></div><div class="field"><label for="k_tok">Token wysyłki</label><input type="password" id="k_tok" autocomplete="off" style="width:170px"></div><p class="small muted">Co najmniej 12 znaków. Hasło zna tylko właściciel aplikacji; bez niego kopii nie da się odczytać. Telefon zapisuje klucz, którego nie da się z niego odczytać, a nie hasło.</p><p><button class="btn small" data-kopiakey="1">Zapisz klucz w tym telefonie</button></p></div>';
   return h+'<p><button class="btn ghost small" data-consentoff="1">Wycofaj zgodę</button></p>'}
 // ---------- Widoki ----------
 const TABS=[
@@ -1020,6 +1032,7 @@ document.addEventListener('click',e=>{
   else if(d.consent){if(!(document.getElementById('c_ok')||{}).checked){toast('Zaznacz pole zgody');return}S.consent={v:CONSENT_V,at:new Date().toISOString()};toast('Zgoda zapisana. Teraz ustaw hasło kopii.',2400)}
   else if(d.consentshow){S.consentShow=!S.consentShow}
   else if(d.consentoff){S.consent=null;S.kopia=null;KS.del().catch(()=>{});toast('Zgoda wycofana. Wysyłanie zatrzymane; kopie zostaną usunięte.',3200)}
+  else if(d.kopiasend){kopiaSend().then(()=>{toast('Kopia wysłana');render()},e=>{if(S.kopia){S.kopia.err=e.message;save()}toast(e.message,3200);render()});return}
   else if(d.kopiakey){kopiaSetup().then(()=>{toast('Klucz zapisany w tym telefonie');save();render()},e=>toast(e.message,3200));return}
   else if(d.cardok){S.cardsOk=S.cardsOk||{};S.cardsOk[d.cardok]=todayKey()}
   else if(d.tipok){S.tips=S.tips||{};S.tips[d.tipok]=true}
@@ -1061,3 +1074,5 @@ document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.lab
 if(!S.onb){S.tab='intro';S.introStep=0}
 render();
 if(!DEMO)chInit();
+// Automatyczna wysyłka kopii dla rady po starcie (bez blokowania widoku)
+if(typeof window!=='undefined'&&typeof window.addEventListener==='function')setTimeout(()=>{kopiaAuto().then(ok=>{if(ok&&S.tab==='set')render()})},3000);
