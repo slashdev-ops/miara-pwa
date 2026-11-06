@@ -36,7 +36,7 @@
     color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 80px);scroll-padding-bottom:calc(104px + env(safe-area-inset-bottom,0px));-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-variant-numeric:tabular-nums}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:16px 24px 8px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
@@ -150,7 +150,7 @@ nav.tabs svg{width:24px;height:24px}
 .hbtn{border:0;background:transparent;color:var(--green);font-weight:600;font-size:15px;min-height:44px;padding:0 4px;text-decoration:underline;text-underline-offset:3px}
 .num{display:flex;align-items:center;gap:4px}
 .field .num input[type=text]{width:76px}
-.stp{border:0;width:44px;height:44px;border-radius:var(--r-s);background:var(--surface2);color:var(--ink);font-size:20px;line-height:1;flex:none}
+.stp{touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;border:0;width:44px;height:44px;border-radius:var(--r-s);background:var(--surface2);color:var(--ink);font-size:20px;line-height:1;flex:none}
 .chips.quick{padding:0 16px 8px;margin:0}
 .flash{outline:3px solid var(--brass);outline-offset:4px;transition:outline-color 2s}
 @media (prefers-reduced-motion:reduce){.flash{transition:none}}
@@ -301,3 +301,6 @@ table.weeks td:nth-child(3):not(:empty){padding-top:4px;color:var(--muted)}
 .field.sleep .num{gap:4px}
 .field.sleep .num input[type=text]{width:44px;padding:8px 4px;text-align:center}
 .field.sleep .num .unit{margin:0}
+.field.haserr{flex-wrap:wrap}
+.field .err{flex:1 1 100%;font-size:13px;color:var(--warn-ink)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
