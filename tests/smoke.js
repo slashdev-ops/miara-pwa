@@ -30,7 +30,7 @@ const check = (name, cond, info) => { if (cond) ok++; else bad++; console.log((c
 
 check('index.html: brak skryptów i stylów wstawionych w HTML (CSP)', !/<script>|<style>|\son[a-z]+=/i.test(html));
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.webmanifest'), 'utf8'));
-const missing = manifest.icons.map((i) => i.src).concat(['icons/apple-touch-icon.png']).filter((f) => !fs.existsSync(path.join(root, f)));
+const missing = manifest.icons.map((i) => i.src.split('?')[0]).concat(['icons/apple-touch-icon.png']).filter((f) => !fs.existsSync(path.join(root, f)));
 check('manifest: nazwa Miara i wszystkie ikony istnieją', manifest.name === 'Miara' && !missing.length, missing.join(', '));
 const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 const swMissing = [...sw.matchAll(/'\.\/([^']+)'/g)].map((m) => m[1].split('?')[0]).filter((f) => f && !fs.existsSync(path.join(root, f)));
@@ -238,9 +238,12 @@ tryc('dalej: ze zwierzakiem prowadzi do następnego kroku w Moim dniu', () => vi
 tryc('dalej: po pierwszych krokach dwa przyciski do Mojego dnia w Ustawieniach', () => { const h = view('set', { ...CLEAN(), ...OKD, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 2 && h.includes('Przejdź do Mojego dnia'); });
 tryc('dalej: ekran zwierzaka kończy się przyciskiem do Mojego dnia', () => { const h = view('pet', { ...CLEAN(), pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 1 && h.includes('Przejdź do Mojego dnia'); });
 
-// Favicon zgodny z logo: kafel jak ikona aplikacji, trzy łuki, linia trendu i kropka; nowa wersja omija pamięć podręczną
-tryc('favicon: kafel, trzy łuki, linia trendu i kropka jak w logo', () => { const f = fs.readFileSync(path.join(root, 'brand/miara-favicon.svg'), 'utf8'); return /<rect[^>]*rx="22"[^>]*fill="#2B6A55"/.test(f) && (f.match(/A33 33/g) || []).length === 3 && /<path d="M[\d.]+ [\d.]+L[\d.]+ [\d.]+L[\d.]+ [\d.]+L[\d.]+ [\d.]+"/.test(f) && f.includes('<circle'); });
-tryc('favicon: odnośnik z wersją omija pamięć podręczną (brand/ ma max-age 7 dni)', () => /<link rel="icon" href="brand\/miara-favicon\.svg\?v=2"/.test(html));
+// Ikona na ekranie początkowym i favicon jak logo: łuki zielony, złoty, niebieski i ciemny trend na białym kafelku
+const LOGO_COLORS = ['#2B6A55', '#C08A2E', '#5563B0', '#16231C'];
+const brandSvg = (f) => fs.readFileSync(path.join(root, 'brand', f), 'utf8');
+tryc('ikona i favicon: kolory logo na białym kafelku', () => ['miara-ikona.svg', 'miara-favicon.svg'].every((f) => { const s = brandSvg(f); return LOGO_COLORS.every((c) => s.includes(`"${c}"`)) && /<rect[^>]*fill="#FFFFFF"/.test(s) && /<path d="M[\d.]+ [\d.]+L/.test(s); }));
+tryc('favicon: zaokrąglony kafel i grubsza kreska niż ikona', () => /<rect[^>]*rx="22"/.test(brandSvg('miara-favicon.svg')) && /stroke-width="12"/.test(brandSvg('miara-favicon.svg')));
+tryc('ikony z wersją omijają pamięć podręczną (brand/ i icons/ mają max-age 7 dni)', () => /<link rel="icon" href="brand\/miara-favicon\.svg\?v=2"/.test(html) && /<link rel="apple-touch-icon" href="icons\/apple-touch-icon\.png\?v=2"/.test(html) && (fs.readFileSync(path.join(root, 'manifest.webmanifest'), 'utf8').match(/\.png\?v=2"/g) || []).length === 3);
 
 console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
 process.exit(bad ? 1 : 0);
