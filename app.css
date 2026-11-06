@@ -229,3 +229,7 @@ details.fold .panel,details.fold .meal{margin:0;border-radius:0}
 .btn.small{padding:6px 12px;min-height:36px;font-size:14px;width:auto;flex:none}
 .opt.hab.next{box-shadow:inset 4px 0 0 var(--green)}
 .opt .chev{color:var(--muted);font-size:22px;line-height:1;margin-left:4px}
+
+/* Wskazówka pierwszego wejścia */
+.tip{display:flex;align-items:center;gap:12px;padding:10px 16px;margin-bottom:12px;border-left:4px solid var(--green)}
+.tip p{margin:0;flex:1;font-size:15px}

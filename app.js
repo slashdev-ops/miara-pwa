@@ -607,7 +607,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'80',cm:'170',age:'35',sex:'K',goal:'72',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,tips:{},petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),JSON.parse(r));}catch(e){}return clone(DEF)}
@@ -653,7 +653,18 @@ function habOn(x,h,ents,k){if(x.auto==='z')return num((S.meas[k]||{}).sleep)>=7|
 function dayPts(k){const h=(S.hab&&S.hab[k])||{},ents=S.days[k]||[];return HABITS.reduce((a,x)=>a+(habOn(x,h,ents,k)?x.pts:0),0)}
 function weekPts(){const d=new Date(),dow=(d.getDay()+6)%7;let s=0;for(let i=0;i<=dow;i++){const x=new Date(d);x.setDate(d.getDate()-i);s+=dayPts(keyOf(x))}return s}
 function level(p){let l=LEVELS[0];for(const x of LEVELS)if(p>=x[0])l=x;return l}
-function streak(){let n=0,miss=0;const d=new Date();for(let i=0;i<366;i++){const x=new Date(d);x.setDate(d.getDate()-i);if(dayPts(keyOf(x))>=30){n++;miss=0}else if(i===0){continue}else{miss++;if(miss>=2)break}}return n}
+// Wskazówki pierwszego wejścia: jedna na ekran, raz, do „Rozumiem”
+const TIPS={day:'Tu jest Twój dzień: co zrobić dziś i jak idzie. Naciśnij kartę zwierzaka, żeby zobaczyć postęp.',
+  meals:'Przy daniu, które jesz, naciśnij Zjem. Nie trzeba gotować wszystkiego z planu: zjedzone inaczej zapiszesz szybkim wpisem w Moim dniu.',
+  train:'Masz zegarek? Wpisz czas i kalorie z zegarka na górze. Bez zegarka wybierz niżej rodzaj treningu i czas.',
+  health:'Badania, suplementy i wiedza. Nic tu nie jest obowiązkowe, zajrzyj, gdy potrzebujesz.',
+  set:'Twoje dane liczą kalorie: sprawdź je i naciśnij Zapisz i sprawdź. Tu też włączysz wpisywanie raz dziennie.',
+  pet:'Zwierzak rośnie z dni z wpisami. Nie umiera i nie cofa się w rozwoju, nawet po przerwie.'};
+function tipHtml(tab){if(DEMO||!TIPS[tab]||(S.tips||{})[tab]||(tab==='day'&&guideActive()))return '';return `<div class="tip panel" role="note"><p><b>Pierwszy raz tutaj?</b> ${TIPS[tab]}</p><button class="btn small" data-tipok="${tab}">Rozumiem</button></div>`}
+// Dzień aktywny: 30 pkt albo, w trybie raz dziennie, zapisany wpis dnia (posiłki oraz trening albo kroki)
+function onceDone(k){const e=S.days[k]||[];return e.some(x=>x.kind==='m')&&(e.some(x=>x.kind==='t')||num((S.meas[k]||{}).steps)>0)}
+function dayOk(k){return dayPts(k)>=30||(!!S.once&&onceDone(k))}
+function streak(){let n=0,miss=0;const d=new Date();for(let i=0;i<366;i++){const x=new Date(d);x.setDate(d.getDate()-i);if(dayOk(keyOf(x))){n++;miss=0}else if(i===0){continue}else{miss++;if(miss>=2)break}}return n}
 function habitsHtml(trained){
   const hk=todayKey(),hh=S.hab[hk]||{},wp=weekPts(),lv=level(wp),nx=LEVELS.find(x=>x[0]>wp);
   let g='<h2>Nawyki dnia</h2><div class="panel">'+HABITS.filter(x=>x.auto!=='u'||S.mode==='utrzymanie').map(x=>{const on=habOn(x,hh,day(),hk);return `<button class="opt hab ${on?'on':''}" data-hab="${x.id}" aria-pressed="${!!on}"><span class="box">${on?'✓':''}</span><span>${x.n}</span><span class="met">+${x.pts}</span></button>`}).join('')+'</div>';
@@ -708,7 +719,7 @@ function filtered(){
 
 // ---------- Zwierzak (pet.js): dane dla PET.state, karta, wybór, ekran postępu ----------
 function petPts(k){const x=HABITS.find(h=>h.id==='pasmo');return dayPts(k)-(habOn(x,(S.hab||{})[k]||{},S.days[k]||[],k)?x.pts:0)}
-function petCtx(now){return {now:now||new Date(),pet:S.pet,once:!!S.once,seen:S.petSeen||[],celeb:S.petCeleb&&S.petCeleb.day===todayKey()?S.petCeleb.id:null,key:keyOf,dayPts:petPts,entries:k=>S.days[k]||[],meas:k=>S.meas[k]||{},habs:k=>(S.hab||{})[k]||{},urges:k=>(S.urges||{})[k]||[],reviewed:Object.keys(S.reviews||{}).length>0,streak,weekPts,level,stage:stageInfo,avgW:(a,b)=>avgAgo(a,b,'w'),startW:(stageInfo()||{}).start||null,num}}
+function petCtx(now){return {now:now||new Date(),pet:S.pet,once:!!S.once,seen:S.petSeen||[],celeb:S.petCeleb&&S.petCeleb.day===todayKey()?S.petCeleb.id:null,key:keyOf,dayPts:k=>S.once&&onceDone(k)?Math.max(30,petPts(k)):petPts(k),entries:k=>S.days[k]||[],meas:k=>S.meas[k]||{},habs:k=>(S.hab||{})[k]||{},urges:k=>(S.urges||{})[k]||[],reviewed:Object.keys(S.reviews||{}).length>0,streak,weekPts,level,stage:stageInfo,avgW:(a,b)=>avgAgo(a,b,'w'),startW:(stageInfo()||{}).start||null,num}}
 // Kamień milowy zaliczany poza przerysowaniem przy wpisywaniu (REDRAW); świętowanie widoczne do obejrzenia ekranu zwierzaka
 function petState(){if(DEMO){const fr=PET.demo().frames,f=fr[DEMO_I%fr.length];S.pet.kind=f.kind;return PET.state(Object.assign(petCtx(),{force:f}))}const st=PET.state(petCtx());let ch=false;if(st.milestone&&!REDRAW){S.petSeen=(S.petSeen||[]).concat(st.milestone);S.petCeleb={id:st.milestone,day:todayKey()};ch=true}if(S.pet&&st.active>(S.pet.peak||0)){S.pet.peak=st.active;ch=true}if(ch)save();return st}
 function petCardHtml(){if(!S.pet)return `<button class="petcard" data-petpick="1">${PET.svg('gaska','egg','ok',null)}<span class="petinfo"><b>Wybierz towarzysza</b><span class="small">Gąska albo kaczuszka będzie reagować na Twoje wpisy.</span></span></button>`;return PET.card(petState(),S.pet,esc)}
@@ -862,11 +873,11 @@ ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź ob
   <li><a href="https://fitmum.ku.dk/2011_Compendium_of_Physical_Activities.pdf" target="_blank" rel="noopener">2011 Compendium of Physical Activities</a>: ergometr wioślarski. Pływanie, nordic walking i orbitrek z wiedzy ogólnej, niesprawdzone.</li>
   <li>Równania metaboliczne ACSM dla marszu i biegu, wzór Mifflina-St Jeora, sprawność brutto jazdy na rowerze ok. 20%: wiedza ogólna, niesprawdzone w tej aplikacji ze źródłem.</li>
   <li>Wartości odżywcze: typowe wartości z tabel składu, orientacyjne.</li></ol>
-  ${nextHtml('set')}<p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p><p><button class="btn ghost" data-reset="1">Przywróć ustawienia domyślne</button></p>`;
+  ${nextHtml('set')}<p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-reset="1">Przywróć ustawienia domyślne</button></p>`;
   document.getElementById('main').innerHTML=h;
 }
 
-function render(){renderTabs();({meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują. <button class="btn ghost" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+function render(){renderTabs();({meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują. <button class="btn ghost" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 function toast(t,ms){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),ms||1600)}
 function setPath(p,v){const a=p.split('.');let o=S;for(let i=0;i<a.length-1;i++)o=o[a[i]];o[a[a.length-1]]=v}
 
@@ -932,6 +943,8 @@ document.addEventListener('click',e=>{
   else if(d.petkind){const first=!S.pet;S.pet={kind:d.petkind,name:(S.pet&&S.pet.name)||'',since:(S.pet&&S.pet.since)||todayKey()};if(first)S.petSeen=[...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])]}
   else if(d.petpick){S.tab='set';window.scrollTo(0,0)}
   else if(d.datasave){const c=dataCheck();if(c.err.length){toast(c.err[0],3200);const el=document.getElementById('f_'+c.first);if(el&&el.focus)el.focus()}else{S.guide=S.guide||{};S.guide.dataOk=true;save();toast('Dane zapisane')}}
+  else if(d.tipok){S.tips=S.tips||{};S.tips[d.tipok]=true}
+  else if(d.tipsreset){S.tips={};toast('Wskazówki pokażą się ponownie')}
   else if(d.guidehide){S.guide.hidden=true}
   else if(d.demoexit){location.hash='';location.reload();return}
   else if(d.sex){S.sex=d.sex}

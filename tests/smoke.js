@@ -10,7 +10,7 @@ const code = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
 const els = {}, lis = {};
-const mk = (id) => els[id] || (els[id] = { id, innerHTML: '', textContent: '', value: '', checked: false, style: {}, classList: { add() {}, remove() {} } });
+const mk = (id) => els[id] || (els[id] = { id, innerHTML: '', textContent: '', value: '', checked: false, style: {}, classList: { add() {}, remove() {} }, insertAdjacentHTML(pos, h) { this.innerHTML = h + this.innerHTML; } });
 const sandbox = {
   document: { getElementById: mk, querySelector: () => null, addEventListener(t, f) { (lis[t] = lis[t] || []).push(f); } },
   window: { scrollTo() {} },
@@ -22,7 +22,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b)};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -262,5 +262,19 @@ tryc('P1-3: ukończony Wpis dnia mówi, że dzień zapisany, i prowadzi do zwier
   const k = T.todayKey(), h = view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, days: { [k]: [{ kind: 'm', id: 's1', label: 'x', k: 300, p: 20, f: 5, c: 30 }, { kind: 't', label: 'Trening z zegarka', min: 40, gross: 300, net: 200 }] }, meas: { [k]: { steps: '8000' } } });
   return h.includes('Dzień zapisany') && /Wpis dnia[\s\S]*data-tab="pet"[^>]*>Zobacz zwierzaka/.test(h);
 });
+// Rada 06.11.2026 (pierwsze wejście, długie korzystanie): punkty trybu raz dziennie, wskazówki pierwszego wejścia
+const yKey = () => { const d = new Date(); d.setDate(d.getDate() - 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const ONCE_DAY = () => [{ kind: 'm', id: 's1', label: 'x', k: 400, p: 20, f: 5, c: 30, plan: true }];
+const onceState = (once) => { const k = T.todayKey(), y = yKey(); return { ...CLEAN(), once, pet: { kind: 'gaska', name: 'A', since: y }, petSeen: [...SEEN_ALL], guide: { ...HID }, days: { [k]: ONCE_DAY(), [y]: ONCE_DAY() }, meas: { [k]: { steps: '8000' }, [y]: { steps: '7000' } } }; };
+tryc('P1-2r: tryb raz dziennie: wpis dnia (posiłki i kroki) liczy się do serii', () => { view('day', onceState(true)); return T.streak() === 2; });
+tryc('P1-2r: tryb raz dziennie: zwierzak wykluwa się po wpisach dnia', () => { view('day', onceState(true)); return P().state(T.petCtx()).stage === 'chick'; });
+tryc('P1-2r: zwykły tryb: ten sam dzień poniżej 30 pkt nie jest aktywny', () => { view('day', onceState(false)); return T.streak() === 0 && P().state(T.petCtx()).stage === 'egg'; });
+const TIPST = () => ({ ...CLEAN(), ...OKD, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true }, tips: {} });
+tryc('wskazówki: każdy ekran ma wskazówkę przy pierwszym wejściu', () => ['meals', 'train', 'health', 'set', 'pet', 'day'].every((t) => view(t, TIPST()).includes(`data-tipok="${t}"`)));
+tryc('wskazówki: po Rozumiem znika na stałe', () => { view('train', TIPST()); click({ tipok: 'train' }); return T.S().tips.train === true && !mainHtml().includes('data-tipok') && !view('train').includes('data-tipok'); });
+tryc('wskazówki: na Moim dniu nie ma jej, gdy są pierwsze kroki', () => !view('day', { ...TIPST(), guide: { hidden: false, dataOk: false, seenPet: false } }).includes('data-tipok'));
+tryc('wskazówki: w trybie demo ich nie ma', () => { T.setDemo(true); let h = ''; try { h = view('meals', TIPST()); } finally { T.setDemo(false); } return !h.includes('data-tipok'); });
+tryc('wskazówki: Ustawienia przywracają wskazówki', () => { view('set', { ...TIPST(), tips: { meals: true, set: true } }); click({ tipsreset: '1' }); return Object.keys(T.S().tips).length === 0; });
+
 console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
 process.exit(bad ? 1 : 0);
