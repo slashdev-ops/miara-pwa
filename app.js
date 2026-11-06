@@ -218,7 +218,7 @@ function renderSos(){
     h+='<h2>Po przerwie</h2><div class="panel"><button class="opt" data-sosout="minela"><span>Ochota minęła</span></button><button class="opt" data-sosout="plan"><span>Zjem planowaną przekąskę</span></button><button class="opt" data-sosout="inne"><span>Zjem coś innego</span></button></div>';
     if(st==='inne')h+=`<div class="panel"><div class="field"><label for="s_n">Co</label><input type="text" id="s_n" style="width:170px;text-align:left" placeholder="np. ciastka"></div><div class="field"><label for="s_k">Ile, w przybliżeniu</label><input type="text" inputmode="numeric" id="s_k" placeholder="0"><span class="unit">kcal</span></div></div><p><button class="btn" data-sossave="1">Zapisz</button></p><p class="small muted">Zapis jest ważniejszy niż sam wybór. Dla skali: 100 kcal to ok. ${fmt(100/walkPerMin())} min spaceru, ${(()=>{const l=targetKcal()-eatenToday();return l>=0?`a dziś zostało ok. ${fmt(l)} kcal.`:`a cel dnia jest już przekroczony o ok. ${fmt(-l)} kcal; zapis i tak się liczy.`})()}</p>`;
   }
-  h+='<h2>Twoje ochoty</h2><div class="note">'+urgeStats()+'</div>';
+  h+='<h2 id="ochoty">Twoje ochoty</h2>'+whyP('ochoty')+'<div class="note">'+urgeStats()+'</div>';
   document.getElementById('main').innerHTML=h;
 }
 
@@ -240,7 +240,7 @@ const SUPP=[
 ];
 function protCost(){return PROT.map(([id,n,pp])=>{const r=S.prices[id]||{},p=num(r.p),g=num(r.g);return {id,n,pp,c:p>0&&g>0?p/(g*pp/100)*20:null}})}
 function renderHealth(){
-  let h='<p><button class="btn" data-tab="labs" style="width:100%">Moje badania</button></p><div class="note"><b>Co realne.</b> Przy chorobach przewlekłych, np. tarczycy, celem jest dobra kontrola wyników i objawów, nie wyleczenie. Insulinooporność często wyraźnie się poprawia przy spadku masy ciała, ruchu i śnie. Niedobory wyrównuje się według wyników badań.</div>';
+  let h='<p><button class="btn" data-tab="labs">Moje badania</button></p><div class="note"><b>Co realne.</b> Przy chorobach przewlekłych, np. tarczycy, celem jest dobra kontrola wyników i objawów, nie wyleczenie. Insulinooporność często wyraźnie się poprawia przy spadku masy ciała, ruchu i śnie. Niedobory wyrównuje się według wyników badań.</div>';
   h+=cardsHtml('health')+visitHtml();
   const box=(title,items)=>`<details class="fold"><summary>${title}</summary><div class="panel">`+items.map(([a,b])=>`<div class="entry"><span class="txt"><b>${a}.</b> ${b}</span></div>`).join('')+'</div></details>';
   h+=box('Woda, uda i pośladki',[
@@ -264,7 +264,7 @@ function renderHealth(){
   ]);
   h+='<h2>Start w 3 krokach</h2><div class="panel"><div class="entry"><span class="txt"><b>1. Badania i lekarz.</b> Zakres ustal z lekarzem, np. TSH, fT4, fT3, anty-TPO, glukoza i insulina na czczo, HbA1c, 25(OH)D, ferrytyna, magnez, wapń.</span></div><div class="entry"><span class="txt"><b>2. Witamina D3</b> według wytycznych. Pozostałe suplementy dopiero po wynikach.</span></div><div class="entry"><span class="txt"><b>3. Białko z jedzenia</b> według planu. Kreatyna 3-5 g dziennie, jeśli trenujesz siłowo.</span></div></div>';
   h+='<details class="fold"><summary>Suplementy ('+SUPP.length+')</summary>'+SUPP.map(s=>`<article class="meal"><div class="mhead"><div class="name">${s.n}</div><div class="meta">${s.v}</div></div><div class="mdet" style="border-top:0"><p class="small"><b>Dawka:</b> ${s.d}</p><p class="small"><b>Dowody:</b> ${s.e}</p><p class="small"><b>Uwaga:</b> ${s.w}</p></div></article>`).join('')+'</details>';
-  h+='<h2>Białko za złotówkę</h2><p class="small muted">Wpisz cenę z półki lub paragonu i wagę opakowania. Wynik to koszt 20 g białka. Ceny zapisują się w telefonie.</p><div class="panel">'+protCost().map(r=>`<div class="field" style="flex-wrap:wrap"><label style="flex:1 1 100%">${r.n}</label><input type="text" inputmode="decimal" data-k="prices.${r.id}.p" value="${esc(S.prices[r.id].p)}" placeholder="cena" aria-label="Cena: ${r.n}"><span class="unit">zł</span><input type="text" inputmode="numeric" data-k="prices.${r.id}.g" value="${esc(S.prices[r.id].g)}" aria-label="Waga opakowania: ${r.n}"><span class="unit">g</span></div>`).join('')+'</div>';
+  h+='<h2 id="bialko">Białko za złotówkę</h2>'+whyP('bialko')+'<p class="small muted">Wpisz cenę z półki lub paragonu i wagę opakowania. Wynik to koszt 20 g białka. Ceny zapisują się w telefonie.</p><div class="panel">'+protCost().map(r=>`<div class="field" style="flex-wrap:wrap"><label style="flex:1 1 100%">${r.n}</label><input type="text" inputmode="decimal" data-k="prices.${r.id}.p" value="${esc(S.prices[r.id].p)}" placeholder="cena" aria-label="Cena: ${r.n}"><span class="unit">zł</span><input type="text" inputmode="numeric" data-k="prices.${r.id}.g" value="${esc(S.prices[r.id].g)}" aria-label="Waga opakowania: ${r.n}"><span class="unit">g</span></div>`).join('')+'</div>';
   const ranked=protCost().filter(r=>r.c!=null).sort((a,b)=>a.c-b.c);
   if(ranked.length)h+='<h2>Ranking</h2><div class="panel">'+ranked.map((r,i)=>`<div class="entry"><span class="txt">${i+1}. ${r.n}</span><span class="val">${r.c.toFixed(2).replace('.',',')} zł za 20 g</span></div>`).join('')+'</div>';
   h+='<h2>Źródła</h2><ol class="src"><li><a href="https://pubmed.ncbi.nlm.nih.gov/36771403/" target="_blank" rel="noopener">Wytyczne witaminy D w Polsce, aktualizacja 2023</a></li><li><a href="https://pubmed.ncbi.nlm.nih.gov/37221858/" target="_blank" rel="noopener">Stanowisko ISSN: żywienie kobiet aktywnych fizycznie (kreatyna)</a></li><li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4501114/" target="_blank" rel="noopener">Stanowisko ISSN: beta-alanina</a></li><li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10951571" target="_blank" rel="noopener">Metaanaliza: selen w Hashimoto (Thyroid 2024)</a></li></ol><p class="small muted">Aplikacja nie zastępuje lekarza. Suplementy omawiaj z lekarzem, zwłaszcza przy zmianie leków.</p>';
@@ -347,7 +347,7 @@ function onceHtml(){const k=todayKey(),m=S.meas[k]||{},ms=day().filter(e=>e.kind
     +row(ms>0,'Posiłki',ms?ms+' zapisane':'Jak wyglądało dziś jedzenie?','<button class="btn small" data-dayplan="1">Według planu</button><button class="btn small ghost" data-dayother="1">Inaczej</button>')
     +row(tr,'Trening',tr?'zapisany':'Tylko jeśli dziś był','<button class="btn small ghost" data-tab="train">Z zegarka</button>')
     +row(st,'Kroki',st?fmt(num(m.steps))+' kroków':'Liczba z telefonu','<button class="btn small ghost" data-goto="m_steps">Wpisz</button>')+'</div>'
-    +(ms>0&&(tr||st)?'<div class="note">✓ Dzień zapisany. Do jutra wieczorem.</div><p class="nextbar"><button class="btn" data-tab="pet" style="width:100%">Zobacz zwierzaka</button></p>':'')}
+    +(ms>0&&(tr||st)?'<div class="note">✓ Dzień zapisany. Do jutra wieczorem.</div><p class="nextbar"><button class="btn" data-tab="pet">Zobacz zwierzaka</button></p>':'')}
 function focusHtml(){if(S.once)return onceHtml();const k=todayKey(),m=S.meas[k]||{},ms=day().filter(e=>e.kind==='m').length,tr=day().some(e=>e.kind==='t'),st=num(m.steps)>0;const items=[[num(m.w)>0,'Zważ się rano',num(m.w)>0?fmt1(num(m.w))+' kg':'','goto','m_w','Wpisz wagę w Pomiarach dnia niżej'],[ms>=3,'Zapisz 3 posiłki',ms+' z 3','tab','meals','Otwórz Posiłki i naciśnij Zjem przy daniu'],[tr||st,(S.knee&&S.knee.start&&S.knee.days.includes(new Date().getDay())?'Ruch: dziś sesja kolana':'Ruch: trening albo kroki'),tr?'trening':(st?fmt(num(m.steps))+' kroków':''),'tab','train','Dodaj trening albo wpisz kroki w Pomiarach dnia']];const done=items.filter(x=>x[0]).length,nx=items.findIndex(x=>!x[0]);return `<h2>Dziś: ${done} z 3</h2><div class="panel">`+items.map(([ok,lab,val,act,arg,hint],i)=>`<button class="opt hab ${ok?'on':(i===nx?'next':'')}" data-${act}="${arg}"><span class="box">${ok?'✓':''}</span><span class="lab">${lab}${ok?'':`<small class="hint">${hint}</small>`}</span><span class="met">${val}</span><span class="chev" aria-hidden="true">›</span></button>`).join('')+'</div>'}
 function firstDataDay(){const ks=Object.keys(S.days||{}).filter(k=>(S.days[k]||[]).some(e=>e.kind==='m')).sort();return ks[0]||null}
 function reliability(){const f=firstDataDay();if(!f)return null;const span=Math.max(1,Math.min(14,Math.round((Date.parse(todayKey())-Date.parse(f))/864e5)+1));let md=0,wd=0;lastKeys(span).forEach(k=>{if((S.days[k]||[]).filter(e=>e.kind==='m').length>=3)md++;if(num((S.meas[k]||{}).w)>0)wd++});return {span,md,wd,pct:Math.round(md/span*100)}}
@@ -355,7 +355,7 @@ function relHtml(){const r=reliability();if(!r||r.span<7)return '';const M=measu
 function mondayOf(d){const x=new Date(d);x.setHours(12,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return keyOf(x)}
 function reviewKey(){const d=new Date();return d.getDay()===0?mondayOf(d):mondayOf(new Date(Date.now()-7*864e5))}
 function weekStats(mk){const base=Date.parse(mk+'T12:00:00'),ks=Array.from({length:7},(_,i)=>keyOf(new Date(base+i*864e5))),pk=Array.from({length:7},(_,i)=>keyOf(new Date(base+(i-7)*864e5)));const aw=a=>{const v=a.map(k=>num((S.meas[k]||{}).w)).filter(x=>x>0);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};let md=0,pts=0,ur=0,uok=0;ks.forEach(k=>{if((S.days[k]||[]).filter(e=>e.kind==='m').length>=3)md++;pts+=dayPts(k);(S.urges[k]||[]).forEach(u=>{ur++;if(u.out!=='inne')uok++})});return {ks,w:aw(ks),pw:aw(pk),md,pts,ur,uok}}
-function reviewPromptHtml(){const dw=new Date().getDay();if(![0,1,2].includes(dw)||(S.reviews||{})[reviewKey()])return '';return '<p><button class="btn" data-tab="review" style="width:100%">Przegląd tygodnia: 3 pytania, 2 minuty</button></p>'}
+function reviewPromptHtml(){const dw=new Date().getDay();if(![0,1,2].includes(dw)||(S.reviews||{})[reviewKey()])return '';return '<p><button class="btn" data-tab="review">Przegląd tygodnia: 3 pytania, 2 minuty</button></p>'}
 function changeHtml(){const r=Object.entries(S.reviews||{}).sort((a,b)=>b[0].localeCompare(a[0]))[0];if(!r||!r[1].c||Date.now()-Date.parse(r[0]+'T12:00:00')>14*864e5)return '';return `<div class="note"><b>Twoja zmiana na ten tydzień:</b> ${esc(r[1].c)}</div>`}
 function renderReview(){
   const mk=reviewKey(),st=weekStats(mk),ex=(S.reviews||{})[mk]||{},end=st.ks.at(-1);
@@ -363,11 +363,11 @@ function renderReview(){
   let h='<p><button class="btn ghost" data-tab="day">Wróć</button></p>';
   h+=`<div class="note"><b>Tydzień ${fmtDate(mk)}-${fmtDate(end)}</b><br>Pełny zapis posiłków: ${st.md} z 7 dni. Punkty: ${fmt(st.pts)}. Ochoty: ${st.ur}${st.ur?`, w tym ${st.uok} bez jedzenia spoza planu`:''}.${st.w!=null?` Średnia waga: ${fmt1(st.w)} kg${st.pw!=null?`, tydzień wcześniej ${fmt1(st.pw)} kg`:''}.`:' Brak ważeń w tym tygodniu.'}</div>`;
   h+=ta('r_a','Co zadziałało?','np. przekąska w torbie w pracy',ex.a)+ta('r_b','Co nie zadziałało?','np. podjadanie po 15:00',ex.b)+ta('r_c','Jedna zmiana na przyszły tydzień','np. herbata o 15:00 zamiast ciastka',ex.c);
-  h+='<p><button class="btn" data-revsave="1" style="width:100%">Zapisz przegląd</button></p><p class="small muted">Jedna zmiana naraz. Zobaczysz ją przez tydzień na górze Mojego dnia.</p>';
+  h+='<p><button class="btn" data-revsave="1">Zapisz przegląd</button></p><p class="small muted">Jedna zmiana naraz. Zobaczysz ją przez tydzień na górze Mojego dnia.</p>';
   document.getElementById('main').innerHTML=h;
 }
 function renderIntro(){
-  const s=S.introStep||0,next=(a,l)=>`<p><button class="btn" style="width:100%" data-${a}="1">${l}</button></p>`;
+  const s=S.introStep||0,next=(a,l)=>`<p><button class="btn" data-${a}="1">${l}</button></p>`;
   let h='<div style="display:flex;gap:8px;justify-content:center;margin:8px 0 16px" aria-label="Krok '+(s+1)+' z 5">'+[0,1,2,3,4].map(i=>`<span style="width:${i===s?24:8}px;height:8px;border-radius:4px;background:${i===s?'var(--green)':'var(--line)'}"></span>`).join('')+'</div>';
   if(s===0)h+='<h2 style="font-size:24px">Plan na zdrową wagę, bez kartki i wyrzutów</h2><p>Aplikacja podpowiada, co zjeść, liczy kalorie z Twoich danych i pokazuje, dokąd prowadzą wybory.</p>'+next('intronext','Dalej');
   if(s===1)h+='<h2 style="font-size:24px">Codziennie tylko 3 rzeczy</h2><div class="panel"><div class="entry"><span class="txt"><b>1.</b> Zważ się rano</span></div><div class="entry"><span class="txt"><b>2.</b> Zapisz posiłki jednym dotknięciem „Zjem”</span></div><div class="entry"><span class="txt"><b>3.</b> Ruch: trening albo kroki z zegarka</span></div></div><p>Gdy łapie ochota na przekąskę, naciśnij przycisk „Mam ochotę coś przekąsić”. Reszta jest opcjonalna.</p>'+next('intronext','Dalej');
@@ -474,7 +474,7 @@ function renderRecipe(){
   if(cm!==1||por!==1)h+=`<p class="small muted">Porcja przeliczona: węglowodany ×${fmt1(cm)}, wielkość ×${fmt1(por)}.</p>`;
   h+='<h3 class="rh">Przygotowanie</h3><ol class="steps">'+steps.map(s=>`<li>${s}</li>`).join('')+'</ol>';
   h+=tipsHtml(m,x);
-  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz co najmniej 4 godziny po leku (wiedza ogólna, niesprawdzone).</p>':''}${planIds().includes(m.id)?'<p class="small muted">W planie na dziś. Wieczorem „Według planu” zapisze to danie.</p>':`<p><button class="btn" data-cook="${m.id}" style="width:100%">Gotuję to dziś</button></p>`}<p><button class="btn${planIds().includes(m.id)?'':' ghost'}" data-addmeal="${m.id}" style="width:100%">Zjem, zapisz</button></p><p><button class="btn ghost" data-copy="${m.id}" style="width:100%">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
+  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz co najmniej 4 godziny po leku (wiedza ogólna, niesprawdzone).</p>':''}${planIds().includes(m.id)?'<p class="small muted">W planie na dziś. Wieczorem „Według planu” zapisze to danie.</p>':`<p><button class="btn" data-cook="${m.id}">Gotuję to dziś</button></p>`}<p><button class="btn${planIds().includes(m.id)?'':' ghost'}" data-addmeal="${m.id}">Zjem, zapisz</button></p><p><button class="btn ghost" data-copy="${m.id}">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
   document.getElementById('main').innerHTML=h;
 }
 
@@ -484,11 +484,11 @@ const KNEE_EX={
   st:[['Przysiad do krzesła w zakresie bez bólu',['2 × 10','3 × 10','3 × 8 z plecakiem z wodą']],['Most biodrowy',['2 × 12','3 × 12','3 × 10 na jednej nodze']],['Wyprost kolana w siadzie z gumą',['2 × 12','3 × 12','3 × 10, mocniejsza guma']],['Uginanie kolana z gumą',['2 × 12','3 × 12','3 × 10, mocniejsza guma']],['Wspięcia na palce',['2 × 15','3 × 15','3 × 12 na jednej nodze']]]
 };
 function kneeWeek(){const s=S.knee.start;if(!s)return 0;return Math.max(1,Math.min(12,Math.floor((Date.parse(todayKey())-Date.parse(s))/(7*864e5))+1))}
-function kneeBannerHtml(){const K=S.knee;if(!K.start)return '';const dw=new Date().getDay(),t=todayKey(),done=K.sessions.some(x=>x.d===t),last=K.sessions.at(-1),y=keyOf(new Date(Date.now()-864e5));let h='';if(last&&last.d===y&&!K.morning[t])h+='<div class="note"><b>Kolano rano po wczorajszej sesji:</b><div class="chips" style="margin-top:8px">'+['lepiej','tak samo','gorzej'].map(v=>`<button class="chip" data-kmorn="${v}">${v}</button>`).join('')+'</div></div>';if(K.days.includes(dw)&&!done)h+='<p><button class="btn" data-tab="knee" style="width:100%">Dziś sesja programu kolana</button></p>';return h}
+function kneeBannerHtml(){const K=S.knee;if(!K.start)return '';const dw=new Date().getDay(),t=todayKey(),done=K.sessions.some(x=>x.d===t),last=K.sessions.at(-1),y=keyOf(new Date(Date.now()-864e5));let h='';if(last&&last.d===y&&!K.morning[t])h+='<div class="note"><b>Kolano rano po wczorajszej sesji:</b><div class="chips" style="margin-top:8px">'+['lepiej','tak samo','gorzej'].map(v=>`<button class="chip" data-kmorn="${v}">${v}</button>`).join('')+'</div></div>';if(K.days.includes(dw)&&!done)h+='<p><button class="btn" data-tab="knee">Dziś sesja programu kolana</button></p>';return h}
 function renderKnee(){
   const K=S.knee,wk=kneeWeek(),n=K.sessions.length,ph=wk<=4?0:wk<=8?1:2,today=todayKey(),done=K.sessions.find(x=>x.d===today);
   let h='<p><button class="btn ghost" data-tab="train">Wróć</button></p><div class="note warn">Program z badania dotyczył osób w wieku 35-60 lat ze zwyrodnieniowym uszkodzeniem łąkotki potwierdzonym rezonansem. Przed startem: diagnoza u ortopedy, a ćwiczenia zatwierdza fizjoterapeuta.</div>';
-  h+=K.start?`<div class="note"><b>Tydzień ${wk} z 12. Sesje: ${n} z 24.</b> ${n>=24?'Pełny program jak w badaniu.':n>=19?'Poziom zadowalający według badania (19-23 sesje); każda kolejna się liczy.':'Każda sesja się liczy; po przerwie wracasz od ostatniego poziomu.'}</div>`:'<p><button class="btn" data-kstart="1" style="width:100%">Zaczynam program (12 tygodni)</button></p>';
+  h+=K.start?`<div class="note"><b>Tydzień ${wk} z 12. Sesje: ${n} z 24.</b> ${n>=24?'Pełny program jak w badaniu.':n>=19?'Poziom zadowalający według badania (19-23 sesje); każda kolejna się liczy.':'Każda sesja się liczy; po przerwie wracasz od ostatniego poziomu.'}</div>`:'<p><button class="btn" data-kstart="1">Zaczynam program 12 tygodni</button></p>';
   const last=K.sessions.at(-1);
   if(last){const nd=keyOf(new Date(Date.parse(last.d+'T12:00:00')+864e5)),mo=K.morning[nd];const r=(last.pain>3||mo==='gorzej')?'Zostań na obecnym poziomie albo zrób krok wstecz. Jeśli to się powtórzy w 2 kolejnych sesjach: fizjoterapeuta.':mo?'Kolano dobrze znosi obciążenie: w następnej sesji możesz dodać serię albo trudniejszą wersję.':last.d===today?'Jutro rano oceń kolano: od tego zależy progresja.':'Brak oceny poranka po ostatniej sesji: zostań na obecnym poziomie.';h+=`<div class="note"><b>Ostatnia sesja ${fmtDate(last.d)}: ból ${last.pain}/10${mo?', rano '+mo:''}.</b> ${r}</div>`}
   const cr=K.sessions.filter(x=>x.cramp&&Date.parse(today)-Date.parse(x.d)<14*864e5).length;
@@ -498,7 +498,7 @@ function renderKnee(){
   h+=ex(`Nerwowo-mięśniowe, poziom ${ph+1} z 3`,KNEE_EX.nm)+ex(`Siłowe, poziom ${ph+1} z 3`,KNEE_EX.st);
   h+='<p class="small muted">Lista ćwiczeń z badania jest w rycinach publikacji, których nie sprawdziłem. Powyższe to przykłady do zatwierdzenia przez fizjoterapeutę (wniosek), z poziomami na tygodnie 1-4, 5-8 i 9-12.</p>';
   const cp=K.tmpPain!=null?K.tmpPain:(done?done.pain:null),cc=K.tmpCramp!=null?K.tmpCramp:(done?done.cramp:false);
-  h+=`<h2>${done?'Dzisiejsza sesja zapisana':'Zapisz dzisiejszą sesję'}</h2><div class="panel" style="padding:4px 16px 12px"><p style="margin:10px 0 4px">Ból kolana w trakcie (0 brak, 10 najgorszy)</p><div class="chips">`+[0,1,2,3,4,5,6,7,8,9,10].map(v=>`<button class="chip ${cp===v?'inc':''}" data-kpain="${v}" style="min-width:38px">${v}</button>`).join('')+`</div><p style="margin:12px 0 4px">Skurcze mięśni w trakcie</p><div class="chips"><button class="chip ${cc?'inc':''}" data-kcramp="1">tak, były skurcze</button></div><p class="small muted">Ból kolana oceniaj osobno od bólu nóg przy lipodemii.</p></div><p><button class="btn" data-ksave="1" style="width:100%">${done?'Popraw zapis sesji':'Zapisz sesję (60 min)'}</button></p>`;
+  h+=`<h2>${done?'Dzisiejsza sesja zapisana':'Zapisz dzisiejszą sesję'}</h2><div class="panel" style="padding:4px 16px 12px"><p style="margin:10px 0 4px">Ból kolana w trakcie (0 brak, 10 najgorszy)</p><div class="chips">`+[0,1,2,3,4,5,6,7,8,9,10].map(v=>`<button class="chip ${cp===v?'inc':''}" data-kpain="${v}" style="min-width:38px">${v}</button>`).join('')+`</div><p style="margin:12px 0 4px">Skurcze mięśni w trakcie</p><div class="chips"><button class="chip ${cc?'inc':''}" data-kcramp="1">tak, były skurcze</button></div><p class="small muted">Ból kolana oceniaj osobno od bólu nóg przy lipodemii.</p></div><p><button class="btn" data-ksave="1">${done?'Popraw zapis sesji':'Zapisz sesję (60 min)'}</button></p>`;
   h+='<h2>Dni sesji</h2><div class="chips">'+[[1,'pn'],[2,'wt'],[3,'śr'],[4,'cz'],[5,'pt'],[6,'sb'],[0,'nd']].map(([v,l])=>`<button class="chip ${K.days.includes(v)?'inc':''}" data-kday="${v}">${l}</button>`).join('')+'</div><p class="small muted">Sesja zastępuje trening siłowy z planu w te dni, nie dochodzi do niego. Na rowerku przy lipodemii pomaga kompresja, jeśli lekarz ją zalecił.</p>';
   h+='<h2>Po 12 tygodniach</h2><div class="note">Ból do 3/10 i rano bez pogorszenia: powrót wykroków i głębszych przysiadów. W przeciwnym razie: ortopeda.</div>';
   document.getElementById('main').innerHTML=h;
@@ -579,7 +579,7 @@ function renderChallenge(){
 
 // ---------- UX: zwijane sekcje z zapamiętanym stanem ----------
 const OPEN_F=new Set(['zapisane']);
-function fold(id,title,inner){return `<details class="fold" data-fold="${id}"${OPEN_F.has(id)?' open':''}><summary>${title}</summary><div style="padding:0 12px 12px">${inner}</div></details>`}
+function fold(id,title,inner){return `<details class="fold" id="fold_${id}" data-fold="${id}"${OPEN_F.has(id)?' open':''}><summary>${title}</summary><div style="padding:0 12px 12px">${inner}</div></details>`}
 document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.fold){t.open?OPEN_F.add(t.dataset.fold):OPEN_F.delete(t.dataset.fold)}},true);
 
 // ---------- Kopia danych: eksport i import pliku (np. przez iCloud Drive) ----------
@@ -597,7 +597,7 @@ async function bkExport(){
   toast('Zapis pliku i schowek są niedostępne w tym widoku');
 }
 function bkHtml(){
-  let h=`<h2 id="kopia">Kopia danych</h2><div class="panel" style="padding:4px 16px 12px"><p class="small">Kopia to plik ze wszystkimi danymi z tego telefonu. Zapisz go w aplikacji Pliki na iCloud Drive, a na drugim telefonie wczytaj z tego samego miejsca.</p><p class="small muted">Ostatnia kopia: ${S.lastBackup?fmtDate(S.lastBackup):'jeszcze nie było'}. Dobry moment: dzień pomiaru BIA, raz na 4 tygodnie.</p><div class="field" style="padding:8px 0"><label for="bk_nh">Bez danych zdrowotnych (do udostępnienia innej osobie)</label><input type="checkbox" class="switch" id="bk_nh" data-k="bkNoHealth" ${S.bkNoHealth?'checked':''}></div><p><button class="btn" data-bkexp="1" style="width:100%">Zapisz kopię</button></p><p style="margin:14px 0 6px">Wczytaj kopię</p><label class="btn ghost" style="display:flex;align-items:center;justify-content:center;width:100%">Wybierz plik kopii z Plików<input type="file" id="bk_file" accept=".json,application/json" style="display:none"></label>`;
+  let h=`<h2 id="kopia">Kopia danych</h2><div class="panel" style="padding:4px 16px 12px"><p class="small">Kopia to plik ze wszystkimi danymi z tego telefonu. Zapisz go w aplikacji Pliki na iCloud Drive, a na drugim telefonie wczytaj z tego samego miejsca.</p><p class="small muted">Ostatnia kopia: ${S.lastBackup?fmtDate(S.lastBackup):'jeszcze nie było'}. Dobry moment: dzień pomiaru BIA, raz na 4 tygodnie.</p><div class="field" style="padding:8px 0"><label for="bk_nh">Bez danych zdrowotnych (do udostępnienia innej osobie)</label><input type="checkbox" class="switch" id="bk_nh" data-k="bkNoHealth" ${S.bkNoHealth?'checked':''}></div><p><button class="btn" data-bkexp="1">Zapisz kopię</button></p><p style="margin:14px 0 6px">Wczytaj kopię</p><label class="btn ghost" style="display:flex;align-items:center;justify-content:center;width:100%">Wybierz plik kopii z Plików<input type="file" id="bk_file" accept=".json,application/json" style="display:none"></label>`;
   h+=fold('bkpaste','albo wklej tekst kopii','<textarea id="bk_text" rows="3" aria-label="Tekst kopii" style="width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)"></textarea><p><button class="btn ghost" data-bkpaste="1">Sprawdź kopię</button></p>');
   if(BK_PENDING)h+=`<div class="note warn"><b>Kopia z ${fmtDate(String(BK_PENDING.created||'').slice(0,10))}${BK_PENDING.noHealth?', bez danych zdrowotnych':''}:</b> ${bkSummary(BK_PENDING.data)}. Wczytanie zastąpi wszystkie dane w tym telefonie.<p><button class="btn" data-bkapply="1">Zastąp dane</button> <button class="btn ghost" data-bkcancel="1">Anuluj</button></p></div>`;
   h+='<p class="small muted">Plik nie jest zaszyfrowany i zawiera dane zdrowotne. Trzymaj go w prywatnym folderze. Włączona Zaawansowana ochrona danych w iCloud szyfruje iCloud Drive tak, że klucze mają tylko Twoje urządzenia (wiedza ogólna, niesprawdzone).</p></div>';
@@ -880,8 +880,8 @@ function renderMeals(){
   let h=planHtml()+shopHtml()+'<h2>Albo wybierz sam</h2>'+seg([['sniadanie','Śniadanie'],['obiad','Obiad'],['kolacja','Kolacja'],['przekaska','Przekąska'],['all','Wszystkie']],S.f.type,'type','scroll')+'<div id="rytm">'+seg([['all','Każdy czas'],['quick','Na co dzień, do 20 min'],['big','Na weekend, więcej czasu']],S.f.pace||'all','pace','scroll')+'</div>';
   h+='<details class="fold" data-fold="filtry"'+(OPEN_F.has('filtry')?' open':'')+'><summary>Filtry i sortowanie</summary><div style="padding:0 12px 12px">';
   h+='<h2>Produkty</h2><p class="small muted">Dotknij raz: chcę. Drugi raz: bez tego. Trzeci: bez znaczenia.</p><div class="chips">'+CHIPS.map(c=>{const s=S.f.chips[c]||0;return `<button class="chip ${s===1?'inc':s===-1?'exc':''}" data-chip="${c}">${c}</button>`}).join('')+'</div>';
-  h+='<h2>Pod trening</h2>'+seg([['auto','Auto'],['1','Bez treningu'],['1.25','Lekki'],['1.5','Siłownia, cardio']],S.f.carb,'carb','scroll')+`<p class="small muted">${carbTxt} Zmienia tylko porcję kaszy, ryżu, ziemniaków, pieczywa i płatków.</p>`;
-  h+='<h2>Makro na porcję</h2><div class="panel">'+
+  h+='<h2 id="podtrening">Pod trening</h2>'+whyP('podtrening')+seg([['auto','Auto'],['1','Bez treningu'],['1.25','Lekki'],['1.5','Siłownia, cardio']],S.f.carb,'carb','scroll')+`<p class="small muted">${carbTxt} Zmienia tylko porcję kaszy, ryżu, ziemniaków, pieczywa i płatków.</p>`;
+  h+='<h2 id="makro">Makro na porcję</h2>'+whyP('makro')+'<div class="panel">'+
     `<div class="slider"><div class="top"><span>Białko co najmniej</span><b id="l_minP">${S.f.minP} g</b></div><input type="range" min="0" max="60" step="5" value="${S.f.minP}" data-r="minP" aria-label="Białko co najmniej"></div>`+
     `<div class="slider"><div class="top"><span>Kalorie najwyżej</span><b id="l_maxK">${S.f.maxK>=1000?'bez limitu':S.f.maxK+' kcal'}</b></div><input type="range" min="150" max="1000" step="25" value="${S.f.maxK}" data-r="maxK" aria-label="Kalorie najwyżej"></div>`+
     `<div class="slider"><div class="top"><span>Węglowodany najwyżej</span><b id="l_maxC">${S.f.maxC>=130?'bez limitu':S.f.maxC+' g'}</b></div><input type="range" min="0" max="130" step="5" value="${S.f.maxC}" data-r="maxC" aria-label="Węglowodany najwyżej"></div>`+
@@ -908,7 +908,7 @@ function renderMealList(){
 function renderTrain(){
   const t=S.tr;
   let h=''
-    +'<h2>Trening z zegarka</h2><div class="panel">'+field('Czas','tr.wmin',t.wmin||'','min','numeric')+'<div class="chips quick">'+[30,45,60,90].map(v=>`<button class="chip${String(t.wmin)===String(v)?' inc':''}" data-setv="tr.wmin" data-v="${v}">${v} min</button>`).join('')+'</div>'+field('Kalorie z zegarka','tr.wk',t.wk||'','kcal','numeric')+'<p><button class="btn" data-addwatch="1" style="width:100%">Dodaj trening z zegarka</button></p></div>'
+    +'<h2>Trening z zegarka</h2><div class="panel">'+field('Czas','tr.wmin',t.wmin||'','min','numeric')+'<div class="chips quick">'+[30,45,60,90].map(v=>`<button class="chip${String(t.wmin)===String(v)?' inc':''}" data-setv="tr.wmin" data-v="${v}">${v} min</button>`).join('')+'</div>'+field('Kalorie z zegarka','tr.wk',t.wk||'','kcal','numeric')+'<p><button class="btn" data-addwatch="1">Dodaj trening z zegarka</button></p></div>'
     +'<p class="small muted">Zegarek też szacuje kalorie, zwykle z tętna, a błąd bywa większy niż 20%. Do bilansu liczy się netto: kalorie z zegarka minus spoczynek w tym czasie.</p><h2>Albo oszacuj z rodzaju treningu</h2>'+seg([['silownia','Siłownia'],['plywanie','Pływanie'],['bieznia','Bieżnia'],['spinning','Spinning'],['inne','Inne']],t.cat,'cat','scroll');
   if(t.cat==='bieznia'){
     h+=seg([['marsz','Marsz'],['bieg','Bieg']],t.bMode,'bmode');
@@ -928,7 +928,7 @@ function renderTrain(){
   if(sp.knee)h+=`<div class="note warn">Kolano: ${sp.knee}</div>`;
   if(sp.warn)h+=`<div class="note warn">${sp.warn}</div>`;
   h+=`<p class="small muted">Źródło wartości: ${sp.src}${sp.met?`, MET ${fmt1(sp.met)}`:''}. Wynik jest szacunkiem dla przeciętnej osoby; rzeczywiste spalanie może różnić się o kilkadziesiąt procent.</p>`;
-  h+='<p><button class="btn ghost" data-tab="knee" style="width:100%">Program kolana, 12 tygodni</button></p>';
+  h+='<p><button class="btn ghost" data-tab="knee">Program kolana, 12 tygodni</button></p>';
   document.getElementById('main').innerHTML=h;
 }
 
@@ -945,7 +945,7 @@ function stanHtml(){const k=todayKey(),m=S.meas[k]||{},d=day(),ml=d.filter(e=>e.
   const st=num(m.steps),tm=tr.reduce((s,e)=>s+num(e.min),0),mv=[st>0?`${fmt(st)} kroków`:'',tr.length?`trening ${fmt(tm)} min`:''].filter(Boolean).join(', ');
   h+=row('Ruch',mv||'brak danych',mv?'dzisiejsze pomiary i treningi':'wpisz kroki albo dodaj trening');
   if(p||cyc)h+=row('Ból i cykl',p?'dzień z bólem'+(p.aura?', aura':''):'bez bólu',cyc?(cyc==='P'?'dni bez hormonów':'tydzień cyklu '+esc(cyc)):'cykl nie zaznaczony dziś');
-  return `<section class="stan panel" aria-label="Stan dziś"><h2>Stan dziś</h2>${h}</section>`}
+  return `<section class="stan panel" id="stan" aria-label="Stan dziś"><h2>Stan dziś</h2>${h}</section>`}
 function renderDay(){
   const d=day(),tr=d.filter(e=>e.kind==='t'),ml=d.filter(e=>e.kind==='m');
   const net=tr.reduce((a,e)=>a+e.net,0),eat={k:0,p:0,f:0,c:0};ml.forEach(e=>{eat.k+=e.k;eat.p+=e.p;eat.f+=e.f;eat.c+=e.c});
@@ -974,14 +974,14 @@ function dataCheck(){const err=[],warn=[];let first=null;
   if(!err.length&&S.mode==='redukcja'&&num(S.goal)>=num(S.kg)){err.push('Waga docelowa w redukcji powinna być niższa od obecnej.');first='goal'}
   if(!err.length&&num(S.goal)/Math.pow(num(S.cm)/100,2)<18.5)warn.push('Waga docelowa daje BMI poniżej 18,5. Ustal cel z lekarzem lub dietetykiem.');
   return {err,warn,first}}
-function dataHtml(){const c=dataCheck(),ok=S.guide&&S.guide.dataOk,w=c.warn.map(x=>`<div class="note warn">${x}</div>`).join(''),btn='<p><button class="btn" data-datasave="1" style="width:100%">Zapisz i sprawdź</button></p>';
+function dataHtml(){const c=dataCheck(),ok=S.guide&&S.guide.dataOk,w=c.warn.map(x=>`<div class="note warn">${x}</div>`).join(''),btn='<p><button class="btn" data-datasave="1">Zapisz i sprawdź</button></p>';
   if(c.err.length)return `<div class="note warn"><b>Do poprawy:</b> ${c.err.join(' ')}</div>`+btn;
   if(!ok)return '<p class="small muted">Sprawdź, czy to Twoje wartości, a nie przykładowe, i naciśnij Zapisz i sprawdź.</p>'+w+btn;
   return `<div class="note">✓ Dane zapisane: ${fmt1(num(S.kg))} kg, ${fmt(num(S.cm))} cm, wiek ${fmt(num(S.age))}, cel ${fmt1(num(S.goal))} kg.</div>`+w+nextHtml('set')}
 function nextHtml(cur){const g=guideActive()?guideSteps().find(x=>!x.done):null,lc=x=>x.charAt(0).toLowerCase()+x.slice(1);let a='tab',v='day',t='Przejdź do Mojego dnia';
   if(g){if(cur==='set'&&g.id==='data'){a='goto';v='dane';t='Dalej: sprawdź i zapisz dane na górze'}else if(cur==='set'&&g.id==='pet'){a='goto';v='towarzysz';t='Dalej: wybierz towarzysza niżej'}else if(!(g.act==='tab'&&g.arg===cur)){a=g.act==='nav'?'nav':'tab';v=g.act==='goto'?'day':g.arg;t='Dalej: '+lc(g.label)}}
   else if(cur==='day')return '';
-  return `<p class="nextbar"><button class="btn" data-${a}="${v}" style="width:100%">${t}</button></p>`}
+  return `<p class="nextbar"><button class="btn" data-${a}="${v}">${t}</button></p>`}
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
   let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>';
@@ -990,7 +990,7 @@ function renderSet(){
   h+='<h2 id="komunikaty">Komunikaty</h2>'+seg([['std','Zwykle'],['long','Dłużej'],['stay','Do zamknięcia']],S.toastLen||'std','toastlen')+'<p class="small muted">Jak długo widać dymek po zapisie. Każdy zamkniesz przyciskiem ×.</p>';
   h+=`<div class="panel"><div class="field"><label for="discreet">Tryb dyskretny: karty o migrenie i antykoncepcji tylko w Zdrowiu</label><input type="checkbox" class="switch" id="discreet" data-k="discreet" ${S.discreet?'checked':''}></div></div>`;
   h+='<h2 id="towarzysz">Towarzysz</h2>'+petPickHtml()+(S.pet?`<div class="panel"><div class="field"><label for="body">Sylwetka z pomiarów na ekranie zwierzaka</label><input type="checkbox" class="switch" id="body" data-k="body" ${S.body?'checked':''}></div></div>`:'');
-  h+='<h2>Tryb</h2>'+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie']],S.mode,'mode');
+  h+='<h2 id="tryb">Tryb</h2>'+whyP('tryb')+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie']],S.mode,'mode');
   h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div></div>
 ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź objawy nóg (lipodemia)</label><input type="checkbox" class="switch" id="lip" data-k="lip" ${S.lip?'checked':''}></div></div>`:''}
   <p class="small muted">Klasyczny MET zakłada 1 kcal na kg na godzinę w spoczynku. Korekta zastępuje to wartością ze wzoru Mifflina-St Jeora, co dla kobiet i osób z wyższym udziałem tkanki tłuszczowej zwykle daje niższe, bliższe rzeczywistości wyniki (wniosek z definicji MET, niesprawdzony pomiarem).</p>
@@ -1008,6 +1008,22 @@ ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź ob
 }
 
 // ---------- Przewodnik „Co chcesz zrobić?”: każde zadanie przenosi na ekran i podświetla miejsce ----------
+// „Po co”: ta sama treść pod nagłówkiem sekcji i w Pomocy („Co to znaczy?”)
+const GLOSS=[
+  ['bialko','Białko za złotówkę','Porównujesz, z którego produktu białko wychodzi najtaniej: koszt 20 g białka, mniej więcej tyle, ile ma 100 g piersi z kurczaka. Ranking pokaże najtańsze źródła na zakupy.','health#bialko'],
+  ['makro','Makro na porcję','Zawęża listę dań do tych, które pasują do Twojego dnia: co najmniej tyle białka, najwyżej tyle kalorii i węglowodanów na porcję. Wielkość porcji przelicza gramatury.','meals#makro#filtry'],
+  ['podtrening','Pod trening','W dni z treningiem zwiększa porcję kaszy, ryżu, ziemniaków, pieczywa i płatków, żeby ciało miało z czego się regenerować. Auto bierze trening zapisany dziś.','meals#podtrening#filtry'],
+  ['stan','Stan dziś','Jedno spojrzenie na wagę, jedzenie, sen i ruch. Przy każdej wartości widać, z ilu danych pochodzi.','day#stan'],
+  ['karty','Co się dzieje','Karty z Twoich danych: co się zmieniło, dlaczego i co z tym zrobić. Każda podaje, na czym się opiera. Wszystkie są w Zdrowiu.','health'],
+  ['netto','kcal netto','Kalorie z treningu ponad to, co ciało spaliłoby w tym czasie w spoczynku. Tylko ta część trafia do bilansu dnia.','train'],
+  ['nawyki','Nawyki i punkty','Codzienne małe działania z punktami dla zwierzaka. Punkty nie zależą od wagi ani kalorii.','day#fold_nawyki#wiecej,nawyki'],
+  ['prognoza','Prognoza i Twój priorytet','Kiedy dojdziesz do celu przy obecnym tempie i która jedna zmiana da teraz najwięcej.','day#fold_prognoza#wiecej,prognoza'],
+  ['wplyw','Mój wpływ','Dokąd prowadzą Twoje wybory: średni bilans z zapisanych dni przeliczony na tempo zmiany wagi.','impact'],
+  ['ochoty','Twoje ochoty','Podsumowanie zapisanych ochot na przekąskę. Pomaga zauważyć, kiedy przychodzą najczęściej, i zaplanować coś wcześniej.','sos#ochoty'],
+  ['tryb','Tryb: redukcja albo utrzymanie','Redukcja ustawia cel kalorii ok. 20% poniżej zapotrzebowania. Utrzymanie trzyma osiągniętą wagę: cel równa się zapotrzebowaniu.','set#tryb'],
+  ['korekta','Korekta na spoczynkowe zużycie energii','Dokładniejsze kalorie z treningu: spoczynek liczony ze wzoru dla Twojej płci, wieku i wagi zamiast przybliżenia 1 kcal na kg na godzinę.','set#korekta'],
+  ['dyskretny','Tryb dyskretny','Karty o migrenie i antykoncepcji pokazują się tylko w Zdrowiu, nie na ekranie Mój dzień.','set#discreet']];
+function whyP(id){const g=GLOSS.find(x=>x[0]===id);return g?`<p class="why"><b>Po co:</b> ${g[2]}</p>`:''}
 const HELP=[
   ['Posiłki','Zapisać zjedzony posiłek','W planie dnia naciśnij Zjem przy daniu.','meals#plan'],
   ['Posiłki','Wybrać, co gotuję dziś','Otwórz przepis i naciśnij Gotuję to dziś. Wieczorem Według planu zapisze to danie.','meals#plan'],
@@ -1026,9 +1042,10 @@ const HELP=[
   ['Ustawienia','Zrobić kopię danych','Plik kopii albo zaszyfrowana kopia.','set#kopia']];
 function renderHelp(){let h='<h2>Co chcesz zrobić?</h2><p class="small muted">Naciśnij Pokaż: Miara przeniesie Cię na właściwy ekran i podświetli miejsce.</p>',g='';
   HELP.forEach(([grp,lab,how,to])=>{if(grp!==g){h+=(g?'</div>':'')+`<h3 class="rh">${grp}</h3><div class="panel" style="padding:0 16px">`;g=grp}h+=`<div class="step"><span class="lab">${lab}<small class="hint">${how}</small></span><button class="btn small ghost" data-${to.includes('#')?'nav':'tab'}="${to}">Pokaż</button></div>`});
+  h+='</div><h2>Co to znaczy?</h2><div class="panel" style="padding:0 16px">'+GLOSS.map(([,t,w,to])=>`<div class="step"><span class="lab">${t}<small class="hint">${w}</small></span><button class="btn small ghost" data-${to.includes('#')?'nav':'tab'}="${to}">Pokaż</button></div>`).join('');
   h+='</div><h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
   document.getElementById('main').innerHTML=h}
-function render(){renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują. <button class="btn ghost" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+function render(){renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -1044,7 +1061,7 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;
   if(d.toastclose){toastHide();return}
   if(b.parentNode&&b.parentNode.id==='toast')toastHide();
-  if(d.nav){const [tab,id,fd]=d.nav.split('#');S.tab=tab;if(fd)OPEN_F.add(fd);save();render();const el=id&&document.getElementById(id);
+  if(d.nav){const [tab,id,fd]=d.nav.split('#');S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
     if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.classList){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2400)}}else window.scrollTo(0,0);return}
   if(d.stp){const k=d.stp,f=k.split('.').pop(),st=STEP[f],L=LIM[f],a=k.split('.');if(!st)return;if(a[0]==='meas'){S.meas[a[1]]=S.meas[a[1]]||{}}
     const raw=k.split('.').reduce((o,x)=>o==null?o:o[x],S),has=raw!=null&&String(raw).trim()!=='';let v=has?num(raw)+(+d.d)*st:stpStart(k);v=Math.min(L[1],Math.max(L[0],v));setPath(k,stpFmt(v,st));

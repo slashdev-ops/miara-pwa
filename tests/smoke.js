@@ -256,7 +256,7 @@ tryc('dane: Zapisz z poprawnymi danymi zalicza krok i prowadzi do sekcji Towarzy
 tryc('dane: pusta waga nie przechodzi i mówi, co uzupełnić', () => { view('set', { ...NEWU(), ...OKD, kg: '' }); click({ datasave: '1' }); return T.S().guide.dataOk === false && mainHtml().includes('Uzupełnij wagę'); });
 tryc('dane: w redukcji cel musi być niższy od wagi', () => { view('set', { ...NEWU(), ...OKD, goal: '90' }); click({ datasave: '1' }); return T.S().guide.dataOk === false && mainHtml().includes('Waga docelowa w redukcji powinna być niższa od obecnej'); });
 tryc('dane: cel z BMI poniżej 18,5 daje ostrzeżenie, ale zapisuje', () => { view('set', { ...NEWU(), ...OKD, goal: '50' }); click({ datasave: '1' }); return T.S().guide.dataOk === true && mainHtml().includes('BMI poniżej 18,5'); });
-tryc('dalej: ze zwierzakiem prowadzi do następnego kroku w Moim dniu', () => view('set', { ...NEWU(), ...OKD, pet: { ...PETA }, guide: { hidden: false, dataOk: true, seenPet: false } }).includes('<button class="btn" data-nav="day#m_w" style="width:100%">Dalej: wpisz dzisiejszą wagę</button>'));
+tryc('dalej: ze zwierzakiem prowadzi do następnego kroku w Moim dniu', () => view('set', { ...NEWU(), ...OKD, pet: { ...PETA }, guide: { hidden: false, dataOk: true, seenPet: false } }).includes('<button class="btn" data-nav="day#m_w">Dalej: wpisz dzisiejszą wagę</button>'));
 tryc('dalej: po pierwszych krokach dwa przyciski do Mojego dnia w Ustawieniach', () => { const h = view('set', { ...CLEAN(), ...OKD, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 2 && h.includes('Przejdź do Mojego dnia'); });
 tryc('dalej: ekran zwierzaka kończy się przyciskiem do Mojego dnia', () => { const h = view('pet', { ...CLEAN(), pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 1 && h.includes('Przejdź do Mojego dnia'); });
 
@@ -478,7 +478,7 @@ tryc('stan: ruch z krokami i treningiem', () => { const h = stan(view('day', BAS
 tryc('stan: ból i cykl tylko przy danych', () => { const h = stan(view('day', BASE({ pain: { [dk(0)]: { aura: true } }, meas: { [dk(0)]: { cyc: 'P' } } }))); return h.includes('Ból i cykl') && h.includes('dzień z bólem, aura') && h.includes('dni bez hormonów'); });
 tryc('układ: Stan dziś na górze, karty pod nim, potem Dziś, zwierzak niżej; Więcej zwinięte', () => {
   const h = view('day', BASE({ pain: { [dk(0)]: {} }, meas: { [dk(0)]: { cyc: 'P' } } })), i = (x) => h.indexOf(x);
-  return i('class="stan') > -1 && i('class="stan') < i('data-card=') && i('data-card=') < i('<h2>Dziś') && i('<h2>Dziś') < i('class="petcard') && /<details class="fold" data-fold="wiecej">/.test(h) && h.indexOf('data-fold="prognoza"') > i('data-fold="wiecej"');
+  return i('class="stan') > -1 && i('class="stan') < i('data-card=') && i('data-card=') < i('<h2>Dziś') && i('<h2>Dziś') < i('class="petcard') && /<details class="fold" id="fold_wiecej" data-fold="wiecej">/.test(h) && h.indexOf('data-fold="prognoza"') > i('data-fold="wiecej"');
 });
 
 tryc('układ Treningu: główne zadanie na górze, program kolana niżej jako przycisk konturowy', () => { const h = view('train', BASE()), k = h.indexOf('data-tab="knee"'); return k > h.indexOf('data-addtrain') && h.indexOf('data-addwatch') < h.indexOf('data-addtrain') && /<button class="btn ghost" data-tab="knee"/.test(h); });
@@ -518,6 +518,28 @@ tryc('rytm: filtr Na co dzień pokazuje dania do 20 min', () => { const S = T.S(
 tryc('rytm: filtr Na weekend pokazuje dania od 25 min', () => { const S = T.S(); S.f.type = 'obiad'; S.f.pace = 'big'; const L = T.filtered(); S.f.pace = 'all'; return L.length > 3 && L.every((o) => o.m.min >= 25); });
 tryc('rytm: Posiłki mają wybór Na co dzień i Na weekend', () => { const h = view('meals', BASE()); return h.includes('id="rytm"') && h.includes('data-pace="quick"') && h.includes('data-pace="big"'); });
 tryc('plan: obiady w dni robocze do 20 min, w weekend większe danie', () => [1, 2, 3, 4, 5].every((d) => T.PLAN[d].map((id) => T.MEALS.find((m) => m.id === id)).filter((m) => m.t === 'obiad').every((m) => m.min <= 20)) && [6, 0].every((d) => T.PLAN[d].map((id) => T.MEALS.find((m) => m.id === id)).some((m) => m.t === 'obiad' && m.min >= 25)));
+
+// Zgłoszenie 06.11.2026: jeden styl przycisków pilnowany testami; „Po co” przy niejasnych sekcjach i w Pomocy
+const rule = (sel) => { const i = sysCss.indexOf('\n' + sel + '{'); return i < 0 ? '' : sysCss.slice(i + sel.length + 2, sysCss.indexOf('}', i)); };
+tryc('przyciski: działania mają kształt pól (12 px) i tekst w jednej linii', () => /border-radius:var\(--r-s\)/.test(rule('.btn')) && /white-space:nowrap/.test(rule('.btn')));
+tryc('przyciski: − i + w kształcie pól', () => /border-radius:var\(--r-s\)/.test(rule('.stp')));
+tryc('przyciski: pigułka tylko dla chipów', () => { const bad = [...sysCss.matchAll(/([^{}\n]+)\{[^}]*border-radius:var\(--pill\)/g)].map((m) => m[1].trim()).filter((sel) => /\.btn|\.stp|\.tclose|\.hbtn|button/.test(sel) && !/^\.chip\b/.test(sel)); if (bad.length) throw new Error(bad.join(' | ')); return true; });
+tryc('przyciski: działania sekcji na pełną szerokość, jedno pod drugim', () => /main p > \.btn:not\(\.small\)\{[^}]*width:100%/.test(sysCss));
+tryc('przyciski: bez szerokości w atrybucie style i bez pływania', () => !/class="btn[^"]*"[^>]*style="width:100%"/.test(code) && !/\.btn\{[^}]*float/.test(sysCss) && !/\.btn[^{]*\{[^}]*float:/.test(sysCss));
+tryc('przyciski: wyłączone powiększanie tekstu przez przeglądarkę', () => /html\{[^}]*(^|;)text-size-adjust:100%/.test(sysCss));
+tryc('przyciski: każdy napis na przyciskach najwyżej 28 znaków', () => {
+  const long = new Set();
+  for (const tab of ['day', 'meals', 'train', 'health', 'set', 'help', 'sos', 'visit', 'labs', 'knee', 'impact', 'pet', 'review']) {
+    const h = view(tab, BASE()); for (const m of h.matchAll(/<button class="btn[^"]*"[^>]*>([^<]*)<\/button>/g)) if (m[1].trim().length > 28) long.add(tab + ': ' + m[1].trim());
+  }
+  if (long.size) throw new Error([...long].join(' | ')); return true;
+});
+tryc('po co: Białko za złotówkę mówi, po co jest', () => { const h = view('health', BASE()); return h.includes('id="bialko"') && /id="bialko"[\s\S]{0,200}Po co:[^<]*<\/b>[^<]*najtaniej/.test(h); });
+tryc('po co: Pomoc ma część Co to znaczy? z hasłem Białko za złotówkę', () => { const h = view('help', BASE()); return h.includes('Co to znaczy?') && h.includes('data-nav="health#bialko"'); });
+tryc('po co: Makro na porcję i Pod trening z wyjaśnieniem', () => { const h = view('meals', BASE()); return /id="makro"[\s\S]{0,120}Po co:/.test(h) && /id="podtrening"[\s\S]{0,120}Po co:/.test(h); });
+tryc('po co: przejście otwiera zagnieżdżone zwinięcia', () => { view('help', BASE()); click({ nav: 'day#fold_prognoza#wiecej,prognoza' }); const h = mainHtml(); return h.includes('data-fold="wiecej" open') && h.includes('data-fold="prognoza" open') && h.includes('id="fold_prognoza"'); });
+
+tryc('przyciski: ten sam rozmiar w zwiniętych sekcjach (box-sizing bez dziedziczenia przez details)', () => sysCss.includes('*,*::before,*::after{box-sizing:border-box}') && !sysCss.includes('box-sizing:inherit'));
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);

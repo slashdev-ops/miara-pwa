@@ -33,7 +33,11 @@ krój Fraunces w nagłówkach i liczbach (lokalnie, licencja OFL w `fonts/`), te
   zmiennych dla obu motywów i pilnuje liczby zaokrągleń i rozmiarów pisma.
 - „Mój dzień” zaczyna się od „Stanu dziś” (waga, jedzenie, sen, ruch, ból i cykl): każda wartość podaje źródło
   i liczbę danych, a brak danych jest pokazany wprost; rzadziej używane rzeczy są zwinięte w „Więcej”.
-- Jeden wypełniony przycisk na główne zadanie ekranu; pozostałe konturowe.
+- Przyciski: jeden kształt dla działań (zaokrąglenie 12 px jak pola, 48 px, tekst w jednej linii do 28 znaków,
+  w sekcji na pełną szerokość, jeden pod drugim), najwyżej jedno wypełnione działanie w sekcji; pigułka tylko dla chipów
+  (zaznaczanie i szybkie wartości), przełączniki segmentowe dla wyboru jednej opcji. Zasady pilnują testy.
+- „Po co” pod nagłówkiem sekcji z pojęciem do zrozumienia (np. „Białko za złotówkę”); ta sama treść w Pomocy,
+  w części „Co to znaczy?”.
 
 ## Mniej wpisów
 
