@@ -63,7 +63,7 @@ files = {
     "miara-logo.svg": svg("0 0 370 100", mark((GREEN, AMBER, BLUE), INK) + word(INK), "Miara"),
     "miara-logo-ciemne.svg": svg("0 0 370 100", mark(("#62B597", "#E2AE55", "#93A0EE"), INK_DARK) + word(INK_DARK), "Miara", BG_DARK),
     "miara-znak.svg": svg("0 0 100 100", mark((GREEN, AMBER, BLUE), INK), "Miara"),
-    "miara-ikona.svg": svg("0 0 100 100", mark((GREEN, AMBER, BLUE), INK, r=30), "Miara", ICON_BG),
+    "miara-ikona.svg": svg("0 0 100 100", mark((GREEN, AMBER, BLUE), INK, r=33, sw=FAV_SW), "Miara", ICON_BG, sw=FAV_SW),  # = favicon bez zaokrąglenia
 }
 for name, content in files.items():
     (OUT / name).write_text(content, encoding="utf-8", newline="\n")  # LF także na Windows

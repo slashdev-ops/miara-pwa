@@ -245,5 +245,6 @@ tryc('ikona i favicon: kolory logo na białym kafelku', () => ['miara-ikona.svg'
 tryc('favicon: zaokrąglony kafel i grubsza kreska niż ikona', () => /<rect[^>]*rx="22"/.test(brandSvg('miara-favicon.svg')) && /stroke-width="12"/.test(brandSvg('miara-favicon.svg')));
 tryc('ikony z wersją omijają pamięć podręczną (brand/ i icons/ mają max-age 7 dni)', () => /<link rel="icon" href="brand\/miara-favicon\.svg\?v=2"/.test(html) && /<link rel="apple-touch-icon" href="icons\/apple-touch-icon\.png\?v=2"/.test(html) && (fs.readFileSync(path.join(root, 'manifest.webmanifest'), 'utf8').match(/\.png\?v=2"/g) || []).length === 3);
 
+tryc('ikona ekranu początkowego = favicon bez zaokrąglenia (iOS sam zaokrągla rogi)', () => brandSvg('miara-ikona.svg') === brandSvg('miara-favicon.svg').replace(' rx="22"', ''));
 console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
 process.exit(bad ? 1 : 0);
