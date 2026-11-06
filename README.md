@@ -60,6 +60,20 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 
 - Kopie danych (`miara-kopia-*.json`) zawierają dane zdrowotne, dlatego `.gitignore` blokuje je przed commitem.
 
+### Zaszyfrowana kopia dla właściciela (opcjonalna, za zgodą)
+
+- **Zgoda** (RODO art. 7 i 9 ust. 2 lit. a): osobna, z wersją treści, celem, czasem przechowywania i prawami; pole
+  niezaznaczone domyślnie; nowa wersja treści wymaga ponownej zgody; wycofanie zatrzymuje wysyłkę i usuwa klucz.
+- **Szyfrowanie end-to-end w telefonie**: AES-GCM 256, klucz z hasła PBKDF2-SHA-256 (600 000 iteracji, losowa sól),
+  losowy IV dla każdej kopii (WebCrypto). Hasło nie jest zapisywane; telefon trzyma `CryptoKey` z `extractable: false`
+  w IndexedDB.
+- **Funkcja `api/kopia.js`** (Vercel): token urządzenia porównywany w stałym czasie, przyjmuje wyłącznie kopertę
+  z szyfrogramem (lista dozwolonych pól, base64, minimalna liczba iteracji), limit 1 MB i 3 wysyłek na dobę,
+  zapis w magazynie Vercel Blob z dostępem prywatnym pod losową nazwą, przechowywane 4 ostatnie kopie, `Cache-Control: no-store`.
+- Serwer i magazyn nie znają klucza: wyciek tokenu magazynu albo adresu pliku nie ujawnia danych.
+- Zależność funkcji `@vercel/blob` w dokładnej wersji z plikiem blokady; podatna zależność pośrednia wymuszona na
+  poprawioną wersję (`overrides`); aplikacja w przeglądarce nadal nie ma zależności.
+
 ## Struktura
 
 | Plik | Rola |
