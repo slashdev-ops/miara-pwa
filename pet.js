@@ -49,7 +49,7 @@ var PET = (function () {
     const k = c.key(c.now), h = c.now.getHours(), przerwa = gap(c), ents = c.entries(k), m = c.meas(k) || {};
     const meals = ents.filter((e) => e.kind === 'm').length, train = ents.some((e) => e.kind === 't');
     const sleep = c.num(m.sleep), steps = c.num(m.steps);
-    const food = h < 9 && meals === 0 ? 50 : [0, 40, 70, 100][Math.min(meals, 3)];
+    const food = (c.once ? h < 19 : h < 9) && meals === 0 ? 50 : [0, 40, 70, 100][Math.min(meals, 3)];
     const energy = Math.min(sleep / 7, 1) * 60 + (train || steps >= 6000 ? 40 : steps >= 3000 ? 20 : 0);
     const mood = Math.min(c.dayPts(k) / 50, 1) * 80 + (c.streak() >= 3 ? 20 : 0);
     const pen = 35 * przerwa;
@@ -61,7 +61,7 @@ var PET = (function () {
     if (milestone || c.celeb) md = 'celebrate';
     else if (h >= 22 || h < 6) md = 'sleep';
     else if (przerwa >= 2 && isEmpty(c, k)) md = 'sad';
-    else if (h >= 12 && meals === 0) md = 'hungry';
+    else if (h >= (c.once ? 19 : 12) && meals === 0) md = 'hungry';
     else if (meters.energy < 40) md = 'tired';
     else if (meters.food >= 70 && meters.energy >= 70 && meters.mood >= 70) md = 'happy';
     const name = (c.pet && String(c.pet.name || '').trim()) || 'Kluska';

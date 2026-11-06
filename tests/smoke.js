@@ -75,7 +75,7 @@ function mkCtx(o = {}) {
     streak: () => o.streak || 0, weekPts: () => o.weekPts || 0, level: T.level,
     stage: () => (o.pct != null ? { pct: o.pct } : null),
     avgW: (a) => (a === 0 && o.avgW != null ? o.avgW : null), startW: o.startW != null ? o.startW : null,
-    num: T.num,
+    num: T.num, once: !!o.once,
   };
 }
 const st = (c) => sandbox.PET.state(c);
@@ -222,6 +222,27 @@ tryc('P1-2: to samo po odtworzeniu starej kopii bez petSeen', () => {
   return (T.S().petSeen || []).includes('review1') && !view('day').includes('pet-celebrate');
 });
 tryc('P1-2: zmiana rodzaju istniejącego zwierzaka nie zmienia odznak', () => { view('set', { ...CLEAN(), pet: { ...PETA }, petSeen: ['week1'], reviews: REV }); click({ petkind: 'kaczka' }); return T.S().petSeen.join() === 'week1' && T.S().pet.kind === 'kaczka'; });
+
+// Rada 06.11.2026, P1: trening z zegarka i tryb „raz dziennie” dla osoby, którą zniechęca częste wpisywanie
+const lastE = () => { const d = T.S().days[T.todayKey()] || []; return d[d.length - 1]; }, nE = () => (T.S().days[T.todayKey()] || []).length;
+const HID = { hidden: true, dataOk: true, seenPet: true };
+tryc('P1-2z: trening z zegarka: kalorie z zegarka jako brutto, netto bez spoczynku', () => {
+  view('train', { ...CLEAN(), tr: { ...T.S().tr, wmin: '45', wk: '400' } }); click({ addwatch: '1' }); const e = lastE();
+  return e && e.kind === 't' && e.label === 'Trening z zegarka' && e.min === 45 && e.gross === 400 && e.net > 0 && e.net < 400;
+});
+tryc('P1-2z: bez kalorii z zegarka nic nie dodaje', () => { view('train', { ...CLEAN(), tr: { ...T.S().tr, wmin: '45', wk: '' } }); click({ addwatch: '1' }); return nE() === 0; });
+tryc('P1-2z: kalorie poza zakresem odrzucone', () => { view('train', { ...CLEAN(), tr: { ...T.S().tr, wmin: '45', wk: '9000' } }); click({ addwatch: '1' }); return nE() === 0; });
+tryc('P1-2z: panel z zegarka jest nad szacunkiem z rodzaju', () => { const h = view('train', CLEAN()); return h.includes('data-addwatch') && h.indexOf('data-addwatch') < h.indexOf('data-addtrain'); });
+tryc('P1-3: tryb raz dziennie: o 14:00 bez posiłku zwierzak nie czeka na wpis', () => { const s = st(mkCtx({ today: { sleep: 7, steps: 7000 }, once: true })); return s.mood !== 'hungry' && s.meters.food === 50; });
+tryc('P1-3: tryb raz dziennie: o 19:30 bez posiłku czeka na wpis', () => st(mkCtx({ now: '19:30', today: { sleep: 7, steps: 7000 }, once: true })).mood === 'hungry');
+tryc('P1-3: petCtx przekazuje tryb raz dziennie', () => { T.S().once = true; const r = T.petCtx().once === true; T.S().once = false; return r; });
+tryc('P1-3: Ustawienia mają przełącznik raz dziennie', () => view('set', CLEAN()).includes('data-k="once"'));
+tryc('P1-3: Dziś w trybie raz dziennie: wpis dnia z Według planu i Inaczej', () => { const h = view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } }); return h.includes('Wpis dnia') && h.includes('data-dayplan') && h.includes('data-dayother'); });
+tryc('P1-3: Według planu dodaje posiłki z planu tylko raz', () => {
+  view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } }); click({ dayplan: '1' }); click({ dayplan: '1' });
+  return (T.S().days[T.todayKey()] || []).filter((e) => e.kind === 'm').length === T.PLAN[new Date().getDay()].length;
+});
+tryc('P1-3: Inaczej otwiera szybki wpis', () => { view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } }); click({ dayother: '1' }); return mainHtml().includes('data-fold="szybki" open'); });
 
 console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
 process.exit(bad ? 1 : 0);
