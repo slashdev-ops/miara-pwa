@@ -297,3 +297,7 @@ table.weeks tr:first-child{border-top:0;color:var(--muted)}
 table.weeks th,table.weeks td{padding:0;text-align:left}
 table.weeks td:nth-child(3),table.weeks th:nth-child(3){grid-column:1/-1}
 table.weeks td:nth-child(3):not(:empty){padding-top:4px;color:var(--muted)}
+.field.sleep{flex-wrap:wrap}
+.field.sleep .num{gap:4px}
+.field.sleep .num input[type=text]{width:44px;padding:8px 4px;text-align:center}
+.field.sleep .num .unit{margin:0}
