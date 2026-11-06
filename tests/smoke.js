@@ -279,7 +279,7 @@ tryc('wskazówki: Ustawienia przywracają wskazówki', () => { view('set', { ...
 
 // Rada 06.11.2026 (ekran startowy): dzień z bólem głowy i karty „Co się dzieje”
 const dk = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-const BASE = (o) => ({ ...CLEAN(), consent: null, kopia: null, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, tips: { day: true, health: true, set: true }, pain: {}, cardsOk: {}, discreet: false, once: false, ...o });
+const BASE = (o) => ({ ...CLEAN(), consent: null, kopia: null, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, tips: { day: true, health: true, set: true }, pain: {}, cardsOk: {}, discreet: false, once: false, visit: null, ...o });
 const cards = (h) => (h.match(/data-card="[a-z_]+"/g) || []).map((x) => x.slice(11, -1));
 const ONCE_OK = () => [{ kind: 'm', id: 's1', label: 'x', k: 400, p: 20, f: 5, c: 30 }];
 tryc('ból: Mój dzień ma przycisk Boli mnie głowa', () => view('day', BASE()).includes('data-pain="today"'));
@@ -416,6 +416,26 @@ tryAsync('kopia: błąd serwera zapisany do pokazania, bez daty wysyłki', async
   return r === false && T.S().kopia.err.includes('Brak uprawnień') && !T.S().kopia.sent && view('set').includes('Brak uprawnień');
 });
 
+// Rada 06.11.2026 (do czasu wizyty): umówiona wizyta, karta z 3 działaniami na dziś, lista na wizytę z dziennika
+const ahead = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+tryc('wizyta: karta z liczbą dni do wizyty i listą na wizytę', () => { const h = view('day', BASE({ visit: { who: 'ginekolog', date: ahead(12) } })); return cards(h).includes('wizyta') && h.includes('za 12 dni') && h.includes('data-tab="visit"'); });
+tryc('wizyta: bez wizyty i bez aury karty nie ma; po terminie też nie', () => !cards(view('health', BASE())).includes('wizyta') && !cards(view('health', BASE({ visit: { who: 'x', date: dk(3) } }))).includes('wizyta'));
+tryc('wizyta: po dniu z aurą karta jest także bez umówionej wizyty i mówi, by nie czekać', () => { const h = view('health', BASE({ pain: { [dk(5)]: { aura: true } } })); return cards(h).includes('wizyta') && h.includes('nie czekaj miesięcy'); });
+tryc('wizyta: nazwa lekarza escapowana', () => { const h = view('health', BASE({ visit: { who: '<b>x</b>', date: ahead(3) } })); return h.includes('&lt;b&gt;x&lt;/b&gt;') && !h.includes('<b>x</b>'); });
+tryc('wizyta: zapis z formularza w Zdrowiu, zła data odrzucona', () => {
+  view('health', BASE()); els.v_who = { value: 'ginekolog' }; els.v_date = { value: 'jutro' }; click({ visitsave: '1' }); const bad = !T.S().visit;
+  els.v_date = { value: ahead(20) }; click({ visitsave: '1' }); return bad && T.S().visit.who === 'ginekolog' && T.S().visit.date === ahead(20) && view('health').includes('data-visitsave');
+});
+tryc('lista na wizytę: liczby z dziennika i cyklu, bez zgadywania', () => {
+  const pain = { [dk(1)]: { aura: true, med: true }, [dk(2)]: { med: true }, [dk(40)]: {} }, meas = {};
+  for (let i = 0; i < 12; i++) meas[dk(i)] = { cyc: i < 6 ? 'P' : '2', sleep: '7' };
+  const h = view('visit', BASE({ pain, meas }));
+  return h.includes('Dni z bólem głowy: 3; z aurą: 1; z lekiem: 2') && h.includes('Dni z lekiem w ostatnich 30 dniach: 2') && h.includes('Ból w dniach bez hormonów: 2 z 6') && h.includes('Sen: średnio 7 h z 12 nocy') && h.includes('data-visitcopy');
+});
+tryc('lista na wizytę: za mało dni cyklu daje „za mało danych”', () => view('visit', BASE({ pain: { [dk(1)]: {} } })).includes('Cykl: za mało zaznaczonych dni'));
+tryc('wizyta: kopia bez danych zdrowotnych nie zawiera wizyty', () => { view('health', BASE({ visit: { who: 'x', date: ahead(5) } })); return !JSON.parse(T.bkBuild(true)).data.visit && !!JSON.parse(T.bkBuild(false)).data.visit; });
+
+tryc('lista na wizytę: ekran ma tytuł w nagłówku', () => { view('visit', BASE()); return (els.title || {}).textContent === 'Lista na wizytę'; });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

@@ -239,7 +239,7 @@ const SUPP=[
 function protCost(){return PROT.map(([id,n,pp])=>{const r=S.prices[id]||{},p=num(r.p),g=num(r.g);return {id,n,pp,c:p>0&&g>0?p/(g*pp/100)*20:null}})}
 function renderHealth(){
   let h='<p><button class="btn" data-tab="labs" style="width:100%">Moje badania</button></p><div class="note"><b>Co realne.</b> Przy chorobach przewlekłych, np. tarczycy, celem jest dobra kontrola wyników i objawów, nie wyleczenie. Insulinooporność często wyraźnie się poprawia przy spadku masy ciała, ruchu i śnie. Niedobory wyrównuje się według wyników badań.</div>';
-  h+=cardsHtml('health');
+  h+=cardsHtml('health')+visitHtml();
   const box=(title,items)=>`<details class="fold"><summary>${title}</summary><div class="panel">`+items.map(([a,b])=>`<div class="entry"><span class="txt"><b>${a}.</b> ${b}</span></div>`).join('')+'</div></details>';
   h+=box('Woda, uda i pośladki',[
     ['Waga skacze z dnia na dzień','Wahania o 1-2 kg to głównie woda: sól, węglowodany, cykl, trening (wiedza ogólna). Dlatego aplikacja patrzy na średnią z tygodnia i trend z 2-4 tygodni.'],
@@ -583,7 +583,7 @@ document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.datas
 // ---------- Kopia danych: eksport i import pliku (np. przez iCloud Drive) ----------
 const BK_SKIP=['tab','introStep','sosStep','sosTrig','recipe','recipeBack','labSel'];
 let BK_PENDING=null;
-function bkBuild(noHealth){const d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.kopia)delete d.kopia.token;if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){d.labs=[];d.urges={};d.legs={};d.pain={};Object.values(d.meas||{}).forEach(m=>{delete m.fat;delete m.ffm;delete m.ecw;delete m.bmr;delete m.cyc})}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
+function bkBuild(noHealth){const d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.kopia)delete d.kopia.token;if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){d.labs=[];d.urges={};d.legs={};d.pain={};d.visit=null;Object.values(d.meas||{}).forEach(m=>{delete m.fat;delete m.ffm;delete m.ecw;delete m.bmr;delete m.cyc})}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
 function bkParse(text){try{const o=JSON.parse(text);if(!o||o.app!=='talerz-i-trening'||o.v!==1||!o.data||typeof o.data!=='object'||Array.isArray(o.data))return null;return o}catch(e){return null}}
 function bkSummary(d){return `${Object.keys(d.days||{}).length} dni z wpisami, ${Object.keys(d.meas||{}).length} dni z pomiarami, ${(d.labs||[]).length} wyników badań, ${((d.knee||{}).sessions||[]).length} sesji kolana, ${Object.keys(d.legs||{}).length} wpisów nóg`}
 async function bkExport(){
@@ -608,7 +608,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'80',cm:'170',age:'35',sex:'K',goal:'72',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),JSON.parse(r));}catch(e){}return clone(DEF)}
@@ -759,6 +759,12 @@ const CARDS=[
   {id:'aura',sens:1,ev:'m',when:()=>auraDays()>0,src:()=>`${auraDays()} ${auraDays()===1?'dzień':'dni'} z aurą w ostatnich 90 dniach (dziennik bólu)`,
     t:'Migrena z aurą: porozmawiaj z ginekologiem',why:'Przy migrenie z aurą tabletki antykoncepcyjne z estrogenem zwiększają ryzyko udaru i w zaleceniach WHO są przeciwwskazaniem. Nie odstawiaj ich bez planu innej antykoncepcji: zmianę ustala lekarz.',
     more:'Dzwoń 112, gdy aura trwa dłużej niż godzinę albo jest inna niż zwykle, gdy słabnie lub drętwieje jedna strona ciała, przy zaburzeniach mowy albo nagłym, najsilniejszym w życiu bólu.'},
+  {id:'wizyta',sens:1,ev:'u',when:()=>visitDays()!=null||auraDays()>0,
+    src:()=>(visitDays()!=null?`wizyta ${fmtDate(S.visit.date)}`:'brak umówionej wizyty')+`; dni z aurą w 90 dniach: ${auraDays()}`,
+    t:()=>{const n=visitDays();return n==null?'Do czasu wizyty':`Do czasu wizyty (${esc(S.visit.who||'lekarz')}, za ${n} ${n===1?'dzień':'dni'})`},
+    why:'Na dziś 3 rzeczy: sen o stałej porze, posiłki bez długich przerw, woda i stała ilość kofeiny. Migrena reaguje na rytm dnia, więc te zmiany zmniejszają liczbę ataków.',
+    more:()=>auraDays()>0?'Przy migrenie z aurą nie czekaj miesięcy: umów teleporadę ginekologiczną albo lekarza rodzinnego w ciągu dni. Nie odstawiaj tabletek bez planu innej antykoncepcji.':'Zaznaczaj dni z bólem jednym dotknięciem; lista na wizytę zbierze je za Ciebie.',
+    todo:['Lista na wizytę','tab','visit']},
   {id:'bol_hormony',sens:1,ev:'m',when:()=>{const k=todayKey();return !!painAt(k)&&(S.meas[k]||{}).cyc==='P'},src:()=>'dziś: dzień z bólem głowy i zaznaczone dni bez hormonów',
     t:'Ból głowy w dniach bez hormonów',why:'Spadek estrogenu w dniach bez hormonów często wyzwala migrenę. To znany wzorzec, a nie Twoja słabość.',todo:['Zaznacz aurę i lek','goto','painrow']},
   {id:'bez_sil',ev:'u',when:()=>!!painAt(todayKey())||(sleepAt(todayKey())!=null&&sleepAt(todayKey())<6),src:()=>painAt(todayKey())?'dziś: dzień z bólem głowy':`sen ostatniej nocy: ${fmt1(sleepAt(todayKey()))} h (pomiary dnia)`,
@@ -772,7 +778,7 @@ const CARDS=[
   {id:'waga_stoi',ev:'u',when:()=>{const a=wAvg(0,6),b=wAvg(21,27);return a.n>=2&&b.n>=2&&Math.abs(a.avg-b.avg)<0.2},src:()=>{const a=wAvg(0,6),b=wAvg(21,27);return `średnia teraz ${fmt1(a.avg)} kg (${a.n} ważeń), 3 tygodnie temu ${fmt1(b.avg)} kg (${b.n} ważeń)`},
     t:'Waga stoi mimo starań',why:'Woda i cykl potrafią przez 1-2 tygodnie maskować spadek tłuszczu, a nowe leki mogą zmieniać masę ciała. Obwód talii pokazuje zmianę niezależnie od wody.',todo:['Wpisz obwód talii','goto','m_waist']}
 ];
-function cardHtml(c,day){return `<div class="card panel" data-card="${c.id}"><h3>${c.t}</h3><p>${c.why}</p>${c.more?`<p class="small">${c.more}</p>`:''}<p class="small muted">Na podstawie: ${c.src()}. <span class="ev">${EV[c.ev]}</span></p>`
+function cardHtml(c,day){return `<div class="card panel" data-card="${c.id}"><h3>${typeof c.t==='function'?c.t():c.t}</h3><p>${c.why}</p>${c.more?`<p class="small">${typeof c.more==='function'?c.more():c.more}</p>`:''}<p class="small muted">Na podstawie: ${c.src()}. <span class="ev">${EV[c.ev]}</span></p>`
   +((c.todo||day)?`<p class="cardact">${c.todo?`<button class="btn small" data-${c.todo[1]}="${c.todo[2]}">${c.todo[0]}</button>`:''}${day&&!(c.todo&&c.todo[1]==='cardok')?`<button class="btn ghost small" data-cardok="${c.id}">Rozumiem</button>`:''}</p>`:'')+'</div>'}
 function cardsHtml(where){const all=CARDS.filter(c=>c.when());
   if(where==='health')return '<h2>Dlaczego tak się czuję</h2>'+(all.length?all.map(c=>cardHtml(c,false)).join(''):'<p class="small muted">Teraz nic szczególnego. Karty pojawią się, gdy dane coś pokażą.</p>');
@@ -827,6 +833,19 @@ function radaKopiaHtml(){const c=S.consent;let h='<h3>Kopia dla rady (zaszyfrowa
   h+=S.kopia?`<p class="small">Klucz zapisany w tym telefonie ${fmtDate(String(S.kopia.at).slice(0,10))}. Kopia wysyła się sama przy otwarciu aplikacji, najwyżej raz na 7 dni. Ostatnia wysyłka: ${S.kopia.sent?fmtDate(S.kopia.sent.slice(0,10)):'jeszcze nie było'}.</p>${S.kopia.err?`<div class="note warn">${esc(S.kopia.err)}</div>`:''}<p><button class="btn small" data-kopiasend="1">Wyślij teraz</button></p>`
     :'<div class="panel"><div class="field"><label for="k_p1">Hasło kopii</label><input type="password" id="k_p1" autocomplete="new-password" style="width:170px"></div><div class="field"><label for="k_p2">Powtórz hasło</label><input type="password" id="k_p2" autocomplete="new-password" style="width:170px"></div><div class="field"><label for="k_tok">Token wysyłki</label><input type="password" id="k_tok" autocomplete="off" style="width:170px"></div><p class="small muted">Co najmniej 12 znaków. Hasło zna tylko właściciel aplikacji; bez niego kopii nie da się odczytać. Telefon zapisuje klucz, którego nie da się z niego odczytać, a nie hasło.</p><p><button class="btn small" data-kopiakey="1">Zapisz klucz w tym telefonie</button></p></div>';
   return h+'<p><button class="btn ghost small" data-consentoff="1">Wycofaj zgodę</button></p>'}
+// Umówiona wizyta i lista na wizytę z dziennika (rada: mapa powiązań nr 1-3, 5, 15)
+function visitDays(){const v=S.visit;if(!v||!v.date||v.date<todayKey())return null;return Math.round((Date.parse(v.date+'T12:00:00')-Date.parse(todayKey()+'T12:00:00'))/864e5)}
+function visitHtml(){const v=S.visit||{};return `<h2>Wizyta u lekarza</h2><div class="panel"><div class="field"><label for="v_who">U kogo</label><input type="text" id="v_who" maxlength="40" value="${esc(v.who||'')}" placeholder="np. ginekolog" style="width:170px;text-align:left"></div><div class="field"><label for="v_date">Kiedy</label><input type="date" id="v_date" value="${esc(v.date||'')}"></div><p class="cardact"><button class="btn small" data-visitsave="1">Zapisz wizytę</button><button class="btn ghost small" data-tab="visit">Lista na wizytę</button></p></div>`}
+function visitLines(){const ks=Array.from({length:90},(_,i)=>nAgo(i)),P=S.pain||{},pk=ks.filter(k=>P[k]),a=pk.filter(k=>P[k].aura).length,m=pk.filter(k=>P[k].med).length,m30=ks.slice(0,30).filter(k=>P[k]&&P[k].med).length;
+  const cyc=k=>(S.meas[k]||{}).cyc,pl=ks.filter(k=>cyc(k)==='P'),ot=ks.filter(k=>['1','2','3','4'].includes(cyc(k))),sl=ks.map(sleepAt).filter(x=>x!=null),w=wAvg(0,6);
+  const L=[`Okres: ostatnie 90 dni, do ${fmtDate(todayKey())}.`,`Dni z bólem głowy: ${pk.length}; z aurą: ${a}; z lekiem: ${m}.`,`Dni z lekiem w ostatnich 30 dniach: ${m30}.`,
+    pl.length>=5&&ot.length>=5?`Ból w dniach bez hormonów: ${pl.filter(k=>P[k]).length} z ${pl.length}; w pozostałych zaznaczonych dniach: ${ot.filter(k=>P[k]).length} z ${ot.length}.`:'Cykl: za mało zaznaczonych dni do porównania (potrzeba po 5).',
+    sl.length?`Sen: średnio ${fmt1(sl.reduce((s,x)=>s+x,0)/sl.length)} h z ${sl.length} nocy.`:'Sen: brak danych.',
+    w.n?`Waga: średnia ${fmt1(w.avg)} kg z ${w.n} ważeń w ostatnich 7 dniach.`:'Waga: brak ważeń w ostatnich 7 dniach.'];
+  if(a)L.push('Do zapytania: czy przy migrenie z aurą mogę dalej brać tabletki antykoncepcyjne z estrogenem i jaka metoda będzie bezpieczna?');
+  return L}
+function renderVisit(){const v=S.visit||{};document.getElementById('main').innerHTML=`<h2>Lista na wizytę${v.who?': '+esc(v.who):''}${v.date?', '+fmtDate(v.date):''}</h2><div class="panel card">`+visitLines().map(x=>`<p>${x}</p>`).join('')
+  +'<p class="small muted">Liczby z dziennika bólu, cyklu i pomiarów w tym telefonie. Pokaż je lekarzowi albo skopiuj.</p></div><p class="cardact"><button class="btn" data-visitcopy="1">Kopiuj listę</button><button class="btn ghost" data-tab="health">Wróć do Zdrowia</button></p>'}
 // ---------- Widoki ----------
 const TABS=[
   ['meals','Posiłki','<path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5"/>'],
@@ -837,7 +856,7 @@ const TABS=[
 ];
 function renderTabs(){const tb=document.getElementById('tabs');if(tb&&tb.style)tb.style.display=S.tab==='intro'?'none':'';
   document.getElementById('tabs').innerHTML=TABS.map(([k,l,ic])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}" aria-label="${l}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>${l}</button>`).join('');
-  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{sos:'Ochota na przekąskę',labs:'Moje badania',intro:'Wprowadzenie',review:'Przegląd tygodnia',recipe:'Przepis',knee:'Program kolana',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
+  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{sos:'Ochota na przekąskę',labs:'Moje badania',visit:'Lista na wizytę',intro:'Wprowadzenie',review:'Przegląd tygodnia',recipe:'Przepis',knee:'Program kolana',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
   document.getElementById('who').textContent=new Date().toLocaleDateString('pl-PL',{weekday:'short',day:'numeric',month:'numeric'});
 }
 function seg(items,cur,attr,cls=''){return `<div class="seg ${cls}">`+items.map(([v,l])=>`<button class="${String(cur)===String(v)?'on':''}" data-${attr}="${v}">${l}</button>`).join('')+'</div>'}
@@ -960,7 +979,7 @@ ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź ob
   document.getElementById('main').innerHTML=h;
 }
 
-function render(){renderTabs();({meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują. <button class="btn ghost" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+function render(){renderTabs();({meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują. <button class="btn ghost" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 function toast(t,ms){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),ms||1600)}
 function setPath(p,v){const a=p.split('.');let o=S;for(let i=0;i<a.length-1;i++)o=o[a[i]];o[a[a.length-1]]=v}
 
@@ -1034,6 +1053,8 @@ document.addEventListener('click',e=>{
   else if(d.consentoff){S.consent=null;S.kopia=null;KS.del().catch(()=>{});toast('Zgoda wycofana. Wysyłanie zatrzymane; kopie zostaną usunięte.',3200)}
   else if(d.kopiasend){kopiaSend().then(()=>{toast('Kopia wysłana');render()},e=>{if(S.kopia){S.kopia.err=e.message;save()}toast(e.message,3200);render()});return}
   else if(d.kopiakey){kopiaSetup().then(()=>{toast('Klucz zapisany w tym telefonie');save();render()},e=>toast(e.message,3200));return}
+  else if(d.visitsave){const g=id=>document.getElementById(id),who=String(g('v_who').value||'').trim().slice(0,40),dt=String(g('v_date').value||'').trim();if(!/^\d{4}-\d{2}-\d{2}$/.test(dt)){toast('Wybierz datę wizyty');return}S.visit={who,date:dt};toast('Zapisano wizytę')}
+  else if(d.visitcopy){const t=visitLines().join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano listę'),()=>toast('Nie udało się skopiować'));return}
   else if(d.cardok){S.cardsOk=S.cardsOk||{};S.cardsOk[d.cardok]=todayKey()}
   else if(d.tipok){S.tips=S.tips||{};S.tips[d.tipok]=true}
   else if(d.tipsreset){S.tips={};toast('Wskazówki pokażą się ponownie')}
