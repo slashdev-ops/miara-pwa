@@ -142,7 +142,7 @@ tryc('odznaka świętowana raz (petSeen)', () => {
 });
 tryc('wprowadzenie: 5 kroków, krok 3 to wybór zwierzaka', () => view('intro', { introStep: 2 }).includes('data-petkind') && view('intro', { introStep: 4 }).includes('Krok 5 z 5'));
 const swSrc = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-check('sw.js: pet.js i krój pisma w pamięci podręcznej, CACHE miara-v3 (przebudowa)', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v3'") && swSrc.includes("'./fonts/fraunces-latin-ext-600-normal.woff2'"));
+check('sw.js: pet.js i krój pisma w pamięci podręcznej, CACHE miara-v3 (duże wydanie)', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v3'") && swSrc.includes("'./fonts/fraunces-latin-ext-600-normal.woff2'"));
 check('index.html: pet.js przed app.js', /pet\.js[\s\S]*app\.js/.test(html));
 
 // Zwierzak: sylwetka z pomiarów (opcjonalna)
@@ -199,7 +199,7 @@ tryc('guide: kroki zaliczają się z danych', () => {
   const d = Object.fromEntries(T.guideSteps().map((x) => [x.id, x.done])); return d.pet && d.weight && d.meal && d.move && !d.data && !d.seepet;
 });
 tryc('guide: panel na górze dnia, przycisk ochoty pod listą „Dziś”', () => { const h = view('day', NEWU()); return h.includes('class="guide') && h.indexOf('Pierwsze kroki') < h.indexOf('Dziś:') && h.indexOf('Dziś:') < h.indexOf('Mam ochotę coś przekąsić'); });
-// Rada 07.11.2026 (przebudowa): przycisk ochoty ma stałe miejsce pod zwierzakiem; na górze jest Stan dziś
+// Rada 07.11.2026 (nowy układ): przycisk ochoty ma stałe miejsce pod zwierzakiem; na górze jest Stan dziś
 tryc('guide: po ukończeniu panel znika, na górze Stan dziś, przycisk ochoty raz, pod Dziś', () => {
   const h = view('day', { ...NEWU(), pet: { ...PETA }, guide: { hidden: false, dataOk: true, seenPet: true }, meas: { [today()]: { w: '82', steps: '6000' } }, days: { [today()]: [{ kind: 'm', label: 'x', k: 400, p: 30, f: 10, c: 40 }] } });
   return !h.includes('Pierwsze kroki') && h.indexOf('Stan dziś') < h.indexOf('Dziś:') && h.indexOf('Dziś:') < h.indexOf('Mam ochotę coś przekąsić') && h.split('Mam ochotę coś przekąsić').length === 2;
