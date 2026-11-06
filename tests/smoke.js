@@ -10,7 +10,7 @@ const code = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
 const els = {}, lis = {};
-const mk = (id) => els[id] || (els[id] = { id, innerHTML: '', textContent: '', value: '', checked: false, style: {}, classList: { add() {}, remove() {} } });
+const mk = (id) => els[id] || (els[id] = { id, innerHTML: '', textContent: '', value: '', checked: false, style: {}, classList: { add() {}, remove() {} }, insertAdjacentHTML(pos, h) { this.innerHTML = h + this.innerHTML; } });
 const sandbox = {
   document: { getElementById: mk, querySelector: () => null, addEventListener(t, f) { (lis[t] = lis[t] || []).push(f); } },
   window: { scrollTo() {} },
@@ -22,7 +22,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b)};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -75,7 +75,7 @@ function mkCtx(o = {}) {
     streak: () => o.streak || 0, weekPts: () => o.weekPts || 0, level: T.level,
     stage: () => (o.pct != null ? { pct: o.pct } : null),
     avgW: (a) => (a === 0 && o.avgW != null ? o.avgW : null), startW: o.startW != null ? o.startW : null,
-    num: T.num,
+    num: T.num, once: !!o.once,
   };
 }
 const st = (c) => sandbox.PET.state(c);
@@ -223,6 +223,26 @@ tryc('P1-2: to samo po odtworzeniu starej kopii bez petSeen', () => {
 });
 tryc('P1-2: zmiana rodzaju istniejącego zwierzaka nie zmienia odznak', () => { view('set', { ...CLEAN(), pet: { ...PETA }, petSeen: ['week1'], reviews: REV }); click({ petkind: 'kaczka' }); return T.S().petSeen.join() === 'week1' && T.S().pet.kind === 'kaczka'; });
 
+// Rada 06.11.2026, P1: trening z zegarka i tryb „raz dziennie” dla osoby, którą zniechęca częste wpisywanie
+const lastE = () => { const d = T.S().days[T.todayKey()] || []; return d[d.length - 1]; }, nE = () => (T.S().days[T.todayKey()] || []).length;
+const HID = { hidden: true, dataOk: true, seenPet: true };
+tryc('P1-2z: trening z zegarka: kalorie z zegarka jako brutto, netto bez spoczynku', () => {
+  view('train', { ...CLEAN(), tr: { ...T.S().tr, wmin: '45', wk: '400' } }); click({ addwatch: '1' }); const e = lastE();
+  return e && e.kind === 't' && e.label === 'Trening z zegarka' && e.min === 45 && e.gross === 400 && e.net > 0 && e.net < 400;
+});
+tryc('P1-2z: bez kalorii z zegarka nic nie dodaje', () => { view('train', { ...CLEAN(), tr: { ...T.S().tr, wmin: '45', wk: '' } }); click({ addwatch: '1' }); return nE() === 0; });
+tryc('P1-2z: kalorie poza zakresem odrzucone', () => { view('train', { ...CLEAN(), tr: { ...T.S().tr, wmin: '45', wk: '9000' } }); click({ addwatch: '1' }); return nE() === 0; });
+tryc('P1-2z: panel z zegarka jest nad szacunkiem z rodzaju', () => { const h = view('train', CLEAN()); return h.includes('data-addwatch') && h.indexOf('data-addwatch') < h.indexOf('data-addtrain'); });
+tryc('P1-3: tryb raz dziennie: o 14:00 bez posiłku zwierzak nie czeka na wpis', () => { const s = st(mkCtx({ today: { sleep: 7, steps: 7000 }, once: true })); return s.mood !== 'hungry' && s.meters.food === 50; });
+tryc('P1-3: tryb raz dziennie: o 19:30 bez posiłku czeka na wpis', () => st(mkCtx({ now: '19:30', today: { sleep: 7, steps: 7000 }, once: true })).mood === 'hungry');
+tryc('P1-3: petCtx przekazuje tryb raz dziennie', () => { T.S().once = true; const r = T.petCtx().once === true; T.S().once = false; return r; });
+tryc('P1-3: Ustawienia mają przełącznik raz dziennie', () => view('set', CLEAN()).includes('data-k="once"'));
+tryc('P1-3: Dziś w trybie raz dziennie: wpis dnia z Według planu i Inaczej', () => { const h = view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } }); return h.includes('Wpis dnia') && h.includes('data-dayplan') && h.includes('data-dayother'); });
+tryc('P1-3: Według planu dodaje posiłki z planu tylko raz', () => {
+  view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } }); click({ dayplan: '1' }); click({ dayplan: '1' });
+  return (T.S().days[T.todayKey()] || []).filter((e) => e.kind === 'm').length === T.PLAN[new Date().getDay()].length;
+});
+tryc('P1-3: Inaczej otwiera szybki wpis', () => { view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } }); click({ dayother: '1' }); return mainHtml().includes('data-fold="szybki" open'); });
 // Zgłoszenie 06.11.2026: po wpisaniu danych brak przycisku, dokąd przejść, i brak informacji, czy dane są poprawne
 const NX = (h) => (h.match(/class="nextbar"/g) || []).length, OKD = { kg: '82', cm: '170', age: '40', goal: '74', mode: 'redukcja' };
 tryc('dane: wejście w Ustawienia nie zalicza kroku Sprawdź swoje dane', () => { view('set', { ...NEWU(), ...OKD }); return T.S().guide.dataOk === false; });
@@ -237,6 +257,24 @@ tryc('dane: cel z BMI poniżej 18,5 daje ostrzeżenie, ale zapisuje', () => { vi
 tryc('dalej: ze zwierzakiem prowadzi do następnego kroku w Moim dniu', () => view('set', { ...NEWU(), ...OKD, pet: { ...PETA }, guide: { hidden: false, dataOk: true, seenPet: false } }).includes('<button class="btn" data-tab="day" style="width:100%">Dalej: wpisz dzisiejszą wagę</button>'));
 tryc('dalej: po pierwszych krokach dwa przyciski do Mojego dnia w Ustawieniach', () => { const h = view('set', { ...CLEAN(), ...OKD, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 2 && h.includes('Przejdź do Mojego dnia'); });
 tryc('dalej: ekran zwierzaka kończy się przyciskiem do Mojego dnia', () => { const h = view('pet', { ...CLEAN(), pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 1 && h.includes('Przejdź do Mojego dnia'); });
+
+tryc('P1-3: ukończony Wpis dnia mówi, że dzień zapisany, i prowadzi do zwierzaka', () => {
+  const k = T.todayKey(), h = view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, days: { [k]: [{ kind: 'm', id: 's1', label: 'x', k: 300, p: 20, f: 5, c: 30 }, { kind: 't', label: 'Trening z zegarka', min: 40, gross: 300, net: 200 }] }, meas: { [k]: { steps: '8000' } } });
+  return h.includes('Dzień zapisany') && /Wpis dnia[\s\S]*data-tab="pet"[^>]*>Zobacz zwierzaka/.test(h);
+});
+// Rada 06.11.2026 (pierwsze wejście, długie korzystanie): punkty trybu raz dziennie, wskazówki pierwszego wejścia
+const yKey = () => { const d = new Date(); d.setDate(d.getDate() - 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const ONCE_DAY = () => [{ kind: 'm', id: 's1', label: 'x', k: 400, p: 20, f: 5, c: 30, plan: true }];
+const onceState = (once) => { const k = T.todayKey(), y = yKey(); return { ...CLEAN(), once, pet: { kind: 'gaska', name: 'A', since: y }, petSeen: [...SEEN_ALL], guide: { ...HID }, days: { [k]: ONCE_DAY(), [y]: ONCE_DAY() }, meas: { [k]: { steps: '8000' }, [y]: { steps: '7000' } } }; };
+tryc('P1-2r: tryb raz dziennie: wpis dnia (posiłki i kroki) liczy się do serii', () => { view('day', onceState(true)); return T.streak() === 2; });
+tryc('P1-2r: tryb raz dziennie: zwierzak wykluwa się po wpisach dnia', () => { view('day', onceState(true)); return P().state(T.petCtx()).stage === 'chick'; });
+tryc('P1-2r: zwykły tryb: ten sam dzień poniżej 30 pkt nie jest aktywny', () => { view('day', onceState(false)); return T.streak() === 0 && P().state(T.petCtx()).stage === 'egg'; });
+const TIPST = () => ({ ...CLEAN(), ...OKD, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true }, tips: {} });
+tryc('wskazówki: każdy ekran ma wskazówkę przy pierwszym wejściu', () => ['meals', 'train', 'health', 'set', 'pet', 'day'].every((t) => view(t, TIPST()).includes(`data-tipok="${t}"`)));
+tryc('wskazówki: po Rozumiem znika na stałe', () => { view('train', TIPST()); click({ tipok: 'train' }); return T.S().tips.train === true && !mainHtml().includes('data-tipok') && !view('train').includes('data-tipok'); });
+tryc('wskazówki: na Moim dniu nie ma jej, gdy są pierwsze kroki', () => !view('day', { ...TIPST(), guide: { hidden: false, dataOk: false, seenPet: false } }).includes('data-tipok'));
+tryc('wskazówki: w trybie demo ich nie ma', () => { T.setDemo(true); let h = ''; try { h = view('meals', TIPST()); } finally { T.setDemo(false); } return !h.includes('data-tipok'); });
+tryc('wskazówki: Ustawienia przywracają wskazówki', () => { view('set', { ...TIPST(), tips: { meals: true, set: true } }); click({ tipsreset: '1' }); return Object.keys(T.S().tips).length === 0; });
 
 // Ikona na ekranie początkowym i favicon jak logo: łuki zielony, złoty, niebieski i ciemny trend na białym kafelku
 const LOGO_COLORS = ['#2B6A55', '#C08A2E', '#5563B0', '#16231C'];

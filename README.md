@@ -23,6 +23,15 @@ na danych przykładowych, bez zapisu w telefonie.
 Stan zwierzaka nie jest zapisywany: liczy go czysta funkcja `PET.state(ctx)` w `pet.js` z danych aplikacji,
 więc moduł jest testowany bez przeglądarki (`tests/smoke.js`). Projekt i plan: `docs/specs/`, `docs/plans/`.
 
+## Mniej wpisów
+
+Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
+
+- **Wpisuję raz dziennie** (Ustawienia): „Mój dzień” pokazuje jeden wieczorny wpis dnia (posiłki „Według planu”
+  albo „Inaczej”, trening, kroki), a zwierzak przypomina o posiłkach dopiero od 19:00.
+- **Trening z zegarka:** czas i kalorie z zegarka sportowego zamiast wyboru rodzaju treningu; do bilansu trafia netto,
+  czyli kalorie z zegarka minus spoczynek w tym czasie. Pola mają limity i tę samą walidację co reszta aplikacji.
+
 ## Założenia projektu
 
 | Obszar | Rozwiązanie |

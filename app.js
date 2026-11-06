@@ -337,7 +337,15 @@ const tgTxt=T=>typeof T.t==='function'?T.t():T.t;
 function toCanon(T,e){const v=num(e.val),u=String(e.unit||'').toLowerCase();for(const [re,f] of T.cv){if(new RegExp(re,'i').test(u))return typeof f==='function'?f(v):v*f}return null}
 
 // ---------- Dziś, jakość danych, przegląd tygodnia, wprowadzenie ----------
-function focusHtml(){const k=todayKey(),m=S.meas[k]||{},ms=day().filter(e=>e.kind==='m').length,tr=day().some(e=>e.kind==='t'),st=num(m.steps)>0;const items=[[num(m.w)>0,'Zważ się rano',num(m.w)>0?fmt1(num(m.w))+' kg':'','goto','m_w','Wpisz wagę w Pomiarach dnia niżej'],[ms>=3,'Zapisz 3 posiłki',ms+' z 3','tab','meals','Otwórz Posiłki i naciśnij Zjem przy daniu'],[tr||st,(S.knee&&S.knee.start&&S.knee.days.includes(new Date().getDay())?'Ruch: dziś sesja kolana':'Ruch: trening albo kroki'),tr?'trening':(st?fmt(num(m.steps))+' kroków':''),'tab','train','Dodaj trening albo wpisz kroki w Pomiarach dnia']];const done=items.filter(x=>x[0]).length,nx=items.findIndex(x=>!x[0]);return `<h2>Dziś: ${done} z 3</h2><div class="panel">`+items.map(([ok,lab,val,act,arg,hint],i)=>`<button class="opt hab ${ok?'on':(i===nx?'next':'')}" data-${act}="${arg}"><span class="box">${ok?'✓':''}</span><span class="lab">${lab}${ok?'':`<small class="hint">${hint}</small>`}</span><span class="met">${val}</span><span class="chev" aria-hidden="true">›</span></button>`).join('')+'</div>'}
+// Tryb „raz dziennie”: jeden wieczorny wpis zamiast listy zadań na cały dzień
+function onceHtml(){const k=todayKey(),m=S.meas[k]||{},ms=day().filter(e=>e.kind==='m').length,tr=day().some(e=>e.kind==='t'),st=num(m.steps)>0;
+  const row=(ok,lab,val,btns)=>`<div class="step${ok?' done':''}"><span class="box">${ok?'✓':''}</span><span class="lab">${lab}<small class="hint">${val}</small></span>${ok?'':btns}</div>`;
+  return '<h2>Wpis dnia</h2><div class="panel" style="padding:4px 16px">'
+    +row(ms>0,'Posiłki',ms?ms+' zapisane':'Jak wyglądało dziś jedzenie?','<button class="btn small" data-dayplan="1">Według planu</button><button class="btn small ghost" data-dayother="1">Inaczej</button>')
+    +row(tr,'Trening',tr?'zapisany':'Tylko jeśli dziś był','<button class="btn small ghost" data-tab="train">Z zegarka</button>')
+    +row(st,'Kroki',st?fmt(num(m.steps))+' kroków':'Liczba z telefonu','<button class="btn small ghost" data-goto="m_steps">Wpisz</button>')+'</div>'
+    +(ms>0&&(tr||st)?'<div class="note">✓ Dzień zapisany. Do jutra wieczorem.</div><p class="nextbar"><button class="btn" data-tab="pet" style="width:100%">Zobacz zwierzaka</button></p>':'')}
+function focusHtml(){if(S.once)return onceHtml();const k=todayKey(),m=S.meas[k]||{},ms=day().filter(e=>e.kind==='m').length,tr=day().some(e=>e.kind==='t'),st=num(m.steps)>0;const items=[[num(m.w)>0,'Zważ się rano',num(m.w)>0?fmt1(num(m.w))+' kg':'','goto','m_w','Wpisz wagę w Pomiarach dnia niżej'],[ms>=3,'Zapisz 3 posiłki',ms+' z 3','tab','meals','Otwórz Posiłki i naciśnij Zjem przy daniu'],[tr||st,(S.knee&&S.knee.start&&S.knee.days.includes(new Date().getDay())?'Ruch: dziś sesja kolana':'Ruch: trening albo kroki'),tr?'trening':(st?fmt(num(m.steps))+' kroków':''),'tab','train','Dodaj trening albo wpisz kroki w Pomiarach dnia']];const done=items.filter(x=>x[0]).length,nx=items.findIndex(x=>!x[0]);return `<h2>Dziś: ${done} z 3</h2><div class="panel">`+items.map(([ok,lab,val,act,arg,hint],i)=>`<button class="opt hab ${ok?'on':(i===nx?'next':'')}" data-${act}="${arg}"><span class="box">${ok?'✓':''}</span><span class="lab">${lab}${ok?'':`<small class="hint">${hint}</small>`}</span><span class="met">${val}</span><span class="chev" aria-hidden="true">›</span></button>`).join('')+'</div>'}
 function firstDataDay(){const ks=Object.keys(S.days||{}).filter(k=>(S.days[k]||[]).some(e=>e.kind==='m')).sort();return ks[0]||null}
 function reliability(){const f=firstDataDay();if(!f)return null;const span=Math.max(1,Math.min(14,Math.round((Date.parse(todayKey())-Date.parse(f))/864e5)+1));let md=0,wd=0;lastKeys(span).forEach(k=>{if((S.days[k]||[]).filter(e=>e.kind==='m').length>=3)md++;if(num((S.meas[k]||{}).w)>0)wd++});return {span,md,wd,pct:Math.round(md/span*100)}}
 function relHtml(){const r=reliability();if(!r||r.span<7)return '';const M=measuredTdee(),G=dataGap(),low=r.pct<60;return `<details class="fold"${low?' open':''}><summary>Jakość danych: ${r.pct}% dni z pełnym zapisem</summary><div class="panel" style="padding:4px 16px 12px"><p>Ostatnie ${r.span} ${r.span===1?'dzień':'dni'}: pełny zapis posiłków (co najmniej 3) w ${r.md}, ważenie w ${r.wd}.</p>${low?'<p><b>Poniżej 60%.</b> Uprość: zapisuj z planu dnia przyciskiem „Zjem”, resztę szybkim wpisem.</p>':''}<p>${M?'Zapotrzebowanie liczone z Twoich danych: aktywne.':`Do zapotrzebowania z Twoich danych brakuje w ostatnich 28 dniach: ${Math.max(0,6-G.w)} ważeń (rozłożonych na co najmniej 14 dni) i ${Math.max(0,10-G.i)} dni z pełnym zapisem.`}</p><p class="small muted">Próg 60% to założenie planu, nie wynik badań.</p></div></details>`}
@@ -598,8 +606,8 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 const LS='talerz-trening-v1';
 const DEF={kg:'80',cm:'170',age:'35',sex:'K',goal:'72',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
-  tr:{cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
+  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,tips:{},petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),JSON.parse(r));}catch(e){}return clone(DEF)}
@@ -613,8 +621,8 @@ const open=new Set();
 // ---------- Obliczenia ----------
 const num=v=>{const s=String(v).trim().replace(/(\d)[\s\u00a0]+(?=\d{3}(\D|$))/g,'$1'),t=s.match(/^(\d{1,2})\s*(?::|h)\s*(\d{1,2})?\s*(?:m|min)?$/i);if(t)return +t[1]+(+(t[2]||0))/60;const x=parseFloat(s.replace(',','.'));return isFinite(x)?x:0};
 // Pola liczbowe: format i zakres (ostatni człon klucza data-k). Wpis błędny lub poza zakresem nie trafia do danych.
-const LIM={kg:[35,250],goal:[35,250],w:[35,250],cm:[120,220],age:[16,90],steps:[0,60000],sleep:[0,16],waist:[30,200],hip:[30,200],thigh:[20,120],fat:[3,60],ffm:[25,120],ecw:[30,50],bmr:[900,3000],min:[1,300],speed:[1,20],grade:[0,25],watts:[20,500]};
-const INT_K=new Set(['steps','bmr','age','min']);
+const LIM={kg:[35,250],goal:[35,250],w:[35,250],cm:[120,220],age:[16,90],steps:[0,60000],sleep:[0,16],waist:[30,200],hip:[30,200],thigh:[20,120],fat:[3,60],ffm:[25,120],ecw:[30,50],bmr:[900,3000],min:[1,300],wmin:[1,300],wk:[10,3000],speed:[1,20],grade:[0,25],watts:[20,500]};
+const INT_K=new Set(['steps','bmr','age','min','wmin','wk']);
 function checkNum(k,raw){const key=String(k).split('.').pop();let s=String(raw).trim();if(s==='')return {s};if(INT_K.has(key))s=s.replace(/[\s\u00a0.](?=\d{3}(\D|$))/g,'');const core=key==='sleep'?s:s.replace(/\s*(kg|cm|h|%|kcal|lat|min|km\/h|w|g|zł)$/i,'');const ok=key==='sleep'?/^(\d{1,2}([.,]\d+)?|\d{1,2}\s*(:|h)\s*(\d{1,2})?\s*(m|min)?)$/i.test(s):/^\d+([.,]\d+)?$/.test(core);if(!ok)return {s,err:key==='sleep'?'Sen w godzinach, np. 7,5 albo 7:30':'Wpisz samą liczbę, np. 82,4'};const r=LIM[key],v=num(core);if(r&&(v<r[0]||v>r[1]))return {s,err:'Dozwolone '+fmt1(r[0])+'-'+fmt1(r[1])};return {s:core}}
 const fmt=x=>Math.round(x).toLocaleString('pl-PL');
 const fmt1=x=>(Math.round(x*10)/10).toLocaleString('pl-PL');
@@ -645,7 +653,18 @@ function habOn(x,h,ents,k){if(x.auto==='z')return num((S.meas[k]||{}).sleep)>=7|
 function dayPts(k){const h=(S.hab&&S.hab[k])||{},ents=S.days[k]||[];return HABITS.reduce((a,x)=>a+(habOn(x,h,ents,k)?x.pts:0),0)}
 function weekPts(){const d=new Date(),dow=(d.getDay()+6)%7;let s=0;for(let i=0;i<=dow;i++){const x=new Date(d);x.setDate(d.getDate()-i);s+=dayPts(keyOf(x))}return s}
 function level(p){let l=LEVELS[0];for(const x of LEVELS)if(p>=x[0])l=x;return l}
-function streak(){let n=0,miss=0;const d=new Date();for(let i=0;i<366;i++){const x=new Date(d);x.setDate(d.getDate()-i);if(dayPts(keyOf(x))>=30){n++;miss=0}else if(i===0){continue}else{miss++;if(miss>=2)break}}return n}
+// Wskazówki pierwszego wejścia: jedna na ekran, raz, do „Rozumiem”
+const TIPS={day:'Tu jest Twój dzień: co zrobić dziś i jak idzie. Naciśnij kartę zwierzaka, żeby zobaczyć postęp.',
+  meals:'Przy daniu, które jesz, naciśnij Zjem. Nie trzeba gotować wszystkiego z planu: zjedzone inaczej zapiszesz szybkim wpisem w Moim dniu.',
+  train:'Masz zegarek? Wpisz czas i kalorie z zegarka na górze. Bez zegarka wybierz niżej rodzaj treningu i czas.',
+  health:'Badania, suplementy i wiedza. Nic tu nie jest obowiązkowe, zajrzyj, gdy potrzebujesz.',
+  set:'Twoje dane liczą kalorie: sprawdź je i naciśnij Zapisz i sprawdź. Tu też włączysz wpisywanie raz dziennie.',
+  pet:'Zwierzak rośnie z dni z wpisami. Nie umiera i nie cofa się w rozwoju, nawet po przerwie.'};
+function tipHtml(tab){if(DEMO||!TIPS[tab]||(S.tips||{})[tab]||(tab==='day'&&guideActive()))return '';return `<div class="tip panel" role="note"><p><b>Pierwszy raz tutaj?</b> ${TIPS[tab]}</p><button class="btn small" data-tipok="${tab}">Rozumiem</button></div>`}
+// Dzień aktywny: 30 pkt albo, w trybie raz dziennie, zapisany wpis dnia (posiłki oraz trening albo kroki)
+function onceDone(k){const e=S.days[k]||[];return e.some(x=>x.kind==='m')&&(e.some(x=>x.kind==='t')||num((S.meas[k]||{}).steps)>0)}
+function dayOk(k){return dayPts(k)>=30||(!!S.once&&onceDone(k))}
+function streak(){let n=0,miss=0;const d=new Date();for(let i=0;i<366;i++){const x=new Date(d);x.setDate(d.getDate()-i);if(dayOk(keyOf(x))){n++;miss=0}else if(i===0){continue}else{miss++;if(miss>=2)break}}return n}
 function habitsHtml(trained){
   const hk=todayKey(),hh=S.hab[hk]||{},wp=weekPts(),lv=level(wp),nx=LEVELS.find(x=>x[0]>wp);
   let g='<h2>Nawyki dnia</h2><div class="panel">'+HABITS.filter(x=>x.auto!=='u'||S.mode==='utrzymanie').map(x=>{const on=habOn(x,hh,day(),hk);return `<button class="opt hab ${on?'on':''}" data-hab="${x.id}" aria-pressed="${!!on}"><span class="box">${on?'✓':''}</span><span>${x.n}</span><span class="met">+${x.pts}</span></button>`}).join('')+'</div>';
@@ -700,7 +719,7 @@ function filtered(){
 
 // ---------- Zwierzak (pet.js): dane dla PET.state, karta, wybór, ekran postępu ----------
 function petPts(k){const x=HABITS.find(h=>h.id==='pasmo');return dayPts(k)-(habOn(x,(S.hab||{})[k]||{},S.days[k]||[],k)?x.pts:0)}
-function petCtx(now){return {now:now||new Date(),pet:S.pet,seen:S.petSeen||[],celeb:S.petCeleb&&S.petCeleb.day===todayKey()?S.petCeleb.id:null,key:keyOf,dayPts:petPts,entries:k=>S.days[k]||[],meas:k=>S.meas[k]||{},habs:k=>(S.hab||{})[k]||{},urges:k=>(S.urges||{})[k]||[],reviewed:Object.keys(S.reviews||{}).length>0,streak,weekPts,level,stage:stageInfo,avgW:(a,b)=>avgAgo(a,b,'w'),startW:(stageInfo()||{}).start||null,num}}
+function petCtx(now){return {now:now||new Date(),pet:S.pet,once:!!S.once,seen:S.petSeen||[],celeb:S.petCeleb&&S.petCeleb.day===todayKey()?S.petCeleb.id:null,key:keyOf,dayPts:k=>S.once&&onceDone(k)?Math.max(30,petPts(k)):petPts(k),entries:k=>S.days[k]||[],meas:k=>S.meas[k]||{},habs:k=>(S.hab||{})[k]||{},urges:k=>(S.urges||{})[k]||[],reviewed:Object.keys(S.reviews||{}).length>0,streak,weekPts,level,stage:stageInfo,avgW:(a,b)=>avgAgo(a,b,'w'),startW:(stageInfo()||{}).start||null,num}}
 // Kamień milowy zaliczany poza przerysowaniem przy wpisywaniu (REDRAW); świętowanie widoczne do obejrzenia ekranu zwierzaka
 function petState(){if(DEMO){const fr=PET.demo().frames,f=fr[DEMO_I%fr.length];S.pet.kind=f.kind;return PET.state(Object.assign(petCtx(),{force:f}))}const st=PET.state(petCtx());let ch=false;if(st.milestone&&!REDRAW){S.petSeen=(S.petSeen||[]).concat(st.milestone);S.petCeleb={id:st.milestone,day:todayKey()};ch=true}if(S.pet&&st.active>(S.pet.peak||0)){S.pet.peak=st.active;ch=true}if(ch)save();return st}
 function petCardHtml(){if(!S.pet)return `<button class="petcard" data-petpick="1">${PET.svg('gaska','egg','ok',null)}<span class="petinfo"><b>Wybierz towarzysza</b><span class="small">Gąska albo kaczuszka będzie reagować na Twoje wpisy.</span></span></button>`;return PET.card(petState(),S.pet,esc)}
@@ -776,7 +795,9 @@ function renderMealList(){
 
 function renderTrain(){
   const t=S.tr;
-  let h='<p><button class="btn" data-tab="knee" style="width:100%">Program kolana, 12 tygodni</button></p>'+seg([['silownia','Siłownia'],['plywanie','Pływanie'],['bieznia','Bieżnia'],['spinning','Spinning'],['inne','Inne']],t.cat,'cat','scroll');
+  let h='<p><button class="btn" data-tab="knee" style="width:100%">Program kolana, 12 tygodni</button></p>'
+    +'<h2>Trening z zegarka</h2><div class="panel">'+field('Czas','tr.wmin',t.wmin||'','min','numeric')+field('Kalorie z zegarka','tr.wk',t.wk||'','kcal','numeric')+'<p><button class="btn" data-addwatch="1" style="width:100%">Dodaj trening z zegarka</button></p></div>'
+    +'<p class="small muted">Zegarek też szacuje kalorie, zwykle z tętna, a błąd bywa większy niż 20%. Do bilansu liczy się netto: kalorie z zegarka minus spoczynek w tym czasie.</p><h2>Albo oszacuj z rodzaju treningu</h2>'+seg([['silownia','Siłownia'],['plywanie','Pływanie'],['bieznia','Bieżnia'],['spinning','Spinning'],['inne','Inne']],t.cat,'cat','scroll');
   if(t.cat==='bieznia'){
     h+=seg([['marsz','Marsz'],['bieg','Bieg']],t.bMode,'bmode');
     h+='<div class="panel">'+field('Prędkość','tr.speed',t.speed,'km/h')+field('Nachylenie','tr.grade',t.grade,'%')+'</div>';
@@ -837,6 +858,7 @@ function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
   let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>';
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+dataHtml();
+  h+=`<h2>Wpisy</h2><div class="panel"><div class="field"><label for="once">Wpisuję raz dziennie, wieczorem</label><input type="checkbox" class="switch" id="once" data-k="once" ${S.once?'checked':''}></div></div><p class="small muted">Mój dzień pokaże jeden wpis dnia, a zwierzak przypomni o posiłkach dopiero od 19:00.</p>`;
   h+='<h2 id="towarzysz">Towarzysz</h2>'+petPickHtml()+(S.pet?`<div class="panel"><div class="field"><label for="body">Sylwetka z pomiarów na ekranie zwierzaka</label><input type="checkbox" class="switch" id="body" data-k="body" ${S.body?'checked':''}></div></div>`:'');
   h+='<h2>Tryb</h2>'+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie']],S.mode,'mode');
   h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div></div>
@@ -851,11 +873,11 @@ ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź ob
   <li><a href="https://fitmum.ku.dk/2011_Compendium_of_Physical_Activities.pdf" target="_blank" rel="noopener">2011 Compendium of Physical Activities</a>: ergometr wioślarski. Pływanie, nordic walking i orbitrek z wiedzy ogólnej, niesprawdzone.</li>
   <li>Równania metaboliczne ACSM dla marszu i biegu, wzór Mifflina-St Jeora, sprawność brutto jazdy na rowerze ok. 20%: wiedza ogólna, niesprawdzone w tej aplikacji ze źródłem.</li>
   <li>Wartości odżywcze: typowe wartości z tabel składu, orientacyjne.</li></ol>
-  ${nextHtml('set')}<p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p><p><button class="btn ghost" data-reset="1">Przywróć ustawienia domyślne</button></p>`;
+  ${nextHtml('set')}<p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-reset="1">Przywróć ustawienia domyślne</button></p>`;
   document.getElementById('main').innerHTML=h;
 }
 
-function render(){renderTabs();({meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują. <button class="btn ghost" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+function render(){renderTabs();({meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują. <button class="btn ghost" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 function toast(t,ms){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),ms||1600)}
 function setPath(p,v){const a=p.split('.');let o=S;for(let i=0;i<a.length-1;i++)o=o[a[i]];o[a[a.length-1]]=v}
 
@@ -878,6 +900,9 @@ document.addEventListener('click',e=>{
   else if(d.bmode){S.tr.bMode=d.bmode;if(d.bmode==='bieg'&&num(S.tr.speed)<8)S.tr.speed='8';if(d.bmode==='marsz'&&num(S.tr.speed)>6.5)S.tr.speed='5'}
   else if(d.smode){S.tr.sMode=d.smode}
   else if(d.sclass){S.tr.sClass=d.sclass}
+  else if(d.addwatch){const m=num(S.tr.wmin),w=num(S.tr.wk);if(!(m>=1&&m<=300)){toast('Wpisz czas w minutach');return}if(!(w>=10&&w<=3000)){toast('Wpisz kalorie z zegarka, od 10 do 3000');return}day().push({kind:'t',label:'Trening z zegarka',min:m,gross:w,net:Math.max(0,Math.round(w-baseH()*m/60)),src:'zegarek'});S.tr.wk='';PET.react('train');save();toast(guideToast('Dodano do dnia'),3200);return}
+  else if(d.dayplan){const lg=new Set(day().filter(e=>e.kind==='m').map(e=>e.id));let n=0;planIds().forEach(id=>{if(lg.has(id))return;const m=MEALS.find(x=>x.id===id),x=macros(m,carbMult(),num(S.f.portion)||1);day().push({kind:'m',id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c,plan:true});lg.add(id);n++});if(n)PET.react('meal');save();toast(n?`Dodano ${n} ${n===1?'posiłek':'posiłki'} z planu, wartości szacunkowe`:'Plan na dziś jest już zapisany',3200);return}
+  else if(d.dayother){OPEN_F.add('szybki')}
   else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m);day().push({kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net});PET.react('train');save();toast(guideToast('Dodano do dnia'),3200);return}
   else if(d.del!=null){day().splice(+d.del,1)}
   else if(d.clear){S.days[todayKey()]=[]}
@@ -918,6 +943,8 @@ document.addEventListener('click',e=>{
   else if(d.petkind){const first=!S.pet;S.pet={kind:d.petkind,name:(S.pet&&S.pet.name)||'',since:(S.pet&&S.pet.since)||todayKey()};if(first)S.petSeen=[...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])]}
   else if(d.petpick){S.tab='set';window.scrollTo(0,0)}
   else if(d.datasave){const c=dataCheck();if(c.err.length){toast(c.err[0],3200);const el=document.getElementById('f_'+c.first);if(el&&el.focus)el.focus()}else{S.guide=S.guide||{};S.guide.dataOk=true;save();toast('Dane zapisane')}}
+  else if(d.tipok){S.tips=S.tips||{};S.tips[d.tipok]=true}
+  else if(d.tipsreset){S.tips={};toast('Wskazówki pokażą się ponownie')}
   else if(d.guidehide){S.guide.hidden=true}
   else if(d.demoexit){location.hash='';location.reload();return}
   else if(d.sex){S.sex=d.sex}
