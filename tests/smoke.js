@@ -128,6 +128,7 @@ check(`${views.length} widoków × 2 płcie × 2 tryby bez błędu`, !renderErr,
 
 // Zwierzak w aplikacji: karta, ekran, wprowadzenie, stare dane, odznaka raz
 const mainHtml = () => els.main.innerHTML;
+const click = (data) => (lis.click || []).forEach((f) => f({ target: { closest: () => ({ dataset: data }) } }));
 const view = (tab, set) => { const S = T.S(); S.onb = true; S.tab = tab; Object.assign(S, set || {}); T.render(); return mainHtml(); };
 tryc('stare dane bez zwierzaka: karta zaprasza do wyboru', () => view('day', { pet: null }).includes('data-petpick'));
 tryc('karta: puste imię to Kluska', () => view('day', { pet: { kind: 'gaska', name: '', since: '2026-11-01' } }).includes('Kluska'));
@@ -202,7 +203,7 @@ tryc('guide: po ukończeniu panel znika, przycisk ochoty wraca na górę', () =>
   return !h.includes('Pierwsze kroki') && h.indexOf('Mam ochotę coś przekąsić') < h.indexOf('Dziś:');
 });
 tryc('guide: ukryty panel się nie pokazuje', () => !view('day', { ...NEWU(), guide: { hidden: true, dataOk: false, seenPet: false } }).includes('Pierwsze kroki'));
-tryc('guide: Ustawienia zaliczają dane, ekran zwierzaka zalicza poznanie', () => { view('set', NEWU()); const a = T.S().guide.dataOk; view('pet', { pet: { ...PETA } }); return a && T.S().guide.seenPet; });
+tryc('guide: Zapisz w Ustawieniach zalicza dane, ekran zwierzaka zalicza poznanie', () => { view('set', { ...NEWU(), kg: '82', cm: '170', age: '40', goal: '74', mode: 'redukcja' }); click({ datasave: '1' }); const a = T.S().guide.dataOk; view('pet', { pet: { ...PETA } }); return a && T.S().guide.seenPet; });
 tryc('Dziś: podpowiedź akcji i wyróżniony następny krok', () => { const h = view('day', NEWU()); return h.includes('Otwórz Posiłki i naciśnij Zjem') && h.includes('class="opt hab next"'); });
 tryc('bez ślepych zaułków: przyciski do Treningu i Posiłków', () => { const h = view('day', NEWU()); return !h.includes('w zakładce Trening') && h.includes('Przejdź do Treningu') && h.includes('Przejdź do Posiłków'); });
 tryc('karta: jajo mówi, jak się wykluć', () => view('day', { ...NEWU(), pet: { ...PETA } }).includes('wykluje się'));
@@ -210,7 +211,6 @@ tryc('wprowadzenie: ostatni ekran zapowiada pierwsze kroki', () => view('intro',
 tryc('komunikat po akcji wskazuje następny krok', () => { view('day', { ...NEWU(), pet: { ...PETA } }); return T.guideToast('Dodano do dnia') === 'Dodano do dnia. Dalej: sprawdź swoje dane.'; });
 
 // Rada 05.11.2026, P1: wskaźnik mierzy zapisywanie, nie jedzenie; wybór zwierzaka nie świętuje dawnych osiągnięć
-const click = (data) => (lis.click || []).forEach((f) => f({ target: { closest: () => ({ dataset: data }) } }));
 tryc('P1-1: pasek nazywa się Posiłki, bez słowa Najedzenie', () => { const h = P().card(st(mkCtx({ today: { sleep: 7, steps: 7000 } })), { kind: 'gaska', name: 'Kluska' }, T.esc); return h.includes('Posiłki') && !h.includes('Najedzenie'); });
 tryc('P1-1: mina bez posiłku nie mówi o głodzie i nie pokazuje miski', () => { const s = st(mkCtx({ today: { sleep: 7, steps: 7000 } })), c = { kind: 'gaska', name: 'Kluska' }; const h = P().card(s, c, T.esc) + P().screen(s, c, { today: { done: 0, pts: 0 }, week: { pts: 0, level: 'Start', next: null }, all: { active: 1, streak: 0, dw: null, waist: null, pct: null }, badges: [], body: '' }, T.esc); return s.mood === 'hungry' && !/głodn/i.test(h) && !h.includes('class="bowl"') && h.includes('class="note"'); });
 tryc('P1-2: pierwszy wybór zwierzaka zalicza dawne osiągnięcia bez świętowania', () => {
@@ -222,6 +222,21 @@ tryc('P1-2: to samo po odtworzeniu starej kopii bez petSeen', () => {
   return (T.S().petSeen || []).includes('review1') && !view('day').includes('pet-celebrate');
 });
 tryc('P1-2: zmiana rodzaju istniejącego zwierzaka nie zmienia odznak', () => { view('set', { ...CLEAN(), pet: { ...PETA }, petSeen: ['week1'], reviews: REV }); click({ petkind: 'kaczka' }); return T.S().petSeen.join() === 'week1' && T.S().pet.kind === 'kaczka'; });
+
+// Zgłoszenie 06.11.2026: po wpisaniu danych brak przycisku, dokąd przejść, i brak informacji, czy dane są poprawne
+const NX = (h) => (h.match(/class="nextbar"/g) || []).length, OKD = { kg: '82', cm: '170', age: '40', goal: '74', mode: 'redukcja' };
+tryc('dane: wejście w Ustawienia nie zalicza kroku Sprawdź swoje dane', () => { view('set', { ...NEWU(), ...OKD }); return T.S().guide.dataOk === false; });
+tryc('dane: niezatwierdzone dane mają przycisk Zapisz i sprawdź', () => view('set', { ...NEWU(), ...OKD }).includes('data-datasave'));
+tryc('dane: Zapisz z poprawnymi danymi zalicza krok i prowadzi do sekcji Towarzysz', () => {
+  view('set', { ...NEWU(), ...OKD }); click({ datasave: '1' }); const h = mainHtml();
+  return T.S().guide.dataOk === true && h.includes('Dane zapisane') && h.includes('data-goto="towarzysz"') && h.includes('id="towarzysz"');
+});
+tryc('dane: pusta waga nie przechodzi i mówi, co uzupełnić', () => { view('set', { ...NEWU(), ...OKD, kg: '' }); click({ datasave: '1' }); return T.S().guide.dataOk === false && mainHtml().includes('Uzupełnij wagę'); });
+tryc('dane: w redukcji cel musi być niższy od wagi', () => { view('set', { ...NEWU(), ...OKD, goal: '90' }); click({ datasave: '1' }); return T.S().guide.dataOk === false && mainHtml().includes('Waga docelowa w redukcji powinna być niższa od obecnej'); });
+tryc('dane: cel z BMI poniżej 18,5 daje ostrzeżenie, ale zapisuje', () => { view('set', { ...NEWU(), ...OKD, goal: '50' }); click({ datasave: '1' }); return T.S().guide.dataOk === true && mainHtml().includes('BMI poniżej 18,5'); });
+tryc('dalej: ze zwierzakiem prowadzi do następnego kroku w Moim dniu', () => view('set', { ...NEWU(), ...OKD, pet: { ...PETA }, guide: { hidden: false, dataOk: true, seenPet: false } }).includes('<button class="btn" data-tab="day" style="width:100%">Dalej: wpisz dzisiejszą wagę</button>'));
+tryc('dalej: po pierwszych krokach dwa przyciski do Mojego dnia w Ustawieniach', () => { const h = view('set', { ...CLEAN(), ...OKD, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 2 && h.includes('Przejdź do Mojego dnia'); });
+tryc('dalej: ekran zwierzaka kończy się przyciskiem do Mojego dnia', () => { const h = view('pet', { ...CLEAN(), pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { hidden: true, dataOk: true, seenPet: true } }); return NX(h) === 1 && h.includes('Przejdź do Mojego dnia'); });
 
 console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
 process.exit(bad ? 1 : 0);
