@@ -30,10 +30,10 @@ const check = (name, cond, info) => { if (cond) ok++; else bad++; console.log((c
 
 check('index.html: brak skryptów i stylów wstawionych w HTML (CSP)', !/<script>|<style>|\son[a-z]+=/i.test(html));
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.webmanifest'), 'utf8'));
-const missing = manifest.icons.map((i) => i.src).concat(['icons/apple-touch-icon.png']).filter((f) => !fs.existsSync(path.join(root, f)));
+const missing = manifest.icons.map((i) => i.src.split('?')[0]).concat(['icons/apple-touch-icon.png']).filter((f) => !fs.existsSync(path.join(root, f)));
 check('manifest: nazwa Miara i wszystkie ikony istnieją', manifest.name === 'Miara' && !missing.length, missing.join(', '));
 const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-const swMissing = [...sw.matchAll(/'\.\/([^']+)'/g)].map((m) => m[1]).filter((f) => f && !fs.existsSync(path.join(root, f)));
+const swMissing = [...sw.matchAll(/'\.\/([^']+)'/g)].map((m) => m[1].split('?')[0]).filter((f) => f && !fs.existsSync(path.join(root, f)));
 check('service worker: każdy plik z listy istnieje', !swMissing.length, swMissing.join(', '));
 check('zgodność danych: klucz pamięci i identyfikator kopii bez zmian', code.includes("'talerz-trening-v1'") && code.includes("app:'talerz-i-trening'"));
 check('app.js: brak atrybutów on...= (CSP)', !/\son[a-z]+=["']/i.test(code));
@@ -320,5 +320,13 @@ tryc('karty: tryb dyskretny chowa karty wrażliwe z Mojego dnia', () => { const 
 tryc('karty: każda karta mówi, na czym się opiera, i podaje siłę dowodów', () => { const h = view('health', MANY()), n = cards(h).length; return n >= 4 && (h.match(/Na podstawie: /g) || []).length === n && (h.match(/class="ev"/g) || []).length === n; });
 tryc('Ustawienia: przełącznik trybu dyskretnego', () => view('set', BASE()).includes('data-k="discreet"'));
 
+// Ikona na ekranie początkowym i favicon jak logo: łuki zielony, złoty, niebieski i ciemny trend na białym kafelku
+const LOGO_COLORS = ['#2B6A55', '#C08A2E', '#5563B0', '#16231C'];
+const brandSvg = (f) => fs.readFileSync(path.join(root, 'brand', f), 'utf8');
+tryc('ikona i favicon: kolory logo na białym kafelku', () => ['miara-ikona.svg', 'miara-favicon.svg'].every((f) => { const s = brandSvg(f); return LOGO_COLORS.every((c) => s.includes(`"${c}"`)) && /<rect[^>]*fill="#FFFFFF"/.test(s) && /<path d="M[\d.]+ [\d.]+L/.test(s); }));
+tryc('favicon: zaokrąglony kafel i grubsza kreska niż ikona', () => /<rect[^>]*rx="22"/.test(brandSvg('miara-favicon.svg')) && /stroke-width="12"/.test(brandSvg('miara-favicon.svg')));
+tryc('ikony z wersją omijają pamięć podręczną (brand/ i icons/ mają max-age 7 dni)', () => /<link rel="icon" href="brand\/miara-favicon\.svg\?v=2"/.test(html) && /<link rel="apple-touch-icon" href="icons\/apple-touch-icon\.png\?v=2"/.test(html) && (fs.readFileSync(path.join(root, 'manifest.webmanifest'), 'utf8').match(/\.png\?v=2"/g) || []).length === 3);
+
+tryc('ikona ekranu początkowego = favicon bez zaokrąglenia (iOS sam zaokrągla rogi)', () => brandSvg('miara-ikona.svg') === brandSvg('miara-favicon.svg').replace(' rx="22"', ''));
 console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
 process.exit(bad ? 1 : 0);

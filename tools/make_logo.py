@@ -20,7 +20,7 @@ def arc(cx, cy, r, a0, a1):
     return f"M{x0:.2f} {y0:.2f}A{r} {r} 0 {large} 1 {x1:.2f} {y1:.2f}"
 
 
-def mark(colors, trend, cx=50, cy=50, r=38):
+def mark(colors, trend, cx=50, cy=50, r=38, sw=SW):
     """Talerz: 1/2 warzywa, 1/4 białko, 1/4 węglowodany; w środku trend zakończony punktem."""
     gap = 11  # połowa przerwy między segmentami w stopniach (miejsce na zaokrąglone końce)
     segs = [(0, 180, colors[0]), (180, 270, colors[1]), (270, 360, colors[2])]
@@ -28,7 +28,7 @@ def mark(colors, trend, cx=50, cy=50, r=38):
     k = r / 38  # trend skaluje się razem z pierścieniem
     pts = [(-19, 10), (-7, 0), (2, 6), (10, -4)]
     d = "M" + "L".join(f"{cx + x * k:.2f} {cy + y * k:.2f}" for x, y in pts)
-    parts.append(f'<path d="{d}" stroke="{trend}" stroke-width="{SW * k:.2f}"/>')
+    parts.append(f'<path d="{d}" stroke="{trend}" stroke-width="{sw * k:.2f}"/>')
     parts.append(f'<circle cx="{cx + 19 * k:.2f}" cy="{cy - 14 * k:.2f}" r="{6.5 * k:.2f}" fill="{trend}" stroke="none"/>')
     return "".join(parts)
 
@@ -44,28 +44,27 @@ def word(color):
             f'<circle cx="199" cy="21" r="6" fill="{color}" stroke="none"/>')
 
 
-def svg(view, body, title, bg=None):
-    rect = f'<rect width="100%" height="100%" fill="{bg}"/>' if bg else ""
+def svg(view, body, title, bg=None, sw=SW, rx=None):
+    corner = f' rx="{rx}"' if rx else ""
+    rect = f'<rect width="100%" height="100%"{corner} fill="{bg}"/>' if bg else ""
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-labelledby="t">'
             f'<title id="t">{title}</title>{rect}'
-            f'<g fill="none" stroke-width="{SW}" stroke-linecap="round" stroke-linejoin="round">{body}</g></svg>\n')
+            f'<g fill="none" stroke-width="{sw}" stroke-linecap="round" stroke-linejoin="round">{body}</g></svg>\n')
 
 
-def favicon():
-    """Do 16-32 px: sam talerz i punkt pomiaru, grubsza kreska, bez linii trendu."""
-    gap = 14
-    segs = [(0, 180, GREEN), (180, 270, AMBER), (270, 360, BLUE)]
-    body = "".join(f'<path d="{arc(50, 50, 36, a0 + gap, a1 - gap)}" stroke="{c}" stroke-width="16"/>' for a0, a1, c in segs)
-    return body + f'<circle cx="50" cy="50" r="11" fill="{INK}" stroke="none"/>'
+# Ikona i favicon pokazują znak z logo w jego kolorach na białym kafelku: tak samo na ekranie początkowym,
+# w karcie przeglądarki i w logo; biały kafel jest widoczny także na ciemnym pasku kart.
+ICON_BG = "#FFFFFF"
+FAV_SW = 12  # grubsza kreska, żeby znak był czytelny w 16-32 px
 
 
 files = {
-    "miara-favicon.svg": svg("0 0 100 100", favicon(), "Miara"),
+    "miara-favicon.svg": svg("0 0 100 100", mark((GREEN, AMBER, BLUE), INK, r=33, sw=FAV_SW), "Miara", ICON_BG, sw=FAV_SW, rx=22),
     "miara-logo.svg": svg("0 0 370 100", mark((GREEN, AMBER, BLUE), INK) + word(INK), "Miara"),
     "miara-logo-ciemne.svg": svg("0 0 370 100", mark(("#62B597", "#E2AE55", "#93A0EE"), INK_DARK) + word(INK_DARK), "Miara", BG_DARK),
     "miara-znak.svg": svg("0 0 100 100", mark((GREEN, AMBER, BLUE), INK), "Miara"),
-    "miara-ikona.svg": svg("0 0 100 100", mark(("#FFFFFF", "#F2C46D", "#B7C0F7"), "#FFFFFF", r=30), "Miara", GREEN),
+    "miara-ikona.svg": svg("0 0 100 100", mark((GREEN, AMBER, BLUE), INK, r=33, sw=FAV_SW), "Miara", ICON_BG, sw=FAV_SW),  # = favicon bez zaokrąglenia
 }
 for name, content in files.items():
-    (OUT / name).write_text(content, encoding="utf-8")
+    (OUT / name).write_text(content, encoding="utf-8", newline="\n")  # LF także na Windows
     print(name, len(content.encode()), "B")
