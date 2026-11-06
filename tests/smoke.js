@@ -115,8 +115,8 @@ const withPet = (on, fn) => { const q = sandbox.document.querySelector; sandbox.
 tryc('pet.react: bez widocznej postaci czeka w kolejce', () => { P().react('meal'); const a = withPet(false, () => P().flush()); const b = withPet(true, () => P().flush()); return a === false && b === true && fx.cls.includes('react-meal'); });
 tryc('pet.react: reakcja starsza niż 10 min przepada', () => { P().react('train'); return withPet(true, () => P().flush(new Date(Date.now() + 11 * 60000))) === false; });
 tryc('pet.react: nawyk pokazuje +punkty', () => { P().react('habit', 10); withPet(true, () => P().flush()); return fx.fx.some((h) => h.includes('+10')); });
-const css = fs.readFileSync(path.join(root, 'app.css'), 'utf8');
-check('app.css: prefers-reduced-motion wyłącza animacje zwierzaka', /prefers-reduced-motion[^{]*\{[^@]*\.pet[^{]*\{[^}]*animation:none/.test(css));
+const appCss = fs.readFileSync(path.join(root, "app.css"), "utf8");
+check('app.css: prefers-reduced-motion wyłącza animacje zwierzaka', /prefers-reduced-motion[^{]*\{[^@]*\.pet[^{]*\{[^}]*animation:none/.test(appCss));
 
 const views = ['meals', 'train', 'day', 'health', 'set', 'sos', 'labs', 'intro', 'review', 'recipe', 'knee', 'impact', 'challenge', 'pet'];
 let renderErr = '';
@@ -142,7 +142,7 @@ tryc('odznaka świętowana raz (petSeen)', () => {
 });
 tryc('wprowadzenie: 5 kroków, krok 3 to wybór zwierzaka', () => view('intro', { introStep: 2 }).includes('data-petkind') && view('intro', { introStep: 4 }).includes('Krok 5 z 5'));
 const swSrc = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-check('sw.js: pet.js w pamięci podręcznej, CACHE miara-v2', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v2'"));
+check('sw.js: pet.js i krój pisma w pamięci podręcznej, CACHE miara-v3 (duże wydanie)', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v3'") && swSrc.includes("'./fonts/fraunces-latin-ext-600-normal.woff2'"));
 check('index.html: pet.js przed app.js', /pet\.js[\s\S]*app\.js/.test(html));
 
 // Zwierzak: sylwetka z pomiarów (opcjonalna)
@@ -199,9 +199,10 @@ tryc('guide: kroki zaliczają się z danych', () => {
   const d = Object.fromEntries(T.guideSteps().map((x) => [x.id, x.done])); return d.pet && d.weight && d.meal && d.move && !d.data && !d.seepet;
 });
 tryc('guide: panel na górze dnia, przycisk ochoty pod listą „Dziś”', () => { const h = view('day', NEWU()); return h.includes('class="guide') && h.indexOf('Pierwsze kroki') < h.indexOf('Dziś:') && h.indexOf('Dziś:') < h.indexOf('Mam ochotę coś przekąsić'); });
-tryc('guide: po ukończeniu panel znika, przycisk ochoty wraca na górę', () => {
+// Rada 07.11.2026 (nowy układ): przycisk ochoty ma stałe miejsce pod zwierzakiem; na górze jest Stan dziś
+tryc('guide: po ukończeniu panel znika, na górze Stan dziś, przycisk ochoty raz, pod Dziś', () => {
   const h = view('day', { ...NEWU(), pet: { ...PETA }, guide: { hidden: false, dataOk: true, seenPet: true }, meas: { [today()]: { w: '82', steps: '6000' } }, days: { [today()]: [{ kind: 'm', label: 'x', k: 400, p: 30, f: 10, c: 40 }] } });
-  return !h.includes('Pierwsze kroki') && h.indexOf('Mam ochotę coś przekąsić') < h.indexOf('Dziś:');
+  return !h.includes('Pierwsze kroki') && h.indexOf('Stan dziś') < h.indexOf('Dziś:') && h.indexOf('Dziś:') < h.indexOf('Mam ochotę coś przekąsić') && h.split('Mam ochotę coś przekąsić').length === 2;
 });
 tryc('guide: ukryty panel się nie pokazuje', () => !view('day', { ...NEWU(), guide: { hidden: true, dataOk: false, seenPet: false } }).includes('Pierwsze kroki'));
 tryc('guide: Zapisz w Ustawieniach zalicza dane, ekran zwierzaka zalicza poznanie', () => { view('set', { ...NEWU(), kg: '82', cm: '170', age: '40', goal: '74', mode: 'redukcja' }); click({ datasave: '1' }); const a = T.S().guide.dataOk; view('pet', { pet: { ...PETA } }); return a && T.S().guide.seenPet; });
@@ -436,6 +437,52 @@ tryc('lista na wizytę: za mało dni cyklu daje „za mało danych”', () => vi
 tryc('wizyta: kopia bez danych zdrowotnych nie zawiera wizyty', () => { view('health', BASE({ visit: { who: 'x', date: ahead(5) } })); return !JSON.parse(T.bkBuild(true)).data.visit && !!JSON.parse(T.bkBuild(false)).data.visit; });
 
 tryc('lista na wizytę: ekran ma tytuł w nagłówku', () => { view('visit', BASE()); return (els.title || {}).textContent === 'Lista na wizytę'; });
+// System wyglądu: zmienne w obu motywach, kontrast WCAG AA z wartości zmiennych, lokalny krój, porządek skali
+const sysCss = fs.readFileSync(path.join(root, "app.css"), "utf8");
+const themeBlocks = () => { const light = sysCss.match(/:root\{([^}]*)\}/)[1], darkMq = sysCss.match(/:root:not\(\[data-theme="light"\]\)\{([^}]*)\}/)[1], dark = sysCss.match(/:root\[data-theme="dark"\]\{([^}]*)\}/)[1]; return { light, darkMq, dark }; };
+const tok = (block, name) => { const m = block.match(new RegExp('--' + name + ':\\s*([^;]+);')); return m ? m[1].trim() : null; };
+const lum = (hex) => { const v = hex.replace('#', '').match(/../g).map((x) => parseInt(x, 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4))); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+const SYS = ['bg', 'surface', 'surface2', 'ink', 'muted', 'line', 'green', 'on-green', 'brass', 'brass-ink', 'clay', 'warn-ink', 'warn-bg', 'shadow'];
+tryc('wygląd: zmienne systemu w motywie jasnym i w obu ciemnych', () => { const b = themeBlocks(); return [b.light, b.darkMq, b.dark].every((x) => SYS.every((n) => tok(x, n))) && b.darkMq.replace(/\s/g, '') === b.dark.replace(/\s/g, ''); });
+tryc('wygląd: kontrast tekstu co najmniej 4,5:1 (WCAG AA) w obu motywach', () => {
+  const pairs = [['ink', 'bg'], ['ink', 'surface'], ['muted', 'bg'], ['muted', 'surface'], ['green', 'surface'], ['green', 'bg'], ['on-green', 'green'], ['brass-ink', 'surface'], ['brass-ink', 'bg'], ['clay', 'surface'], ['warn-ink', 'warn-bg']];
+  const b = themeBlocks(), bad = [];
+  for (const [name, blk] of [['jasny', b.light], ['ciemny', b.dark]]) for (const [f, g] of pairs) { const c = contrast(tok(blk, f), tok(blk, g)); if (c < 4.5) bad.push(`${name} ${f}/${g} ${c.toFixed(2)}`); }
+  if (bad.length) throw new Error(bad.join('; '));
+  return true;
+});
+tryc('wygląd: krój nagłówków z własnej domeny, pliki istnieją, licencja dołączona', () => {
+  const urls = [...sysCss.matchAll(/url\((fonts\/[^)]+\.woff2)\)/g)].map((m) => m[1]);
+  return urls.length === 2 && urls.every((u) => fs.existsSync(path.join(root, u))) && fs.existsSync(path.join(root, 'fonts', 'Fraunces-OFL.txt')) && !/https?:\/\//.test(sysCss);
+});
+tryc('wygląd: przycisk ochoty w palecie logo (mosiądz), bez fioletu', () => { const r = sysCss.match(/\.btn\.sos\{([^}]*)\}/); return !!r && r[1].includes('var(--brass') && !sysCss.includes('--plum') && !code.includes('--plum'); });
+tryc('wygląd: najwyżej 5 zaokrągleń i 8 rozmiarów pisma w całym CSS', () => {
+  const radii = new Set([...sysCss.matchAll(/border-radius:\s*([^;}]+)/g)].map((m) => m[1].trim())), sizes = new Set([...sysCss.matchAll(/font-size:\s*([^;}]+)/g)].map((m) => m[1].trim()));
+  if (radii.size > 5 || sizes.size > 8) throw new Error(`zaokrąglenia ${[...radii].join(' ')} | pismo ${[...sizes].join(' ')}`);
+  return true;
+});
+
+// Stan dziś: każda wartość ze źródłem i liczbą danych, „brak danych” zamiast zera; nowy układ Mojego dnia
+const stan = (h) => { const m = h.match(/<section class="stan[^"]*"[\s\S]*?<\/section>/); return m ? m[0] : ''; };
+const ML = (n, k, pr) => Array.from({ length: n }, () => ({ kind: 'm', id: 'x', label: 'x', k, p: pr, f: 0, c: 0 }));
+tryc('stan: bez danych każda wartość mówi „brak danych” i co wpisać', () => { const h = stan(view('day', BASE())); return h.includes('Stan dziś') && (h.match(/brak danych/g) || []).length >= 3 && h.includes('wpisz wagę') && !h.includes('Ból i cykl'); });
+tryc('stan: waga jako średnia 7 dni ze źródłem i zmianą do poprzedniego tygodnia', () => {
+  const meas = { [dk(0)]: { w: '80' }, [dk(1)]: { w: '80' }, [dk(2)]: { w: '80' }, [dk(3)]: { w: '80' }, [dk(8)]: { w: '81' }, [dk(9)]: { w: '81' } };
+  const h = stan(view('day', BASE({ meas }))); return h.includes('80 kg') && h.includes('średnia z 4 ważeń w 7 dni') && h.includes('−1 kg') && h.includes('tydzień wcześniej 81 kg z 2');
+});
+tryc('stan: jedzenie z celem, liczbą posiłków i białkiem', () => { const h = stan(view('day', BASE({ days: { [dk(0)]: ML(2, 500, 30) } }))); return /1\s?000 z [\d\s]+ kcal/.test(h) && h.includes('2 posiłki zapisane, białko 60 g'); });
+tryc('stan: w dniu z bólem jedzenie bez celu deficytu', () => stan(view('day', BASE({ pain: { [dk(0)]: {} }, days: { [dk(0)]: ML(1, 500, 30) } }))).includes('dziś bez celu deficytu'));
+tryc('stan: sen ostatniej nocy i średnia z liczbą nocy', () => { const h = stan(view('day', BASE({ meas: { [dk(0)]: { sleep: '6,5' }, [dk(1)]: { sleep: '7,5' } } }))); return h.includes('6,5 h') && h.includes('średnia 7 h z 2 nocy'); });
+tryc('stan: ruch z krokami i treningiem', () => { const h = stan(view('day', BASE({ meas: { [dk(0)]: { steps: '8123' } }, days: { [dk(0)]: [{ kind: 't', label: 'x', min: 40, gross: 300, net: 200 }] } }))); return /8\s?123 kroków/.test(h) && h.includes('trening 40 min'); });
+tryc('stan: ból i cykl tylko przy danych', () => { const h = stan(view('day', BASE({ pain: { [dk(0)]: { aura: true } }, meas: { [dk(0)]: { cyc: 'P' } } }))); return h.includes('Ból i cykl') && h.includes('dzień z bólem, aura') && h.includes('dni bez hormonów'); });
+tryc('układ: Stan dziś na górze, karty pod nim, potem Dziś, zwierzak niżej; Więcej zwinięte', () => {
+  const h = view('day', BASE({ pain: { [dk(0)]: {} }, meas: { [dk(0)]: { cyc: 'P' } } })), i = (x) => h.indexOf(x);
+  return i('class="stan') > -1 && i('class="stan') < i('data-card=') && i('data-card=') < i('<h2>Dziś') && i('<h2>Dziś') < i('class="petcard') && /<details class="fold" data-fold="wiecej">/.test(h) && h.indexOf('data-fold="prognoza"') > i('data-fold="wiecej"');
+});
+
+tryc('układ Treningu: główne zadanie na górze, program kolana niżej jako przycisk konturowy', () => { const h = view('train', BASE()), k = h.indexOf('data-tab="knee"'); return k > h.indexOf('data-addtrain') && h.indexOf('data-addwatch') < h.indexOf('data-addtrain') && /<button class="btn ghost" data-tab="knee"/.test(h); });
+
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

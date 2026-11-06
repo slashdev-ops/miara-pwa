@@ -312,7 +312,7 @@ function renderLabs(){
   h+=L.tg?`<p class="small"><b>Zakres docelowy:</b> ${tgTxt(L.tg)}. Źródło: ${L.tg.src}.</p>`:'<p class="small muted">Dla tego badania nie ma jednego zakresu docelowego: wynik zależy od metody laboratorium. Aplikacja pokaże trend, ocenę zostaw lekarzowi.</p>';
   if(L.note)h+=`<p class="small muted">${L.note}</p>`;
   const tested=LABS.filter(x=>S.labs.some(e=>e.test===x.id));
-  if(tested.length)h+='<h2>Wyniki</h2>'+tested.map(x=>{const es=S.labs.filter(e=>e.test===x.id).sort((a,b)=>b.date.localeCompare(a.date));return `<article class="meal"><div class="mhead"><div class="name">${x.n}</div></div><div class="mdet" style="border-top:0">`+es.map((e,i)=>{const st=labStatus(e),prev=es.at(i+1),d=prev?num(e.val)-num(prev.val):null,norm='',ctx=[e.fast?'na czczo':'',x.thy&&e.bio===false?'biotyna nieodstawiona':'',e.cyc?`tydzień cyklu ${esc(e.cyc)}`:'',e.cr?'przy kreatynie':''].filter(Boolean).join(', ');return `<div class="entry" style="padding:8px 0"><span class="txt">${fmtDate(e.date)}: <b>${esc(e.val)} ${esc(e.unit)}</b>${d!=null?` <span class="small muted">(${d>0?'+':''}${fmt1(d)} od poprzedniego)</span>`:''}<br><span class="small" style="color:${st.w?'var(--plum)':'var(--muted)'}">${st.t}${norm}${ctx?'; '+ctx:''}</span></span><button class="del" data-labdel="${e.id}" aria-label="Usuń wynik">×</button></div>`}).join('')+'</div></article>'}).join('');
+  if(tested.length)h+='<h2>Wyniki</h2>'+tested.map(x=>{const es=S.labs.filter(e=>e.test===x.id).sort((a,b)=>b.date.localeCompare(a.date));return `<article class="meal"><div class="mhead"><div class="name">${x.n}</div></div><div class="mdet" style="border-top:0">`+es.map((e,i)=>{const st=labStatus(e),prev=es.at(i+1),d=prev?num(e.val)-num(prev.val):null,norm='',ctx=[e.fast?'na czczo':'',x.thy&&e.bio===false?'biotyna nieodstawiona':'',e.cyc?`tydzień cyklu ${esc(e.cyc)}`:'',e.cr?'przy kreatynie':''].filter(Boolean).join(', ');return `<div class="entry" style="padding:8px 0"><span class="txt">${fmtDate(e.date)}: <b>${esc(e.val)} ${esc(e.unit)}</b>${d!=null?` <span class="small muted">(${d>0?'+':''}${fmt1(d)} od poprzedniego)</span>`:''}<br><span class="small" style="color:${st.w?'var(--clay)':'var(--muted)'}">${st.t}${norm}${ctx?'; '+ctx:''}</span></span><button class="del" data-labdel="${e.id}" aria-label="Usuń wynik">×</button></div>`}).join('')+'</div></article>'}).join('');
   const hr=homaRows();
   if(hr.length)h+=`<div class="note"><b>HOMA-IR</b>, z glukozy i insuliny z tego samego dnia (wzór Matthewsa): ${hr.map(r=>`${fmtDate(r.date)}: ${fmt1(r.v)}`).join('; ')}. Progi interpretacji różnią się między źródłami; ocenia lekarz.</div>`;
   if(S.labs.length)h+='<p><button class="btn ghost" data-labcopy="1">Kopiuj wyniki dla lekarza</button></p>';
@@ -896,7 +896,7 @@ function renderMealList(){
 
 function renderTrain(){
   const t=S.tr;
-  let h='<p><button class="btn" data-tab="knee" style="width:100%">Program kolana, 12 tygodni</button></p>'
+  let h=''
     +'<h2>Trening z zegarka</h2><div class="panel">'+field('Czas','tr.wmin',t.wmin||'','min','numeric')+field('Kalorie z zegarka','tr.wk',t.wk||'','kcal','numeric')+'<p><button class="btn" data-addwatch="1" style="width:100%">Dodaj trening z zegarka</button></p></div>'
     +'<p class="small muted">Zegarek też szacuje kalorie, zwykle z tętna, a błąd bywa większy niż 20%. Do bilansu liczy się netto: kalorie z zegarka minus spoczynek w tym czasie.</p><h2>Albo oszacuj z rodzaju treningu</h2>'+seg([['silownia','Siłownia'],['plywanie','Pływanie'],['bieznia','Bieżnia'],['spinning','Spinning'],['inne','Inne']],t.cat,'cat','scroll');
   if(t.cat==='bieznia'){
@@ -917,26 +917,42 @@ function renderTrain(){
   if(sp.knee)h+=`<div class="note warn">Kolano: ${sp.knee}</div>`;
   if(sp.warn)h+=`<div class="note warn">${sp.warn}</div>`;
   h+=`<p class="small muted">Źródło wartości: ${sp.src}${sp.met?`, MET ${fmt1(sp.met)}`:''}. Wynik jest szacunkiem dla przeciętnej osoby; rzeczywiste spalanie może różnić się o kilkadziesiąt procent.</p>`;
+  h+='<p><button class="btn ghost" data-tab="knee" style="width:100%">Program kolana, 12 tygodni</button></p>';
   document.getElementById('main').innerHTML=h;
 }
 
+// Stan dziś: punkt centralny Mojego dnia; każda wartość ze źródłem i liczbą danych, brak danych pokazany wprost
+function plPos(n){return n===1?'posiłek':(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?'posiłki':'posiłków'}
+function stanHtml(){const k=todayKey(),m=S.meas[k]||{},d=day(),ml=d.filter(e=>e.kind==='m'),tr=d.filter(e=>e.kind==='t'),p=painAt(k),cyc=m.cyc;
+  const row=(lab,val,src)=>`<div class="stan-row"><span class="stan-lab">${lab}</span><span class="stan-val">${val}</span><span class="stan-src">${src}</span></div>`;
+  const a=wAvg(0,6),b=wAvg(7,13),dw=a.n&&b.n?a.avg-b.avg:null;
+  let h=row('Waga',a.n?`${fmt1(a.avg)} kg${dw!=null?` <small>${dw<=0?'−':'+'}${fmt1(Math.abs(dw))} kg</small>`:''}`:'brak danych',a.n?`średnia z ${a.n} ważeń w 7 dni${b.n?`; tydzień wcześniej ${fmt1(b.avg)} kg z ${b.n}`:''}`:'wpisz wagę w Pomiarach dnia niżej');
+  const eat=ml.reduce((s,e)=>s+e.k,0),prot=ml.reduce((s,e)=>s+e.p,0);
+  h+=row('Jedzenie',ml.length?(p?`${fmt(eat)} kcal`:`${fmt(eat)} z ${fmt(targetKcal())} kcal`):'brak danych',ml.length?`${ml.length} ${plPos(ml.length)} zapisane, białko ${fmt(prot)} g`+(p?'; dziś bez celu deficytu':''):(p?'dziś bez celu deficytu; ':'')+'zapisz posiłek w Posiłkach');
+  const sl=sleepAt(k),s7=Array.from({length:7},(_,i)=>sleepAt(nAgo(i))).filter(x=>x!=null);
+  h+=row('Sen',sl!=null?`${fmt1(sl)} h`:'brak danych',s7.length?`${sl!=null?'ostatnia noc; ':''}średnia ${fmt1(s7.reduce((s,x)=>s+x,0)/s7.length)} h z ${s7.length} nocy`:'wpisz sen w Pomiarach dnia niżej');
+  const st=num(m.steps),tm=tr.reduce((s,e)=>s+num(e.min),0),mv=[st>0?`${fmt(st)} kroków`:'',tr.length?`trening ${fmt(tm)} min`:''].filter(Boolean).join(', ');
+  h+=row('Ruch',mv||'brak danych',mv?'dzisiejsze pomiary i treningi':'wpisz kroki albo dodaj trening');
+  if(p||cyc)h+=row('Ból i cykl',p?'dzień z bólem'+(p.aura?', aura':''):'bez bólu',cyc?(cyc==='P'?'dni bez hormonów':'tydzień cyklu '+esc(cyc)):'cykl nie zaznaczony dziś');
+  return `<section class="stan panel" aria-label="Stan dziś"><h2>Stan dziś</h2>${h}</section>`}
 function renderDay(){
   const d=day(),tr=d.filter(e=>e.kind==='t'),ml=d.filter(e=>e.kind==='m');
   const net=tr.reduce((a,e)=>a+e.net,0),eat={k:0,p:0,f:0,c:0};ml.forEach(e=>{eat.k+=e.k;eat.p+=e.p;eat.f+=e.f;eat.c+=e.c});
   const R=rmr(),target=targetKcal(),pT=1.4*(num(S.goal)||68);
   const bar=(lab,v,max,unit)=>{const pc=Math.min(100,v/max*100);return `<div class="prog"><div class="top"><span>${lab}</span><span>${fmt(v)} / ${fmt(max)} ${unit}</span></div><div class="track"><div class="fill ${v>max*1.05?'over':''}" style="width:${pc}%"></div></div></div>`};
-  const sos='<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>',ga=guideActive();
-  let h=guideHtml()+cardsHtml('day')+petCardHtml()+(ga?'':sos)+changeHtml()+modeHtml()+reviewPromptHtml()+kneeBannerHtml()+focusHtml()+painHtml()+(ga?sos:'')+legHtml()+`<div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
-  h+=measHtml();
-  h+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
-  h+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
-  h+=relHtml();
+  const sos='<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>';
+  let h=guideHtml()+stanHtml()+cardsHtml('day')+changeHtml()+focusHtml()+painHtml()+reviewPromptHtml()+petCardHtml()+sos+measHtml()+legHtml()+kneeBannerHtml();
+  let more=modeHtml()+`<h3 class="rh" style="margin:4px 4px 8px">Energia i białko dziś</h3><div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
+  more+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
+  more+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
+  more+=relHtml();
   h+='<details class="fold" data-fold="zapisane"'+(OPEN_F.has('zapisane')?' open':'')+'><summary>Zapisane dziś: posiłki '+ml.length+', treningi '+tr.length+'</summary><h3 class="rh" style="margin:4px 16px 8px">Treningi</h3><div class="panel">'+(tr.length?tr.map(e=>`<div class="entry"><span class="txt">${e.label}, ${fmt(e.min)} min</span><span class="val">${fmt(e.gross)} kcal</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join(''):'<div class="empty">Brak treningów. <button class="btn ghost small" data-tab="train">Przejdź do Treningu</button></div>')+'</div>';
   h+='<h3 class="rh" style="margin:12px 16px 8px">Posiłki</h3><div class="panel">'+(ml.length?ml.map(e=>`<div class="entry"><span class="txt">${e.label}</span><span class="val">${fmt(e.k)} kcal, B ${fmt(e.p)} g</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join(''):'<div class="empty">Brak posiłków. <button class="btn ghost small" data-tab="meals">Przejdź do Posiłków</button></div>')+'</div></details>';
   h+=`<details class="fold" data-fold="szybki"${OPEN_F.has('szybki')?' open':''}><summary>Szybki wpis albo powtórz wczoraj</summary><div class="panel"><div class="field"><label for="q_n">Co</label><input type="text" id="q_n" style="width:170px;text-align:left" placeholder="np. kawa z mlekiem"></div><div class="field"><label for="q_k">Ile</label><input type="text" inputmode="numeric" id="q_k" placeholder="0"><span class="unit">kcal</span></div></div><p><button class="btn" data-quick="1">Zapisz</button> <button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki</button></p><p class="small muted">Wpis przybliżony wystarczy. W badaniach z wynikiem redukcji wiązała się częstość zapisywania, nie jego dokładność.</p></details>`;
-  h+='<div class="navrow"><button class="btn ghost" data-tab="impact">Mój wpływ</button><button class="btn ghost" data-tab="challenge">Wspólne wyzwanie</button><button class="btn ghost" data-tab="review">Przegląd tygodnia</button></div>';
-  if(d.length)h+='<p><button class="btn ghost" data-clear="1">Wyczyść dzień</button></p>';
-  h+=`<details class="fold" data-fold="cel"${OPEN_F.has('cel')?' open':''}><summary>Jak liczony jest cel</summary><div class="note small" style="margin:0 12px 12px">${S.mode==='utrzymanie'?'Tryb utrzymania: cel to zapotrzebowanie bez deficytu, '+(measuredTdee()?'zmierzone z jedzenia i trendu wagi.':'na razie ze wzoru (spoczynkowe zużycie × 1,3 plus treningi netto).'):measuredTdee()?'Jak liczony jest cel: zmierzone zapotrzebowanie (jedzenie i trend wagi) minus 20%.':`Jak liczony jest cel: na start szacunek, czyli spoczynkowe zużycie energii ${fmt(R)} kcal (wzór Mifflina-St Jeora) × 1,3 dla pracy siedzącej, plus treningi netto, minus 20%. Po 2-4 tygodniach ważenia i zapisywania aplikacja przejdzie na zapotrzebowanie zmierzone.`} Nigdy poniżej spoczynkowego zużycia. Białko: 1,4 g na kg wagi docelowej. Mnożnik 1,3 i deficyt 20% to założenia planu, nie pomiar. Zapisuj na bieżąco, najlepiej zaraz po każdym posiłku.</div></details>`;
+  more+='<div class="navrow"><button class="btn ghost" data-tab="impact">Mój wpływ</button><button class="btn ghost" data-tab="challenge">Wspólne wyzwanie</button><button class="btn ghost" data-tab="review">Przegląd tygodnia</button></div>';
+  if(d.length)more+='<p><button class="btn ghost" data-clear="1">Wyczyść dzień</button></p>';
+  more+=`<details class="fold" data-fold="cel"${OPEN_F.has('cel')?' open':''}><summary>Jak liczony jest cel</summary><div class="note small" style="margin:0 12px 12px">${S.mode==='utrzymanie'?'Tryb utrzymania: cel to zapotrzebowanie bez deficytu, '+(measuredTdee()?'zmierzone z jedzenia i trendu wagi.':'na razie ze wzoru (spoczynkowe zużycie × 1,3 plus treningi netto).'):measuredTdee()?'Jak liczony jest cel: zmierzone zapotrzebowanie (jedzenie i trend wagi) minus 20%.':`Jak liczony jest cel: na start szacunek, czyli spoczynkowe zużycie energii ${fmt(R)} kcal (wzór Mifflina-St Jeora) × 1,3 dla pracy siedzącej, plus treningi netto, minus 20%. Po 2-4 tygodniach ważenia i zapisywania aplikacja przejdzie na zapotrzebowanie zmierzone.`} Nigdy poniżej spoczynkowego zużycia. Białko: 1,4 g na kg wagi docelowej. Mnożnik 1,3 i deficyt 20% to założenia planu, nie pomiar. Zapisuj na bieżąco, najlepiej zaraz po każdym posiłku.</div></details>`;
+  h+=fold('wiecej','Więcej: nawyki, prognoza, przeglądy',more);
   document.getElementById('main').innerHTML=h;
 }
 

@@ -23,6 +23,18 @@ na danych przykładowych, bez zapisu w telefonie.
 Stan zwierzaka nie jest zapisywany: liczy go czysta funkcja `PET.state(ctx)` w `pet.js` z danych aplikacji,
 więc moduł jest testowany bez przeglądarki (`tests/smoke.js`). Projekt i plan: `docs/specs/`, `docs/plans/`.
 
+## System wyglądu
+
+Jasny, funkcjonalny, nowoczesny organiczny: paleta z logo jak materiały (szałwiowa zieleń, mosiądz, przygaszony błękit,
+len, glina), siatka 8 px, zaokrąglenia 16 px (karty) i 12 px (pola) oraz pigułki dla przycisków, cienie zamiast ramek,
+krój Fraunces w nagłówkach i liczbach (lokalnie, licencja OFL w `fonts/`), tekst w kroju systemowym.
+
+- Wszystkie kolory to zmienne w `app.css` z wersją jasną i ciemną; `tests/smoke.js` liczy kontrast WCAG AA z wartości
+  zmiennych dla obu motywów i pilnuje liczby zaokrągleń i rozmiarów pisma.
+- „Mój dzień” zaczyna się od „Stanu dziś” (waga, jedzenie, sen, ruch, ból i cykl): każda wartość podaje źródło
+  i liczbę danych, a brak danych jest pokazany wprost; rzadziej używane rzeczy są zwinięte w „Więcej”.
+- Jeden wypełniony przycisk na główne zadanie ekranu; pozostałe konturowe.
+
 ## Mniej wpisów
 
 Dla osób, które nie chcą wpisywać danych kilka razy dziennie:

@@ -1,7 +1,7 @@
 // Service worker: najpierw sieć (zawsze najnowsza wersja), przy braku sieci kopia z pamięci podręcznej.
 // Strategia "najpierw sieć" sama pobiera nowe wersje plików. Zmiana CACHE czyści stare kopie
 // z pamięci podręcznej; zmieniaj ją przy większych wydaniach (patrz README).
-const CACHE = 'miara-v2';
+const CACHE = 'miara-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -13,7 +13,9 @@ const ASSETS = [
   './brand/miara-favicon.svg?v=2',
   './icons/icon-192.png?v=2',
   './icons/icon-512.png?v=2',
-  './icons/apple-touch-icon.png?v=2'
+  './icons/apple-touch-icon.png?v=2',
+  './fonts/fraunces-latin-600-normal.woff2',
+  './fonts/fraunces-latin-ext-600-normal.woff2'
 ];
 
 self.addEventListener('install', (e) => {
