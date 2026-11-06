@@ -88,6 +88,9 @@ const MEALS=[
   {id:'o17',t:'obiad',n:'Zupa krem z soczewicy i marchewki z jajkiem',min:25,ing:[['soczewica',60],['marchew',200],['cebula',50],['oliwa',8],['jajko',60],['chleb',40,1]],how:'Soczewicę, marchew i cebulę w plastrach zalać 600 ml wody w dużej misce, mikrofala pod przykryciem 18-20 min, zmiksować blenderem. Jajko na twardo z zapasu.'},
   {id:'o18',t:'obiad',n:'Bulgur z pieczonym kurczakiem i papryką',min:30,ing:[['kurczak_piers',150],['papryka',200],['cebula',50],['bulgur',60,1],['jogurt',50],['oliwa',8]],how:'Kurczaka, paprykę i cebulę piec 25 min w 200°C. Bulgur zalać podwójną ilością wrzątku z mikrofali i przykryć na 15 min.'},
   {id:'s6',sw:1,t:'sniadanie',n:'Jaglanka z jabłkiem, cynamonem i skyrem',min:12,ing:[['jaglana',40,1],['mleko',250],['jablko',120],['skyr',150]],how:'Kaszę przelać wrzątkiem na sicie (usuwa gorycz), z mlekiem do mikrofali na 8-10 min, mieszając co 2 min. Dodać starte jabłko, cynamon i skyr.'},
+  {id:'o19',t:'obiad',n:'Kurczak z papryką, cukinią i kaszą gryczaną',min:20,ing:[['kurczak_piers',150],['papryka',150],['cukinia',150],['kasza_gr',40,1],['oliwa',8]],how:'Kurczaka i warzywa w kostce wymieszać z oliwą i przyprawami, piec 18 min w 220°C. Kasza z mikrofali albo z zapasu.'},
+  {id:'o20',t:'obiad',n:'Sałatka z tuńczykiem, fasolą i chlebem żytnim',min:10,ing:[['tunczyk',120],['fasola',100],['pomidor',150],['ogorek',100],['chleb',40,1],['oliwa',8]],how:'Fasolę z puszki opłukać, wymieszać z tuńczykiem, pomidorem, ogórkiem i oliwą z cytryną. Chleb obok.'},
+  {id:'o21',t:'obiad',n:'Dorsz z batatami i brokułem',min:30,ing:[['dorsz',200],['bataty',150,1],['brokul',200],['oliwa',8]],how:'Bataty w kostce piec 15 min w 200°C, dołożyć dorsza z oliwą i ziołami, piec kolejne 15 min. Brokuł w mikrofali z 2 łyżkami wody, 4 min.'},
   {id:'s7',sw:1,t:'sniadanie',n:'Pieczone placuszki twarogowe z jabłkiem i cynamonem',min:20,ing:[['twarog',150],['jajko',60],['platki',30,1],['jablko',100]],how:'Twaróg, jajko i płatki rozgnieść widelcem, dodać starte jabłko i cynamon. Łyżką nakładać małe placki na blachę z papierem do pieczenia, piec 15 min w 190°C. Słodycz daje jabłko, bez cukru.'},
   {id:'s8',sw:1,t:'sniadanie',n:'Twarożek waniliowy z owocami i orzechami',min:3,ing:[['twarog',200],['owoce',150],['orzechy',10]],how:'Twaróg rozetrzeć z łyżką mleka i kilkoma kroplami aromatu waniliowego, na wierzch owoce i posiekane orzechy. Bez cukru: słodycz dają owoce.'},
   {id:'s9',sw:1,t:'sniadanie',n:'Owsianka nocna z jabłkiem i cynamonem',min:5,ing:[['platki',40,1],['skyr',150],['mleko',100],['jablko',100],['orzechy',10]],how:'Wieczorem wymieszać w słoiku płatki, skyr, mleko i starte jabłko z cynamonem, rano posypać orzechami. Na zimno albo 1 min w mikrofali.'},
@@ -173,8 +176,13 @@ function measHtml(){
   if(t.length||svg)h+=fold('trendy','Trendy pomiarów',`<div class="note" style="margin:0">${svg}${svgCap}${t.map(x=>`<p>${x}</p>`).join('')}<p class="small muted">Pojedyncze ważenie waha się przez wodę nawet o 1-2 kg (wiedza ogólna); decyduje średnia z tygodnia.</p></div>`);
   return h;
 }
-function planIds(){const sw=(S.swaps||{})[todayKey()]||{};return PLAN[new Date().getDay()].map((id,i)=>sw[i]||id)}
-function shopLines(){const agg={};for(const d of [0,1,2,3,4,5,6])PLAN[d].forEach(id=>MEALS.find(m=>m.id===id).ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g}));return Object.keys(ING).filter(i=>agg[i]).map(i=>i==='jajko'?`Jajka: ${Math.ceil(agg[i]/60)} szt.`:`${ING[i].n}: ${Math.ceil(agg[i]/10)*10} g`)}
+// Plan dnia według profilu: przy IO danie spoza reguły zamienia się na danie tego samego rodzaju, które ją spełnia,
+// najpierw w tym samym rytmie (obiad do 20 min w dni robocze, od 25 min w weekend), potem najbliższe kalorycznie
+function planFor(dw){const base=PLAN[dw];if(!((S.prof||{}).cond||{}).io)return base.slice();const we=[0,6].includes(dw),kc=m=>macros(m,1,1).k;
+  return base.map(id=>{const m=MEALS.find(x=>x.id===id);if(ioFit(m,macros(m,1,1)))return id;const off=o=>o.t==='obiad'&&(we?o.min<25:o.min>20)?1:0;
+    const c=MEALS.filter(o=>o.t===m.t&&!base.includes(o.id)&&ioFit(o,macros(o,1,1))).sort((a,b)=>off(a)-off(b)||Math.abs(kc(a)-kc(m))-Math.abs(kc(b)-kc(m))||a.id.localeCompare(b.id));return c.length?c[0].id:id})}
+function planIds(){const sw=(S.swaps||{})[todayKey()]||{};return planFor(new Date().getDay()).map((id,i)=>sw[i]||id)}
+function shopLines(){const agg={};for(const d of [0,1,2,3,4,5,6])planFor(d).forEach(id=>MEALS.find(m=>m.id===id).ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g}));return Object.keys(ING).filter(i=>agg[i]).map(i=>i==='jajko'?`Jajka: ${Math.ceil(agg[i]/60)} szt.`:`${ING[i].n}: ${Math.ceil(agg[i]/10)*10} g`)}
 function shopHtml(){const L=shopLines();return `<details class="fold" id="zakupy"><summary>Lista zakupów na tydzień z planu (${L.length} pozycji)</summary><div class="panel">`+L.map(l=>{const [a,b]=l.split(': ');return `<div class="entry"><span class="txt">${a}</span><span class="val">${b}</span></div>`}).join('')+'</div><p class="small muted" style="padding:0 16px">Ilości dla 7 dni planu, bez zamian i bez dodatkowych porcji węglowodanów po treningu. Przyprawy, sól i cytryna poza listą.</p><p style="padding:0 16px 12px"><button class="btn ghost" data-shop="1">Kopiuj listę</button></p></details>'}
 function planHtml(){
   const ids=planIds(),d=day(),cm=carbMult(),por=num(S.f.portion)||1,ms=d.filter(e=>e.kind==='m'),logged=new Set(ms.map(e=>e.id));
@@ -182,8 +190,8 @@ function planHtml(){
   const rec=ids.map(id=>MEALS.find(m=>m.id===id)).find(m=>m.t===now&&!logged.has(m.id));
   let h=`<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p><h2 id="plan">Dziś według planu</h2><p class="small muted">${[0,6].includes(new Date().getDay())?'Weekend: jedno większe danie, jest więcej czasu.':'Dzień roboczy: obiad do 20 min.'} ${left>=0?`Zostało ok. ${fmt(left)} kcal na dziś.`:`Cel dnia przekroczony o ok. ${fmt(-left)} kcal.`} Jedno dotknięcie zapisuje posiłek.</p><div class="panel">`;
   const pk=ids.map(id=>macros(MEALS.find(m=>m.id===id),cm,por)),tk=pk.reduce((a,b)=>a+b.k,0),tp=pk.reduce((a,b)=>a+b.p,0),room=targetKcal()-tk;
-  const base=PLAN[new Date().getDay()];
-  h+=ids.map((id,i)=>{const m=MEALS.find(x=>x.id===id),x=macros(m,cm,por),done=logged.has(id);return `<div class="entry"><span class="txt"><span class="small muted">${SLOT_T[m.t]}${m.t==='kolacja'&&postTrain()?', po treningu':''}${id!==base[i]?', Twój wybór':''}${rec&&rec.id===id?', polecane teraz':''}</span><br><button class="linkbtn" data-recipe="${id}">${m.n}</button>${done?'':`<br><button class="linkbtn small" data-swap="${i}" style="color:var(--muted);font-size:13px">zamień na inne</button>`}</span><span class="val">${fmt(x.k)} kcal</span>${done?'<span class="val">✓</span>':`<button class="btn" data-addmeal="${id}">Zjem</button>`}</div>`}).join('');
+  const base=planFor(new Date().getDay()),orig=PLAN[new Date().getDay()];
+  h+=ids.map((id,i)=>{const m=MEALS.find(x=>x.id===id),x=macros(m,cm,por),done=logged.has(id);return `<div class="entry"><span class="txt"><span class="small muted">${SLOT_T[m.t]}${m.t==='kolacja'&&postTrain()?', po treningu':''}${id!==base[i]?', Twój wybór':base[i]!==orig[i]?', dopasowane do IO':''}${rec&&rec.id===id?', polecane teraz':''}</span><br><button class="linkbtn" data-recipe="${id}">${m.n}</button>${done?'':`<br><button class="linkbtn small" data-swap="${i}" style="color:var(--muted);font-size:13px">zamień na inne</button>`}</span><span class="val">${fmt(x.k)} kcal</span>${done?'<span class="val">✓</span>':`<button class="btn" data-addmeal="${id}">Zjem</button>`}</div>`}).join('');
   h+=`<p class="small muted" style="padding:0 16px 12px">Plan dnia: ${fmt(tk)} kcal i ${fmt(tp)} g białka przy celu ${fmt(targetKcal())} kcal.${room>=50?` Zostaje ok. ${fmt(room)} kcal na dodatek albo większą porcję.`:''}</p>`;
   return h+'</div>';
 }
@@ -453,6 +461,9 @@ const STEPS={
   s3:['Do skyru wsyp płatki i siemię, wymieszaj.','Dodaj pokrojone jabłko.','Możesz przygotować wieczorem i trzymać w lodówce.'],
   s4:['Twaróg rozgnieć z solą i ziołami.','Posmaruj chleb.','Paprykę i ogórka pokrój i podaj obok.'],
   s5:['Płatki, jajka i banana zmiksuj blenderem na gładko.','Przelej do foremek na muffinki do 3/4 wysokości.','Piecz 18-20 min w 180°C.','Podawaj z jogurtem. Zapas wystarczy na 3 dni w lodówce.'],
+  o19:['Kurczaka, paprykę i cukinię pokrój w kostkę, wymieszaj z oliwą, solą, papryką i czosnkiem.','Rozłóż na blasze z papierem, piecz 18 min w 220°C.',GROATS],
+  o20:['Fasolę z puszki przepłucz na sicie.','Wymieszaj z tuńczykiem, pokrojonym pomidorem i ogórkiem, oliwą, sokiem z cytryny i pieprzem.','Chleb żytni podaj obok.'],
+  o21:['Bataty pokrój w kostkę, wymieszaj z połową oliwy, piecz 15 min w 200°C.','Dołóż dorsza skropionego resztą oliwy, z ziołami i solą, piecz kolejne 15 min.','Brokuł w misce z 2 łyżkami wody, mikrofala pod przykryciem 4 min.'],
   s7:['Twaróg, jajko i płatki rozgnieć widelcem w misce.','Dodaj starte jabłko i cynamon, wymieszaj.','Łyżką nałóż 6-8 małych placków na blachę z papierem do pieczenia.','Piecz 15 min w 190°C. Słodycz daje jabłko, bez cukru.'],
   s8:['Twaróg rozetrzyj widelcem z łyżką mleka i kilkoma kroplami aromatu waniliowego.','Na wierzch wyłóż owoce, mrożone rozmroź 1 min w mikrofali.','Posyp posiekanymi orzechami. Bez cukru: słodycz dają owoce.'],
   s9:['Wieczorem wymieszaj w słoiku płatki, skyr, mleko, starte jabłko i cynamon.','Zamknij i wstaw do lodówki na noc.','Rano posyp orzechami. Jedz na zimno albo podgrzej 1 min w mikrofali.'],
@@ -640,6 +651,8 @@ const SCEN={
   migrena:{t:'Migrena z aurą i Yaz',tab:'health',chk:'Zdrowie: „Najpierw” każe porozmawiać z ginekologiem, bo Yaz zawiera estrogen; licznik 10 dni z lekiem w 30 dniach; w 12 tygodniach ocena 3 cykli. Mój dzień: dzień z bólem i karta „Po krótkich nocach”.',f:b=>migPain(b,'yaz')},
   minitabletka:{t:'Migrena z aurą i minitabletka',tab:'health',chk:'Zdrowie: bez przeciwwskazania, zamiast niego „Twoja tabletka jest dopuszczalna przy aurze”; „Najpierw” to licznik dni z lekiem.',f:b=>migPain(b,'cerazette')},
   hashimoto:{t:'Hashimoto, lipodemia, insulinooporność',tab:'health',chk:'Zdrowie: TSH 6-8 tygodni po zmianie tabletek (Yasmin), lewotyroksyna na czczo, talia i uda osobno, cel 5-7% masy ciała; w 12 tygodniach przedziały wagi.',f:()=>({prof:{cond:{hashi:true,lip:true,io:true},pill:'yasmin'},lip:true,goal:'70'})},
+  polaczenia:{t:'Połączenia: IO, migrena i Hashimoto',tab:'meals',chk:'Posiłki: „Dla mnie” włączone, plan dnia z daniami „dopasowane do IO”. Zdrowie: zdania „Razem: …” dla par schorzeń. Mój dzień po 12:00: karta „Długa przerwa w jedzeniu”.',
+    f:b=>{const d=Object.assign({},b.days);d[nAgo(0)]=[];return {prof:{cond:{io:true,mig:true,hashi:true},pill:'cerazette'},days:d}}},
   pokaz:{t:'Pełny pokaz',tab:'day',chk:'70 dni danych: Stan dziś, trendy, zwierzak z odznakami, przegląd tygodnia; zakładki działają jak na co dzień.',f:()=>({})}};
 function migPain(b,pill){const pain={},m=Object.assign({},b.meas);for(let i=0;i<12;i++)pain[nAgo(i*2)]={aura:i<3,med:i<10};[1,3,5].forEach(i=>{m[nAgo(i)]=Object.assign({},m[nAgo(i)],{cyc:'P'})});
   m[nAgo(0)]=Object.assign({},m[nAgo(0)],{sleep:'5:20'});m[nAgo(1)]=Object.assign({},m[nAgo(1)],{sleep:'5:45'});return {prof:{cond:{aura:true,mig:true},pill},pain,meas:m}}
@@ -766,6 +779,11 @@ function macros(m,cm,por){
 const CHIPS=[...new Set(Object.values(ING).map(i=>i.chip).filter(Boolean))];
 function chipsOf(m){return new Set(m.ing.map(x=>ING[x[0]].chip).filter(Boolean))}
 // Oznaczenia przepisów liczone z reguł (rada/2026-11-06_oznaczenia-przepisow); tylko oznaczenia pozytywne
+// „Dla mnie”: zasady jedzenia z profilu; dziś tylko IO ma regułę dla składu dań, reszta schorzeń nie (rada/2026-11-06_posilki-dla-mnie)
+function forMe(){return !!((S.prof||{}).cond||{}).io&&S.f.forme!==false}
+function forMeHtml(){const c=(S.prof||{}).cond||{};if(!Object.values(c).some(Boolean))return '';
+  if(!c.io)return '<p class="small muted" style="margin:4px 8px">Twój profil nie zmienia doboru dań: dla Hashimoto, migreny i lipodemii nie ma diety z dowodami. Liczą się regularne posiłki i cały plan; soję przy Hashimoto oznaczamy.</p>';
+  return `<div class="chips"><button class="chip${forMe()?' inc':''}" data-forme="1" aria-pressed="${forMe()}">Dla mnie</button></div><p class="small muted" style="margin:4px 8px">${forMe()?'Pokazuję dania zgodne z Twoim profilem: reguła Przy IO. Plan dnia też jest do niej dopasowany.':'Pokazuję wszystkie dania.'}</p>`}
 function ioFit(m,x){return m.t==='przekaska'?x.c<=20&&(x.p>=10||x.f>=8):x.p>=20&&x.c<=50}
 function mealTags(m,x){const t=[];if(m.sw)t.push(['Słodkie','danie na słodko, słodycz z owoców']);
   if(ioFit(m,x))t.push(['Przy IO',m.t==='przekaska'?'do 20 g węglowodanów z białkiem albo tłuszczem':'co najmniej 20 g białka i do 50 g węglowodanów']);
@@ -778,7 +796,7 @@ function filtered(){
   const pc=S.f.pace||'all';
   return MEALS.filter(m=>(S.f.type==='all'||m.t===S.f.type)&&(pc==='all'||(pc==='quick'?m.min<=20:m.min>=25)))
     .map(m=>({m,x:macros(m,cm,por),ch:chipsOf(m)}))
-    .filter(o=>(!(S.f.tags||{}).sw||o.m.sw)&&(!(S.f.tags||{}).io||ioFit(o.m,o.x)))
+    .filter(o=>(!(S.f.tags||{}).sw||o.m.sw)&&(!(S.f.tags||{}).io||ioFit(o.m,o.x))&&(!forMe()||ioFit(o.m,o.x)))
     .filter(o=>!exc.some(c=>o.ch.has(c)))
     .filter(o=>!inc.length||inc.some(c=>o.ch.has(c)))
     .filter(o=>o.x.p>=S.f.minP&&o.x.k<=S.f.maxK&&o.x.c<=S.f.maxC)
@@ -853,6 +871,10 @@ function planActs(){const c=(S.prof||{}).cond||{},P=pillOf(),pn=P[1].split(' (')
   if(c.io){a(11,`Cel: 5-7% mniej masy ciała, czyli ${fmt1(kg()*0.05)}-${fmt1(kg()*0.07)} kg`,'Taki spadek z ruchem w programie DPP zmniejszył ryzyko cukrzycy o ok. 58%.','m');
     a(12,'Słodkie śniadanie może zostać','Ważne, żeby miało co najmniej 20 g białka (skyr, twaróg, jajka) i owoce w całości zamiast cukru, soku czy dżemu. W Posiłkach filtr „Słodkie” i „Przy IO” pokazuje takie przepisy.','u');
     a(13,'150 minut ruchu tygodniowo, sen 7 godzin','Ruch i sen poprawiają wrażliwość na insulinę niezależnie od wagi; trening siłowy 2 razy w tygodniu pomaga mięśniom zużywać glukozę.','m')}
+  if(c.io&&mig)a(18,'Razem: insulinooporność i migrena','Bez postu przerywanego i długich przerw w jedzeniu: przy migrenie to częsty wyzwalacz ataków, a przy insulinooporności wystarczy deficyt kalorii i ruch.','u');
+  if(c.io&&c.hashi)a(19,'Razem: insulinooporność i Hashimoto','Zasady się nie wykluczają: lek na czczo, po 30-60 minutach śniadanie Przy IO. TSH w normie to warunek, bo nieleczona niedoczynność spowalnia redukcję.','u');
+  if(c.lip&&c.io)a(20,'Razem: lipodemia i insulinooporność','Redukcja poprawia wrażliwość na insulinę i zmniejsza zwykłą tkankę tłuszczową; tkanka lipodemiczna reaguje słabiej, więc oceniaj talię, ból i ciężkość nóg, nie tylko obwód uda.','s');
+  if(c.lip&&c.hashi)a(21,'Razem: lipodemia i Hashimoto','Obrzęk przy niedoczynności to co innego niż lipodemia. Nagły obrzęk, obrzęk jednej nogi albo dołek po uciśnięciu zgłoś lekarzowi.','w');
   if(P[3])a(16,'Drospirenon: ryzyko zakrzepicy','Ok. 9-12 na 10 000 kobiet rocznie wobec 5-7 przy tabletkach z lewonorgestrelem i ok. 2 bez tabletek (EMA 2013). Ból i obrzęk jednej łydki albo nagła duszność: pilnie do lekarza.','m');
   if(P[0])a(17,'Waga a tabletki','Przeglądy badań (Cochrane) nie potwierdzają dużego przyrostu masy ciała przez tabletki; wahania to zwykle woda w cyklu.','m');
   return A.sort((x,y)=>x.pri-y.pri)}
@@ -870,7 +892,10 @@ function weeksHtml(){const c=(S.prof||{}).cond||{},est=!!pillOf()[2],mig=!!c.aur
   let h='<table class="weeks"><tr><th>Tydz.</th><th>Waga</th><th>Co sprawdzić</th></tr>';
   for(let i=1;i<=12;i++){const lo=Math.max(goal,w0-wk*1.25*i),hi=Math.max(goal,w0-wk*0.75*i);h+=`<tr class="wk"><td>${i}</td><td>${wk>0?`${fmt1(lo)}-${fmt1(hi)} kg`:'bez zmian'}</td><td>${(ms[i]||[]).join(' ')}</td></tr>`}
   return h+`</table><p class="small muted">Waga z deficytu planu (${fmt(Math.max(0,def))} kcal dziennie), przedział ±25%. Miara nie prognozuje wyników badań, bólu ani samopoczucia: zależą od leczenia i wielu czynników. Pokazuje je z Twoich wpisów: sen i ból w Stanie dziś, sylwetka z obwodów w ekranie zwierzaka.</p>`}
+function migGap(h){const c=(S.prof||{}).cond||{};return (!!c.mig||!!c.aura||auraDays()>0)&&!S.once&&h>=12&&!day().some(e=>e.kind==='m')}
 const CARDS=[
+  {id:'przerwa',sens:1,ev:'u',when:()=>migGap(new Date().getHours()),src:()=>'profil: migrena; dziś brak zapisanego posiłku po 12:00',
+    t:'Długa przerwa w jedzeniu',why:()=>'Przy migrenie przerwa dłuższa niż 5 godzin to częsty wyzwalacz ataku. Zjedz coś z białkiem, nawet małego.'+(((S.prof||{}).cond||{}).io?' Przy insulinooporności długie przerwy też nie pomagają.':''),todo:['Posiłki','tab','meals']},
   {id:'aura',sens:1,ev:'m',when:()=>auraDays()>0,src:()=>`${auraDays()} ${auraDays()===1?'dzień':'dni'} z aurą w ostatnich 90 dniach (dziennik bólu)`,
     t:'Migrena z aurą: porozmawiaj z ginekologiem',why:'Przy migrenie z aurą tabletki antykoncepcyjne z estrogenem zwiększają ryzyko udaru i w zaleceniach WHO są przeciwwskazaniem. Nie odstawiaj ich bez planu innej antykoncepcji: zmianę ustala lekarz.',
     more:'Dzwoń 112, gdy aura trwa dłużej niż godzinę albo jest inna niż zwykle, gdy słabnie lub drętwieje jedna strona ciała, przy zaburzeniach mowy albo nagłym, najsilniejszym w życiu bólu.'},
@@ -893,7 +918,7 @@ const CARDS=[
   {id:'waga_stoi',ev:'u',when:()=>{const a=wAvg(0,6),b=wAvg(21,27);return a.n>=2&&b.n>=2&&Math.abs(a.avg-b.avg)<0.2},src:()=>{const a=wAvg(0,6),b=wAvg(21,27);return `średnia teraz ${fmt1(a.avg)} kg (${a.n} ważeń), 3 tygodnie temu ${fmt1(b.avg)} kg (${b.n} ważeń)`},
     t:'Waga stoi mimo starań',why:'Woda i cykl potrafią przez 1-2 tygodnie maskować spadek tłuszczu, a nowe leki mogą zmieniać masę ciała. Obwód talii pokazuje zmianę niezależnie od wody.',todo:['Wpisz obwód talii','goto','m_waist']}
 ];
-function cardHtml(c,day){return `<div class="card panel" data-card="${c.id}"><h3>${typeof c.t==='function'?c.t():c.t}</h3><p>${c.why}</p>${c.more?`<p class="small">${typeof c.more==='function'?c.more():c.more}</p>`:''}<p class="small muted">Na podstawie: ${c.src()}. <span class="ev">${EV[c.ev]}</span></p>`
+function cardHtml(c,day){return `<div class="card panel" data-card="${c.id}"><h3>${typeof c.t==='function'?c.t():c.t}</h3><p>${typeof c.why==='function'?c.why():c.why}</p>${c.more?`<p class="small">${typeof c.more==='function'?c.more():c.more}</p>`:''}<p class="small muted">Na podstawie: ${c.src()}. <span class="ev">${EV[c.ev]}</span></p>`
   +((c.todo||day)?`<p class="cardact">${c.todo?`<button class="btn small" data-${c.todo[1]}="${c.todo[2]}">${c.todo[0]}</button>`:''}${day&&!(c.todo&&c.todo[1]==='cardok')?`<button class="btn ghost small" data-cardok="${c.id}">Rozumiem</button>`:''}</p>`:'')+'</div>'}
 function cardsHtml(where){const all=CARDS.filter(c=>c.when());
   if(where==='health')return '<h2>Dlaczego tak się czuję</h2>'+(all.length?all.map(c=>cardHtml(c,false)).join(''):'<p class="small muted">Teraz nic szczególnego. Karty pojawią się, gdy dane coś pokażą.</p>');
@@ -983,7 +1008,7 @@ function field(label,key,val,unit,mode){return `<div class="field"><label for="f
 function renderMeals(){
   const cm=carbMult(),n=trainNet();
   const carbTxt=S.f.carb==='auto'?(n>0?`Automatycznie z dzisiejszych treningów (${fmt(n)} kcal netto): węglowodany ×${fmt1(cm)}.`:'Automatycznie: brak treningu w dzienniku dnia, węglowodany ×1.'):`Ustawione ręcznie: węglowodany ×${fmt1(cm)}.`;
-  let h=planHtml()+shopHtml()+'<h2>Albo wybierz sam</h2>'+seg([['sniadanie','Śniadanie'],['obiad','Obiad'],['kolacja','Kolacja'],['przekaska','Przekąska'],['all','Wszystkie']],S.f.type,'type','scroll')+'<div id="oznaczenia"><p class="small" style="margin:8px 8px 4px"><b>Oznaczenia</b></p>'+whyP('oznaczenia')+'<div class="chips">'+[['sw','Słodkie'],['io','Przy IO']].map(([v,l])=>`<button class="chip${(S.f.tags||{})[v]?' inc':''}" data-ftag="${v}" aria-pressed="${!!(S.f.tags||{})[v]}">${l}</button>`).join('')+'</div></div>'+'<div id="rytm">'+seg([['all','Każdy czas'],['quick','Na co dzień, do 20 min'],['big','Na weekend, więcej czasu']],S.f.pace||'all','pace','scroll')+'</div>';
+  let h=planHtml()+shopHtml()+'<h2>Albo wybierz sam</h2>'+seg([['sniadanie','Śniadanie'],['obiad','Obiad'],['kolacja','Kolacja'],['przekaska','Przekąska'],['all','Wszystkie']],S.f.type,'type','scroll')+forMeHtml()+'<div id="oznaczenia"><p class="small" style="margin:8px 8px 4px"><b>Oznaczenia</b></p>'+whyP('oznaczenia')+'<div class="chips">'+[['sw','Słodkie'],['io','Przy IO']].map(([v,l])=>`<button class="chip${(S.f.tags||{})[v]?' inc':''}" data-ftag="${v}" aria-pressed="${!!(S.f.tags||{})[v]}">${l}</button>`).join('')+'</div></div>'+'<div id="rytm">'+seg([['all','Każdy czas'],['quick','Na co dzień, do 20 min'],['big','Na weekend, więcej czasu']],S.f.pace||'all','pace','scroll')+'</div>';
   h+='<details class="fold" data-fold="filtry"'+(OPEN_F.has('filtry')?' open':'')+'><summary>Filtry i sortowanie</summary><div style="padding:0 12px 12px">';
   h+='<h2>Produkty</h2><p class="small muted">Dotknij raz: chcę. Drugi raz: bez tego. Trzeci: bez znaczenia.</p><div class="chips">'+CHIPS.map(c=>{const s=S.f.chips[c]||0;return `<button class="chip ${s===1?'inc':s===-1?'exc':''}" data-chip="${c}">${c}</button>`}).join('')+'</div>';
   h+='<h2 id="podtrening">Pod trening</h2>'+whyP('podtrening')+seg([['auto','Auto'],['1','Bez treningu'],['1.25','Lekki'],['1.5','Siłownia, cardio']],S.f.carb,'carb','scroll')+`<p class="small muted">${carbTxt} Zmienia tylko porcję kaszy, ryżu, ziemniaków, pieczywa i płatków.</p>`;
@@ -1174,7 +1199,7 @@ document.addEventListener('click',e=>{
   if(d.nav){const [tab,id,fd]=d.nav.split('#');S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
     if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.classList){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2400)}}else window.scrollTo(0,0);return}
   if(d.stp){if(STP_SKIP){STP_SKIP=false;return}if(!stpApply(d.stp,+d.d,1))return;save();stpDone(d.stp,d.d);return}
-  if(d.cook){const m=MEALS.find(x=>x.id===d.cook),k=todayKey(),base=PLAN[new Date().getDay()],i=m?base.findIndex(id=>MEALS.find(x=>x.id===id).t===m.t):-1;if(i<0)return;
+  if(d.cook){const m=MEALS.find(x=>x.id===d.cook),k=todayKey(),base=planFor(new Date().getDay()),i=m?base.findIndex(id=>MEALS.find(x=>x.id===id).t===m.t):-1;if(i<0)return;
     S.swaps=S.swaps||{};S.swaps[k]=S.swaps[k]||{};if(base[i]===m.id)delete S.swaps[k][i];else S.swaps[k][i]=m.id;save();render();
     toast(`${SLOT_T[m.t]} na dziś: ${m.n}. Wieczorem „Według planu” zapisze to danie.`,{act:'tab',arg:'meals',label:'Plan dnia'});return}
   if(d.tab){S.tab=d.tab;if(d.tab==='sos'){S.sosStep='trig';sosEnd=0;clearInterval(sosT)}window.scrollTo(0,0)}
@@ -1219,7 +1244,7 @@ document.addEventListener('click',e=>{
   else if(d.ksave){const K=S.knee,t=todayKey(),dn=K.sessions.find(x=>x.d===t),pain=K.tmpPain!=null?K.tmpPain:(dn?dn.pain:null);if(pain==null){toast('Zaznacz ból kolana 0-10');return}const cramp=K.tmpCramp!=null?K.tmpCramp:(dn?dn.cramp:false);if(!K.start)K.start=t;if(dn){dn.pain=pain;dn.cramp=cramp}else{K.sessions.push({d:t,pain,cramp});const sp={met:3.5},kk=kcal(sp,60);day().push({kind:'t',label:'Program kolana (rower, ćwiczenia nerwowo-mięśniowe i siłowe)',min:60,gross:kk.gross,net:kk.net,knee:1})}K.tmpPain=null;K.tmpCramp=null;PET.react('train');toast('Zapisano sesję')}
   else if(d.kmorn){S.knee.morning[todayKey()]=d.kmorn;toast('Zapisano')}
   else if(d.kday){const v=+d.kday,a=S.knee.days;S.knee.days=a.includes(v)?a.filter(x=>x!==v):[...a,v]}
-  else if(d.swap!=null){const i=+d.swap,k=todayKey(),orig=PLAN[new Date().getDay()][i],cur=planIds()[i],t=MEALS.find(m=>m.id===orig).t,bk=macros(MEALS.find(m=>m.id===orig),1,1).k,c=MEALS.filter(m=>m.t===t).sort((a,b)=>(a.id===orig?-1:b.id===orig?1:0)||Math.abs(macros(a,1,1).k-bk)-Math.abs(macros(b,1,1).k-bk)||a.id.localeCompare(b.id)).map(m=>m.id),nx=c[(c.indexOf(cur)+1)%c.length];S.swaps=S.swaps||{};S.swaps[k]=S.swaps[k]||{};if(nx===orig)delete S.swaps[k][i];else S.swaps[k][i]=nx}
+  else if(d.swap!=null){const i=+d.swap,k=todayKey(),orig=planFor(new Date().getDay())[i],cur=planIds()[i],t=MEALS.find(m=>m.id===orig).t,bk=macros(MEALS.find(m=>m.id===orig),1,1).k,c=MEALS.filter(m=>m.t===t).sort((a,b)=>(a.id===orig?-1:b.id===orig?1:0)||Math.abs(macros(a,1,1).k-bk)-Math.abs(macros(b,1,1).k-bk)||a.id.localeCompare(b.id)).map(m=>m.id),nx=c[(c.indexOf(cur)+1)%c.length];S.swaps=S.swaps||{};S.swaps[k]=S.swaps[k]||{};if(nx===orig)delete S.swaps[k][i];else S.swaps[k][i]=nx}
   else if(d.shop){const t='Lista zakupów na tydzień\n'+shopLines().join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano listę'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
   else if(d.recipe){if(S.tab!=='recipe')S.recipeBack=S.tab;S.recipe=d.recipe;S.tab='recipe';window.scrollTo(0,0)}
   else if(d.labsave){const g=id=>document.getElementById(id),v=g('l_val').value.trim(),dt=g('l_date').value;if(!v||!isFinite(parseFloat(v.replace(',','.')))){toast('Wpisz wynik liczbowo');return}if(!dt){toast('Wpisz datę');return}S.labs.push({id:Date.now().toString(36),test:LABN[S.labSel]?S.labSel:'tsh',date:dt,val:v.replace(',','.'),unit:g('l_unit').value.trim(),fast:g('l_fast').checked,bio:g('l_bio')?g('l_bio').checked:undefined,cyc:g('l_cyc')?g('l_cyc').value.trim():'',cr:g('l_cr')?g('l_cr').checked:false});toast('Zapisano wynik')}
@@ -1254,6 +1279,7 @@ document.addEventListener('click',e=>{
   else if(d.toastlen){S.toastLen=d.toastlen;toast(d.toastlen==='stay'?'Komunikat zostanie, dopóki go nie zamkniesz.':'Tak długo będzie widać komunikat.')}
   else if(d.setv){setPath(d.setv,d.v)}
   else if(d.pace){S.f.pace=d.pace}
+  else if(d.forme){S.f.forme=!forMe()}
   else if(d.ftag){S.f.tags=S.f.tags||{};S.f.tags[d.ftag]=!S.f.tags[d.ftag]}
   else if(d.cond){S.prof=S.prof||{cond:{},pill:''};S.prof.cond=S.prof.cond||{};S.prof.cond[d.cond]=!S.prof.cond[d.cond];if(d.cond==='lip'&&S.prof.cond.lip)S.lip=true}
   else if(d.demoexit){location.hash='';location.reload();return}

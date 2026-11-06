@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -280,7 +280,7 @@ tryc('wskazówki: Ustawienia przywracają wskazówki', () => { view('set', { ...
 
 // Rada 06.11.2026 (ekran startowy): dzień z bólem głowy i karty „Co się dzieje”
 const dk = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-const BASE = (o) => ({ ...CLEAN(), consent: null, kopia: null, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, tips: { day: true, health: true, set: true }, pain: {}, cardsOk: {}, discreet: false, once: false, visit: null, ...o });
+const BASE = (o) => ({ ...CLEAN(), consent: null, kopia: null, prof: { cond: {}, pill: '' }, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, tips: { day: true, health: true, set: true }, pain: {}, cardsOk: {}, discreet: false, once: false, visit: null, ...o });
 const cards = (h) => (h.match(/data-card="[a-z_]+"/g) || []).map((x) => x.slice(11, -1));
 const ONCE_OK = () => [{ kind: 'm', id: 's1', label: 'x', k: 400, p: 20, f: 5, c: 30 }];
 tryc('ból: Mój dzień ma przycisk Boli mnie głowa', () => view('day', BASE()).includes('data-pain="today"'));
@@ -621,6 +621,26 @@ tryc('oznaczenia: przepis poza regułą przy IO podpowiada zmianę porcji', () =
 tryc('oznaczenia: plan przy IO mówi, że słodkie śniadanie może zostać', () => planOf(view('health', BASE(PROF(['io'], '')))).includes('Słodkie śniadanie może zostać'));
 
 tryc('przytrzymanie: 15 kroków w mniej niż 1,5 s, 30 kroków w mniej niż 2 s', () => { const tAt = (n) => { let t = T.HOLD_DELAY; for (let i = 1; i < n - 1; i++) t += T.holdGap(i); return t; }; return tAt(15) < 1500 && tAt(30) < 2000; });
+
+// Zgłoszenie 06.11.2026: posiłki według całego profilu, łączenie schorzeń
+const fitAll = (ids) => ids.every((id) => { const m = M(id); return T.ioFit(m, T.macros(m, 1, 1)); });
+tryc('dla mnie: bez profilu plan tygodnia bez zmian', () => { view('meals', BASE()); return [0, 1, 2, 3, 4, 5, 6].every((d) => T.planFor(d).join() === T.PLAN[d].join()); });
+tryc('dla mnie: przy IO każdy posiłek planu tygodnia spełnia regułę', () => { view('meals', BASE(PROF(['io'], ''))); return [0, 1, 2, 3, 4, 5, 6].every((d) => fitAll(T.planFor(d))); });
+tryc('dla mnie: zamiany przy IO trzymają rytm obiadów i rodzaj posiłku', () => { view('meals', BASE(PROF(['io'], ''))); return [0, 1, 2, 3, 4, 5, 6].every((d) => T.planFor(d).every((id, i) => M(id).t === M(T.PLAN[d][i]).t) && T.planFor(d).map(M).filter((m) => m.t === 'obiad').every((m) => [0, 6].includes(d) ? m.min >= 25 : m.min <= 20)); });
+tryc('dla mnie: plan dnia oznacza dania dopasowane do IO', () => { const h = view('meals', BASE(PROF(['io'], ''))); return T.planFor(new Date().getDay()).join() === T.PLAN[new Date().getDay()].join() || h.includes('dopasowane do IO'); });
+tryc('dla mnie: własny wybór wygrywa z dopasowaniem', () => { view('recipe', BASE({ ...PROF(['io'], ''), swaps: {} })); click({ cook: 'o9' }); return T.planIds().includes('o9'); });
+tryc('dla mnie: lista zakupów liczy dopasowany plan', () => { view('meals', BASE()); const a = T.shopLines().join(); view('meals', BASE(PROF(['io'], ''))); return T.shopLines().join() !== a; });
+tryc('dla mnie: Posiłki mają przełącznik Dla mnie, przy IO włączony i filtrujący', () => { const S = T.S(); const h = view('meals', BASE(PROF(['io'], ''))); S.f.type = 'all'; const L = T.filtered(); S.f.type = 'obiad'; return h.includes('data-forme') && L.length > 10 && L.every((o) => T.ioFit(o.m, o.x)); });
+tryc('dla mnie: wyłączenie pokazuje wszystkie dania', () => { const S = T.S(); view('meals', BASE(PROF(['io'], ''))); click({ forme: '1' }); S.f.type = 'all'; const n = T.filtered().length; S.f.type = 'obiad'; click({ forme: '1' }); return n >= 40; });
+tryc('dla mnie: profil bez zasad dla jedzenia mówi to wprost', () => view('meals', BASE(PROF(['lip', 'mig'], ''))).includes('nie zmienia doboru dań'));
+tryc('razem: IO i migrena bez postu przerywanego', () => planOf(view('health', BASE(PROF(['io', 'mig'], '')))).includes('Bez postu przerywanego'));
+tryc('razem: IO i Hashimoto się nie wykluczają', () => planOf(view('health', BASE(PROF(['io', 'hashi'], '')))).includes('nie wykluczają'));
+tryc('razem: lipodemia i Hashimoto: obrzęk to co innego', () => planOf(view('health', BASE(PROF(['lip', 'hashi'], '')))).includes('Obrzęk przy niedoczynności'));
+tryc('przerwa: karta przy migrenie po 12:00 bez posiłku, nie rano i nie po posiłku', () => { view('day', BASE(PROF(['mig'], ''))); const a = T.migGap(13), b = T.migGap(9); view('day', BASE({ ...PROF(['mig'], ''), days: { [dk(0)]: [{ kind: 'm', id: 's1', label: 'x', k: 400, p: 20, f: 10, c: 40 }] } })); const c = T.migGap(13); view('day', BASE(PROF([], ''))); return a && !b && !c && !T.migGap(13); });
+tryc('przerwa: karta w Zdrowiu pokazuje tekst, nie kod', () => { const h = view('health', BASE(PROF(['mig', 'io'], ''))); return !T.migGap(new Date().getHours()) || (h.includes('Długa przerwa w jedzeniu') && h.includes('wyzwalacz ataku') && !h.includes('=>')); });
+tryc('karty: każde pole why i more da się pokazać jako tekst', () => { const h = view('health', BASE({ ...PROF(['mig', 'io'], ''), pain: { [dk(0)]: { aura: true } }, meas: { [dk(0)]: { cyc: 'P', sleep: '5' }, [dk(1)]: { sleep: '5' } } })); return !/=>|function\s*\(/.test(h); });
+tryc('nowe obiady Przy IO: 3 dania, w tym 2 do 20 min', () => { const L = ['o19', 'o20', 'o21'].map(M); return L.every((m) => m && m.t === 'obiad' && T.ioFit(m, T.macros(m, 1, 1))) && L.filter((m) => m.min <= 20).length === 2; });
+tryc('scenariusz połączenia: IO, migrena i Hashimoto', () => { const s = T.scenS('polaczenia'); return s.prof.cond.io && s.prof.cond.mig && s.prof.cond.hashi; });
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);

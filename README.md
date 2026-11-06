@@ -72,6 +72,9 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 - „Twój plan” to reguły z dowodami i liczbami z wpisów, np. migrena z aurą i tabletka z estrogenem jako pierwsze
   działanie (kategoria 4 w kryteriach WHO), licznik dni z lekiem (ICHD-3), TSH po zmianie tabletek przy Hashimoto.
   Każde działanie podaje siłę dowodów.
+- „Dla mnie” w Posiłkach i plan tygodnia według profilu: przy insulinooporności danie spoza reguły zamienia się na danie
+  tego samego rodzaju i rytmu, które ją spełnia; zdania „Razem: …” łączą zalecenia dla par schorzeń (np. bez postu
+  przerywanego przy IO i migrenie); karta „Długa przerwa w jedzeniu” przy migrenie.
 - „12 tygodni”: waga w przedziale z deficytu planu i kamienie milowe; aplikacja celowo nie prognozuje wyników badań,
   bólu ani samopoczucia, tylko pokazuje je z wpisów.
 
