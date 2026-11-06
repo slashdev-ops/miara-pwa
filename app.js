@@ -142,10 +142,19 @@ function measuredTdee(){
   return {tdee:avgI-slope*7700,slope,nW:n,nI:I.length,avgI};
 }
 function dataGap(){let w=0,i=0;lastKeys(28).forEach(k=>{const m=(S.meas||{})[k];if(m&&num(m.w)>0)w++;if((S.days[k]||[]).filter(e=>e.kind==='m').length>=3)i++});return {w,i}}
+// Sen jako czas trwania: godziny i minuty w osobnych polach (klawiatura cyfr, bez przecinka i dwukropka); zapis „g:mm”
+function hm(v){let H=Math.floor(v),M=Math.round((v-H)*60);if(M===60){H++;M=0}return [H,M]}
+function fmtSleep(v){const [H,M]=hm(v);return M?`${H} h ${M} min`:`${H} h`}
+function sleepFmt(v){const [H,M]=hm(v);return `${H}:${String(M).padStart(2,'0')}`}
+function sleepField(k,m){const has=String(m.sleep||'').trim()!=='',[H,M]=has?hm(num(m.sleep)):['',''];
+  return `<div class="field sleep"><label for="m_sleep">Sen</label><span class="num"><button class="stp" data-stp="meas.${k}.sleep" data-d="-1" aria-label="Sen: mniej o 15 minut">−</button>`
+    +`<input type="text" inputmode="numeric" id="m_sleep" data-sl="h" data-day="${k}" value="${H}" placeholder="7" aria-label="Sen, godziny"><span class="unit">h</span>`
+    +`<input type="text" inputmode="numeric" id="m_sleepm" data-sl="m" data-day="${k}" value="${has?M:''}" placeholder="0" aria-label="Sen, minuty"><span class="unit">min</span>`
+    +`<button class="stp" data-stp="meas.${k}.sleep" data-d="1" aria-label="Sen: więcej o 15 minut">+</button></span></div>`}
 function measHtml(){
   const k=todayKey(),m=S.meas[k]||(S.meas[k]={});
   const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" placeholder="${ph||''}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`;
-  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, po toalecie, przed jedzeniem. Kroki i sen przepisz z zegarka. Obwody co 2 tygodnie. Sen w godzinach: 7 h 30 min to 7,5 albo 7:30.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+f('Sen (zegarek)','sleep','h','decimal','np. 7,5')+'</div>'+cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej zawsze w tych samych warunkach: rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). Wpisany BMR z pomiaru BIA zastępuje wzór przez 90 dni, a waga z pomiarów zastępuje wagę z ustawień.</p></details>';
+  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, po toalecie, przed jedzeniem. Kroki i sen przepisz z zegarka. Obwody co 2 tygodnie. Sen wpisz w godzinach i minutach, tak jak pokazuje zegarek.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+sleepField(k,m)+'</div>'+cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej zawsze w tych samych warunkach: rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). Wpisany BMR z pomiaru BIA zastępuje wzór przez 90 dni, a waga z pomiarów zastępuje wagę z ustawień.</p></details>';
   const ks=lastKeys(28).reverse(),val=(x,key)=>{const v=num((S.meas[x]||{})[key]);return v>0?v:null};
   const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
   const ws=ks.map(x=>val(x,'w')),w1=avg(ws.slice(-7)),w0=avg(ws.slice(-14,-7)),st=avg(ks.slice(-7).map(x=>val(x,'steps'))),sl=avg(ks.slice(-7).map(x=>val(x,'sleep')));
@@ -154,7 +163,7 @@ function measHtml(){
   [['waist','Talia','cm'],['hip','Biodra','cm'],['thigh','Udo','cm']].forEach(([key,lab,u])=>{const s=ks.map(x=>val(x,key)).filter(v=>v!=null);if(s.length>=2)t.push(`${lab}: z ${fmt1(s[0])} na ${fmt1(s[s.length-1])} ${u} w ostatnich 28 dniach.`)});
   const k90=lastKeys(90).reverse();[['fat','Tłuszcz','%'],['ffm','FFM','kg'],['ecw','ECW/TBW','%']].forEach(([key,lab,u])=>{const s=k90.map(x=>val(x,key)).filter(v=>v!=null);if(s.length===1)t.push(`${lab}: ${fmt1(s[0])} ${u} (jeden pomiar).`);else if(s.length>=2)t.push(`${lab}: z ${fmt1(s[0])} na ${fmt1(s[s.length-1])} ${u} w ostatnich 90 dniach.`)});
   if(st!=null)t.push(`Kroki, średnia z 7 dni: ${fmt(st)}.`);
-  if(sl!=null)t.push(`Sen, średnia z 7 dni: ${fmt1(sl)} h.`);
+  if(sl!=null)t.push(`Sen, średnia z 7 dni: ${fmtSleep(sl)}.`);
   const pc=ks.slice(-7).filter(x=>(S.meas[x]||{}).cyc==='P'&&val(x,'w')!=null).length;if(pc)t.push(`${pc} ${pc===1?'ważenie':'ważenia'} z ostatnich 7 dni w przerwie w tabletkach: woda może wtedy podnieść wagę (wiedza ogólna).`);
   const pts=ws.map((v,i)=>v==null?null:[i,v]).filter(Boolean);let svg='',svgCap='';
   if(pts.length>=5){const ys=pts.map(p=>p[1]),mn=Math.min(...ys),mx=Math.max(...ys),r=mx-mn||1;svgCap=`<p class="small muted">Waga z 28 dni: od ${fmt1(mn)} do ${fmt1(mx)} kg.</p>`;svg=`<svg viewBox="0 0 280 60" width="100%" height="60" role="img" aria-label="Waga z 28 dni"><polyline fill="none" stroke="var(--green)" stroke-width="2" points="${pts.map(p=>`${(p[0]/27*270+5).toFixed(1)},${(55-(p[1]-mn)/r*50).toFixed(1)}`).join(' ')}"/></svg>`}
@@ -528,7 +537,7 @@ function renderImpact(){
   h+=duo('Ciało',[`${D.trainN} treningów i sesji`,`${D.protDays} dni z białkiem co najmniej ${fmt(D.pT)} g`,`${ks.length} sesji programu kolana`],body);
   const st=avgAgo(0,7,'steps'),sl=avgAgo(0,7,'sleep'),labs=[];LABS.filter(x=>x.tg).forEach(x=>{const es=S.labs.filter(e=>e.test===x.id).sort((a,b)=>b.date.localeCompare(a.date));if(es.length){const c=es.length>=2?`, zmiana ${num(es[0].val)-num(es[1].val)>0?'+':''}${fmt1(num(es[0].val)-num(es[1].val))}`:'';labs.push(`${x.n}: ${esc(es[0].val)} ${esc(es[0].unit)}, ${labStatus(es[0]).t.split(':')[0]}${c}`)}});
   if(!labs.length)labs.push('Brak wyników z zakresem docelowym: wpisz je w Moich badaniach');
-  h+=duo('Zdrowie',[st!=null?`Kroki, średnia 7 dni: ${fmt(st)}`:'Kroki: brak wpisów z 7 dni',sl!=null?`Sen, średnia 7 dni: ${fmt1(sl)} h`:'Sen: brak wpisów z 7 dni'],labs);
+  h+=duo('Zdrowie',[st!=null?`Kroki, średnia 7 dni: ${fmt(st)}`:'Kroki: brak wpisów z 7 dni',sl!=null?`Sen, średnia 7 dni: ${fmtSleep(sl)}`:'Sen: brak wpisów z 7 dni'],labs);
   h+='<p class="small muted">Liczby pokazują, co zostało zrobione i co się zmierzyło w tym samym czasie. To obserwacja, nie dowód, że jedno wywołało drugie. Każda decyzja się liczy, nawet gdy efekt widać dopiero po kilku tygodniach.</p>';
   document.getElementById('main').innerHTML=h;
 }
@@ -624,14 +633,20 @@ const open=new Set();
 // ---------- Obliczenia ----------
 const num=v=>{const s=String(v).trim().replace(/(\d)[\s\u00a0]+(?=\d{3}(\D|$))/g,'$1'),t=s.match(/^(\d{1,2})\s*(?::|h)\s*(\d{1,2})?\s*(?:m|min)?$/i);if(t)return +t[1]+(+(t[2]||0))/60;const x=parseFloat(s.replace(',','.'));return isFinite(x)?x:0};
 // Pola liczbowe: format i zakres (ostatni człon klucza data-k). Wpis błędny lub poza zakresem nie trafia do danych.
-const STEP={kg:.1,goal:.5,w:.1,cm:1,age:1,steps:500,sleep:.5,waist:.5,hip:.5,thigh:.5,fat:.1,ffm:.1,ecw:.1,bmr:10,min:5,wmin:5,wk:10,speed:.5,grade:.5,watts:5};
+const STEP={kg:.1,goal:.5,w:.1,cm:1,age:1,steps:500,sleep:.25,waist:.5,hip:.5,thigh:.5,fat:.1,ffm:.1,ecw:.1,bmr:10,min:5,wmin:5,wk:10,speed:.5,grade:.5,watts:5};
 const STP0={sleep:7,steps:5000,wmin:45,wk:300,min:45,speed:5,grade:0,watts:100,cm:165,age:30};
 // Pierwsze naciśnięcie pustego pola: ostatnia zapisana wartość (waga z ostatniego ważenia), inaczej typowa
 function stpStart(k){const a=k.split('.'),f=a[a.length-1];if(a[0]==='meas'){const ks=Object.keys(S.meas||{}).filter(x=>x<a[1]&&num((S.meas[x]||{})[f])>0).sort();if(ks.length)return num(S.meas[ks[ks.length-1]][f]);if(f==='w')return kg()}if(f==='goal')return kg();if(f==='kg')return kg();return STP0[f]!=null?STP0[f]:LIM[f][0]}
 function stpFmt(v,st){return st<1?String(Math.round(v*10)/10).replace('.',','):String(Math.round(v))}
 const LIM={kg:[35,250],goal:[35,250],w:[35,250],cm:[120,220],age:[16,90],steps:[0,60000],sleep:[0,16],waist:[30,200],hip:[30,200],thigh:[20,120],fat:[3,60],ffm:[25,120],ecw:[30,50],bmr:[900,3000],min:[1,300],wmin:[1,300],wk:[10,3000],speed:[1,20],grade:[0,25],watts:[20,500]};
 const INT_K=new Set(['steps','bmr','age','min','wmin','wk']);
-function checkNum(k,raw){const key=String(k).split('.').pop();let s=String(raw).trim();if(s==='')return {s};if(INT_K.has(key))s=s.replace(/[\s\u00a0.](?=\d{3}(\D|$))/g,'');const core=key==='sleep'?s:s.replace(/\s*(kg|cm|h|%|kcal|lat|min|km\/h|w|g|zł)$/i,'');const ok=key==='sleep'?/^(\d{1,2}([.,]\d+)?|\d{1,2}\s*(:|h)\s*(\d{1,2})?\s*(m|min)?)$/i.test(s):/^\d+([.,]\d+)?$/.test(core);if(!ok)return {s,err:key==='sleep'?'Sen w godzinach, np. 7,5 albo 7:30':'Wpisz samą liczbę, np. 82,4'};const r=LIM[key],v=num(core);if(r&&(v<r[0]||v>r[1]))return {s,err:'Dozwolone '+fmt1(r[0])+'-'+fmt1(r[1])};return {s:core}}
+// Pola ca\u0142kowite: separator tysi\u0119cy spacj\u0105, kropk\u0105 albo przecinkiem (10 500, 10.500, 10,500), bez u\u0142amk\u00f3w;
+// czas treningu tak\u017ce jak w zegarku: 1:15 albo 1:15:30 (godziny:minuty[:sekundy]) zamieniany na minuty
+const NUM_EX={steps:'8500',wk:'420',wmin:'45 albo 1:15',min:'45 albo 1:15',age:'28',bmr:'1450'},DUR_K=new Set(['min','wmin']);
+const intErr=key=>'Wpisz liczb\u0119 ca\u0142kowit\u0105, np. '+(NUM_EX[key]||'10');
+function checkNum(k,raw){const key=String(k).split('.').pop();let s=String(raw).trim();if(s==='')return {s};
+  if(DUR_K.has(key)){const t=s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);if(t){if(+t[2]>59||+(t[3]||0)>59)return {s,err:'Minuty i sekundy od 0 do 59'};s=String(+t[1]*60+(+t[2])+Math.round(+(t[3]||0)/60))}}
+  if(INT_K.has(key))s=s.replace(/[\s\u00a0.,](?=\d{3}(\D|$))/g,'');const core=key==='sleep'?s:s.replace(/\s*(kg|cm|h|%|kcal|lat|min|km\/h|w|g|zł)$/i,'');const ok=key==='sleep'?/^(\d{1,2}([.,]\d+)?|\d{1,2}\s*(:|h)\s*(\d{1,2})?\s*(m|min)?)$/i.test(s):/^\d+([.,]\d+)?$/.test(core);if(!ok)return {s,err:key==='sleep'?'Sen w godzinach i minutach, np. 7:30':INT_K.has(key)?intErr(key):'Wpisz samą liczbę, np. 82,4'};if(INT_K.has(key)&&/[.,]/.test(core))return {s,err:intErr(key)};if(key==='sleep'){const mm=s.match(/(?::|h)\s*(\d{1,2})/i);if(mm&&+mm[1]>59)return {s,err:'Minuty od 0 do 59'}}const r=LIM[key],v=num(core);if(r&&(v<r[0]||v>r[1]))return {s,err:'Dozwolone '+fmt1(r[0])+'-'+fmt1(r[1])};return {s:core}}
 const fmt=x=>Math.round(x).toLocaleString('pl-PL');
 const fmt1=x=>(Math.round(x*10)/10).toLocaleString('pl-PL');
 const kg=()=>{const ks=Object.keys(S.meas||{}).sort().reverse();for(const k of ks){const v=num(S.meas[k].w);if(v>0)return v}return num(S.kg)||78};
@@ -821,9 +836,9 @@ const CARDS=[
     todo:['Lista na wizytę','tab','visit']},
   {id:'bol_hormony',sens:1,ev:'m',when:()=>{const k=todayKey();return !!painAt(k)&&(S.meas[k]||{}).cyc==='P'},src:()=>'dziś: dzień z bólem głowy i zaznaczone dni bez hormonów',
     t:'Ból głowy w dniach bez hormonów',why:'Spadek estrogenu w dniach bez hormonów często wyzwala migrenę. To znany wzorzec, a nie Twoja słabość.',todo:['Zaznacz aurę i lek','goto','painrow']},
-  {id:'bez_sil',ev:'u',when:()=>!!painAt(todayKey())||(sleepAt(todayKey())!=null&&sleepAt(todayKey())<6),src:()=>painAt(todayKey())?'dziś: dzień z bólem głowy':`sen ostatniej nocy: ${fmt1(sleepAt(todayKey()))} h (pomiary dnia)`,
+  {id:'bez_sil',ev:'u',when:()=>!!painAt(todayKey())||(sleepAt(todayKey())!=null&&sleepAt(todayKey())<6),src:()=>painAt(todayKey())?'dziś: dzień z bólem głowy':`sen ostatniej nocy: ${fmtSleep(sleepAt(todayKey()))} (pomiary dnia)`,
     t:'Mało sił na trening',why:'W dniu ataku migreny ruch zwykle nasila ból, a po złej nocy trening idzie gorzej. Regularny, umiarkowany ruch w lepsze dni może zmniejszać częstość migren.',todo:['Dziś odpoczywam','cardok','bez_sil']},
-  {id:'zla_noc',ev:'u',when:()=>{const a=sleepAt(todayKey()),b=sleepAt(nAgo(1));return a!=null&&b!=null&&a<6&&b<6},src:()=>`sen: ${fmt1(sleepAt(nAgo(1)))} h i ${fmt1(sleepAt(todayKey()))} h (2 ostatnie noce, pomiary dnia)`,
+  {id:'zla_noc',ev:'u',when:()=>{const a=sleepAt(todayKey()),b=sleepAt(nAgo(1));return a!=null&&b!=null&&a<6&&b<6},src:()=>`sen: ${fmtSleep(sleepAt(nAgo(1)))} i ${fmtSleep(sleepAt(todayKey()))} (2 ostatnie noce, pomiary dnia)`,
     t:'Po krótkich nocach chce się jeść więcej',why:'Krótki sen zwiększa apetyt, zwłaszcza na słodkie i tłuste. To fizjologia, nie brak silnej woli.',todo:['Śniadanie z białkiem','tab','meals']},
   {id:'stres',ev:'u',when:()=>urges3()>=2,src:()=>`${urges3()} wpisy ochoty w 3 dni (przycisk ochoty)`,
     t:'Stres i ochota na jedzenie',why:'Przewlekły stres, w tym kortyzol, często przesuwa wybory w stronę jedzenia kalorycznego i psuje sen. Działa to przez zachowanie, a nie z dnia na dzień.',todo:['Plan na ochotę','tab','sos']},
@@ -894,7 +909,7 @@ function visitLines(){const ks=Array.from({length:90},(_,i)=>nAgo(i)),P=S.pain||
   const cyc=k=>(S.meas[k]||{}).cyc,pl=ks.filter(k=>cyc(k)==='P'),ot=ks.filter(k=>['1','2','3','4'].includes(cyc(k))),sl=ks.map(sleepAt).filter(x=>x!=null),w=wAvg(0,6);
   const L=[`Okres: ostatnie 90 dni, do ${fmtDate(todayKey())}.`,`Dni z bólem głowy: ${pk.length}; z aurą: ${a}; z lekiem: ${m}.`,`Dni z lekiem w ostatnich 30 dniach: ${m30}.`,
     pl.length>=5&&ot.length>=5?`Ból w dniach bez hormonów: ${pl.filter(k=>P[k]).length} z ${pl.length}; w pozostałych zaznaczonych dniach: ${ot.filter(k=>P[k]).length} z ${ot.length}.`:'Cykl: za mało zaznaczonych dni do porównania (potrzeba po 5).',
-    sl.length?`Sen: średnio ${fmt1(sl.reduce((s,x)=>s+x,0)/sl.length)} h z ${sl.length} nocy.`:'Sen: brak danych.',
+    sl.length?`Sen: średnio ${fmtSleep(sl.reduce((s,x)=>s+x,0)/sl.length)} z ${sl.length} nocy.`:'Sen: brak danych.',
     w.n?`Waga: średnia ${fmt1(w.avg)} kg z ${w.n} ważeń w ostatnich 7 dniach.`:'Waga: brak ważeń w ostatnich 7 dniach.'];
   if(a)L.push('Do zapytania: czy przy migrenie z aurą mogę dalej brać tabletki antykoncepcyjne z estrogenem i jaka metoda będzie bezpieczna?');
   return L}
@@ -986,7 +1001,7 @@ function stanHtml(){const k=todayKey(),m=S.meas[k]||{},d=day(),ml=d.filter(e=>e.
   const eat=ml.reduce((s,e)=>s+e.k,0),prot=ml.reduce((s,e)=>s+e.p,0);
   h+=row('Jedzenie',ml.length?(p?`${fmt(eat)} kcal`:`${fmt(eat)} z ${fmt(targetKcal())} kcal`):'brak danych',ml.length?`${ml.length} ${plPos(ml.length)} zapisane, białko ${fmt(prot)} g`+(p?'; dziś bez celu deficytu':''):(p?'dziś bez celu deficytu; ':'')+'zapisz posiłek w Posiłkach');
   const sl=sleepAt(k),s7=Array.from({length:7},(_,i)=>sleepAt(nAgo(i))).filter(x=>x!=null);
-  h+=row('Sen',sl!=null?`${fmt1(sl)} h`:'brak danych',s7.length?`${sl!=null?'ostatnia noc; ':''}średnia ${fmt1(s7.reduce((s,x)=>s+x,0)/s7.length)} h z ${s7.length} nocy`:'wpisz sen w Pomiarach dnia niżej');
+  h+=row('Sen',sl!=null?fmtSleep(sl):'brak danych',s7.length?`${sl!=null?'ostatnia noc; ':''}średnia ${fmtSleep(s7.reduce((s,x)=>s+x,0)/s7.length)} z ${s7.length} nocy`:'wpisz sen w Pomiarach dnia niżej');
   const st=num(m.steps),tm=tr.reduce((s,e)=>s+num(e.min),0),mv=[st>0?`${fmt(st)} kroków`:'',tr.length?`trening ${fmt(tm)} min`:''].filter(Boolean).join(', ');
   h+=row('Ruch',mv||'brak danych',mv?'dzisiejsze pomiary i treningi':'wpisz kroki albo dodaj trening');
   if(p||cyc)h+=row('Ból i cykl',p?'dzień z bólem'+(p.aura?', aura':''):'bez bólu',cyc?(cyc==='P'?'dni bez hormonów':'tydzień cyklu '+esc(cyc)):'cykl nie zaznaczony dziś');
@@ -1111,7 +1126,7 @@ document.addEventListener('click',e=>{
   if(d.nav){const [tab,id,fd]=d.nav.split('#');S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
     if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.classList){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2400)}}else window.scrollTo(0,0);return}
   if(d.stp){const k=d.stp,f=k.split('.').pop(),st=STEP[f],L=LIM[f],a=k.split('.');if(!st)return;if(a[0]==='meas'){S.meas[a[1]]=S.meas[a[1]]||{}}
-    const raw=k.split('.').reduce((o,x)=>o==null?o:o[x],S),has=raw!=null&&String(raw).trim()!=='';let v=has?num(raw)+(+d.d)*st:stpStart(k);v=Math.min(L[1],Math.max(L[0],v));setPath(k,stpFmt(v,st));
+    const raw=k.split('.').reduce((o,x)=>o==null?o:o[x],S),has=raw!=null&&String(raw).trim()!=='';let v=has?num(raw)+(+d.d)*st:stpStart(k);v=Math.min(L[1],Math.max(L[0],v));setPath(k,f==='sleep'?sleepFmt(v):stpFmt(v,st));
     if(/^meas\.[^.]+\.w$/.test(k))PET.react('weigh');if(/^meas\.[^.]+\.sleep$/.test(k)&&v>=7)PET.react('sleepok');save();render();return}
   if(d.cook){const m=MEALS.find(x=>x.id===d.cook),k=todayKey(),base=PLAN[new Date().getDay()],i=m?base.findIndex(id=>MEALS.find(x=>x.id===id).t===m.t):-1;if(i<0)return;
     S.swaps=S.swaps||{};S.swaps[k]=S.swaps[k]||{};if(base[i]===m.id)delete S.swaps[k][i];else S.swaps[k][i]=m.id;save();render();
@@ -1206,6 +1221,10 @@ document.addEventListener('input',e=>{
     const lab=document.getElementById('l_'+k);
     if(lab)lab.textContent=k==='minP'?v+' g':k==='maxK'?(v>=1000?'bez limitu':v+' kcal'):k==='maxC'?(v>=130?'bez limitu':v+' g'):'×'+fmt1(v);
     renderMealList();return}
+  if(el.dataset.sl){const k=el.dataset.day,hs=String(document.getElementById('m_sleep').value).trim(),ms=String(document.getElementById('m_sleepm').value).trim();
+    const bad=!/^\d{0,2}$/.test(hs)||!/^\d{0,2}$/.test(ms)?'Wpisz same cyfry':+ms>59?'Minuty od 0 do 59':(+hs||0)+(+ms||0)/60>16?'Sen najwyżej 16 godzin':'';
+    el.classList.toggle('bad',!!bad);el.setAttribute('aria-invalid',bad?'true':'false');el.title=bad;if(bad)return;
+    S.meas[k]=S.meas[k]||{};S.meas[k].sleep=hs===''&&ms===''?'':`${+hs||0}:${String(+ms||0).padStart(2,'0')}`;save();return}
   const k=el.dataset.k;if(!k)return;
   if(el.type==='checkbox'){setPath(k,el.checked);if(k==='body'&&el.checked)toast('Sylwetka pokazuje trend 4 tygodni. Pojedyncze pomiary się wahają.');save();render();return}
   let v=el.value;const im=el.getAttribute('inputmode');
@@ -1223,7 +1242,15 @@ document.addEventListener('focusout',e=>{const el=e.target,k=el.dataset&&el.data
   if(el.classList.contains('bad')){const v=EDIT&&EDIT.k===k&&EDIT.v!=null?EDIT.v:'';setPath(k,v);el.value=v;el.classList.remove('bad');el.setAttribute('aria-invalid','false');toast((el.title||'Popraw wartość')+'. Zostaje poprzednia wartość.')}
   else{const c=checkNum(k,el.value);if(c.s!==el.value){setPath(k,c.s);el.value=c.s}
     if(/^meas\.[^.]+\.w$/.test(k)&&num(c.s)>0)PET.react('weigh');if(/^meas\.[^.]+\.sleep$/.test(k)&&num(c.s)>=7)PET.react('sleepok')}
-  EDIT=null;save();setTimeout(()=>{const a=document.activeElement;if(!(a&&a.dataset&&a.dataset.k))render()},0)});
+  EDIT=null;save();setTimeout(()=>{const a=document.activeElement;if(!(a&&a.dataset&&(a.dataset.k||a.dataset.sl)))render()},0)});
+// Wyjście z pól snu: błędny wpis wraca do zapisanej wartości, przerysowanie dopiero poza polami
+// Wartość snu sprzed edycji pary pól: po błędnym wpisie wraca ona, a nie cyfra wpisana po drodze
+let SLEDIT=null;
+document.addEventListener('focusin',e=>{const el=e.target;if(el.dataset&&el.dataset.sl&&!SLEDIT)SLEDIT={k:el.dataset.day,v:(S.meas[el.dataset.day]||{}).sleep||''}});
+document.addEventListener('focusout',e=>{const el=e.target;if(REDRAW||!el.dataset||!el.dataset.sl)return;
+  if(el.classList.contains('bad')){if(SLEDIT){S.meas[SLEDIT.k]=S.meas[SLEDIT.k]||{};S.meas[SLEDIT.k].sleep=SLEDIT.v;save()}toast((el.title||'Popraw wartość')+'. Zostaje poprzednia wartość.')}
+  else if(num((S.meas[el.dataset.day]||{}).sleep)>=7)PET.react('sleepok');
+  setTimeout(()=>{const a=document.activeElement;if(!(a&&a.dataset&&a.dataset.sl))SLEDIT=null;if(!(a&&a.dataset&&(a.dataset.k||a.dataset.sl)))render()},0)});
 document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.labsel){S.labSel=e.target.value;save();render()}});
 // usuń dni starsze niż 60
 (function(){const lim=Date.now()-60*864e5;for(const k in S.days){if(new Date(k).getTime()<lim)delete S.days[k]}save()})();

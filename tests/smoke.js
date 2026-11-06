@@ -473,7 +473,7 @@ tryc('stan: waga jako średnia 7 dni ze źródłem i zmianą do poprzedniego tyg
 });
 tryc('stan: jedzenie z celem, liczbą posiłków i białkiem', () => { const h = stan(view('day', BASE({ days: { [dk(0)]: ML(2, 500, 30) } }))); return /1\s?000 z [\d\s]+ kcal/.test(h) && h.includes('2 posiłki zapisane, białko 60 g'); });
 tryc('stan: w dniu z bólem jedzenie bez celu deficytu', () => stan(view('day', BASE({ pain: { [dk(0)]: {} }, days: { [dk(0)]: ML(1, 500, 30) } }))).includes('dziś bez celu deficytu'));
-tryc('stan: sen ostatniej nocy i średnia z liczbą nocy', () => { const h = stan(view('day', BASE({ meas: { [dk(0)]: { sleep: '6,5' }, [dk(1)]: { sleep: '7,5' } } }))); return h.includes('6,5 h') && h.includes('średnia 7 h z 2 nocy'); });
+tryc('stan: sen ostatniej nocy i średnia z liczbą nocy', () => { const h = stan(view('day', BASE({ meas: { [dk(0)]: { sleep: '6,5' }, [dk(1)]: { sleep: '7,5' } } }))); return h.includes('6 h 30 min') && h.includes('średnia 7 h z 2 nocy'); });
 tryc('stan: ruch z krokami i treningiem', () => { const h = stan(view('day', BASE({ meas: { [dk(0)]: { steps: '8123' } }, days: { [dk(0)]: [{ kind: 't', label: 'x', min: 40, gross: 300, net: 200 }] } }))); return /8\s?123 kroków/.test(h) && h.includes('trening 40 min'); });
 tryc('stan: ból i cykl tylko przy danych', () => { const h = stan(view('day', BASE({ pain: { [dk(0)]: { aura: true } }, meas: { [dk(0)]: { cyc: 'P' } } }))); return h.includes('Ból i cykl') && h.includes('dzień z bólem, aura') && h.includes('dni bez hormonów'); });
 tryc('układ: Stan dziś na górze, karty pod nim, potem Dziś, zwierzak niżej; Więcej zwinięte', () => {
@@ -508,7 +508,7 @@ tryc('pola: krok nie wychodzi poza limit', () => { view('set', BASE({ cm: '220' 
 tryc('pola: puste pole wagi dnia zaczyna od ostatniego ważenia, potem krok', () => {
   const k = `meas.${dk(0)}.w`; view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } })); click({ stp: k, d: '1' }); const a = T.S().meas[dk(0)].w; click({ stp: k, d: '1' }); return a === '80,4' && T.S().meas[dk(0)].w === '80,5';
 });
-tryc('pola: sen zaczyna od 7 h i idzie co pół godziny', () => { const k = `meas.${dk(0)}.sleep`; view('day', BASE()); click({ stp: k, d: '1' }); click({ stp: k, d: '1' }); return T.S().meas[dk(0)].sleep === '7,5'; });
+tryc('pola: sen zaczyna od 7 h i idzie co 15 minut', () => { const k = `meas.${dk(0)}.sleep`; view('day', BASE()); click({ stp: k, d: '1' }); click({ stp: k, d: '1' }); return T.S().meas[dk(0)].sleep === '7:15'; });
 tryc('pola: Pomiary dnia mają przyciski przy wadze, krokach i śnie', () => { const h = view('day', BASE()); return ['w', 'steps', 'sleep'].every((x) => h.includes(`data-stp="meas.${dk(0)}.${x}"`)); });
 tryc('trening: szybki wybór czasu 30, 45, 60, 90 min', () => { const h = view('train', BASE()); if (![30, 45, 60, 90].every((v) => h.includes(`data-setv="tr.wmin" data-v="${v}"`))) return false; click({ setv: 'tr.wmin', v: '45' }); return T.S().tr.wmin === '45'; });
 tryc('gotuję: przepis ma przycisk Gotuję to dziś', () => { T.S().recipe = 'o10'; return view('recipe', BASE()).includes('data-cook="o10"'); });
@@ -565,6 +565,30 @@ tryc('plan: każde działanie podaje siłę dowodów', () => { const h = planOf(
 tryc('12 tygodni: tabela 12 tygodni z wagą w przedziale', () => { const h = view('health', BASE({ ...PROF(['hashi'], ''), kg: '80', goal: '70' })), m = h.match(/<table class="weeks"[\s\S]*?<\/table>/); return !!m && (m[0].match(/<tr class="wk"/g) || []).length === 12 && /7[0-9],[0-9]-7[0-9],[0-9] kg/.test(m[0]); });
 tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h = view('health', BASE({ ...PROF(['hashi', 'mig'], 'yaz'), kg: '80', goal: '70' })), m = (h.match(/<table class="weeks"[\s\S]*?<\/table>/) || [''])[0]; return !/TSH (spadnie|wyniesie)|samopoczucie (wzro|popraw)/.test(m) && h.includes('nie prognozuje'); });
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof.pill && !Object.keys(d.prof.cond).length; });
+
+// Zgłoszenie 06.11.2026: sen 6 h 13 min nie da się wpisać przecinkiem; sen jako godziny i minuty, bez dwuznaczności
+const typeSleep = (h, m) => { mk('m_sleep').value = h; mk('m_sleepm').value = m; let bad = false; const t = { dataset: { sl: 'm', day: dk(0) }, value: m, title: '', classList: { toggle: (c, on) => { if (c === 'bad') bad = !!on; } }, setAttribute() {}, getAttribute: () => 'numeric' }; (lis.input || []).forEach((f) => f({ target: t })); return bad; };
+tryc('sen: dwa pola, godziny i minuty, z klawiaturą samych cyfr', () => { const h = view('day', BASE()); return /id="m_sleep"[^>]*inputmode="numeric"|inputmode="numeric"[^>]*id="m_sleep"/.test(h) && /inputmode="numeric"[^>]*id="m_sleepm"/.test(h) && !h.includes('np. 7,5'); });
+tryc('sen: 6 h i 13 min zapisuje 6:13', () => { view('day', BASE()); const bad = typeSleep('6', '13'); return !bad && T.S().meas[dk(0)].sleep === '6:13' && Math.abs(T.num('6:13') - (6 + 13 / 60)) < 1e-9; });
+tryc('sen: same minuty 45 to 0:45', () => { view('day', BASE()); typeSleep('', '45'); return T.S().meas[dk(0)].sleep === '0:45'; });
+tryc('sen: minuty 75 odrzucone, zostaje poprzednia wartość', () => { view('day', BASE({ meas: { [dk(0)]: { sleep: '7:00' } } })); const bad = typeSleep('6', '75'); return bad && T.S().meas[dk(0)].sleep === '7:00'; });
+tryc('sen: 17 godzin odrzucone', () => { view('day', BASE({ meas: { [dk(0)]: { sleep: '7:00' } } })); return typeSleep('17', '0') && T.S().meas[dk(0)].sleep === '7:00'; });
+tryc('sen: przecinek albo litery odrzucone', () => { view('day', BASE()); return typeSleep('6,5', '') && typeSleep('6', 'a'); });
+tryc('sen: stary zapis 7,5 pokazuje 7 h i 30 min w polach', () => { const h = view('day', BASE({ meas: { [dk(0)]: { sleep: '7,5' } } })); return /id="m_sleep"[^>]*value="7"/.test(h) && /id="m_sleepm"[^>]*value="30"/.test(h); });
+tryc('sen: Stan dziś pokazuje 6 h 13 min', () => stan(view('day', BASE({ meas: { [dk(0)]: { sleep: '6:13' } } }))).includes('6 h 13 min'));
+tryc('sen: błędny wpis wraca do wartości sprzed edycji, nie do cyfry wpisanej po drodze', () => {
+  view('day', BASE({ meas: { [dk(0)]: { sleep: '6:13' } } }));
+  const t = { dataset: { sl: 'm', day: dk(0) }, classList: { contains: () => true }, title: 'Minuty od 0 do 59' };
+  (lis.focusin || []).forEach((f) => f({ target: t })); typeSleep('6', '7'); typeSleep('6', '75'); T.setRedraw(false); (lis.focusout || []).forEach((f) => f({ target: t }));
+  return T.S().meas[dk(0)].sleep === '6:13';
+});
+tryc('liczby: kroki 10,500 i 10.500 to dziesięć i pół tysiąca, nie 10,5', () => cn('meas.d.steps', '10,500').s === '10500' && cn('meas.d.steps', '10.500').s === '10500');
+tryc('liczby: pola całkowite odrzucają ułamki z jasnym komunikatem', () => ['8,5', '45.5'].every((v) => /całkowit/.test(cn('meas.d.steps', v).err || '')) && /całkowit/.test(cn('age', '28,5').err || ''));
+tryc('liczby: czas treningu 1:15 i 1:15:30 z zegarka to 75 i 76 minut', () => cn('tr.wmin', '1:15').s === '75' && cn('tr.wmin', '1:15:30').s === '76' && cn('tr.min', '0:45').s === '45');
+tryc('liczby: czas treningu 1:75 odrzucony', () => !!cn('tr.wmin', '1:75').err);
+tryc('liczby: komunikat błędu z przykładem dla tego pola, nie wagi', () => !/82,4/.test(cn('meas.d.steps', 'abc').err) && /82,4/.test(cn('meas.d.w', 'abc').err));
+tryc('sen: 6:75 w tekście odrzucone przez walidację', () => !!cn('meas.d.sleep', '6:75').err && !cn('meas.d.sleep', '6:59').err);
+tryc('sen: karty piszą sen w godzinach i minutach', () => view('day', BASE({ meas: { [dk(0)]: { sleep: '5:20' }, [dk(1)]: { sleep: '5:45' } } })).includes('sen: 5 h 45 min i 5 h 20 min'));
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
