@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -641,6 +641,23 @@ tryc('przerwa: karta w Zdrowiu pokazuje tekst, nie kod', () => { const h = view(
 tryc('karty: każde pole why i more da się pokazać jako tekst', () => { const h = view('health', BASE({ ...PROF(['mig', 'io'], ''), pain: { [dk(0)]: { aura: true } }, meas: { [dk(0)]: { cyc: 'P', sleep: '5' }, [dk(1)]: { sleep: '5' } } })); return !/=>|function\s*\(/.test(h); });
 tryc('nowe obiady Przy IO: 3 dania, w tym 2 do 20 min', () => { const L = ['o19', 'o20', 'o21'].map(M); return L.every((m) => m && m.t === 'obiad' && T.ioFit(m, T.macros(m, 1, 1))) && L.filter((m) => m.min <= 20).length === 2; });
 tryc('scenariusz połączenia: IO, migrena i Hashimoto', () => { const s = T.scenS('polaczenia'); return s.prof.cond.io && s.prof.cond.mig && s.prof.cond.hashi; });
+
+// Polecenie 08.11.2026: Zamówione; chipy snu, „jak wczoraj” przy krokach
+const ORDB = (o) => BASE({ ord: { dish: 'kurczak', sushi: 12, kurczak: 5, tofu: '1', alt: false, add: {}, ...o } });
+tryc('zamówione: Posiłki mają sekcję z trzema daniami', () => { const h = view('meals', ORDB()); return h.includes('id="zamowione"') && ['sushi', 'kurczak', 'tofu'].every((d) => h.includes(`data-orddish="${d}"`)); });
+tryc('zamówione: kurczak 5 kawałków z ryżem to 1010 kcal', () => { view('meals', ORDB({ add: { ryz: true } })); const c = T.ordCalc(); return Math.round(c.k) === 1010 && Math.round(c.p) === 50; });
+tryc('zamówione: sushi w tempurze ma więcej kalorii', () => { view('meals', ORDB({ dish: 'sushi', sushi: 16 })); const a = T.ordCalc().k; view('meals', ORDB({ dish: 'sushi', sushi: 16, alt: true })); return a === 720 && T.ordCalc().k === 1120; });
+tryc('zamówione: tofu duża porcja ×1,3', () => { view('meals', ORDB({ dish: 'tofu', tofu: '1.3' })); return Math.round(T.ordCalc().k) === 585; });
+tryc('zamówione: szacunek z przedziałem i białkiem', () => { const h = view('meals', ORDB()); return /ok\. 750 kcal \(525-975\)/.test(h) && h.includes('białko 45 g'); });
+tryc('zamówione: zapis dodaje posiłek do dnia z etykietą', () => { view('meals', ORDB({ days: {} })); T.S().days = {}; click({ ordsave: '1' }); const e = lastE(); return e && e.kind === 'm' && e.ord === 1 && e.label.includes('Kurczak po koreańsku, 5 kawałków') && e.k === 750; });
+tryc('zamówione: wybór zostaje zapamiętany', () => { view('meals', ORDB()); click({ orddish: 'sushi' }); click({ ordn: '16' }); return T.S().ord.dish === 'sushi' && T.S().ord.sushi === 16; });
+tryc('zamówione: każde danie ma zdanie dietetyka', () => ['sushi', 'kurczak', 'tofu'].every((d) => /class="why"|class="small muted"/.test(view('meals', ORDB({ dish: d }))) && view('meals', ORDB({ dish: d })).includes('class="ordtip"')));
+tryc('zamówione: szybki wpis prowadzi do Zamówione', () => view('day', BASE()).includes('data-nav="meals#zamowione"'));
+tryc('zamówione: bez nazw lokali', () => !/chingu|kfc|sushi\s*master/i.test(code));
+tryc('sen: chipy 6:00-8:00 ustawiają sen', () => { const k = `meas.${dk(0)}.sleep`, h = view('day', BASE()); if (!['6:00', '6:30', '7:00', '7:30', '8:00'].every((v) => h.includes(`data-setv="${k}" data-v="${v}"`))) return false; click({ setv: k, v: '7:30' }); return T.S().meas[dk(0)].sleep === '7:30'; });
+tryc('sen: chip jak wczoraj z wczorajszą wartością', () => view('day', BASE({ meas: { [dk(1)]: { sleep: '6:13' } } })).includes('jak wczoraj (6 h 13 min)'));
+tryc('kroki: chip jak wczoraj, gdy dziś pusto', () => { const k = `meas.${dk(0)}.steps`, h = view('day', BASE({ meas: { [dk(1)]: { steps: '8500' } } })); if (!h.includes(`data-setv="${k}" data-v="8500"`) || !/jak wczoraj \(8\s?500\)/.test(h)) return false; click({ setv: k, v: '8500' }); return T.S().meas[dk(0)].steps === '8500' && !view('day', {}).includes(`data-setv="${k}" data-v="8500"`); });
+tryc('kroki: − i + co 1000', () => { const k = `meas.${dk(0)}.steps`; view('day', BASE({ meas: { [dk(0)]: { steps: '5000' } } })); click({ stp: k, d: '1' }); return T.S().meas[dk(0)].steps === '6000'; });
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);

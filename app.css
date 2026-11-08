@@ -300,9 +300,10 @@ table.weeks td:nth-child(3):not(:empty){padding-top:4px;color:var(--muted)}
 .field.sleep{flex-wrap:wrap}
 .field.sleep .num{gap:4px}
 .field.sleep .num input[type=text]{width:44px;padding:8px 4px;text-align:center}
-.field.sleep .num .unit{margin:0}
+.field.sleep .num .unit{margin:0;width:auto;padding:0 4px}
 .field.haserr{flex-wrap:wrap}
 .field .err{flex:1 1 100%;font-size:13px;color:var(--warn-ink)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mtags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 .mtag{display:inline-block;font-size:13px;padding:0 8px;border-radius:var(--pill);box-shadow:inset 0 0 0 1px var(--line);color:var(--muted)}
+.ordtip{font-size:15px;color:var(--muted);margin:0 0 8px}

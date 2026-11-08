@@ -62,6 +62,8 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 - **Scenariusze do sprawdzania** (Pomoc → Sprawdź działanie, albo adres `#demo-migrena`, `#demo-wpisy`,
   `#demo-hashimoto`, `#demo-minitabletka`, `#demo-start`): gotowe dane przykładowe z opisem, co powinno się pokazać;
   nic się nie zapisuje.
+- **Zamówione:** sushi, kurczak po koreańsku i tofu z ilością i dodatkami jednym dotknięciem; szacunek kalorii z przedziałem
+  ±30% i białka, ostatni wybór zapamiętany. Sen i kroki mają chipy typowych wartości i „jak wczoraj”.
 - **Gotuję to dziś** w przepisie wstawia danie do planu dnia; plan tygodnia ma dwa rytmy: obiady do 20 min
   w dni robocze i jedno większe danie w weekend, z filtrem „Na co dzień” i „Na weekend”.
 
