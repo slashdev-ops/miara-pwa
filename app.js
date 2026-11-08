@@ -404,12 +404,74 @@ function reviewKey(){const d=new Date();return d.getDay()===0?mondayOf(d):monday
 function weekStats(mk){const base=Date.parse(mk+'T12:00:00'),ks=Array.from({length:7},(_,i)=>keyOf(new Date(base+i*864e5))),pk=Array.from({length:7},(_,i)=>keyOf(new Date(base+(i-7)*864e5)));const aw=a=>{const v=a.map(k=>num((S.meas[k]||{}).w)).filter(x=>x>0);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};let md=0,pts=0,ur=0,uok=0;ks.forEach(k=>{if((S.days[k]||[]).filter(e=>e.kind==='m').length>=3)md++;pts+=dayPts(k);(S.urges[k]||[]).forEach(u=>{ur++;if(u.out!=='inne')uok++})});return {ks,w:aw(ks),pw:aw(pk),md,pts,ur,uok}}
 function reviewPromptHtml(){const dw=new Date().getDay();if(![0,1,2].includes(dw)||(S.reviews||{})[reviewKey()])return '';return '<p><button class="btn" data-tab="review">Przegląd tygodnia, 2 minuty</button></p>'}
 function changeHtml(){const r=Object.entries(S.reviews||{}).sort((a,b)=>b[0].localeCompare(a[0]))[0];if(!r||!r[1].c||Date.now()-Date.parse(r[0]+'T12:00:00')>14*864e5)return '';return `<div class="note"><b>Twoja zmiana na ten tydzień:</b> ${esc(r[1].c)}</div>`}
+// ---------- Krok po kroku: rozpoznanie przeszkód i ścieżka gotowania, jeden krok na tydzień (rada/2026-11-08_sciezka-krokow) ----------
+const DQ=[['cook','Jak często przygotowujesz posiłek?',[['0','prawie nigdy'],['1','1-3 razy w tygodniu'],['2','prawie codziennie']]],
+  ['bar','Co najbardziej przeszkadza w gotowaniu?',[['umiej','nie wiem, co i jak'],['czas','brak czasu'],['sila','brak siły wieczorem'],['skl','brak składników w domu'],['nie','nic nie przeszkadza']]],
+  ['ord','Ile razy w tygodniu zamawiasz albo jesz na mieście?',[['0','0-1'],['1','2-3'],['2','4 i więcej']]],
+  ['when','Kiedy najczęściej jesz poza planem?',[['rano','rano'],['pop','po południu'],['wiecz','wieczorem'],['roz','różnie'],['rzad','rzadko']]],
+  ['why','Z jakiego powodu najczęściej?',[['stres','stres'],['zmecz','zmęczenie'],['nuda','nuda'],['glod','głód'],['nw','nie wiem']]]];
+const EQ=[['mikrofala','Mikrofala'],['piekarnik','Piekarnik'],['blender','Blender'],['czajnik','Czajnik'],['zamrazarka','Zamrażarka lub zamrażalnik'],['plyta','Płyta grzewcza'],['airfryer','Frytkownica beztłuszczowa'],['pojemniki','Pojemniki na zapas']];
+const ZAP=[['skyr','Skyr'],['twarog','Twaróg'],['chleb','Chleb żytni'],['tunczyk','Tuńczyk w puszce'],['owoce','Mrożone owoce']];
+const NOCOOK=m=>eqOf(m)[0]==='bez gotowania'&&m.min<=5;
+const KROKI=[
+  {n:'Bez gotowania',co:'3 razy w tygodniu danie złożone w 5 minut',cel:3,lz:1,f:NOCOOK,nie:'Powtórz krok w łatwiejszej wersji: 1 danie w tygodniu.',
+    jt:['Jeśli wracam po 18 i nie mam pomysłu, to najpierw jem danie z listy, a potem decyduję o zamówieniu.','Jeśli rano nie mam czasu, to biorę miskę skyru z płatkami.']},
+  {n:'Zapas w domu',co:'kup 5 podstaw i zaznacz je „mam w domu”, zjedz 3 dania z kroku 1',cel:3,lz:3,zt:5,lzt:3,f:NOCOOK,nie:'Łatwiejsza wersja: 3 podstawy zamiast 5.',
+    jt:['Jeśli robię zakupy, to najpierw biorę podstawy z listy.','Jeśli w domu kończy się podstawa, to od razu dopisuję ją do listy zakupów.']},
+  {n:'Mikrofala',eq:'mikrofala',co:'2 razy w tygodniu danie z mikrofali',cel:2,lz:1,f:m=>{const e=eqOf(m);return e.includes('mikrofala')&&!e.includes('piekarnik')&&!m.prep},nie:'Zostań przy kroku 2 i dodaj 1 danie z mikrofali.',
+    jt:['Jeśli wracam bez siły, to robię danie z mikrofali z listy.','Jeśli mam 10 minut, to robię jajecznicę w mikrofali.']},
+  {n:'Jedna blacha na 2 dni',eq:'piekarnik',co:'1 danie z piekarnika, zjedzone w 2 dni',cel:2,lz:2,same:1,f:(m,e)=>eqOf(m).includes('piekarnik')&&(!e||m.min<=20),nie:'Łatwiejsza wersja: danie z piekarnika do 20 minut.',
+    jt:['Jeśli jest niedziela wieczorem, to wkładam do piekarnika jedną blachę na 2 dni.','Jeśli piekarnik się grzeje, to od razu kroję warzywa na drugi dzień.']},
+  {n:'Na zapas w weekend',co:'1 gotowanie w weekend, potem 3 posiłki z zapasu w tygodniu',cel:3,lz:2,f:m=>!!m.prep,nie:'Łatwiejsza wersja: 2 posiłki z zapasu.',
+    jt:['Jeśli jest sobota przed południem, to gotuję jedno danie na zapas.','Jeśli w tygodniu brakuje czasu, to sięgam po pudełko z zapasu.']}];
+function krokMeals(i,easy){const K=KROKI[i],e=(S.krok||{}).eq||{},own=Object.keys(e).filter(k=>e[k]);
+  return MEALS.filter(m=>K.f(m,easy)&&(!own.length||eqOf(m).every(x=>x==='bez gotowania'||own.includes(x))))}
+function kNext(i){for(let j=i+1;j<KROKI.length;j++)if(krokMeals(j).length)return j;return -1}
+function kProg(mk){const k=S.krok,K=KROKI[k.step],ids=new Set(krokMeals(k.step,k.easy).map(m=>m.id)),base=Date.parse(mk+'T12:00:00'),cnt={};let n=0;
+  for(let i=0;i<7;i++)(S.days[keyOf(new Date(base+i*864e5))]||[]).forEach(e=>{if(e.kind==='m'&&ids.has(e.id)){n++;cnt[e.id]=(cnt[e.id]||new Set()).add(i)}});
+  if(K.same)n=Math.max(0,...Object.values(cnt).map(s=>s.size));
+  const cel=k.easy?K.lz:K.cel,zt=K.zt?(k.easy?K.lzt:K.zt):0,z=ZAP.filter(([id])=>(k.zap||{})[id]).length;return {n,cel,z,zt,ok:n>=cel&&z>=zt}}
+function kChain(){const a=S.krok.ans,L=[];const bar={umiej:'nie wiesz, co i jak ugotować',czas:'brak czasu na gotowanie',sila:'brak siły wieczorem',skl:'brak składników w domu'}[a.bar];
+  if(bar)L.push(bar);else if(a.cook==='0')L.push('rzadkie gotowanie');
+  if(a.ord==='2')L.push('zamawianie 4 i więcej razy w tygodniu');else if(a.ord==='1')L.push('zamawianie 2-3 razy w tygodniu');
+  if(a.when!=='rzad')L.push('jedzenie poza planem '+{rano:'rano',pop:'po południu',wiecz:'wieczorem',roz:'o różnych porach'}[a.when]+({stres:' ze stresu',zmecz:' ze zmęczenia',nuda:' z nudy',glod:' z głodu'}[a.why]||''));
+  return L}
+function kData(){let o=0,u=0;const t={};for(let i=0;i<14;i++){const k=keyOf(new Date(Date.now()-i*864e5));(S.days[k]||[]).forEach(e=>{if(e.ord)o++});(S.urges[k]||[]).forEach(x=>{u++;t[x.trig]=(t[x.trig]||0)+1})}
+  const top=Object.entries(t).sort((a,b)=>b[1]-a[1])[0];return o||u?`Z Twoich zapisów z 14 dni: zamówienia ${o}, ochoty ${u}${top&&TRIGN[top[0]]?` (najczęściej: ${TRIGN[top[0]]})`:''}.`:'Brak zapisów z 14 dni, więc łańcuch wynika tylko z odpowiedzi.'}
+function krokCardHtml(){const k=S.krok;if(!k||!k.conf)return changeHtml()+(S.onb&&!k?'<p><button class="btn ghost" data-tab="krok">Co mi utrudnia? 2 minuty</button></p>':'');
+  if(k.fin)return '<div class="note"><b>Ścieżka gotowania ukończona.</b> Kolejne ścieżki (zamawianie, ochoty) pojawią się w następnym etapie.</div>';
+  const K=KROKI[k.step],p=kProg(mondayOf(new Date()));
+  return `<div class="note"><b>Twój krok na ten tydzień:</b> ${K.n} (${k.step+1} z 5)${k.easy?', łatwiejsza wersja':''}<br>${K.co}. Postęp: ${p.n} z ${p.cel}${p.zt?`, zapas ${p.z} z ${p.zt}`:''}.${p.ok?' <b>Krok wykonany.</b>':''}</div><p><button class="btn ghost" data-tab="krok">${p.ok?'Następny krok':'Co zrobić w tym kroku'}</button></p>`}
+function renderKrok(){const k=S.krok,chip=(on,data,l,c)=>`<button class="chip${c?' '+c:''}${on?' inc':''}" ${data} aria-pressed="${!!on}">${l}</button>`;
+  let h='<p><button class="btn ghost" data-tab="day">Wróć</button></p>';
+  if(!k||!k.done){const a=(k||{}).ans||{},e=(k||{}).eq||{};
+    h+='<h2>Co Ci utrudnia?</h2><p>5 pytań, każde na jedno dotknięcie. Pytamy o to, czego brakuje: wiedzy, czasu, siły, składników. Odpowiedzi zostają w telefonie.</p>';
+    h+=DQ.map(([q,t,o])=>`<p style="margin:12px 4px 4px"><b>${t}</b></p><div class="chips">`+o.map(([v,l])=>chip(a[q]===v,`data-kq="${q}:${v}"`,l)).join('')+'</div>').join('');
+    h+='<p style="margin:12px 4px 4px"><b>Co masz w kuchni?</b> Zaznacz wszystko, co masz. Bez zaznaczenia pokażemy wszystkie dania.</p><div class="chips">'+EQ.map(([v,l])=>chip(e[v],`data-keq="${v}"`,l)).join('')+'</div>';
+    h+='<p><button class="btn" data-kres="1">Pokaż, co mi utrudnia</button></p>'+srcHtml('michie');
+  }else if(!k.conf){const L=kChain(),cookOk=k.ans.cook==='2'&&k.ans.bar==='nie';
+    h+=`<h2>Twoje przeszkody</h2><div class="note">${L.length?`<b>${esc(L.join(' → '))}</b>`:'Z odpowiedzi nie wynika wyraźna przeszkoda.'}</div><p>${kData()}</p><p>To przypuszczenie z Twoich odpowiedzi, nie ocena. Czy to o Tobie?</p>`;
+    if(cookOk)h+='<p class="small muted">Gotowanie nie wygląda na przeszkodę. Ścieżki dla zamawiania i ochot powstaną w kolejnym etapie; możesz już teraz zacząć od gotowania.</p>';
+    h+='<p><button class="btn" data-kconf="1">Tak, zaczynam od gotowania</button></p><p><button class="btn ghost" data-kdiag="1">Nie całkiem: zmień</button></p>'+srcHtml(['michie','wolfson']);
+  }else if(k.fin){h+='<div class="note"><b>Ścieżka gotowania ukończona.</b></div><p><button class="btn ghost" data-kdiag="1">Rozpoznanie od nowa</button></p>'}
+  else{const K=KROKI[k.step],p=kProg(mondayOf(new Date())),ms=krokMeals(k.step,k.easy);
+    h+=`<h2>Krok ${k.step+1} z 5: ${K.n}</h2><div class="note"><b>W tym tygodniu:</b> ${K.co}.<br>Postęp z Twoich zapisów: ${p.n} z ${p.cel}${p.zt?`, zapas ${p.z} z ${p.zt}`:''}.${p.ok?' <b>Krok wykonany.</b>':''}</div>`;
+    if(K.zt)h+='<p style="margin:12px 4px 4px"><b>Podstawy do kupienia</b></p><div class="chips">'+ZAP.map(([v,l])=>chip((k.zap||{})[v],`data-kzap="${v}"`,(k.zap||{})[v]?l+': mam w domu':l)).join('')+'</div>';
+    h+='<h3 class="rh" style="margin:12px 4px 8px">Dania tego kroku</h3><div class="panel">'+ms.map(m=>`<div class="entry"><span class="txt">${m.n}, ${m.min} min</span><button class="btn ghost small" data-recipe="${m.id}">Przepis</button></div>`).join('')+'</div>';
+    h+='<p style="margin:12px 4px 4px"><b>Twój plan „jeśli…, to…”</b></p><div class="chips">'+K.jt.map((t,i)=>chip(k.jt===i,`data-kjt="${i}"`,t,'opt')).join('')+'</div>';
+    h+=`<p><b>Gdy się nie uda:</b> ${K.nie} Pominięty dzień nie przerywa kroku.</p>`;
+    if(p.ok)h+='<p><button class="btn" data-kroknext="1">Następny krok</button></p>';
+    h+='<p class="small muted">Miara sama sprawdza krok w przeglądzie tygodnia. Jedna nowa rzecz naraz.</p>'+srcHtml(['harkin','gollw','lally'])+'<p><button class="btn ghost" data-kdiag="1">Rozpoznanie od nowa</button></p>'}
+  document.getElementById('main').innerHTML=h}
+function kStart(i){const k=S.krok;k.step=i;k.easy=false;k.since=mondayOf(new Date());k.jt=0}
+function krokRevHtml(mk,end){const k=S.krok;if(!k||!k.conf||k.fin||k.since>end)return '';const K=KROKI[k.step],p=kProg(mk);
+  return `<h2>Twój krok: ${K.n}</h2><div class="note">${p.ok?'<b>Krok wykonany</b>':'Krok jeszcze nie wyszedł'}: ${p.n} z ${p.cel}${p.zt?`, zapas ${p.z} z ${p.zt}`:''}.${p.ok?'':' To informacja, nie ocena.'}</div>`+(p.ok?'<p><button class="btn" data-kroknext="1">Następny krok</button></p>':'<div class="navrow"><button class="btn ghost" data-krokrep="1">Powtórz krok</button><button class="btn ghost" data-krokeasy="1">Łatwiejsza wersja</button><button class="btn ghost" data-krokdiag="1">Inna przeszkoda</button></div>')}
 function renderReview(){
   const mk=reviewKey(),st=weekStats(mk),ex=(S.reviews||{})[mk]||{},end=st.ks.at(-1);
   const ta=(id,lab,ph,v)=>`<h2>${lab}</h2><div class="panel" style="padding:10px 16px"><textarea id="${id}" rows="2" placeholder="${ph}" aria-label="${lab}" style="width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)">${esc(v||'')}</textarea></div>`;
   let h='<p><button class="btn ghost" data-tab="day">Wróć</button></p>';
-  h+=`<div class="note"><b>Tydzień ${fmtDate(mk)}-${fmtDate(end)}</b><br>Pełny zapis posiłków: ${st.md} z 7 dni. Punkty: ${fmt(st.pts)}. Ochoty: ${st.ur}${st.ur?`, w tym ${st.uok} bez jedzenia spoza planu`:''}.${st.w!=null?` Średnia waga: ${fmt1(st.w)} kg${st.pw!=null?`, tydzień wcześniej ${fmt1(st.pw)} kg`:''}.`:' Brak ważeń w tym tygodniu.'}</div>`;
-  h+=ta('r_a','Co zadziałało?','np. przekąska w torbie w pracy',ex.a)+ta('r_b','Co nie zadziałało?','np. podjadanie po 15:00',ex.b)+ta('r_c','Jedna zmiana na przyszły tydzień','np. herbata o 15:00 zamiast ciastka',ex.c);
+  h+=`<div class="note"><b>Tydzień ${fmtDate(mk)}-${fmtDate(end)}</b><br>Pełny zapis posiłków: ${st.md} z 7 dni. Punkty: ${fmt(st.pts)}. Ochoty: ${st.ur}${st.ur?`, w tym ${st.uok} bez jedzenia spoza planu`:''}.${st.w!=null?` Średnia waga: ${fmt1(st.w)} kg${st.pw!=null?`, tydzień wcześniej ${fmt1(st.pw)} kg`:''}.`:' Brak ważeń w tym tygodniu.'}</div>`+krokRevHtml(mk,end);
+  h+=ta('r_a','Co zadziałało?','np. przekąska w torbie w pracy',ex.a)+ta('r_b','Co nie zadziałało?','np. podjadanie po 15:00',ex.b)+(S.krok&&S.krok.conf&&!S.krok.fin?'<details class="fold"><summary>Własna zmiana (opcjonalnie)</summary>'+ta('r_c','Własna zmiana na przyszły tydzień','np. herbata o 15:00 zamiast ciastka',ex.c)+'</details>':ta('r_c','Jedna zmiana na przyszły tydzień','np. herbata o 15:00 zamiast ciastka',ex.c));
   h+='<p><button class="btn" data-revsave="1">Zapisz przegląd</button></p><p class="small muted">Jedna zmiana naraz. Zobaczysz ją przez tydzień na górze Mojego dnia.</p>';
   document.getElementById('main').innerHTML=h;
 }
@@ -664,7 +726,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'80',cm:'170',age:'35',sex:'K',goal:'72',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),JSON.parse(r));}catch(e){}return clone(DEF)}
@@ -680,6 +742,8 @@ const SCEN={
   hashimoto:{t:'Hashimoto, lipodemia, insulinooporność',tab:'health',chk:'Zdrowie: TSH 6-8 tygodni po zmianie tabletek (Yasmin), lewotyroksyna na czczo, talia i uda osobno, cel co najmniej 7% masy ciała; w 12 tygodniach przedziały wagi.',f:()=>({prof:{cond:{hashi:true,lip:true,io:true},pill:'yasmin'},lip:true,goal:'70'})},
   polaczenia:{t:'Połączenia: IO, migrena i Hashimoto',tab:'meals',chk:'Posiłki: „Dla mnie” włączone, plan dnia z daniami „dopasowane do IO”. Zdrowie: zdania „Razem: …” dla par schorzeń. Mój dzień po 12:00: karta „Długa przerwa w jedzeniu”.',
     f:b=>{const d=Object.assign({},b.days);d[nAgo(0)]=[];return {prof:{cond:{io:true,mig:true,hashi:true},pill:'cerazette'},days:d}}},
+  sciezka:{t:'Krok po kroku',tab:'krok',chk:'Krok po kroku: krok 1 „Bez gotowania”, postęp 2 z 3, dania bez gotowania, plan „jeśli…, to…”. Mój dzień: „Twój krok na ten tydzień”. Przegląd tygodnia: ocena kroku i własna zmiana jako opcja.',
+    f:b=>{const d=Object.assign({},b.days),m=MEALS.find(x=>x.id==='s3'),x=macros(m,1,1),e={kind:'m',id:'s3',label:m.n,k:x.k,p:x.p,f:x.f,c:x.c};d[nAgo(0)]=[e,{...e}];return {krok:{ans:{cook:'0',bar:'skl',ord:'2',when:'wiecz',why:'zmecz'},eq:{mikrofala:true,piekarnik:true,blender:true},done:true,conf:true,step:0,since:mondayOf(new Date()),easy:false,jt:0,zap:{}},days:d}}},
   pokaz:{t:'Pełny pokaz',tab:'day',chk:'70 dni danych: Stan dziś, trendy, zwierzak z odznakami, przegląd tygodnia; zakładki działają jak na co dzień.',f:()=>({})}};
 function migPain(b,pill){const pain={},m=Object.assign({},b.meas);for(let i=0;i<12;i++)pain[nAgo(i*2)]={aura:i<3,med:i<10};[1,3,5].forEach(i=>{m[nAgo(i)]=Object.assign({},m[nAgo(i)],{cyc:'P'})});
   m[nAgo(0)]=Object.assign({},m[nAgo(0)],{sleep:'5:20'});m[nAgo(1)]=Object.assign({},m[nAgo(1)],{sleep:'5:45'});return {prof:{cond:{aura:true,mig:true},pill},pain,meas:m}}
@@ -907,7 +971,13 @@ const SRC={
   fdcTofu:['https://fdc.nal.usda.gov/food-details/2707476/nutrients','USDA: tofu z warzywami'],
   fdcRice:['https://fdc.nal.usda.gov/food-details/2708408/nutrients','USDA: ryż'],
   fdcFries:['https://fdc.nal.usda.gov/food-details/2709461/nutrients','USDA: frytki'],
-  fdcSlaw:['https://fdc.nal.usda.gov/food-details/2709814/nutrients','USDA: coleslaw']};
+  fdcSlaw:['https://fdc.nal.usda.gov/food-details/2709814/nutrients','USDA: coleslaw'],
+  michie:['https://pmc.ncbi.nlm.nih.gov/articles/PMC3096582/','Michie 2011 (COM-B)'],
+  lally:['https://pmc.ncbi.nlm.nih.gov/articles/PMC11641623/','Singh 2024 (czas tworzenia nawyku)'],
+  harkin:['https://pubmed.ncbi.nlm.nih.gov/26479070/','Harkin 2016 (zapisywanie postępu)'],
+  gollw:['https://kops.uni-konstanz.de/entities/publication/2e749bfb-8533-437c-8203-7e788c910c5f','Gollwitzer 2006 (plan jeśli-to)'],
+  wolfson:['https://pubmed.ncbi.nlm.nih.gov/25399031/','Wolfson 2015 (gotowanie w domu)'],
+  reicks:['https://pubmed.ncbi.nlm.nih.gov/28958671/','Reicks 2018 (nauka gotowania)']};
 const srcA=k=>SRC[k]?`<a href="${SRC[k][0]}" target="_blank" rel="noopener noreferrer">${SRC[k][1]}</a>`:'';
 function srcHtml(keys){const k=[].concat(keys||[]).filter(x=>SRC[x]);return k.length?'<p class="srcl">Źródło: '+k.map(srcA).join(', ')+'</p>':''}
 const EV={m:'dowody mocne',u:'dowody umiarkowane',s:'dowody słabe',w:'wiedza ogólna'};
@@ -1064,7 +1134,7 @@ const TABS=[
 ];
 function renderTabs(){const tb=document.getElementById('tabs');if(tb&&tb.style)tb.style.display=S.tab==='intro'?'none':'';
   document.getElementById('tabs').innerHTML=TABS.map(([k,l,ic])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}" aria-label="${l}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>${l}</button>`).join('');
-  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{help:'Pomoc',sos:'Ochota na przekąskę',labs:'Moje badania',visit:'Lista na wizytę',intro:'Wprowadzenie',review:'Przegląd tygodnia',recipe:'Przepis',knee:'Program kolana',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
+  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{help:'Pomoc',sos:'Ochota na przekąskę',labs:'Moje badania',visit:'Lista na wizytę',intro:'Wprowadzenie',review:'Przegląd tygodnia',krok:'Krok po kroku',recipe:'Przepis',knee:'Program kolana',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
   document.getElementById('who').textContent=new Date().toLocaleDateString('pl-PL',{weekday:'short',day:'numeric',month:'numeric'});
 }
 function seg(items,cur,attr,cls=''){return `<div class="seg ${cls}">`+items.map(([v,l])=>`<button class="${String(cur)===String(v)?'on':''}" data-${attr}="${v}">${l}</button>`).join('')+'</div>'}
@@ -1151,7 +1221,7 @@ function renderDay(){
   const R=rmr(),target=targetKcal(),pT=1.4*(num(S.goal)||68);
   const bar=(lab,v,max,unit)=>{const pc=Math.min(100,v/max*100);return `<div class="prog"><div class="top"><span>${lab}</span><span>${fmt(v)} / ${fmt(max)} ${unit}</span></div><div class="track"><div class="fill ${v>max*1.05?'over':''}" style="width:${pc}%"></div></div></div>`};
   const sos='<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>';
-  let h=guideHtml()+stanHtml()+cardsHtml('day')+changeHtml()+focusHtml()+painHtml()+reviewPromptHtml()+petCardHtml()+sos+measHtml()+legHtml()+kneeBannerHtml();
+  let h=guideHtml()+stanHtml()+cardsHtml('day')+krokCardHtml()+focusHtml()+painHtml()+reviewPromptHtml()+petCardHtml()+sos+measHtml()+legHtml()+kneeBannerHtml();
   let more=modeHtml()+`<h3 class="rh" style="margin:4px 4px 8px">Energia i białko dziś</h3><div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
   more+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
   more+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
@@ -1250,7 +1320,7 @@ function renderHelp(){let h='<h2>Co chcesz zrobić?</h2><p class="small muted">N
   h+='</div><h2>Sprawdź działanie</h2><p class="small muted">Dane przykładowe: nic się nie zapisuje, Twoje dane zostają. Wyjdź wraca do nich.</p><div class="panel" style="padding:0 16px">'+Object.entries(SCEN).map(([n,s])=>`<div class="step"><span class="lab">${s.t}<small class="hint">${s.chk}</small></span><button class="btn small ghost" data-scen="${n}">Otwórz</button></div>`).join('');
   h+='</div><h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
   document.getElementById('main').innerHTML=h}
-function render(){renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+function render(){renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -1298,6 +1368,16 @@ document.addEventListener('click',e=>{
   else if(d.introdone){S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0)}
   else if(d.intro){S.introStep=0;S.tab='intro';window.scrollTo(0,0)}
   else if(d.goto){const el=document.getElementById(d.goto);if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.focus)el.focus({preventScroll:true})}return}
+  else if(d.kq){const [q,v]=d.kq.split(':');S.krok=S.krok||{ans:{},eq:{},done:false,conf:false,zap:{}};S.krok.ans[q]=v}
+  else if(d.keq){S.krok=S.krok||{ans:{},eq:{},done:false,conf:false,zap:{}};S.krok.eq[d.keq]=!S.krok.eq[d.keq]}
+  else if(d.kres){const a=(S.krok||{}).ans||{},miss=DQ.filter(([q])=>!a[q]);if(miss.length){toast('Odpowiedz jeszcze na: '+miss.map(x=>x[1].toLowerCase()).join(' '));return}S.krok.done=true;window.scrollTo(0,0)}
+  else if(d.kconf){S.krok.conf=true;S.krok.fin=false;S.krok.zap=S.krok.zap||{};kStart(kNext(-1));window.scrollTo(0,0)}
+  else if(d.kdiag||d.krokdiag){S.krok.done=false;S.krok.conf=false;S.krok.fin=false;S.tab='krok';window.scrollTo(0,0)}
+  else if(d.kjt){S.krok.jt=+d.kjt}
+  else if(d.kzap){S.krok.zap=S.krok.zap||{};S.krok.zap[d.kzap]=!S.krok.zap[d.kzap]}
+  else if(d.kroknext){const j=kNext(S.krok.step);if(j<0)S.krok.fin=true;else kStart(j);toast(j<0?'Ścieżka gotowania ukończona':'Nowy krok: '+KROKI[j].n)}
+  else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')}
+  else if(d.krokeasy){kStart(S.krok.step);S.krok.easy=true;toast('Łatwiejsza wersja kroku od tego tygodnia')}
   else if(d.revsave){const g=id=>document.getElementById(id).value.trim();S.reviews=S.reviews||{};S.reviews[reviewKey()]={a:g('r_a'),b:g('r_b'),c:g('r_c'),d:todayKey()};S.tab='day';toast('Zapisano przegląd');window.scrollTo(0,0)}
   else if(d.mode){S.mode=d.mode;if(d.mode==='utrzymanie'){S.maintRef=Math.round((avg7()||kg())*10)/10;S.maintSince=todayKey()}else{S.maintSince=''}toast(d.mode==='utrzymanie'?'Tryb utrzymania':'Tryb redukcji')}
   else if(d.leg){const [key,n]=d.leg.split(':'),k=todayKey();S.legs=S.legs||{};S.legs[k]=S.legs[k]||{};S.legs[k][key]=+n}

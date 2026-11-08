@@ -101,6 +101,7 @@ main p > .btn:not(.small) + .btn:not(.small){margin-top:8px}
 
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:var(--pill);padding:8px 12px;font-size:15px;min-height:44px;white-space:nowrap}
+.chip.opt{white-space:normal;text-align:left;border-radius:var(--r-s);width:100%}
 .chip.inc{background:var(--green);color:var(--on-green);border-color:var(--green)}
 .chip.exc{background:transparent;color:var(--clay);border-color:var(--clay);text-decoration:line-through}
 
