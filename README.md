@@ -62,6 +62,8 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 - **Scenariusze do sprawdzania** (Pomoc → Sprawdź działanie, albo adres `#demo-migrena`, `#demo-wpisy`,
   `#demo-hashimoto`, `#demo-minitabletka`, `#demo-start`): gotowe dane przykładowe z opisem, co powinno się pokazać;
   nic się nie zapisuje.
+- **Zamówione:** sushi, kurczak po koreańsku i tofu z ilością i dodatkami jednym dotknięciem; szacunek kalorii z przedziałem
+  ±30% i białka, ostatni wybór zapamiętany. Sen i kroki mają chipy typowych wartości i „jak wczoraj”.
 - **Gotuję to dziś** w przepisie wstawia danie do planu dnia; plan tygodnia ma dwa rytmy: obiady do 20 min
   w dni robocze i jedno większe danie w weekend, z filtrem „Na co dzień” i „Na weekend”.
 
@@ -77,6 +79,13 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
   przerywanego przy IO i migrenie); karta „Długa przerwa w jedzeniu” przy migrenie.
 - „12 tygodni”: waga w przedziale z deficytu planu i kamienie milowe; aplikacja celowo nie prognozuje wyników badań,
   bólu ani samopoczucia, tylko pokazuje je z wpisów.
+
+## Źródła treści zdrowotnych
+
+- Każda liczba i zalecenie zdrowotne ma link „Źródło” (wytyczne WHO, UKMEC, EMA, ICHD-3, ATA, przeglądy w PubMed/PMC,
+  baza USDA FoodData Central); źródła sprawdzone w sesji z cytatem wartości, nie z pamięci.
+- `tests/smoke.js` pilnuje, że plan działań, karty i Zamówione mają źródła, a liczby bez źródła nie wracają;
+  działanie linków sprawdza osobny skrypt (strony USDA są aplikacją w przeglądarce, więc skrypt sprawdza ich dane).
 
 ## Założenia projektu
 

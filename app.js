@@ -152,6 +152,13 @@ function dataGap(){let w=0,i=0;lastKeys(28).forEach(k=>{const m=(S.meas||{})[k];
 function hm(v){let H=Math.floor(v),M=Math.round((v-H)*60);if(M===60){H++;M=0}return [H,M]}
 function fmtSleep(v){const [H,M]=hm(v);return M?`${H} h ${M} min`:`${H} h`}
 function sleepFmt(v){const [H,M]=hm(v);return `${H}:${String(M).padStart(2,'0')}`}
+// Chipy typowych wartości i „jak wczoraj” (WCAG 3.3.7): jedno dotknięcie zamiast wpisywania
+function lastMeasK(f,k){const ks=Object.keys(S.meas||{}).filter(x=>x<k&&String((S.meas[x]||{})[f]||'').trim()!=='').sort();return ks.length?[ks[ks.length-1],String(S.meas[ks[ks.length-1]][f])]:null}
+function sleepChips(k,m){const cur=String(m.sleep||'').trim()?num(m.sleep):null,l=lastMeasK('sleep',k),ch=[['6:00','6 h'],['6:30','6:30'],['7:00','7 h'],['7:30','7:30'],['8:00','8 h']];
+  if(l)ch.unshift([sleepFmt(num(l[1])),`${l[0]===nAgo(1)?'jak wczoraj':'jak ostatnio'} (${fmtSleep(num(l[1]))})`]);
+  return '<div class="chips quick">'+ch.map(([v,t])=>`<button class="chip${cur!=null&&Math.abs(num(v)-cur)<0.01?' inc':''}" data-setv="meas.${k}.sleep" data-v="${v}">${t}</button>`).join('')+'</div>'}
+function stepsChip(k,m){const l=lastMeasK('steps',k);if(String(m.steps||'').trim()||!l)return '';const v=String(num(l[1]));
+  return `<div class="chips quick"><button class="chip" data-setv="meas.${k}.steps" data-v="${v}">${l[0]===nAgo(1)?'jak wczoraj':'jak ostatnio'} (${fmt(num(v))})</button></div>`}
 function sleepField(k,m){const has=String(m.sleep||'').trim()!=='',[H,M]=has?hm(num(m.sleep)):['',''],ls=lastMeas('sleep',k),[pH,pM]=ls?hm(num(ls)):[7,0];
   return `<div class="field sleep"><label for="m_sleep">Sen</label><span class="num"><button class="stp" data-stp="meas.${k}.sleep" data-d="-1" aria-label="Sen: mniej o 15 minut">−</button>`
     +`<input type="text" inputmode="numeric" id="m_sleep" data-sl="h" data-day="${k}" value="${H}" placeholder="${pH}" aria-label="Sen, godziny"><span class="unit">h</span>`
@@ -160,7 +167,7 @@ function sleepField(k,m){const has=String(m.sleep||'').trim()!=='',[H,M]=has?hm(
 function measHtml(){
   const k=todayKey(),m=S.meas[k]||(S.meas[k]={});
   const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" placeholder="${ph||lastMeas(key,k)}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`;
-  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, po toalecie, przed jedzeniem. Kroki i sen przepisz z zegarka. Obwody co 2 tygodnie. Sen wpisz w godzinach i minutach, tak jak pokazuje zegarek.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+sleepField(k,m)+'</div>'+cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej zawsze w tych samych warunkach: rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). Wpisany BMR z pomiaru BIA zastępuje wzór przez 90 dni, a waga z pomiarów zastępuje wagę z ustawień.</p></details>';
+  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, po toalecie, przed jedzeniem. Kroki i sen przepisz z zegarka. Obwody co 2 tygodnie. Sen wpisz w godzinach i minutach, tak jak pokazuje zegarek.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+stepsChip(k,m)+sleepField(k,m)+sleepChips(k,m)+'</div>'+cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej zawsze w tych samych warunkach: rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). Wpisany BMR z pomiaru BIA zastępuje wzór przez 90 dni, a waga z pomiarów zastępuje wagę z ustawień.</p></details>';
   const ks=lastKeys(28).reverse(),val=(x,key)=>{const v=num((S.meas[x]||{})[key]);return v>0?v:null};
   const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
   const ws=ks.map(x=>val(x,'w')),w1=avg(ws.slice(-7)),w0=avg(ws.slice(-14,-7)),st=avg(ks.slice(-7).map(x=>val(x,'steps'))),sl=avg(ks.slice(-7).map(x=>val(x,'sleep')));
@@ -173,7 +180,7 @@ function measHtml(){
   const pc=ks.slice(-7).filter(x=>(S.meas[x]||{}).cyc==='P'&&val(x,'w')!=null).length;if(pc)t.push(`${pc} ${pc===1?'ważenie':'ważenia'} z ostatnich 7 dni w przerwie w tabletkach: woda może wtedy podnieść wagę (wiedza ogólna).`);
   const pts=ws.map((v,i)=>v==null?null:[i,v]).filter(Boolean);let svg='',svgCap='';
   if(pts.length>=5){const ys=pts.map(p=>p[1]),mn=Math.min(...ys),mx=Math.max(...ys),r=mx-mn||1;svgCap=`<p class="small muted">Waga z 28 dni: od ${fmt1(mn)} do ${fmt1(mx)} kg.</p>`;svg=`<svg viewBox="0 0 280 60" width="100%" height="60" role="img" aria-label="Waga z 28 dni"><polyline fill="none" stroke="var(--green)" stroke-width="2" points="${pts.map(p=>`${(p[0]/27*270+5).toFixed(1)},${(55-(p[1]-mn)/r*50).toFixed(1)}`).join(' ')}"/></svg>`}
-  if(t.length||svg)h+=fold('trendy','Trendy pomiarów',`<div class="note" style="margin:0">${svg}${svgCap}${t.map(x=>`<p>${x}</p>`).join('')}<p class="small muted">Pojedyncze ważenie waha się przez wodę nawet o 1-2 kg (wiedza ogólna); decyduje średnia z tygodnia.</p></div>`);
+  if(t.length||svg)h+=fold('trendy','Trendy pomiarów',`<div class="note" style="margin:0">${svg}${svgCap}${t.map(x=>`<p>${x}</p>`).join('')}<p class="small muted">Decyduje średnia z tygodnia, nie pojedyncze ważenie.</p></div>`);
   return h;
 }
 // Plan dnia według profilu: przy IO danie spoza reguły zamienia się na danie tego samego rodzaju, które ją spełnia,
@@ -184,6 +191,28 @@ function planFor(dw){const base=PLAN[dw];if(!((S.prof||{}).cond||{}).io)return b
 function planIds(){const sw=(S.swaps||{})[todayKey()]||{};return planFor(new Date().getDay()).map((id,i)=>sw[i]||id)}
 function shopLines(){const agg={};for(const d of [0,1,2,3,4,5,6])planFor(d).forEach(id=>MEALS.find(m=>m.id===id).ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g}));return Object.keys(ING).filter(i=>agg[i]).map(i=>i==='jajko'?`Jajka: ${Math.ceil(agg[i]/60)} szt.`:`${ING[i].n}: ${Math.ceil(agg[i]/10)*10} g`)}
 function shopHtml(){const L=shopLines();return `<details class="fold" id="zakupy"><summary>Lista zakupów na tydzień z planu (${L.length} pozycji)</summary><div class="panel">`+L.map(l=>{const [a,b]=l.split(': ');return `<div class="entry"><span class="txt">${a}</span><span class="val">${b}</span></div>`}).join('')+'</div><p class="small muted" style="padding:0 16px">Ilości dla 7 dni planu, bez zamian i bez dodatkowych porcji węglowodanów po treningu. Przyprawy, sól i cytryna poza listą.</p><p style="padding:0 16px 12px"><button class="btn ghost" data-shop="1">Kopiuj listę</button></p></details>'}
+// ---------- Zamówione: jedzenie z dostawy jednym dotknięciem; wartości orientacyjne dietetyka, przedział ±30% (rada/2026-11-08_zamowione-i-zakresy) ----------
+const plN=(n,a,b,c)=>n===1?a:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?b:c;
+const ORD={
+  sushi:{n:'Sushi',opts:[6,8,12,16,24],def:12,lab:x=>`${x} szt.`,per:{k:28,p:0.9,f:0.2,c:5.5},ref:'fdcMaki',alt:{lab:'nigiri',per:{k:35,p:3.4,f:0.1,c:4.7},ref:'fdcNigiri'},
+    tip:'Wartości dla rolki maki (kawałek ok. 30 g) albo nigiri (ok. 35 g) z bazy USDA.'},
+  kurczak:{n:'Kurczak po koreańsku',opts:[3,4,5,6,8,10],def:5,lab:x=>`${x} ${plN(x,'kawałek','kawałki','kawałków')}`,per:{k:148,p:6.5,f:8.2,c:12},ref:'fdcChicken',
+    tip:'Bazy składu żywności nie mają kurczaka po koreańsku: wartości z najbliższego dania, kurczaka smażonego w glazurze (kawałek ok. 50 g).'},
+  tofu:{n:'Tofu',opts:[['0.7','mała porcja'],['1','zwykła porcja'],['1.3','duża porcja']],def:'1',per:{k:322,p:14.4,f:23.5,c:16.4},ref:'fdcTofu',
+    tip:'Wartości dla tofu z warzywami w sosie sojowym (porcja ok. 350 g) z bazy USDA.'}};
+const ORD_ADD=[['ryz','ryż',{k:258,p:5.3,f:0.6,c:56},'ryżem','fdcRice'],['fry','frytki',{k:468,p:5.1,f:22.1,c:62.2},'frytkami','fdcFries'],['sal','coleslaw',{k:239,p:1.3,f:17.7,c:18.5},'coleslawem','fdcSlaw']];
+function ordDish(){const o=S.ord||{};return ORD[o.dish]?o.dish:'sushi'}
+function ordQty(){const o=S.ord||{},dk=ordDish();return dk==='tofu'?String(o.tofu||'1'):(+o[dk]||ORD[dk].def)}
+function ordCalc(){const o=S.ord||{},dk=ordDish(),d=ORD[dk],q=num(ordQty()),per=dk==='sushi'&&o.alt?d.alt.per:d.per,t={k:per.k*q,p:per.p*q,f:per.f*q,c:per.c*q};
+  ORD_ADD.forEach(([id,,v])=>{if((o.add||{})[id]){t.k+=v.k;t.p+=v.p;t.f+=v.f;t.c+=v.c}});return t}
+function ordLabel(){const o=S.ord||{},dk=ordDish(),d=ORD[dk],q=ordQty(),ad=ORD_ADD.filter(([id])=>(o.add||{})[id]).map(x=>x[3]);
+  return `${d.n}, ${dk==='tofu'?d.opts.find(x=>x[0]===q)[1]:d.lab(q)}${dk==='sushi'&&o.alt?', nigiri':''}${ad.length?', z '+ad.join(', '):''}`}
+function orderHtml(){const o=S.ord||{},dk=ordDish(),d=ORD[dk],q=String(ordQty()),t=ordCalc();
+  return '<h2 id="zamowione">Zamówione</h2>'+whyP('zamowione')+'<div class="panel" style="padding:12px 16px">'+seg(Object.entries(ORD).map(([k,v])=>[k,v.n]),dk,'orddish','scroll')
+    +'<div class="chips">'+d.opts.map(x=>{const [v,l]=Array.isArray(x)?x:[String(x),d.lab(x)];return `<button class="chip${v===q?' inc':''}" data-ordn="${v}" aria-pressed="${v===q}">${l}</button>`}).join('')+'</div>'
+    +(d.alt?`<div class="chips"><button class="chip${o.alt?' inc':''}" data-ordalt="1" aria-pressed="${!!o.alt}">${d.alt.lab}</button></div>`:'')
+    +'<p class="small" style="margin:8px 0 4px">Dodatki</p><div class="chips">'+ORD_ADD.map(([id,n])=>`<button class="chip${(o.add||{})[id]?' inc':''}" data-ordadd="${id}" aria-pressed="${!!(o.add||{})[id]}">${n}</button>`).join('')+'</div>'
+    +`<p><b>ok. ${fmt(t.k)} kcal (${fmt(t.k*0.7)}-${fmt(t.k*1.3)})</b>, białko ${fmt(t.p)} g</p><p class="ordtip">${d.tip}</p>${srcHtml([dk==='sushi'&&o.alt?d.alt.ref:d.ref,...ORD_ADD.filter(([id])=>(o.add||{})[id]).map(x=>x[4])])}<p><button class="btn" data-ordsave="1">Zapisz zamówione</button></p></div>`}
 function planHtml(){
   const ids=planIds(),d=day(),cm=carbMult(),por=num(S.f.portion)||1,ms=d.filter(e=>e.kind==='m'),logged=new Set(ms.map(e=>e.id));
   const left=targetKcal()-ms.reduce((a,e)=>a+e.k,0),now=slotNow();
@@ -264,11 +293,9 @@ function renderHealth(){
   h+=cardsHtml('health')+visitHtml();
   const box=(title,items)=>`<details class="fold"><summary>${title}</summary><div class="panel">`+items.map(([a,b])=>`<div class="entry"><span class="txt"><b>${a}.</b> ${b}</span></div>`).join('')+'</div></details>';
   h+=box('Woda, uda i pośladki',[
-    ['Waga skacze z dnia na dzień','Wahania o 1-2 kg to głównie woda: sól, węglowodany, cykl, trening (wiedza ogólna). Dlatego aplikacja patrzy na średnią z tygodnia i trend z 2-4 tygodni.'],
-    ['Co zmniejsza zatrzymanie wody','Mniej żywności wysoko przetworzonej i słonej, warzywa i strączki, ruch łydek w ciągu dnia, sen (wiedza ogólna). Bez tabletek odwadniających na własną rękę.'],
-    ['Kiedy do lekarza','Obrzęk zostawiający dołek po uciśnięciu, nagły obrzęk jednej nogi, obrzęk z dusznością. Niedoczynność tarczycy i antykoncepcja z estrogenem też mogą sprzyjać zatrzymaniu wody (wiedza ogólna, niesprawdzone).'],
-    ['Lipodemia to nie woda','Tkanka przy lipodemii jest symetryczna, często bolesna i zwykle oszczędza stopy. Na objawy: ruch, zwłaszcza w wodzie, i kompresja dobrana przez lekarza.'],
-    ['Uda i pośladki','Tkanki tłuszczowej nie da się spalić tylko w wybranym miejscu: w badaniu 12 tygodni treningu jednej nogi tłuszcz w tej nodze nie spadł. Działa deficyt plus trening siłowy całego ciała; mierz obwody uda i bioder, nie tylko wagę.']
+    ['Waga skacze z dnia na dzień',`Glikogen wiąże wodę: każdy gram to 2,7-4 g wody. Dlatego aplikacja patrzy na średnią z tygodnia i trend z 2-4 tygodni, a nie na pojedyncze ważenie. Źródło: ${srcA('glyc')}.`],
+    ['Lipodemia',`Kompresja razem z ruchem zmniejsza ból, a ćwiczenia w wodzie są szczególnie skuteczne; kompresja nie zmniejsza tkanki. Przy nadwadze redukcja masy zmniejsza też objętość nóg. Źródło: ${srcA('s2k')}.`],
+    ['Uda i pośladki',`W badaniu 12 tygodni treningu jednej nogi tłuszcz w tej nodze nie spadł, choć spadł w całym ciele. Mierz obwody uda i bioder, nie tylko wagę. Źródło: ${srcA('spot')}.`]
   ]);
   h+=box('Dzień pracy przy biurku',[
     ['Przy komputerze','Wstawanie co 45-60 minut na 2-3 minuty: woda, rozciąganie, schody. Rozmowy telefoniczne na stojąco albo w ruchu.'],
@@ -375,7 +402,7 @@ function relHtml(){const r=reliability();if(!r||r.span<7)return '';const M=measu
 function mondayOf(d){const x=new Date(d);x.setHours(12,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return keyOf(x)}
 function reviewKey(){const d=new Date();return d.getDay()===0?mondayOf(d):mondayOf(new Date(Date.now()-7*864e5))}
 function weekStats(mk){const base=Date.parse(mk+'T12:00:00'),ks=Array.from({length:7},(_,i)=>keyOf(new Date(base+i*864e5))),pk=Array.from({length:7},(_,i)=>keyOf(new Date(base+(i-7)*864e5)));const aw=a=>{const v=a.map(k=>num((S.meas[k]||{}).w)).filter(x=>x>0);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};let md=0,pts=0,ur=0,uok=0;ks.forEach(k=>{if((S.days[k]||[]).filter(e=>e.kind==='m').length>=3)md++;pts+=dayPts(k);(S.urges[k]||[]).forEach(u=>{ur++;if(u.out!=='inne')uok++})});return {ks,w:aw(ks),pw:aw(pk),md,pts,ur,uok}}
-function reviewPromptHtml(){const dw=new Date().getDay();if(![0,1,2].includes(dw)||(S.reviews||{})[reviewKey()])return '';return '<p><button class="btn" data-tab="review">Przegląd tygodnia: 3 pytania, 2 minuty</button></p>'}
+function reviewPromptHtml(){const dw=new Date().getDay();if(![0,1,2].includes(dw)||(S.reviews||{})[reviewKey()])return '';return '<p><button class="btn" data-tab="review">Przegląd tygodnia, 2 minuty</button></p>'}
 function changeHtml(){const r=Object.entries(S.reviews||{}).sort((a,b)=>b[0].localeCompare(a[0]))[0];if(!r||!r[1].c||Date.now()-Date.parse(r[0]+'T12:00:00')>14*864e5)return '';return `<div class="note"><b>Twoja zmiana na ten tydzień:</b> ${esc(r[1].c)}</div>`}
 function renderReview(){
   const mk=reviewKey(),st=weekStats(mk),ex=(S.reviews||{})[mk]||{},end=st.ks.at(-1);
@@ -501,7 +528,7 @@ function renderRecipe(){
   if(cm!==1||por!==1)h+=`<p class="small muted">Porcja przeliczona: węglowodany ×${fmt1(cm)}, wielkość ×${fmt1(por)}.</p>`;
   h+='<h3 class="rh">Przygotowanie</h3><ol class="steps">'+steps.map(s=>`<li>${s}</li>`).join('')+'</ol>';
   h+=tipsHtml(m,x);
-  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz co najmniej 4 godziny po leku (wiedza ogólna, niesprawdzone).</p>':''}${planIds().includes(m.id)?'<p class="small muted">W planie na dziś. Wieczorem „Według planu” zapisze to danie.</p>':`<p><button class="btn" data-cook="${m.id}">Gotuję to dziś</button></p>`}<p><button class="btn${planIds().includes(m.id)?'':' ghost'}" data-addmeal="${m.id}">Zjem, zapisz</button></p><p><button class="btn ghost" data-copy="${m.id}">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
+  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz w odstępie od leku, bo może zmniejszać jego wchłanianie (opisy przypadków, wytyczne ATA 2014).</p>':''}${planIds().includes(m.id)?'<p class="small muted">W planie na dziś. Wieczorem „Według planu” zapisze to danie.</p>':`<p><button class="btn" data-cook="${m.id}">Gotuję to dziś</button></p>`}<p><button class="btn${planIds().includes(m.id)?'':' ghost'}" data-addmeal="${m.id}">Zjem, zapisz</button></p><p><button class="btn ghost" data-copy="${m.id}">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
   document.getElementById('main').innerHTML=h;
 }
 
@@ -637,7 +664,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'80',cm:'170',age:'35',sex:'K',goal:'72',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),JSON.parse(r));}catch(e){}return clone(DEF)}
@@ -649,8 +676,8 @@ const SCEN={
   wpisy:{t:'Wpisy dnia',tab:'day',chk:'Mój dzień, Pomiary dnia: + przy wadze wstawia wczorajsze 80,4 kg, przytrzymanie zmienia wartość coraz szybciej, sen wpisujesz cyframi (6 i 13), minuty 75 pokazują błąd pod polem i wracają.',
     f:b=>{const m=Object.assign({},b.meas);m[nAgo(0)]={};m[nAgo(1)]=Object.assign({},m[nAgo(1)],{w:'80,4',sleep:'6:13',steps:'8500'});return {meas:m}}},
   migrena:{t:'Migrena z aurą i Yaz',tab:'health',chk:'Zdrowie: „Najpierw” każe porozmawiać z ginekologiem, bo Yaz zawiera estrogen; licznik 10 dni z lekiem w 30 dniach; w 12 tygodniach ocena 3 cykli. Mój dzień: dzień z bólem i karta „Po krótkich nocach”.',f:b=>migPain(b,'yaz')},
-  minitabletka:{t:'Migrena z aurą i minitabletka',tab:'health',chk:'Zdrowie: bez przeciwwskazania, zamiast niego „Twoja tabletka jest dopuszczalna przy aurze”; „Najpierw” to licznik dni z lekiem.',f:b=>migPain(b,'cerazette')},
-  hashimoto:{t:'Hashimoto, lipodemia, insulinooporność',tab:'health',chk:'Zdrowie: TSH 6-8 tygodni po zmianie tabletek (Yasmin), lewotyroksyna na czczo, talia i uda osobno, cel 5-7% masy ciała; w 12 tygodniach przedziały wagi.',f:()=>({prof:{cond:{hashi:true,lip:true,io:true},pill:'yasmin'},lip:true,goal:'70'})},
+  minitabletka:{t:'Migrena z aurą i minitabletka',tab:'health',chk:'Zdrowie: bez przeciwwskazania; zamiast niego kategorie UKMEC 2025 (2) i WHO 2025 (2 przy rozpoczęciu, 3 przy kontynuacji) i prośba o rozmowę z lekarzem; „Najpierw” to licznik dni z lekiem.',f:b=>migPain(b,'cerazette')},
+  hashimoto:{t:'Hashimoto, lipodemia, insulinooporność',tab:'health',chk:'Zdrowie: TSH 6-8 tygodni po zmianie tabletek (Yasmin), lewotyroksyna na czczo, talia i uda osobno, cel co najmniej 7% masy ciała; w 12 tygodniach przedziały wagi.',f:()=>({prof:{cond:{hashi:true,lip:true,io:true},pill:'yasmin'},lip:true,goal:'70'})},
   polaczenia:{t:'Połączenia: IO, migrena i Hashimoto',tab:'meals',chk:'Posiłki: „Dla mnie” włączone, plan dnia z daniami „dopasowane do IO”. Zdrowie: zdania „Razem: …” dla par schorzeń. Mój dzień po 12:00: karta „Długa przerwa w jedzeniu”.',
     f:b=>{const d=Object.assign({},b.days);d[nAgo(0)]=[];return {prof:{cond:{io:true,mig:true,hashi:true},pill:'cerazette'},days:d}}},
   pokaz:{t:'Pełny pokaz',tab:'day',chk:'70 dni danych: Stan dziś, trendy, zwierzak z odznakami, przegląd tygodnia; zakładki działają jak na co dzień.',f:()=>({})}};
@@ -666,7 +693,7 @@ const open=new Set();
 // ---------- Obliczenia ----------
 const num=v=>{const s=String(v).trim().replace(/(\d)[\s\u00a0]+(?=\d{3}(\D|$))/g,'$1'),t=s.match(/^(\d{1,2})\s*(?::|h)\s*(\d{1,2})?\s*(?:m|min)?$/i);if(t)return +t[1]+(+(t[2]||0))/60;const x=parseFloat(s.replace(',','.'));return isFinite(x)?x:0};
 // Pola liczbowe: format i zakres (ostatni człon klucza data-k). Wpis błędny lub poza zakresem nie trafia do danych.
-const STEP={kg:.1,goal:.5,w:.1,cm:1,age:1,steps:500,sleep:.25,waist:.5,hip:.5,thigh:.5,fat:.1,ffm:.1,ecw:.1,bmr:10,min:5,wmin:5,wk:10,speed:.5,grade:.5,watts:5};
+const STEP={kg:.1,goal:.5,w:.1,cm:1,age:1,steps:1000,sleep:.25,waist:.5,hip:.5,thigh:.5,fat:.1,ffm:.1,ecw:.1,bmr:10,min:5,wmin:5,wk:10,speed:.5,grade:.5,watts:5};
 const STP0={sleep:7,steps:5000,wmin:45,wk:300,min:45,speed:5,grade:0,watts:100,cm:165,age:30};
 // Pierwsze naciśnięcie pustego pola: ostatnia zapisana wartość (waga z ostatniego ważenia), inaczej typowa
 function stpStart(k){const a=k.split('.'),f=a[a.length-1];if(a[0]==='meas'){const ks=Object.keys(S.meas||{}).filter(x=>x<a[1]&&num((S.meas[x]||{})[f])>0).sort();if(ks.length)return num(S.meas[ks[ks.length-1]][f]);if(f==='w')return kg()}if(f==='goal')return kg();if(f==='kg')return kg();return STP0[f]!=null?STP0[f]:LIM[f][0]}
@@ -787,7 +814,7 @@ function forMeHtml(){const c=(S.prof||{}).cond||{};if(!Object.values(c).some(Boo
 function ioFit(m,x){return m.t==='przekaska'?x.c<=20&&(x.p>=10||x.f>=8):x.p>=20&&x.c<=50}
 function mealTags(m,x){const t=[];if(m.sw)t.push(['Słodkie','danie na słodko, słodycz z owoców']);
   if(ioFit(m,x))t.push(['Przy IO',m.t==='przekaska'?'do 20 g węglowodanów z białkiem albo tłuszczem':'co najmniej 20 g białka i do 50 g węglowodanów']);
-  if(((S.prof||{}).cond||{}).hashi&&m.ing.some(i=>i[0]==='tofu'))t.push(['Soja: 4 h po leku','soja zmniejsza wchłanianie lewotyroksyny']);return t}
+  if(((S.prof||{}).cond||{}).hashi&&m.ing.some(i=>i[0]==='tofu'))t.push(['Soja: odstęp od leku','soja może zmniejszać wchłanianie lewotyroksyny (opisy przypadków, wytyczne ATA)']);return t}
 function tagsHtml(m,x){const t=mealTags(m,x);return t.length?'<span class="mtags">'+t.map(([l,w])=>`<span class="mtag" title="${w}">${l}</span>`).join('')+'</span>':''}
 function filtered(){
   const cm=carbMult(),por=num(S.f.portion)||1;
@@ -841,47 +868,88 @@ function wAvg(a,b){const v=[];for(let i=a;i<=b;i++){const x=wAt(nAgo(i));if(x)v.
 function painAt(k){return (S.pain||{})[k]||null}
 function auraDays(){return Object.entries(S.pain||{}).filter(([k,p])=>p&&p.aura&&k>=nAgo(90)).length}
 function urges3(){return [0,1,2].reduce((a,i)=>a+((S.urges||{})[nAgo(i)]||[]).length,0)}
+// ---------- Źródła sprawdzone 08.11.2026 (rada/2026-11-08_zrodla.md): link otwarty w sesji, wartość zgodna z cytatem ----------
+const SRC={
+  who6:['https://iris.who.int/server/api/core/bitstreams/9f048e30-0d14-4187-b167-9c24b9102092/content','WHO MEC, wyd. 6 (2025)'],
+  ukmec:['https://www.cosrh.org/Common/Uploaded%20files/documents/UKMEC_2025.pdf','UKMEC 2025'],
+  ema:['https://www.ema.europa.eu/en/news/benefits-combined-hormonal-contraceptives-chcs-continue-outweigh-risks-chmp-endorses-prac-recommendation','EMA 2013'],
+  cochr:['https://www.cochrane.org/evidence/CD003987_combination-contraceptives-effects-weight','Cochrane 2014'],
+  moh:['https://ichd-3.org/8-headache-attributed-to-a-substance-or-its-withdrawal/8-2-medication-overuse-headache-moh/','ICHD-3, 8.2'],
+  mm:['https://ichd-3.org/appendix/a1-migraine/a1-1-migraine-without-aura/a1-1-1-pure-menstrual-migraine-without-aura/','ICHD-3, A1.1.1'],
+  mig11:['https://ichd-3.org/1-migraine/1-1-migraine-without-aura/','ICHD-3, 1.1'],
+  aura12:['https://ichd-3.org/1-migraine/1-2-migraine-with-aura/','ICHD-3, 1.2'],
+  caff:['https://ichd-3.org/8-headache-attributed-to-a-substance-or-its-withdrawal/8-3-headache-attributed-to-substance-withdrawal/8-3-1-caffeine-withdrawal-headache/','ICHD-3, 8.3.1'],
+  prev:['https://americanheadachesociety.org/news/updated-guideline-on-migraine-prevention-medications-for-adults','AAN/AHS 2026'],
+  varkey:['https://pmc.ncbi.nlm.nih.gov/articles/PMC3236524/','Varkey i in. 2011'],
+  lemmens:['https://pmc.ncbi.nlm.nih.gov/articles/PMC6734345/','Lemmens i in. 2019'],
+  kelman:['https://pubmed.ncbi.nlm.nih.gov/17403039/','Kelman 2007'],
+  fast:['https://pubmed.ncbi.nlm.nih.gov/23996724/','Dalkara i Kılıç 2013'],
+  nhs:['https://www.nhs.uk/conditions/stroke/symptoms/','NHS: objawy udaru'],
+  ata:['https://pmc.ncbi.nlm.nih.gov/articles/PMC4267409/','Wytyczne ATA 2014'],
+  lt4:['https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=1e11ad30-1041-4520-10b0-8f9d30d30fcc','Ulotka lewotyroksyny'],
+  gluten:['https://pubmed.ncbi.nlm.nih.gov/37554764/','Piticchio i in. 2023'],
+  selen:['https://pubmed.ncbi.nlm.nih.gov/32257959/','ETA 2020'],
+  dpp:['https://pubmed.ncbi.nlm.nih.gov/11832527/','DPP 2002'],
+  order:['https://pmc.ncbi.nlm.nih.gov/articles/PMC4876745/','Shukla i in. 2015'],
+  ada:['https://pmc.ncbi.nlm.nih.gov/articles/PMC6908414/','ADA 2016'],
+  sleepIR:['https://pubmed.ncbi.nlm.nih.gov/20371664/','Donga i in. 2010'],
+  s2k:['https://register.awmf.org/assets/guidelines/037_D_Ges_fuer_Phlebologie/037-012le_S2k_Lipoedema__2024-08.pdf','Wytyczne S2k lipodemii 2024'],
+  lipcons:['https://pmc.ncbi.nlm.nih.gov/articles/PMC8652358/','Konsensus lipodemii 2021'],
+  sleepEI:['https://pubmed.ncbi.nlm.nih.gov/27804960/','Al Khatib i in. 2017'],
+  stress:['https://pubmed.ncbi.nlm.nih.gov/17543357/','Adam i Epel 2007'],
+  hall:['https://pubmed.ncbi.nlm.nih.gov/17848938/','Hall 2008'],
+  glyc:['https://pubmed.ncbi.nlm.nih.gov/27231310/','Shiose i in. 2016'],
+  spot:['https://pubmed.ncbi.nlm.nih.gov/23222084/','Ramírez-Campillo i in. 2013'],
+  meds:['https://pubmed.ncbi.nlm.nih.gov/18640463/','Taylor 2008'],
+  fdcMaki:['https://fdc.nal.usda.gov/food-details/2708961/nutrients','USDA: sushi roll'],
+  fdcNigiri:['https://fdc.nal.usda.gov/food-details/2708971/nutrients','USDA: nigiri'],
+  fdcChicken:['https://fdc.nal.usda.gov/food-details/2706794/nutrients','USDA: kurczak w glazurze'],
+  fdcTofu:['https://fdc.nal.usda.gov/food-details/2707476/nutrients','USDA: tofu z warzywami'],
+  fdcRice:['https://fdc.nal.usda.gov/food-details/2708408/nutrients','USDA: ryż'],
+  fdcFries:['https://fdc.nal.usda.gov/food-details/2709461/nutrients','USDA: frytki'],
+  fdcSlaw:['https://fdc.nal.usda.gov/food-details/2709814/nutrients','USDA: coleslaw']};
+const srcA=k=>SRC[k]?`<a href="${SRC[k][0]}" target="_blank" rel="noopener noreferrer">${SRC[k][1]}</a>`:'';
+function srcHtml(keys){const k=[].concat(keys||[]).filter(x=>SRC[x]);return k.length?'<p class="srcl">Źródło: '+k.map(srcA).join(', ')+'</p>':''}
 const EV={m:'dowody mocne',u:'dowody umiarkowane',s:'dowody słabe',w:'wiedza ogólna'};
 // ---------- Profil zdrowia i plan działań: reguły z dowodami (rada/2026-11-06_profil-zdrowia-plan) ----------
 const CONDS=[['hashi','Hashimoto'],['lip','Lipodemia'],['aura','Migrena z aurą'],['mig','Migrena lub silne bóle głowy'],['io','Insulinooporność']];
-// [id, nazwa, estrogen, drospirenon w tabletce dwuskładnikowej, przerwa w opakowaniu]
-const PILLS=[['','Nie biorę tabletek',0,0,0],['yaz','Yaz (drospirenon, estrogen)',1,1,1],['yasmin','Yasmin (drospirenon, estrogen)',1,1,1],['yasminelle','Yasminelle (drospirenon, estrogen)',1,1,1],
-  ['jeanine','Jeanine (dienogest, estrogen)',1,0,1],['microgynon','Microgynon, Rigevidon (lewonorgestrel, estrogen)',1,0,1],['novynette','Novynette (dezogestrel, estrogen)',1,0,1],
+// [id, nazwa, estrogen, grupa ryzyka zakrzepicy wg EMA 2013 (b: 9-12, a: 5-7 na 10 000), przerwa w opakowaniu]
+const PILLS=[['','Nie biorę tabletek',0,0,0],['yaz','Yaz (drospirenon, estrogen)',1,'b',1],['yasmin','Yasmin (drospirenon, estrogen)',1,'b',1],['yasminelle','Yasminelle (drospirenon, estrogen)',1,'b',1],
+  ['jeanine','Jeanine (dienogest, estrogen)',1,0,1],['microgynon','Microgynon, Rigevidon (lewonorgestrel, estrogen)',1,'a',1],['novynette','Novynette (dezogestrel, estrogen)',1,'b',1],
   ['belara','Belara (chlormadinon, estrogen)',1,0,1],['qlaira','Qlaira (dienogest, estradiol)',1,0,1],['zoely','Zoely (nomegestrol, estradiol)',1,0,1],
   ['cerazette','Cerazette, Azalia, Lactinette (minitabletka, bez estrogenu)',0,0,0],['slynd','Slynd (drospirenon, bez estrogenu)',0,0,1],['inna_e','Inna z estrogenem',1,0,1],['inna_p','Inna bez estrogenu',0,0,0]];
 function pillOf(){return PILLS.find(x=>x[0]===((S.prof||{}).pill||''))||PILLS[0]}
 function painDays(n){return Object.keys(S.pain||{}).filter(k=>k>=nAgo(n-1)&&S.pain[k]).length}
 function medDays(n){return Object.entries(S.pain||{}).filter(([k,p])=>k>=nAgo(n-1)&&p&&p.med).length}
 function breakPain(){const ks=Object.keys(S.pain||{}).filter(k=>k>=nAgo(89)&&S.pain[k]);return {all:ks.length,brk:ks.filter(k=>(S.meas[k]||{}).cyc==='P').length}}
-function planActs(){const c=(S.prof||{}).cond||{},P=pillOf(),pn=P[1].split(' (')[0],est=!!P[2],aura=!!c.aura||auraDays()>0,mig=aura||!!c.mig,md=medDays(30),pd=painDays(30),bp=breakPain(),A=[],a=(pri,t,why,ev)=>A.push({pri,t,why,ev});
-  if(aura&&est)a(0,'Porozmawiaj z ginekologiem o zmianie tabletek w ciągu kilku dni',`${pn} zawiera estrogen. Przy migrenie z aurą to przeciwwskazanie: kategoria 4 w kryteriach WHO, bo rośnie ryzyko udaru. Zamiennikiem bywa minitabletka bez estrogenu albo wkładka. Nie odstawiaj tabletek bez innej antykoncepcji.`,'m');
-  if(aura&&P[0]&&!est)a(9,'Twoja tabletka jest dopuszczalna przy aurze',`${pn} nie zawiera estrogenu: kategoria 1-2 w kryteriach WHO i brytyjskich przy migrenie z aurą.`,'m');
-  if(md>=10)a(1,`${md} dni z lekiem w 30 dniach: ryzyko bólu z nadużywania leków`,'Tryptany przez 10 lub więcej dni w miesiącu, a proste leki przeciwbólowe przez 15 lub więcej dni podtrzymują ból głowy (ICHD-3). Powiedz o tym lekarzowi: pomaga leczenie zapobiegawcze.','m');
-  if(mig){if(pd>=4)a(2,`${pd} dni z bólem w 30 dniach: zapytaj o leczenie zapobiegawcze`,'Przy 4 lub więcej dniach z bólem w miesiącu zalecenia przewidują leczenie zapobiegawcze; lek dobiera lekarz.','m');
-    a(3,'Zaznaczaj każdy ból, aurę i lek','Po 3 cyklach widać, czy bóle trzymają się dni od 2 przed do 3 po początku miesiączki (migrena menstruacyjna, ICHD-3). Lekarz zapyta o to najpierw; lista na wizytę zbierze dane.','m');
-    if(est&&P[4]&&!aura&&bp.brk>=2)a(4,`${bp.brk} z ${bp.all} dni z bólem przypada na przerwę w tabletkach`,'Ból w dniach bez hormonów to skutek spadku estrogenu. Zapytaj lekarza o przyjmowanie bez przerwy albo z krótszą przerwą.','u');
-    a(6,'Stały rytm dnia','Sen o tej samej porze także w weekend, posiłki co 3-5 godzin, woda i ta sama ilość kofeiny każdego dnia. Zmiany rytmu to częste wyzwalacze ataków.','u');
-    a(12,'Ruch 3 razy w tygodniu po ok. 40 minut','W badaniu porównawczym regularny umiarkowany wysiłek zmniejszał liczbę ataków podobnie jak lek zapobiegawczy. W dniu ataku odpocznij.','u')}
-  if(c.hashi){if(est)a(5,'Sprawdź TSH 6-8 tygodni po każdej zmianie tabletek','Estrogen doustny zwiększa białko wiążące hormony tarczycy, więc dotychczasowa dawka lewotyroksyny może przestać wystarczać. To samo po odstawieniu tabletek.','m');
-    a(7,'Lewotyroksyna na czczo','30-60 minut przed śniadaniem, popita wodą. Wapń, żelazo i soja co najmniej 4 godziny później, kawa po 30-60 minutach. Inaczej lek wchłania się gorzej i TSH się waha.','m');
-    a(14,'Bez diet eliminacyjnych na zapas','Dieta bezglutenowa pomaga tylko przy potwierdzonej celiakii; selenu nie bierz bez badań, bo nadmiar szkodzi. Przy zmęczeniu mimo dobrego TSH zbadaj ferrytynę, witaminę B12 i D.','u')}
-  if(c.lip){a(8,'Mierz talię i uda osobno','Tkanka przy lipodemii słabo reaguje na redukcję, więc uda mogą się zmieniać wolniej niż talia. To normalne; liczy się też ból i ciężkość nóg w dzienniku nóg.','s');
-    a(10,'Ruch w wodzie albo rower i kompresja','Ruch o małym obciążeniu stawów zmniejsza ból i ciężkość nóg; kompresja dobrana przez specjalistę pomaga w objawach.','s');
-    if(est)a(15,'Estrogen a objawy lipodemii','Objawy często narastają przy zmianach hormonalnych. Dane są słabe, ale powiedz o lipodemii przy wyborze antykoncepcji.','s')}
-  if(c.io){a(11,`Cel: 5-7% mniej masy ciała, czyli ${fmt1(kg()*0.05)}-${fmt1(kg()*0.07)} kg`,'Taki spadek z ruchem w programie DPP zmniejszył ryzyko cukrzycy o ok. 58%.','m');
-    a(12,'Słodkie śniadanie może zostać','Ważne, żeby miało co najmniej 20 g białka (skyr, twaróg, jajka) i owoce w całości zamiast cukru, soku czy dżemu. W Posiłkach filtr „Słodkie” i „Przy IO” pokazuje takie przepisy.','u');
-    a(13,'150 minut ruchu tygodniowo, sen 7 godzin','Ruch i sen poprawiają wrażliwość na insulinę niezależnie od wagi; trening siłowy 2 razy w tygodniu pomaga mięśniom zużywać glukozę.','m')}
-  if(c.io&&mig)a(18,'Razem: insulinooporność i migrena','Bez postu przerywanego i długich przerw w jedzeniu: przy migrenie to częsty wyzwalacz ataków, a przy insulinooporności wystarczy deficyt kalorii i ruch.','u');
-  if(c.io&&c.hashi)a(19,'Razem: insulinooporność i Hashimoto','Zasady się nie wykluczają: lek na czczo, po 30-60 minutach śniadanie Przy IO. TSH w normie to warunek, bo nieleczona niedoczynność spowalnia redukcję.','u');
-  if(c.lip&&c.io)a(20,'Razem: lipodemia i insulinooporność','Redukcja poprawia wrażliwość na insulinę i zmniejsza zwykłą tkankę tłuszczową; tkanka lipodemiczna reaguje słabiej, więc oceniaj talię, ból i ciężkość nóg, nie tylko obwód uda.','s');
-  if(c.lip&&c.hashi)a(21,'Razem: lipodemia i Hashimoto','Obrzęk przy niedoczynności to co innego niż lipodemia. Nagły obrzęk, obrzęk jednej nogi albo dołek po uciśnięciu zgłoś lekarzowi.','w');
-  if(P[3])a(16,'Drospirenon: ryzyko zakrzepicy','Ok. 9-12 na 10 000 kobiet rocznie wobec 5-7 przy tabletkach z lewonorgestrelem i ok. 2 bez tabletek (EMA 2013). Ból i obrzęk jednej łydki albo nagła duszność: pilnie do lekarza.','m');
-  if(P[0])a(17,'Waga a tabletki','Przeglądy badań (Cochrane) nie potwierdzają dużego przyrostu masy ciała przez tabletki; wahania to zwykle woda w cyklu.','m');
+function planActs(){const c=(S.prof||{}).cond||{},P=pillOf(),pn=P[1].split(' (')[0],est=!!P[2],aura=!!c.aura||auraDays()>0,mig=aura||!!c.mig,md=medDays(30),pd=painDays(30),bp=breakPain(),A=[],a=(pri,t,why,ev,src)=>A.push({pri,t,why,ev,src});
+  if(aura&&est)a(0,'Porozmawiaj z ginekologiem o zmianie tabletek w ciągu kilku dni',`${pn} zawiera estrogen. Przy migrenie z aurą to kategoria 4 (przeciwwskazanie) w kryteriach WHO i brytyjskich: kobiety z migreną stosujące takie tabletki mają ok. 2-4 razy częściej udar niedokrwienny. Nie odstawiaj tabletek bez innej antykoncepcji: metodę ustala lekarz.`,'m',['who6','ukmec']);
+  if(aura&&P[0]&&!est)a(9,'Minitabletka przy aurze: omów z lekarzem dalsze stosowanie',`${pn} nie zawiera estrogenu. UKMEC 2025: kategoria 2. WHO 2025: kategoria 2 przy rozpoczęciu i 3 przy kontynuacji. Zapytaj lekarza, co to oznacza dla Ciebie.`,'m',['ukmec','who6']);
+  if(md>=10)a(1,`${md} dni z lekiem w 30 dniach: ryzyko bólu z nadużywania leków`,'Według ICHD-3 ból z nadużywania leków rozpoznaje się, gdy ból głowy jest przez 15 lub więcej dni w miesiącu, a tryptany przyjmuje się przez 10 lub więcej dni albo nieopioidowe leki przeciwbólowe przez 15 lub więcej dni, dłużej niż 3 miesiące. Pokaż lekarzowi licznik z dziennika.','m','moh');
+  if(mig){if(pd>=4)a(2,`${pd} dni z bólem w 30 dniach: zapytaj o leczenie zapobiegawcze`,'Wytyczne AAN/AHS z 2026 r. doradzają leczenie zapobiegawcze przy 4 lub więcej dniach z migreną w miesiącu albo gdy migrena utrudnia pracę i codzienne zadania. Lek dobiera lekarz.','m','prev');
+    a(3,'Zaznaczaj każdy ból, aurę i lek','ICHD-3 opisuje migrenę związaną z miesiączką: napady od 2 dni przed do 3. dnia miesiączki w co najmniej 2 z 3 cykli. Po 3 cyklach dziennik to pokaże, a lista na wizytę zbierze dane.','m','mm');
+    if(est&&P[4]&&!aura&&bp.brk>=2)a(4,`${bp.brk} z ${bp.all} dni z bólem przypada na przerwę w tabletkach`,'To może być wzorzec migreny związanej z miesiączką (ICHD-3). Pokaż dziennik lekarzowi i zapytaj, czy zmiana schematu przyjmowania tabletek ma dla Ciebie sens.','u','mm');
+    a(6,'Stały rytm dnia','W dużym badaniu najczęstszymi wyzwalaczami migreny były stres (80% osób), niejedzenie (57%) i zaburzenia snu (50%). Jedz regularnie i śpij o stałej porze. Kofeinę trzymaj na stałym poziomie: nagłe odstawienie po ponad 2 tygodniach picia ponad 200 mg dziennie może wywołać ból głowy.','u',['kelman','caff']);
+    a(12,'Ruch 3 razy w tygodniu po 40 minut','W badaniu porównawczym taki trening zmniejszył liczbę napadów podobnie jak lek zapobiegawczy (topiramat), a w metaanalizie ruch tlenowy dawał średnio o 0,6 dnia z migreną mniej w miesiącu. W czasie napadu zwykła aktywność nasila ból, więc wtedy odpocznij.','u',['varkey','lemmens','mig11'])}
+  if(c.hashi){if(est)a(5,'Sprawdź TSH 6-8 tygodni po każdej zmianie tabletek','Estrogen doustny zwiększa stężenie białka wiążącego hormony tarczycy, więc dotychczasowa dawka lewotyroksyny może przestać wystarczać. Wytyczne ATA zalecają kontrolę TSH po rozpoczęciu i po odstawieniu estrogenu, gdy wyniki się ustabilizują (zwykle po ok. 6 tygodniach); ulotka leku podaje 6-8 tygodni po zmianie dawki.','m',['ata','lt4']);
+    a(7,'Lewotyroksyna na czczo','Wytyczne ATA: 60 minut przed śniadaniem albo przed snem, co najmniej 3 godziny po kolacji (ulotka: 30-60 minut przed śniadaniem). Wapń i żelazo co najmniej 4 godziny od leku. Kawa (espresso) i soja mogą zmniejszać wchłanianie leku: to opisy przypadków.','m',['ata','lt4']);
+    a(14,'Bez diet eliminacyjnych na zapas','Dieta bezglutenowa przy Hashimoto bez celiakii: za mało dowodów, by ją zalecać (metaanaliza 2023). Selenu europejskie wytyczne (ETA) nie zalecają.','u',['gluten','selen'])}
+  if(c.lip){a(8,'Mierz talię i uda osobno','Tkanka przy lipodemii słabo reaguje na dietę i ćwiczenia, ale przy nadwadze redukcja masy zmniejsza też objętość nóg. Mierz talię i uda osobno i zapisuj ból i ciężkość nóg w dzienniku nóg.','s',['lipcons','s2k']);
+    a(10,'Ruch w wodzie i kompresja','Kompresja razem z ruchem poprawia jakość życia i zmniejsza ból, a ćwiczenia w wodzie są szczególnie skuteczne. Kompresja nie zmniejsza tkanki tłuszczowej.','s','s2k');
+    if(est)a(15,'Hormony a objawy lipodemii','Objawy pojawiają się albo nasilają prawie zawsze w okresach zmian hormonalnych. Powiedz o lipodemii przy wyborze antykoncepcji.','s','s2k')}
+  if(c.io){a(11,`Cel: co najmniej 7% mniej masy ciała, czyli ok. ${fmt1(kg()*0.07)} kg`,'W programie DPP taki cel razem ze 150 minutami ruchu tygodniowo zmniejszył zachorowania na cukrzycę o 58%.','m','dpp');
+    a(12,'Słodkie śniadanie może zostać','Reguła Miary „Przy IO”: co najmniej 20 g białka i do 50 g węglowodanów, owoce w całości zamiast cukru. W badaniu pilotażowym (11 osób) białko i warzywa zjedzone przed węglowodanami obniżały glukozę po posiłku. W Posiłkach filtr „Słodkie” i „Przy IO” pokazuje takie przepisy.','s','order');
+    a(13,'150 minut ruchu tygodniowo i pełny sen','Trening tlenowy i siłowy poprawia działanie insuliny także bez spadku masy ciała, a jedna noc z 4 godzinami snu obniżyła wrażliwość na insulinę o ok. 25%.','m',['ada','sleepIR'])}
+  if(c.io&&mig)a(18,'Razem: insulinooporność i migrena','Bez postu przerywanego i długich przerw w jedzeniu: niejedzenie i post to dobrze opisane wyzwalacze migreny, a przy insulinooporności cel osiąga się deficytem kalorii i ruchem.','u',['fast','dpp']);
+  if(c.io&&c.hashi)a(19,'Razem: insulinooporność i Hashimoto','Zasady się nie wykluczają: lek 60 minut przed śniadaniem, potem śniadanie zgodne z regułą „Przy IO”.','u','ata');
+  if(c.lip&&c.io)a(20,'Razem: lipodemia i insulinooporność','Redukcja pomaga przy insulinooporności, a przy nadwadze zmniejsza też objętość nóg; tkanka lipodemiczna reaguje słabiej, więc oceniaj talię, ból i ciężkość nóg, nie tylko obwód uda.','s',['dpp','s2k']);
+  if(est)a(16,'Tabletki z estrogenem: ryzyko zakrzepicy',(P[3]==='b'?'Ok. 9-12 na 10 000 kobiet rocznie przy tabletkach z drospirenonem, gestodenem albo dezogestrelem; 5-7 przy lewonorgestrelu; ok. 2 bez tabletek (EMA 2013).':P[3]==='a'?'Ok. 5-7 na 10 000 kobiet rocznie przy tabletkach z lewonorgestrelem; ok. 2 bez tabletek (EMA 2013).':'Dla tego składu komunikat EMA nie podaje osobnej liczby; przy lewonorgestrelu 5-7, a bez tabletek ok. 2 na 10 000 kobiet rocznie (EMA 2013).')+' Pilnie do lekarza przy silnym bólu albo obrzęku nogi, nagłej duszności, szybkim oddechu albo kaszlu, bólu w klatce piersiowej, osłabieniu albo drętwieniu twarzy, ręki lub nogi.','m','ema');
+  if(P[0])a(17,'Waga a tabletki','Przegląd Cochrane: dowody nie wystarczają, by ocenić wpływ tabletek na masę ciała, ale dużego efektu nie widać.','m','cochr');
   return A.sort((x,y)=>x.pri-y.pri)}
 function profHtml(){const p=S.prof||{},c=p.cond||{};return '<h2 id="profil">Mój profil zdrowia</h2>'+whyP('profil')+'<div class="chips">'+CONDS.map(([id,n])=>`<button class="chip${c[id]?' inc':''}" data-cond="${id}" aria-pressed="${!!c[id]}">${n}</button>`).join('')
   +`</div><div class="panel"><div class="field"><label for="pill">Tabletki antykoncepcyjne</label><select id="pill" data-k="prof.pill">${PILLS.map(([v,n])=>`<option value="${v}"${v===(p.pill||'')?' selected':''}>${n}</option>`).join('')}</select></div></div>`}
 function healthPlanHtml(){const A=planActs();if(!A.length)return '<section class="plan" id="twojplan"><h2>Twój plan</h2><p class="small muted">Zaznacz wyżej choroby i tabletki, a tu pojawią się działania dla Ciebie.</p></section>';
-  return '<section class="plan" id="twojplan"><h2>Twój plan</h2>'+A.map((x,i)=>`<div class="act${i===0?' first':''}">${i===0?'<p class="tag">Najpierw</p>':''}<h3>${x.t}</h3><p>${x.why}</p><span class="ev">${EV[x.ev]}</span></div>`).join('')+'</section>'}
+  return '<section class="plan" id="twojplan"><h2>Twój plan</h2>'+A.map((x,i)=>`<div class="act${i===0?' first':''}">${i===0?'<p class="tag">Najpierw</p>':''}<h3>${x.t}</h3><p>${x.why}</p><span class="ev">${EV[x.ev]}</span>${srcHtml(x.src)}</div>`).join('')+'</section>'}
 // 12 tygodni: waga w przedziale z deficytu planu (±25%), kamienie milowe z badań; wyniki badań, ból i samopoczucie tylko z wpisów
 function weeksHtml(){const c=(S.prof||{}).cond||{},est=!!pillOf()[2],mig=!!c.aura||!!c.mig||auraDays()>0,w0=avg7()||kg(),goal=num(S.goal)||0,M=measuredTdee(),def=(M?M.tdee:rmr()*1.3)-targetKcal(),wk=Math.max(0,def*7/7700),ms={};
   const m=(w,t)=>(ms[w]=ms[w]||[]).push(t);
@@ -891,34 +959,34 @@ function weeksHtml(){const c=(S.prof||{}).cond||{},est=!!pillOf()[2],mig=!!c.aur
   if(mig)m(12,'Ocena 3 cykli dziennika bólu: czy bóle trzymają się dni miesiączki albo przerwy.');if(c.io)m(12,'Glukoza i insulina na czczo albo HbA1c z lekarzem.');m(12,'Przegląd z lekarzem: lista na wizytę zbierze dane.');
   let h='<table class="weeks"><tr><th>Tydz.</th><th>Waga</th><th>Co sprawdzić</th></tr>';
   for(let i=1;i<=12;i++){const lo=Math.max(goal,w0-wk*1.25*i),hi=Math.max(goal,w0-wk*0.75*i);h+=`<tr class="wk"><td>${i}</td><td>${wk>0?`${fmt1(lo)}-${fmt1(hi)} kg`:'bez zmian'}</td><td>${(ms[i]||[]).join(' ')}</td></tr>`}
-  return h+`</table><p class="small muted">Waga z deficytu planu (${fmt(Math.max(0,def))} kcal dziennie), przedział ±25%. Miara nie prognozuje wyników badań, bólu ani samopoczucia: zależą od leczenia i wielu czynników. Pokazuje je z Twoich wpisów: sen i ból w Stanie dziś, sylwetka z obwodów w ekranie zwierzaka.</p>`}
+  return h+`</table><p class="small muted">Waga z deficytu planu (${fmt(Math.max(0,def))} kcal dziennie), przedział ±25%. Miara nie prognozuje wyników badań, bólu ani samopoczucia: zależą od leczenia i wielu czynników. Pokazuje je z Twoich wpisów: sen i ból w Stanie dziś, sylwetka z obwodów w ekranie zwierzaka.</p>${srcHtml(['hall','glyc'])}`}
 function migGap(h){const c=(S.prof||{}).cond||{};return (!!c.mig||!!c.aura||auraDays()>0)&&!S.once&&h>=12&&!day().some(e=>e.kind==='m')}
 const CARDS=[
-  {id:'przerwa',sens:1,ev:'u',when:()=>migGap(new Date().getHours()),src:()=>'profil: migrena; dziś brak zapisanego posiłku po 12:00',
-    t:'Długa przerwa w jedzeniu',why:()=>'Przy migrenie przerwa dłuższa niż 5 godzin to częsty wyzwalacz ataku. Zjedz coś z białkiem, nawet małego.'+(((S.prof||{}).cond||{}).io?' Przy insulinooporności długie przerwy też nie pomagają.':''),todo:['Posiłki','tab','meals']},
-  {id:'aura',sens:1,ev:'m',when:()=>auraDays()>0,src:()=>`${auraDays()} ${auraDays()===1?'dzień':'dni'} z aurą w ostatnich 90 dniach (dziennik bólu)`,
-    t:'Migrena z aurą: porozmawiaj z ginekologiem',why:'Przy migrenie z aurą tabletki antykoncepcyjne z estrogenem zwiększają ryzyko udaru i w zaleceniach WHO są przeciwwskazaniem. Nie odstawiaj ich bez planu innej antykoncepcji: zmianę ustala lekarz.',
-    more:'Dzwoń 112, gdy aura trwa dłużej niż godzinę albo jest inna niż zwykle, gdy słabnie lub drętwieje jedna strona ciała, przy zaburzeniach mowy albo nagłym, najsilniejszym w życiu bólu.'},
-  {id:'wizyta',sens:1,ev:'u',when:()=>visitDays()!=null||auraDays()>0,
+  {id:'przerwa',sens:1,ev:'u',ref:['kelman','fast'],when:()=>migGap(new Date().getHours()),src:()=>'profil: migrena; dziś brak zapisanego posiłku po 12:00',
+    t:'Długa przerwa w jedzeniu',why:'Niejedzenie to jeden z najczęstszych wyzwalaczy migreny: zgłosiło go 57% osób w dużym badaniu. Zjedz coś, nawet małego.',todo:['Posiłki','tab','meals']},
+  {id:'aura',sens:1,ev:'m',ref:['who6','aura12','nhs'],when:()=>auraDays()>0,src:()=>`${auraDays()} ${auraDays()===1?'dzień':'dni'} z aurą w ostatnich 90 dniach (dziennik bólu)`,
+    t:'Migrena z aurą: porozmawiaj z ginekologiem',why:'Przy migrenie z aurą tabletki z estrogenem to kategoria 4 (przeciwwskazanie) w kryteriach WHO: kobiety z migreną, które je stosują, mają ok. 2-4 razy częściej udar niedokrwienny. Nie odstawiaj ich bez innej antykoncepcji: zmianę ustala lekarz.',
+    more:'Pojedynczy objaw typowej aury trwa 5-60 minut. Dzwoń 112, gdy objaw trwa dłużej albo jest inny niż zwykle, i przy objawach udaru: opadający kącik ust, słabość ręki, zaburzenia mowy.'},
+  {id:'wizyta',sens:1,ev:'u',ref:'kelman',when:()=>visitDays()!=null||auraDays()>0,
     src:()=>(visitDays()!=null?`wizyta ${fmtDate(S.visit.date)}`:'brak umówionej wizyty')+`; dni z aurą w 90 dniach: ${auraDays()}`,
     t:()=>{const n=visitDays();return n==null?'Do czasu wizyty':`Do czasu wizyty (${esc(S.visit.who||'lekarz')}, za ${n} ${n===1?'dzień':'dni'})`},
-    why:'Na dziś 3 rzeczy: sen o stałej porze, posiłki bez długich przerw, woda i stała ilość kofeiny. Migrena reaguje na rytm dnia, więc te zmiany zmniejszają liczbę ataków.',
+    why:'Na dziś 3 rzeczy: sen o stałej porze, regularne posiłki i stała ilość kofeiny. Niejedzenie i zaburzenia snu zgłosiło jako wyzwalacze migreny 57% i 50% osób w dużym badaniu.',
     more:()=>auraDays()>0?'Przy migrenie z aurą nie czekaj miesięcy: umów teleporadę ginekologiczną albo lekarza rodzinnego w ciągu dni. Nie odstawiaj tabletek bez planu innej antykoncepcji.':'Zaznaczaj dni z bólem jednym dotknięciem; lista na wizytę zbierze je za Ciebie.',
     todo:['Lista na wizytę','tab','visit']},
-  {id:'bol_hormony',sens:1,ev:'m',when:()=>{const k=todayKey();return !!painAt(k)&&(S.meas[k]||{}).cyc==='P'},src:()=>'dziś: dzień z bólem głowy i zaznaczone dni bez hormonów',
-    t:'Ból głowy w dniach bez hormonów',why:'Spadek estrogenu w dniach bez hormonów często wyzwala migrenę. To znany wzorzec, a nie Twoja słabość.',todo:['Zaznacz aurę i lek','goto','painrow']},
-  {id:'bez_sil',ev:'u',when:()=>!!painAt(todayKey())||(sleepAt(todayKey())!=null&&sleepAt(todayKey())<6),src:()=>painAt(todayKey())?'dziś: dzień z bólem głowy':`sen ostatniej nocy: ${fmtSleep(sleepAt(todayKey()))} (pomiary dnia)`,
-    t:'Mało sił na trening',why:'W dniu ataku migreny ruch zwykle nasila ból, a po złej nocy trening idzie gorzej. Regularny, umiarkowany ruch w lepsze dni może zmniejszać częstość migren.',todo:['Dziś odpoczywam','cardok','bez_sil']},
-  {id:'zla_noc',ev:'u',when:()=>{const a=sleepAt(todayKey()),b=sleepAt(nAgo(1));return a!=null&&b!=null&&a<6&&b<6},src:()=>`sen: ${fmtSleep(sleepAt(nAgo(1)))} i ${fmtSleep(sleepAt(todayKey()))} (2 ostatnie noce, pomiary dnia)`,
-    t:'Po krótkich nocach chce się jeść więcej',why:'Krótki sen zwiększa apetyt, zwłaszcza na słodkie i tłuste. To fizjologia, nie brak silnej woli.',todo:['Śniadanie z białkiem','tab','meals']},
-  {id:'stres',ev:'u',when:()=>urges3()>=2,src:()=>`${urges3()} wpisy ochoty w 3 dni (przycisk ochoty)`,
-    t:'Stres i ochota na jedzenie',why:'Przewlekły stres, w tym kortyzol, często przesuwa wybory w stronę jedzenia kalorycznego i psuje sen. Działa to przez zachowanie, a nie z dnia na dzień.',todo:['Plan na ochotę','tab','sos']},
-  {id:'skok_wagi',ev:'m',when:()=>{const w=wAt(todayKey()),a=wAvg(1,7);return w!=null&&a.n>=3&&w-a.avg>=0.8},src:()=>{const a=wAvg(1,7);return `dziś ${fmt1(wAt(todayKey()))} kg, średnia z ${a.n} ważeń w 7 dni ${fmt1(a.avg)} kg`},
-    t:'Skok wagi to zwykle woda',why:'Sól, węglowodany, cykl i trening wiążą wodę. Kilogram tłuszczu to około 7700 kcal nadwyżki, więc jeden dzień go nie zrobi.'},
-  {id:'waga_stoi',ev:'u',when:()=>{const a=wAvg(0,6),b=wAvg(21,27);return a.n>=2&&b.n>=2&&Math.abs(a.avg-b.avg)<0.2},src:()=>{const a=wAvg(0,6),b=wAvg(21,27);return `średnia teraz ${fmt1(a.avg)} kg (${a.n} ważeń), 3 tygodnie temu ${fmt1(b.avg)} kg (${b.n} ważeń)`},
-    t:'Waga stoi mimo starań',why:'Woda i cykl potrafią przez 1-2 tygodnie maskować spadek tłuszczu, a nowe leki mogą zmieniać masę ciała. Obwód talii pokazuje zmianę niezależnie od wody.',todo:['Wpisz obwód talii','goto','m_waist']}
+  {id:'bol_hormony',sens:1,ev:'m',ref:'mm',when:()=>{const k=todayKey();return !!painAt(k)&&(S.meas[k]||{}).cyc==='P'},src:()=>'dziś: dzień z bólem głowy i zaznaczone dni bez hormonów',
+    t:'Ból głowy w dniach bez hormonów',why:'ICHD-3 opisuje migrenę związaną z miesiączką: napady od 2 dni przed do 3. dnia miesiączki. Zaznaczaj takie dni, a po 3 cyklach dziennik pokaże, czy to Twój wzorzec.',todo:['Zaznacz aurę i lek','goto','painrow']},
+  {id:'bez_sil',ev:'u',ref:['mig11','lemmens'],when:()=>!!painAt(todayKey())||(sleepAt(todayKey())!=null&&sleepAt(todayKey())<6),src:()=>painAt(todayKey())?'dziś: dzień z bólem głowy':`sen ostatniej nocy: ${fmtSleep(sleepAt(todayKey()))} (pomiary dnia)`,
+    t:'Mało sił na trening',why:'W czasie napadu migreny zwykła aktywność nasila ból, więc dziś odpocznij. Regularny ruch w lepsze dni dawał w badaniach średnio o 0,6 dnia z migreną mniej w miesiącu.',todo:['Dziś odpoczywam','cardok','bez_sil']},
+  {id:'zla_noc',ev:'u',ref:'sleepEI',when:()=>{const a=sleepAt(todayKey()),b=sleepAt(nAgo(1));return a!=null&&b!=null&&a<6&&b<6},src:()=>`sen: ${fmtSleep(sleepAt(nAgo(1)))} i ${fmtSleep(sleepAt(todayKey()))} (2 ostatnie noce, pomiary dnia)`,
+    t:'Po krótkich nocach chce się jeść więcej',why:'Po skróconym śnie ludzie jedli w badaniach średnio o ok. 385 kcal więcej na dobę. To fizjologia, nie brak silnej woli.',todo:['Śniadanie z białkiem','tab','meals']},
+  {id:'stres',ev:'s',ref:'stress',when:()=>urges3()>=2,src:()=>`${urges3()} wpisy ochoty w 3 dni (przycisk ochoty)`,
+    t:'Stres i ochota na jedzenie',why:'Według proponowanego modelu przewlekły stres, przez kortyzol i układ nagrody, przesuwa wybory w stronę jedzenia kalorycznego.',todo:['Plan na ochotę','tab','sos']},
+  {id:'skok_wagi',ev:'m',ref:['glyc','hall'],when:()=>{const w=wAt(todayKey()),a=wAvg(1,7);return w!=null&&a.n>=3&&w-a.avg>=0.8},src:()=>{const a=wAvg(1,7);return `dziś ${fmt1(wAt(todayKey()))} kg, średnia z ${a.n} ważeń w 7 dni ${fmt1(a.avg)} kg`},
+    t:'Skok wagi to zwykle woda',why:'Węglowodany wiążą wodę: każdy gram glikogenu to 2,7-4 g wody. Kilogram tłuszczu to ok. 7700 kcal, więc jeden dzień go nie zrobi.'},
+  {id:'waga_stoi',ev:'u',ref:['glyc','meds'],when:()=>{const a=wAvg(0,6),b=wAvg(21,27);return a.n>=2&&b.n>=2&&Math.abs(a.avg-b.avg)<0.2},src:()=>{const a=wAvg(0,6),b=wAvg(21,27);return `średnia teraz ${fmt1(a.avg)} kg (${a.n} ważeń), 3 tygodnie temu ${fmt1(b.avg)} kg (${b.n} ważeń)`},
+    t:'Waga stoi mimo starań',why:'Glikogen z wodą zmienia wagę niezależnie od tłuszczu, a część leków (np. na migrenę) zmienia masę ciała. Obwód talii pokazuje zmianę niezależnie od wody.',todo:['Wpisz obwód talii','goto','m_waist']}
 ];
-function cardHtml(c,day){return `<div class="card panel" data-card="${c.id}"><h3>${typeof c.t==='function'?c.t():c.t}</h3><p>${typeof c.why==='function'?c.why():c.why}</p>${c.more?`<p class="small">${typeof c.more==='function'?c.more():c.more}</p>`:''}<p class="small muted">Na podstawie: ${c.src()}. <span class="ev">${EV[c.ev]}</span></p>`
+function cardHtml(c,day){return `<div class="card panel" data-card="${c.id}"><h3>${typeof c.t==='function'?c.t():c.t}</h3><p>${typeof c.why==='function'?c.why():c.why}</p>${c.more?`<p class="small">${typeof c.more==='function'?c.more():c.more}</p>`:''}<p class="small muted">Na podstawie: ${c.src()}. <span class="ev">${EV[c.ev]}</span></p>${srcHtml(c.ref)}`
   +((c.todo||day)?`<p class="cardact">${c.todo?`<button class="btn small" data-${c.todo[1]}="${c.todo[2]}">${c.todo[0]}</button>`:''}${day&&!(c.todo&&c.todo[1]==='cardok')?`<button class="btn ghost small" data-cardok="${c.id}">Rozumiem</button>`:''}</p>`:'')+'</div>'}
 function cardsHtml(where){const all=CARDS.filter(c=>c.when());
   if(where==='health')return '<h2>Dlaczego tak się czuję</h2>'+(all.length?all.map(c=>cardHtml(c,false)).join(''):'<p class="small muted">Teraz nic szczególnego. Karty pojawią się, gdy dane coś pokażą.</p>');
@@ -1008,7 +1076,7 @@ function field(label,key,val,unit,mode){return `<div class="field"><label for="f
 function renderMeals(){
   const cm=carbMult(),n=trainNet();
   const carbTxt=S.f.carb==='auto'?(n>0?`Automatycznie z dzisiejszych treningów (${fmt(n)} kcal netto): węglowodany ×${fmt1(cm)}.`:'Automatycznie: brak treningu w dzienniku dnia, węglowodany ×1.'):`Ustawione ręcznie: węglowodany ×${fmt1(cm)}.`;
-  let h=planHtml()+shopHtml()+'<h2>Albo wybierz sam</h2>'+seg([['sniadanie','Śniadanie'],['obiad','Obiad'],['kolacja','Kolacja'],['przekaska','Przekąska'],['all','Wszystkie']],S.f.type,'type','scroll')+forMeHtml()+'<div id="oznaczenia"><p class="small" style="margin:8px 8px 4px"><b>Oznaczenia</b></p>'+whyP('oznaczenia')+'<div class="chips">'+[['sw','Słodkie'],['io','Przy IO']].map(([v,l])=>`<button class="chip${(S.f.tags||{})[v]?' inc':''}" data-ftag="${v}" aria-pressed="${!!(S.f.tags||{})[v]}">${l}</button>`).join('')+'</div></div>'+'<div id="rytm">'+seg([['all','Każdy czas'],['quick','Na co dzień, do 20 min'],['big','Na weekend, więcej czasu']],S.f.pace||'all','pace','scroll')+'</div>';
+  let h=planHtml()+shopHtml()+orderHtml()+'<h2>Albo wybierz sam</h2>'+seg([['sniadanie','Śniadanie'],['obiad','Obiad'],['kolacja','Kolacja'],['przekaska','Przekąska'],['all','Wszystkie']],S.f.type,'type','scroll')+forMeHtml()+'<div id="oznaczenia"><p class="small" style="margin:8px 8px 4px"><b>Oznaczenia</b></p>'+whyP('oznaczenia')+'<div class="chips">'+[['sw','Słodkie'],['io','Przy IO']].map(([v,l])=>`<button class="chip${(S.f.tags||{})[v]?' inc':''}" data-ftag="${v}" aria-pressed="${!!(S.f.tags||{})[v]}">${l}</button>`).join('')+'</div></div>'+'<div id="rytm">'+seg([['all','Każdy czas'],['quick','Na co dzień, do 20 min'],['big','Na weekend, więcej czasu']],S.f.pace||'all','pace','scroll')+'</div>';
   h+='<details class="fold" data-fold="filtry"'+(OPEN_F.has('filtry')?' open':'')+'><summary>Filtry i sortowanie</summary><div style="padding:0 12px 12px">';
   h+='<h2>Produkty</h2><p class="small muted">Dotknij raz: chcę. Drugi raz: bez tego. Trzeci: bez znaczenia.</p><div class="chips">'+CHIPS.map(c=>{const s=S.f.chips[c]||0;return `<button class="chip ${s===1?'inc':s===-1?'exc':''}" data-chip="${c}">${c}</button>`}).join('')+'</div>';
   h+='<h2 id="podtrening">Pod trening</h2>'+whyP('podtrening')+seg([['auto','Auto'],['1','Bez treningu'],['1.25','Lekki'],['1.5','Siłownia, cardio']],S.f.carb,'carb','scroll')+`<p class="small muted">${carbTxt} Zmienia tylko porcję kaszy, ryżu, ziemniaków, pieczywa i płatków.</p>`;
@@ -1090,7 +1158,7 @@ function renderDay(){
   more+=relHtml();
   h+='<details class="fold" data-fold="zapisane"'+(OPEN_F.has('zapisane')?' open':'')+'><summary>Zapisane dziś: posiłki '+ml.length+', treningi '+tr.length+'</summary><h3 class="rh" style="margin:4px 16px 8px">Treningi</h3><div class="panel">'+(tr.length?tr.map(e=>`<div class="entry"><span class="txt">${e.label}, ${fmt(e.min)} min</span><span class="val">${fmt(e.gross)} kcal</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join(''):'<div class="empty">Brak treningów. <button class="btn ghost small" data-tab="train">Przejdź do Treningu</button></div>')+'</div>';
   h+='<h3 class="rh" style="margin:12px 16px 8px">Posiłki</h3><div class="panel">'+(ml.length?ml.map(e=>`<div class="entry"><span class="txt">${e.label}</span><span class="val">${fmt(e.k)} kcal, B ${fmt(e.p)} g</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join(''):'<div class="empty">Brak posiłków. <button class="btn ghost small" data-tab="meals">Przejdź do Posiłków</button></div>')+'</div></details>';
-  h+=`<details class="fold" data-fold="szybki"${OPEN_F.has('szybki')?' open':''}><summary>Szybki wpis albo powtórz wczoraj</summary><div class="panel"><div class="field"><label for="q_n">Co</label><input type="text" id="q_n" style="width:170px;text-align:left" placeholder="np. kawa z mlekiem"></div><div class="field"><label for="q_k">Ile</label><input type="text" inputmode="numeric" id="q_k" placeholder="0"><span class="unit">kcal</span></div></div><p><button class="btn" data-quick="1">Zapisz</button> <button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki</button></p><p class="small muted">Wpis przybliżony wystarczy. W badaniach z wynikiem redukcji wiązała się częstość zapisywania, nie jego dokładność.</p></details>`;
+  h+=`<details class="fold" data-fold="szybki"${OPEN_F.has('szybki')?' open':''}><summary>Szybki wpis albo powtórz wczoraj</summary><div class="panel"><div class="field"><label for="q_n">Co</label><input type="text" id="q_n" style="width:170px;text-align:left" placeholder="np. kawa z mlekiem"></div><div class="field"><label for="q_k">Ile</label><input type="text" inputmode="numeric" id="q_k" placeholder="0"><span class="unit">kcal</span></div></div><p><button class="btn" data-quick="1">Zapisz</button> <button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki</button><button class="btn ghost" data-nav="meals#zamowione">Zamówione jedzenie</button></p><p class="small muted">Wpis przybliżony wystarczy. W badaniach z wynikiem redukcji wiązała się częstość zapisywania, nie jego dokładność.</p></details>`;
   more+='<div class="navrow"><button class="btn ghost" data-tab="impact">Mój wpływ</button><button class="btn ghost" data-tab="challenge">Wspólne wyzwanie</button><button class="btn ghost" data-tab="review">Przegląd tygodnia</button></div>';
   if(d.length)more+='<p><button class="btn ghost" data-clear="1">Wyczyść dzień</button></p>';
   more+=`<details class="fold" data-fold="cel"${OPEN_F.has('cel')?' open':''}><summary>Jak liczony jest cel</summary><div class="note small" style="margin:0 12px 12px">${S.mode==='utrzymanie'?'Tryb utrzymania: cel to zapotrzebowanie bez deficytu, '+(measuredTdee()?'zmierzone z jedzenia i trendu wagi.':'na razie ze wzoru (spoczynkowe zużycie × 1,3 plus treningi netto).'):measuredTdee()?'Jak liczony jest cel: zmierzone zapotrzebowanie (jedzenie i trend wagi) minus 20%.':`Jak liczony jest cel: na start szacunek, czyli spoczynkowe zużycie energii ${fmt(R)} kcal (wzór Mifflina-St Jeora) × 1,3 dla pracy siedzącej, plus treningi netto, minus 20%. Po 2-4 tygodniach ważenia i zapisywania aplikacja przejdzie na zapotrzebowanie zmierzone.`} Nigdy poniżej spoczynkowego zużycia. Białko: 1,4 g na kg wagi docelowej. Mnożnik 1,3 i deficyt 20% to założenia planu, nie pomiar. Zapisuj na bieżąco, najlepiej zaraz po każdym posiłku.</div></details>`;
@@ -1153,15 +1221,17 @@ const GLOSS=[
   ['ochoty','Twoje ochoty','Podsumowanie zapisanych ochot na przekąskę. Pomaga zauważyć, kiedy przychodzą najczęściej, i zaplanować coś wcześniej.','sos#ochoty'],
   ['tryb','Tryb: redukcja albo utrzymanie','Redukcja ustawia cel kalorii ok. 20% poniżej zapotrzebowania. Utrzymanie trzyma osiągniętą wagę: cel równa się zapotrzebowaniu.','set#tryb'],
   ['korekta','Korekta na spoczynkowe zużycie energii','Dokładniejsze kalorie z treningu: spoczynek liczony ze wzoru dla Twojej płci, wieku i wagi zamiast przybliżenia 1 kcal na kg na godzinę.','set#korekta'],
-  ['oznaczenia','Oznaczenia przepisów','Słodkie: danie na słodko, słodycz z owoców. Przy IO: co najmniej 20 g białka i do 50 g węglowodanów na porcję, a przekąska do 20 g węglowodanów z białkiem albo tłuszczem; takie danie podnosi cukier wolniej. Zaznacz oba, żeby zobaczyć słodkie śniadania dobre przy insulinooporności.','meals#oznaczenia'],
-  ['cykl','Tydzień cyklu dziś','Zaznacz, który to tydzień cyklu; przy tabletkach to tydzień opakowania, a „Przerwa w tabletkach” to dni bez hormonów. Miara łączy to z bólem głowy i wagą: ból w dniach przerwy to typowy wzorzec migreny po spadku estrogenu, a przed miesiączką waga bywa wyższa o wodę. Po 3 cyklach widać, czy bóle trzymają się tych dni.','day#cykl'],
+  ['zamowione','Zamówione','Szybki zapis jedzenia z dostawy albo restauracji: wybierasz danie, ilość i dodatki, a Miara szacuje kalorie i białko. Wartości są orientacyjne, lokale się różnią, więc pokazujemy przedział ±30%; regularny zapis liczy się bardziej niż dokładność. Ostatni wybór zostaje zapamiętany.','meals#zamowione','fdcMaki'],
+  ['oznaczenia','Oznaczenia przepisów','Słodkie: danie na słodko, słodycz z owoców. Przy IO: co najmniej 20 g białka i do 50 g węglowodanów na porcję, a przekąska do 20 g węglowodanów z białkiem albo tłuszczem. To reguła Miary ułożona pod insulinooporność. Zaznacz oba, żeby zobaczyć słodkie śniadania dobre przy insulinooporności.','meals#oznaczenia'],
+  ['cykl','Tydzień cyklu dziś','Zaznacz, który to tydzień cyklu; przy tabletkach to tydzień opakowania, a „Przerwa w tabletkach” to dni bez hormonów. ICHD-3 opisuje migrenę związaną z miesiączką: napady od 2 dni przed do 3. dnia miesiączki w co najmniej 2 z 3 cykli. Po 3 cyklach dziennik pokaże, czy bóle trzymają się tych dni.','day#cykl','mm'],
   ['profil','Mój profil zdrowia','Zaznacz choroby i tabletki, a Miara ułoży plan działań z Twoich wpisów i zaleceń. Profil zostaje w tym telefonie; kopia bez danych zdrowotnych go pomija.','health#profil'],
   ['dyskretny','Tryb dyskretny','Karty o migrenie i antykoncepcji pokazują się tylko w Zdrowiu, nie na ekranie Mój dzień.','set#discreet']];
-function whyP(id){const g=GLOSS.find(x=>x[0]===id);return g?`<p class="why"><b>Po co:</b> ${g[2]}</p>`:''}
+function whyP(id){const g=GLOSS.find(x=>x[0]===id);return g?`<p class="why"><b>Po co:</b> ${g[2]}${g[4]?` Źródło: ${[].concat(g[4]).map(srcA).join(', ')}.`:''}</p>`:''}
 const HELP=[
   ['Posiłki','Zapisać zjedzony posiłek','W planie dnia naciśnij Zjem przy daniu.','meals#plan'],
   ['Posiłki','Wybrać, co gotuję dziś','Otwórz przepis i naciśnij Gotuję to dziś. Wieczorem Według planu zapisze to danie.','meals#plan'],
   ['Posiłki','Znaleźć szybkie danie albo większe na weekend','Nad listą dań wybierz Na co dzień albo Na weekend.','meals#rytm'],
+  ['Posiłki','Zapisać jedzenie z dostawy','Zamówione: danie, ilość, dodatki i jeden przycisk.','meals#zamowione'],
   ['Posiłki','Zrobić zakupy na tydzień','Lista zakupów z planu jest pod planem dnia.','meals#zakupy'],
   ['Mój dzień','Wpisać wagę','Pomiary dnia. Przyciski − i + zaczynają od ostatniego ważenia.','day#m_w'],
   ['Mój dzień','Wpisać sen i kroki','Pomiary dnia: przepisz z zegarka albo telefonu.','day#m_sleep'],
@@ -1279,6 +1349,11 @@ document.addEventListener('click',e=>{
   else if(d.toastlen){S.toastLen=d.toastlen;toast(d.toastlen==='stay'?'Komunikat zostanie, dopóki go nie zamkniesz.':'Tak długo będzie widać komunikat.')}
   else if(d.setv){setPath(d.setv,d.v)}
   else if(d.pace){S.f.pace=d.pace}
+  else if(d.orddish){S.ord=S.ord||{add:{}};S.ord.dish=d.orddish}
+  else if(d.ordn){S.ord=S.ord||{add:{}};const dk=ordDish();S.ord[dk]=dk==='tofu'?d.ordn:+d.ordn}
+  else if(d.ordalt){S.ord.alt=!S.ord.alt}
+  else if(d.ordadd){S.ord.add=S.ord.add||{};S.ord.add[d.ordadd]=!S.ord.add[d.ordadd]}
+  else if(d.ordsave){const t=ordCalc();day().push({kind:'m',id:'zam_'+ordDish(),label:ordLabel()+' (zamówione)',k:Math.round(t.k),p:Math.round(t.p),f:Math.round(t.f),c:Math.round(t.c),ord:1});PET.react('meal');save();render();toast(guideToast('Zapisano zamówione'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
   else if(d.forme){S.f.forme=!forMe()}
   else if(d.ftag){S.f.tags=S.f.tags||{};S.f.tags[d.ftag]=!S.f.tags[d.ftag]}
   else if(d.cond){S.prof=S.prof||{cond:{},pill:''};S.prof.cond=S.prof.cond||{};S.prof.cond[d.cond]=!S.prof.cond[d.cond];if(d.cond==='lip'&&S.prof.cond.lip)S.lip=true}
