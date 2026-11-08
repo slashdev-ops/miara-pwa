@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -552,7 +552,7 @@ tryc('profil: zaznaczenie choroby zapisuje się w profilu', () => { view('health
 tryc('plan: bez profilu prosi o zaznaczenie chorób', () => planOf(view('health', BASE({ prof: { cond: {}, pill: '' } }))).includes('Zaznacz wyżej'));
 tryc('plan: aura i Yaz: najpierw przeciwwskazanie WHO, kategoria 4', () => { const f = firstAct(view('health', BASE(PROF(['aura'], 'yaz')))); return f.includes('przeciwwskazanie') && f.includes('kategoria 4'); });
 tryc('plan: dni z aurą w dzienniku działają jak zaznaczona aura', () => firstAct(view('health', BASE({ ...PROF(['mig'], 'jeanine'), pain: { [dk(3)]: { aura: true } } }))).includes('przeciwwskazanie'));
-tryc('plan: aura i minitabletka bez przeciwwskazania', () => { const h = planOf(view('health', BASE(PROF(['aura'], 'cerazette')))); return !h.includes('przeciwwskazanie') && h.includes('dopuszczalna'); });
+tryc('plan: aura i minitabletka: kategorie UKMEC i WHO 2025, bez przeciwwskazania', () => { const h = planOf(view('health', BASE(PROF(['aura'], 'cerazette')))); return !h.includes('przeciwwskazanie') && h.includes('UKMEC 2025: kategoria 2') && h.includes('3 przy kontynuacji'); });
 tryc('plan: Hashimoto i tabletka z estrogenem: TSH 6-8 tygodni', () => planOf(view('health', BASE(PROF(['hashi'], 'yaz')))).includes('TSH 6-8 tygodni'));
 tryc('plan: drospirenon z ryzykiem zakrzepicy w liczbach', () => planOf(view('health', BASE(PROF([], 'yaz')))).includes('9-12 na 10 000'));
 tryc('plan: 10 dni z lekiem w 30 dniach: ostrzeżenie o nadużywaniu leków z liczbą', () => {
@@ -603,7 +603,7 @@ tryc('błąd pod polem: komunikat powiązany z polem', () => /aria-describedby/.
 tryc('scenariusze: co najmniej 5, każdy z opisem, co sprawdzić', () => { const k = Object.keys(T.SCEN); return k.length >= 5 && k.every((n) => T.SCEN[n].t && T.SCEN[n].chk && T.SCEN[n].chk.length > 30); });
 tryc('scenariusze: Pomoc ma przyciski do każdego scenariusza', () => { const h = view('help', BASE()); return Object.keys(T.SCEN).every((n) => h.includes(`data-scen="${n}"`)); });
 tryc('scenariusz migrena: najpierw przeciwwskazanie, licznik dni z lekiem', () => { const h = view('health', T.scenS('migrena')); return firstAct(h).includes('przeciwwskazanie') && planOf(h).includes('10 dni z lekiem'); });
-tryc('scenariusz minitabletka: bez przeciwwskazania', () => { const h = view('health', T.scenS('minitabletka')); return !planOf(h).includes('przeciwwskazanie') && planOf(h).includes('dopuszczalna'); });
+tryc('scenariusz minitabletka: bez przeciwwskazania, z kategoriami', () => { const h = view('health', T.scenS('minitabletka')); return !planOf(h).includes('przeciwwskazanie') && planOf(h).includes('UKMEC 2025'); });
 tryc('scenariusz hashimoto: TSH i talia osobno', () => { const h = planOf(view('health', T.scenS('hashimoto'))); return h.includes('TSH 6-8 tygodni') && h.includes('osobno'); });
 tryc('scenariusz wpisy: + przy wadze zaczyna od wczorajszego ważenia', () => { view('day', T.scenS('wpisy')); click({ stp: `meas.${dk(0)}.w`, d: '1' }); return T.S().meas[dk(0)].w === '80,4'; });
 tryc('scenariusz start: pierwsze wejście', () => T.scenS('start').onb === false);
@@ -635,9 +635,9 @@ tryc('dla mnie: wyłączenie pokazuje wszystkie dania', () => { const S = T.S();
 tryc('dla mnie: profil bez zasad dla jedzenia mówi to wprost', () => view('meals', BASE(PROF(['lip', 'mig'], ''))).includes('nie zmienia doboru dań'));
 tryc('razem: IO i migrena bez postu przerywanego', () => planOf(view('health', BASE(PROF(['io', 'mig'], '')))).includes('Bez postu przerywanego'));
 tryc('razem: IO i Hashimoto się nie wykluczają', () => planOf(view('health', BASE(PROF(['io', 'hashi'], '')))).includes('nie wykluczają'));
-tryc('razem: lipodemia i Hashimoto: obrzęk to co innego', () => planOf(view('health', BASE(PROF(['lip', 'hashi'], '')))).includes('Obrzęk przy niedoczynności'));
+tryc('razem: zdanie bez źródła usunięte (obrzęk przy Hashimoto i lipodemii)', () => !planOf(view('health', BASE(PROF(['lip', 'hashi'], '')))).includes('Obrzęk przy niedoczynności'));
 tryc('przerwa: karta przy migrenie po 12:00 bez posiłku, nie rano i nie po posiłku', () => { view('day', BASE(PROF(['mig'], ''))); const a = T.migGap(13), b = T.migGap(9); view('day', BASE({ ...PROF(['mig'], ''), days: { [dk(0)]: [{ kind: 'm', id: 's1', label: 'x', k: 400, p: 20, f: 10, c: 40 }] } })); const c = T.migGap(13); view('day', BASE(PROF([], ''))); return a && !b && !c && !T.migGap(13); });
-tryc('przerwa: karta w Zdrowiu pokazuje tekst, nie kod', () => { const h = view('health', BASE(PROF(['mig', 'io'], ''))); return !T.migGap(new Date().getHours()) || (h.includes('Długa przerwa w jedzeniu') && h.includes('wyzwalacz ataku') && !h.includes('=>')); });
+tryc('przerwa: karta w Zdrowiu pokazuje tekst, nie kod', () => { const h = view('health', BASE(PROF(['mig', 'io'], ''))); return !T.migGap(new Date().getHours()) || (h.includes('Długa przerwa w jedzeniu') && h.includes('wyzwalaczy migreny') && !h.includes('=>')); });
 tryc('karty: każde pole why i more da się pokazać jako tekst', () => { const h = view('health', BASE({ ...PROF(['mig', 'io'], ''), pain: { [dk(0)]: { aura: true } }, meas: { [dk(0)]: { cyc: 'P', sleep: '5' }, [dk(1)]: { sleep: '5' } } })); return !/=>|function\s*\(/.test(h); });
 tryc('nowe obiady Przy IO: 3 dania, w tym 2 do 20 min', () => { const L = ['o19', 'o20', 'o21'].map(M); return L.every((m) => m && m.t === 'obiad' && T.ioFit(m, T.macros(m, 1, 1))) && L.filter((m) => m.min <= 20).length === 2; });
 tryc('scenariusz połączenia: IO, migrena i Hashimoto', () => { const s = T.scenS('polaczenia'); return s.prof.cond.io && s.prof.cond.mig && s.prof.cond.hashi; });
@@ -645,11 +645,11 @@ tryc('scenariusz połączenia: IO, migrena i Hashimoto', () => { const s = T.sce
 // Polecenie 08.11.2026: Zamówione; chipy snu, „jak wczoraj” przy krokach
 const ORDB = (o) => BASE({ ord: { dish: 'kurczak', sushi: 12, kurczak: 5, tofu: '1', alt: false, add: {}, ...o } });
 tryc('zamówione: Posiłki mają sekcję z trzema daniami', () => { const h = view('meals', ORDB()); return h.includes('id="zamowione"') && ['sushi', 'kurczak', 'tofu'].every((d) => h.includes(`data-orddish="${d}"`)); });
-tryc('zamówione: kurczak 5 kawałków z ryżem to 1010 kcal', () => { view('meals', ORDB({ add: { ryz: true } })); const c = T.ordCalc(); return Math.round(c.k) === 1010 && Math.round(c.p) === 50; });
-tryc('zamówione: sushi w tempurze ma więcej kalorii', () => { view('meals', ORDB({ dish: 'sushi', sushi: 16 })); const a = T.ordCalc().k; view('meals', ORDB({ dish: 'sushi', sushi: 16, alt: true })); return a === 720 && T.ordCalc().k === 1120; });
-tryc('zamówione: tofu duża porcja ×1,3', () => { view('meals', ORDB({ dish: 'tofu', tofu: '1.3' })); return Math.round(T.ordCalc().k) === 585; });
-tryc('zamówione: szacunek z przedziałem i białkiem', () => { const h = view('meals', ORDB()); return /ok\. 750 kcal \(525-975\)/.test(h) && h.includes('białko 45 g'); });
-tryc('zamówione: zapis dodaje posiłek do dnia z etykietą', () => { view('meals', ORDB({ days: {} })); T.S().days = {}; click({ ordsave: '1' }); const e = lastE(); return e && e.kind === 'm' && e.ord === 1 && e.label.includes('Kurczak po koreańsku, 5 kawałków') && e.k === 750; });
+tryc('zamówione: kurczak 5 kawałków z ryżem to 998 kcal (USDA)', () => { view('meals', ORDB({ add: { ryz: true } })); const c = T.ordCalc(); return Math.round(c.k) === 998 && Math.round(c.p) === 38; });
+tryc('zamówione: sushi 16 maki to 448 kcal, nigiri 560 (USDA)', () => { view('meals', ORDB({ dish: 'sushi', sushi: 16 })); const a = T.ordCalc().k; view('meals', ORDB({ dish: 'sushi', sushi: 16, alt: true })); return Math.round(a) === 448 && Math.round(T.ordCalc().k) === 560; });
+tryc('zamówione: tofu duża porcja ×1,3 (USDA)', () => { view('meals', ORDB({ dish: 'tofu', tofu: '1.3' })); return Math.round(T.ordCalc().k) === 419; });
+tryc('zamówione: szacunek z przedziałem i białkiem', () => { const h = view('meals', ORDB()); return /ok\. 740 kcal \(518-962\)/.test(h) && h.includes('białko 33 g'); });
+tryc('zamówione: zapis dodaje posiłek do dnia z etykietą', () => { view('meals', ORDB({ days: {} })); T.S().days = {}; click({ ordsave: '1' }); const e = lastE(); return e && e.kind === 'm' && e.ord === 1 && e.label.includes('Kurczak po koreańsku, 5 kawałków') && e.k === 740; });
 tryc('zamówione: wybór zostaje zapamiętany', () => { view('meals', ORDB()); click({ orddish: 'sushi' }); click({ ordn: '16' }); return T.S().ord.dish === 'sushi' && T.S().ord.sushi === 16; });
 tryc('zamówione: każde danie ma zdanie dietetyka', () => ['sushi', 'kurczak', 'tofu'].every((d) => /class="why"|class="small muted"/.test(view('meals', ORDB({ dish: d }))) && view('meals', ORDB({ dish: d })).includes('class="ordtip"')));
 tryc('zamówione: szybki wpis prowadzi do Zamówione', () => view('day', BASE()).includes('data-nav="meals#zamowione"'));
@@ -658,6 +658,20 @@ tryc('sen: chipy 6:00-8:00 ustawiają sen', () => { const k = `meas.${dk(0)}.sle
 tryc('sen: chip jak wczoraj z wczorajszą wartością', () => view('day', BASE({ meas: { [dk(1)]: { sleep: '6:13' } } })).includes('jak wczoraj (6 h 13 min)'));
 tryc('kroki: chip jak wczoraj, gdy dziś pusto', () => { const k = `meas.${dk(0)}.steps`, h = view('day', BASE({ meas: { [dk(1)]: { steps: '8500' } } })); if (!h.includes(`data-setv="${k}" data-v="8500"`) || !/jak wczoraj \(8\s?500\)/.test(h)) return false; click({ setv: k, v: '8500' }); return T.S().meas[dk(0)].steps === '8500' && !view('day', {}).includes(`data-setv="${k}" data-v="8500"`); });
 tryc('kroki: − i + co 1000', () => { const k = `meas.${dk(0)}.steps`; view('day', BASE({ meas: { [dk(0)]: { steps: '5000' } } })); click({ stp: k, d: '1' }); return T.S().meas[dk(0)].steps === '6000'; });
+
+// Zasada 08.11.2026: dane z badań tylko ze sprawdzonych linków; każda treść zdrowotna ma źródło
+const isUrl = (u) => /^https:\/\/[^\s"'<>]+$/.test(u);
+tryc('źródła: każde źródło to link https z opisem', () => Object.values(T.SRC).every(([u, l]) => isUrl(u) && l && l.length > 3));
+tryc('źródła: każde działanie planu ma link Źródło', () => { const h = planOf(view('health', BASE({ ...PROF(['hashi', 'lip', 'mig', 'io'], 'yaz'), pain: { [dk(1)]: { aura: true, med: true } } }))); const n = (h.match(/<div class="act/g) || []).length, s = (h.match(/class="srcl"/g) || []).length; return n >= 10 && n === s; });
+tryc('źródła: każda karta ma źródło z listy', () => T.CARDS.every((c) => c.ref && [].concat(c.ref).every((k) => T.SRC[k])));
+tryc('źródła: karta pokazuje link Źródło', () => /data-card="zla_noc"[\s\S]*?class="srcl"[\s\S]*?href="https:\/\/pubmed/.test(view('health', BASE({ meas: { [dk(0)]: { sleep: '5' }, [dk(1)]: { sleep: '5' } } }))));
+tryc('źródła: każde danie i dodatek w Zamówione ma źródło z USDA', () => Object.values(T.ORD).every((d) => d.ref && T.SRC[d.ref] && /fdc\.nal\.usda\.gov/.test(T.SRC[d.ref][0])) && T.ORD_ADD.every((a) => T.SRC[a[4]]));
+tryc('źródła: Zamówione pokazuje link do bazy USDA', () => /id="zamowione"[\s\S]*?href="https:\/\/fdc\.nal\.usda\.gov/.test(view('meals', ORDB())));
+tryc('źródła: linki otwierają się w nowej karcie bez przekazywania odsyłacza', () => { const h = planOf(view('health', BASE(PROF(['io'], '')))); return /target="_blank" rel="noopener noreferrer"/.test(h); });
+tryc('źródła: usunięte liczby bez źródła (1-2 kg, 3-5 godzin, 5 godzin, sen 7 godzin)', () => !/1-2 kg|1-2 tygodni|co 3-5 godzin|dłuższa niż 5 godzin|sen 7 godzin|ferrytynę/.test(code));
+tryc('źródła: minitabletka bez słowa dopuszczalna, tempura usunięta', () => !/dopuszczalna przy aurze|tempura albo majonez/.test(code));
+tryc('źródła: cel przy IO co najmniej 7% (DPP)', () => planOf(view('health', BASE(PROF(['io'], '')))).includes('co najmniej 7%'));
+tryc('źródła: zakrzepica przy dezogestrelu 9-12, przy lewonorgestrelu 5-7', () => planOf(view('health', BASE(PROF([], 'novynette')))).includes('9-12 na 10 000') && planOf(view('health', BASE(PROF([], 'microgynon')))).includes('Ok. 5-7 na 10 000'));
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);

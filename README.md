@@ -80,6 +80,13 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 - „12 tygodni”: waga w przedziale z deficytu planu i kamienie milowe; aplikacja celowo nie prognozuje wyników badań,
   bólu ani samopoczucia, tylko pokazuje je z wpisów.
 
+## Źródła treści zdrowotnych
+
+- Każda liczba i zalecenie zdrowotne ma link „Źródło” (wytyczne WHO, UKMEC, EMA, ICHD-3, ATA, przeglądy w PubMed/PMC,
+  baza USDA FoodData Central); źródła sprawdzone w sesji z cytatem wartości, nie z pamięci.
+- `tests/smoke.js` pilnuje, że plan działań, karty i Zamówione mają źródła, a liczby bez źródła nie wracają;
+  działanie linków sprawdza osobny skrypt (strony USDA są aplikacją w przeglądarce, więc skrypt sprawdza ich dane).
+
 ## Założenia projektu
 
 | Obszar | Rozwiązanie |
