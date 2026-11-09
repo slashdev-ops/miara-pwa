@@ -770,7 +770,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},goalWay:'proc',muscle:false,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},swaps:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},swaps:{},cel:null,hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 // Wartości startowe (rada/2026-11-09_wartosci-startowe): punkt startowy do ustawiania przyciskami, zależny od płci; to założenie
@@ -1306,13 +1306,47 @@ function stanHtml(){const k=todayKey(),m=S.meas[k]||{},d=day(),ml=d.filter(e=>e.
   h+=row('Ruch',mv||'brak danych',mv?'dzisiejsze pomiary i treningi':'wpisz kroki albo dodaj trening');
   if(p||cyc)h+=row('Ból i cykl',p?'dzień z bólem'+(p.aura?', aura':''):'bez bólu',cyc?(cyc==='P'?'dni bez hormonów':'tydzień cyklu '+esc(cyc)):'cykl nie zaznaczony dziś');
   return `<section class="stan panel" id="stan" aria-label="Stan dziś"><h2>Stan dziś</h2>${h}</section>`}
+// Etap 1: cel aktywny i „Co się wydarzyło” (zdarzenia.js liczy, app.js tylko pokazuje)
+function zdCtx(){
+  const k=S.krok;
+  return {pT:1.4*(num(S.goal)||68),est:!!pillOf()[2],krokDone:!!(k&&k.conf&&kProg(mondayOf(new Date())).ok)};
+}
+function zdSrc(x){return `<a href="${x.url}" target="_blank" rel="noopener">źródło</a>, siła dowodów: ${x.sila}`}
+function celHtml(){
+  const ctx=zdCtx(),sig=ZD.signals(S,todayKey(),ctx),cur=S.cel&&ZD.goalOf(S.cel.id);
+  const pick=(id,lab)=>`<button class="chip${cur&&cur.id===id?' inc':''}" data-cel="${id}" aria-pressed="${cur&&cur.id===id}">${lab}</button>`;
+  let h=sig.map(x=>`<div class="note warn"><b>Najpierw lekarz: ${esc(x.t)}.</b> ${esc(x.x)}</div>`).join('');
+  h+='<section class="panel zdsec" id="cel" aria-label="Twój cel"><h2>Twój cel</h2>';
+  if(!cur){
+    const sug=ZD.suggest(S,todayKey(),ctx),g=ZD.goalOf(sug);
+    h+=`<p>Proponowany cel z Twoich danych: <b>${g.t}</b>. Jeden cel naraz; zmienisz go w każdej chwili.</p><p>${pick(sug,'Wybieram ten cel')}</p>`;
+    h+=fold('celwybor','Inne cele',`<div class="chips">${ZD.goals.filter(x=>x.id!==sug).map(x=>pick(x.id,x.t)).join('')}</div>`);
+  }else{
+    const p=ZD.progress(S,cur.id,todayKey(),ctx);
+    h+=`<p><b>${cur.t}</b>, od ${fmtDate(S.cel.since)}</p><p class="small">W tym tygodniu: ${esc(p.txt)}.</p>`;
+    h+=`<h3>Na co jeszcze wpływa</h3><ul class="zd">${ZD.impact(cur.id,S.prof).map(x=>`<li><b>${x.to}:</b> ${x.t} <span class="small muted">(${zdSrc(x)})</span></li>`).join('')}</ul>`;
+    h+=fold('celwybor','Zmień cel',`<p class="small muted">Zmiana celu nie kasuje danych.</p><div class="chips">${ZD.goals.map(x=>pick(x.id,x.t)).join('')}</div>`);
+  }
+  return h+'</section>';
+}
+function zdHtml(){
+  const ev=ZD.events(S,todayKey(),zdCtx());
+  const one=e=>`<li><b>${esc(e.t)}</b> <span class="small muted">${fmtDate(e.k)}</span><br><span class="small">${esc(e.x)}</span><br><span class="small muted">Z czego: ${esc(e.z)}; ${esc(e.w)}.${e.act&&e.act.url?' '+zdSrc(e.act)+'.':''}</span></li>`;
+  let h='<section class="panel zdsec" id="zdarzenia" aria-label="Co się wydarzyło"><h2>Co się wydarzyło</h2>';
+  if(!ev.length)h+='<p class="small">Zdarzenia pojawią się, gdy zapiszesz kilka dni: wagę, sen, kroki albo posiłki.</p>';
+  else{
+    h+=`<ul class="zd">${ev.slice(0,3).map(one).join('')}</ul>`;
+    if(ev.length>3)h+=fold('zdall',`Wszystkie z 28 dni (${ev.length})`,`<ul class="zd">${ev.slice(3).map(one).join('')}</ul>`);
+  }
+  return h+'</section>';
+}
 function renderDay(){
   const d=day(),tr=d.filter(e=>e.kind==='t'),ml=d.filter(e=>e.kind==='m');
   const net=tr.reduce((a,e)=>a+e.net,0),eat={k:0,p:0,f:0,c:0};ml.forEach(e=>{eat.k+=e.k;eat.p+=e.p;eat.f+=e.f;eat.c+=e.c});
   const R=rmr(),target=targetKcal(),pT=1.4*(num(S.goal)||68);
   const bar=(lab,v,max,unit)=>{const pc=Math.min(100,v/max*100);return `<div class="prog"><div class="top"><span>${lab}</span><span>${fmt(v)} / ${fmt(max)} ${unit}</span></div><div class="track"><div class="fill ${v>max*1.05?'over':''}" style="width:${pc}%"></div></div></div>`};
   const sos='<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>';
-  let h=guideHtml()+stanHtml()+cardsHtml('day')+krokCardHtml()+focusHtml()+painHtml()+reviewPromptHtml()+petCardHtml()+sos+measHtml()+legHtml()+kneeBannerHtml();
+  let h=guideHtml()+stanHtml()+celHtml()+zdHtml()+cardsHtml('day')+krokCardHtml()+focusHtml()+painHtml()+reviewPromptHtml()+petCardHtml()+sos+measHtml()+legHtml()+kneeBannerHtml();
   let more=modeHtml()+`<h3 class="rh" style="margin:4px 4px 8px">Energia i białko dziś</h3><div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
   more+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
   more+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
@@ -1481,7 +1515,8 @@ document.addEventListener('click',e=>{
   else if(d.kjt){S.krok.jt=+d.kjt}
   else if(d.kzap){S.krok.zap=S.krok.zap||{};S.krok.zap[d.kzap]=!S.krok.zap[d.kzap]}
   else if(d.kroknext){const j=kNext(S.krok.step);if(j<0)S.krok.fin=true;else kStart(j);toast(j<0?'Ścieżka gotowania ukończona':'Nowy krok: '+KROKI[j].n)}
-  else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')}
+  else if(d.cel){const g=ZD.goalOf(d.cel);if(!g)return;S.cel={id:g.id,since:todayKey()};toast('Twój cel: '+g.t)}
+else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')}
   else if(d.krokeasy){kStart(S.krok.step);S.krok.easy=true;toast('Łatwiejsza wersja kroku od tego tygodnia')}
   else if(d.impsave){const I=S.imp;if(I){const m=S.meas[I.date]=S.meas[I.date]||{};Object.entries(I.vals).forEach(([f,v])=>{m[f]=f==='sleep'?sleepFmt(num(v)):v})}S.imp=null;S.tab='day';toast('Zapisano dane ze Skrótu')}
   else if(d.impskip){S.imp=null;S.tab='day'}

@@ -23,6 +23,8 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
+const zdPath = path.join(root, 'zdarzenia.js');
+if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
 vm.runInContext(code + '\n;globalThis.__T={S:()=>S,DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash};', sandbox);
 const T = sandbox.__T;
 
@@ -595,7 +597,7 @@ tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h =
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
 const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord'];
-const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps'];
+const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
   view('day', BASE({ kg: '90', age: '50', sex: 'M', muscle: true, bmiCut: 'nhs', meas: { [dk(0)]: { w: '90', steps: '8000', waist: '100' } }, days: { [dk(0)]: ML(1, 500, 30) }, krok: { step: 1, since: dk(3), ans: { why: 'zmeczenie' } }, knee: { start: dk(3), sessions: [{ d: dk(1), pain: 4 }], morning: {}, days: [2], tmpPain: null, tmpCramp: null } }));
@@ -875,6 +877,128 @@ tryc('ekran główny: wprowadzenie pokazuje kroki w przeglądarce, a z ikony nie
 });
 tryc('ekran główny: Pomoc znajduje instrukcję po słowie „ekran”', () => view('help', BASE({ helpQ: 'ekran główny' })).includes('set#ekran'));
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
+
+// Etap 1: „Co się wydarzyło” i jeden cel aktywny (zdarzenia.js, docs/specs/2026-11-10-etap1-zdarzenia-i-cel-design.md).
+// Moduł liczy z podanego stanu i dnia, więc testy używają stałej daty D0.
+const Z = () => sandbox.ZD;
+const D0 = '2026-11-10';
+const zk = (n) => { const d = new Date(Date.parse(D0 + 'T12:00:00') - n * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const ZS = (o) => ({ days: {}, meas: {}, pain: {}, urges: {}, hab: {}, prof: { cond: {}, pill: '' }, krok: null, cel: null, age: '35', goal: '66,5', ...o });
+const MS = (pairs) => { const m = {}; for (const [n, v] of pairs) m[zk(n)] = { ...(m[zk(n)] || {}), ...v }; return m; };
+const ev = (s, ctx) => Z().events(s, D0, ctx || {});
+const evId = (s, id, ctx) => ev(s, ctx).filter((e) => e.id === id);
+const VERIFIED = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 17];
+
+tryc('zdarzenia: moduł ma events, goals, suggest, progress, impact, signals', () => !!Z() && ['events', 'suggest', 'progress', 'impact', 'signals'].every((f) => typeof Z()[f] === 'function') && Z().goals.length === 6);
+tryc('zdarzenia: 2 noce z rzędu poniżej 6 h to „Krótkie noce”, jedna noc albo 6 h nie', () => {
+  const a = evId(ZS({ meas: MS([[0, { sleep: '5,5' }], [1, { sleep: '5,9' }]]) }), 'krotki_sen');
+  const b = evId(ZS({ meas: MS([[0, { sleep: '5,5' }], [1, { sleep: '6' }]]) }), 'krotki_sen');
+  return a.length === 1 && a[0].k === D0 && b.length === 0;
+});
+tryc('zdarzenia: 4 krótkie noce z rzędu to jedno zdarzenie', () => evId(ZS({ meas: MS([[0, { sleep: '5' }], [1, { sleep: '5' }], [2, { sleep: '5' }], [3, { sleep: '5' }]]) }), 'krotki_sen').length === 1);
+tryc('zdarzenia: średnia wagi zmieniona o 0,5 kg przy 3 ważeniach w każdym tygodniu; 0,4 kg albo 2 ważenia nie', () => {
+  const w = (now, old, n) => MS([...Array(n).keys()].map((i) => [i, { w: String(now) }]).concat([...Array(n).keys()].map((i) => [21 + i, { w: String(old) }])));
+  const a = evId(ZS({ meas: w(80, 80.5, 3) }), 'waga_zmiana'), b = evId(ZS({ meas: w(80, 80.4, 3) }), 'waga_zmiana'), c = evId(ZS({ meas: w(80, 81, 2) }), 'waga_zmiana');
+  return a.length === 1 && a[0].t.includes('spadła') && a[0].z.includes('3 ważeń') && b.length === 0 && c.length === 0;
+});
+tryc('zdarzenia: zmiana wagi i kroków raz, najnowsza (zachodzące okna nie powtarzają tego samego)', () => {
+  const m = MS([...Array(50).keys()].map((i) => [i, { w: String(80 + i * 0.05), steps: String(9000 - i * 100) }]));
+  const w = evId(ZS({ meas: m }), 'waga_zmiana'), k = evId(ZS({ meas: m }), 'kroki_zmiana');
+  return w.length === 1 && w[0].k === D0 && k.length <= 1;
+});
+tryc('zdarzenia: waga stoi jak karta (różnica poniżej 0,2 kg, co najmniej 2 ważenia)', () => {
+  const m = MS([[0, { w: '80' }], [1, { w: '80,1' }], [21, { w: '80' }], [22, { w: '80,1' }]]);
+  return evId(ZS({ meas: m }), 'waga_stoi').length === 1 && evId(ZS({ meas: m }), 'waga_zmiana').length === 0;
+});
+tryc('zdarzenia: 3 dni z bólem w 7 dniach tak, 2 nie', () => {
+  const p = (ds) => Object.fromEntries(ds.map((n) => [zk(n), {}]));
+  return evId(ZS({ pain: p([0, 2, 5]) }), 'bol_dni').length === 1 && evId(ZS({ pain: p([0, 5]) }), 'bol_dni').length === 0;
+});
+tryc('zdarzenia: kroki zmienione o 1000 przy 4 dniach w każdym tygodniu; 3 dni nie', () => {
+  const s = (n) => MS([...Array(n).keys()].map((i) => [i, { steps: '7000' }]).concat([...Array(n).keys()].map((i) => [7 + i, { steps: '6000' }])));
+  const a = evId(ZS({ meas: s(4) }), 'kroki_zmiana');
+  return a.length === 1 && a[0].t.includes('wzrosły') && evId(ZS({ meas: s(3) }), 'kroki_zmiana').length === 0;
+});
+tryc('zdarzenia: powrót po co najmniej 3 dniach bez wpisów, bez liczenia przerwy', () => {
+  const a = evId(ZS({ meas: MS([[0, { w: '80' }], [10, { w: '80' }]]) }), 'powrot'), b = evId(ZS({ meas: MS([[0, { w: '80' }], [2, { w: '80' }]]) }), 'powrot');
+  return a.length === 1 && a[0].k === D0 && a[0].x.includes('Dobrze, że jesteś') && !/dni przerwy|nie było Cię/.test(a[0].x) && b.length === 0;
+});
+tryc('zdarzenia: tylko ostatnie 28 dni', () => evId(ZS({ meas: MS([[30, { sleep: '5' }], [31, { sleep: '5' }]]) }), 'krotki_sen').length === 0);
+tryc('zdarzenia: każde ma „z czego” z liczbą i „w tym czasie”, nigdy „z powodu”', () => {
+  const s = ZS({ meas: MS([[0, { sleep: '5', steps: '7000', w: '80' }], [1, { sleep: '5', steps: '7000', w: '80' }], [2, { steps: '7000', w: '80' }], [3, { steps: '7000' }], [7, { steps: '5000' }], [8, { steps: '5000' }], [9, { steps: '5000' }], [10, { steps: '5000' }], [21, { w: '81' }], [22, { w: '81' }], [23, { w: '81' }]]), days: { [zk(1)]: [{ kind: 't', min: 30 }] } });
+  const e = ev(s);
+  if (e.length < 3) throw new Error('za mało zdarzeń: ' + e.map((x) => x.id).join(','));
+  return e.every((x) => /[0-9]/.test(x.z) && typeof x.w === 'string' && !JSON.stringify(x).includes('z powodu')) && e.some((x) => x.w.includes('w tym czasie') && x.w.includes('1 trening'));
+});
+tryc('zdarzenia: tydzień celu z wynikiem po 7 dniach od wyboru', () => {
+  const s = ZS({ cel: { id: 'sen', since: zk(7) }, meas: MS([0, 1, 2, 3, 4, 5, 6].map((n) => [n + 1, { sleep: n < 5 ? '7' : '5' }])) });
+  const a = evId(s, 'cel_tydzien');
+  return a.length === 1 && a[0].x.includes('5 z 7');
+});
+tryc('cel: propozycja w kolejności ból, sen, białko, ruch, zapisy, waga', () => {
+  const S0 = (o) => ZS({ meas: MS([0, 1, 2, 3, 4].map((n) => [n, { w: '80' }])), ...o });
+  const pain = { [zk(3)]: {} }, mig = { cond: { mig: true }, pill: '' };
+  const meals = (p) => Object.fromEntries([0, 1, 2].map((n) => [zk(n), [{ kind: 'm', p, k: 400 }]]));
+  const r = [
+    Z().suggest(S0({ prof: mig, pain }), D0, { pT: 90 }),
+    Z().suggest(S0({ meas: MS([[0, { sleep: '5', w: '80' }], [2, { sleep: '5', w: '80' }], [3, { w: '80' }], [4, { w: '80' }]]) }), D0, { pT: 90 }),
+    Z().suggest(S0({ days: meals(30) }), D0, { pT: 90 }),
+    Z().suggest(S0({ meas: MS([0, 1, 2, 3].map((n) => [n, { steps: '5000', w: '80' }])) }), D0, { pT: 90 }),
+    Z().suggest(S0({ age: '65', meas: MS([0, 1, 2, 3].map((n) => [n, { steps: '7000', w: '80' }])) }), D0, { pT: 90 }),
+    Z().suggest(ZS({ meas: MS([[0, { w: '80' }], [3, { w: '80' }]]) }), D0, { pT: 90 }),
+  ];
+  if (r.join() !== 'bol,sen,bialko,ruch,waga,zapisy') throw new Error(r.join());
+  return true;
+});
+tryc('cel: postęp snu „5 z 7 nocy”, ruchu z progiem według wieku (Paluch 2022)', () => {
+  const s = ZS({ meas: MS([0, 1, 2, 3, 4, 5, 6].map((n) => [n, { sleep: n < 5 ? '7' : '5', steps: '7000' }])) });
+  const a = Z().progress(s, 'sen', D0, {}), b = Z().progress(s, 'ruch', D0, {}), c = Z().progress({ ...s, age: '65' }, 'ruch', D0, {});
+  return a.txt.includes('5 z 7') && b.cel === 8000 && c.cel === 6000 && b.txt.includes('7000');
+});
+tryc('cel: wpływy tylko ze sprawdzonych wierszy mapy, z siłą i linkiem; migrena tylko przy profilu', () => {
+  const all = Z().goals.flatMap((g) => Z().impact(g.id, { cond: { mig: true } }));
+  const okRows = all.every((x) => VERIFIED.includes(x.row) && /^https:/.test(x.url) && ['mocne', 'umiarkowane', 'słabe'].includes(x.sila));
+  const noMig = Z().impact('ruch', { cond: {} }).every((x) => !x.mig), withMig = Z().impact('ruch', { cond: { mig: true } }).some((x) => x.mig);
+  const plan = Z().goals.every((g) => Z().impact(g.id, { cond: {} }).some((x) => x.row === 10));
+  return okRows && noMig && withMig && plan;
+});
+tryc('cel: sygnały „najpierw lekarz”: aura z estrogenem, co najmniej 10 dni z lekiem w 30', () => {
+  const med = (n) => Object.fromEntries([...Array(n).keys()].map((i) => [zk(i), { med: true }]));
+  const a = Z().signals(ZS({ prof: { cond: { aura: true }, pill: 'x' } }), D0, { est: true }).map((x) => x.id);
+  const b = Z().signals(ZS({ pain: med(10) }), D0, {}).map((x) => x.id), c = Z().signals(ZS({ pain: med(9) }), D0, {}).map((x) => x.id);
+  return a.includes('aura_estrogen') && b.includes('leki') && c.length === 0;
+});
+// Etap 1 w aplikacji: Mój dzień
+const secZd = (h) => { const i = h.indexOf('id="zdarzenia"'); return i < 0 ? '' : h.slice(i, h.indexOf('</section>', i)); };
+const secCel = (h) => { const i = h.indexOf('id="cel"'); return i < 0 ? '' : h.slice(i, h.indexOf('</section>', i)); };
+tryc('Mój dzień: „Co się wydarzyło” pod Stanem dziś, pusty stan z podpowiedzią', () => {
+  const h = view('day', BASE()); const z = secZd(h);
+  return h.indexOf('id="stan"') < h.indexOf('id="zdarzenia"') && z.includes('Co się wydarzyło') && z.includes('pojawią się');
+});
+tryc('Mój dzień: zdarzenie z danych osoby z „z czego” i „w tym czasie”', () => {
+  const z = secZd(view('day', BASE({ meas: { [dk(0)]: { sleep: '5' }, [dk(1)]: { sleep: '5' } } })));
+  return z.includes('Krótkie noce') && z.includes('w tym czasie');
+});
+tryc('Mój dzień: bez celu propozycja z przyciskiem; wybór zapisuje cel od dziś', () => {
+  const c = secCel(view('day', BASE({ cel: null, meas: { [dk(0)]: { sleep: '5' }, [dk(1)]: { sleep: '5' } } })));
+  if (!c.includes('data-cel="sen"')) throw new Error('brak propozycji snu');
+  click({ cel: 'sen' }); const s = T.S().cel;
+  return !!s && s.id === 'sen' && s.since === T.todayKey();
+});
+tryc('Mój dzień: aktywny cel z postępem, listą wpływów ze źródłami i zmianą celu (6 do wyboru)', () => {
+  const c = secCel(view('day', BASE({ cel: { id: 'sen', since: dk(2) } })));
+  return c.includes('Mniej krótkich nocy') && c.includes('Na co jeszcze wpływa') && c.includes('https://pubmed.ncbi.nlm.nih.gov/27804960/') && (c.match(/data-cel="/g) || []).length === 6;
+});
+tryc('Mój dzień: zmiana celu nie kasuje danych', () => {
+  view('day', BASE({ cel: { id: 'sen', since: dk(5) }, meas: { [dk(0)]: { w: '80' } } })); click({ cel: 'ruch' });
+  const s = T.S(); return s.cel.id === 'ruch' && s.meas[dk(0)].w === '80';
+});
+tryc('Mój dzień: sygnał „najpierw lekarz” nad celem', () => {
+  const pain = Object.fromEntries([...Array(10).keys()].map((i) => [dk(i), { med: true }]));
+  const h = view('day', BASE({ pain })); const i = h.indexOf('Najpierw lekarz');
+  return i > 0 && i < h.indexOf('id="cel"');
+});
+tryc('etap 1: pole cel w DEF, zdarzenia.js w index.html przed app.js i w pamięci podręcznej', () => T.DEF().cel === null && html.indexOf('zdarzenia.js') > 0 && html.indexOf('zdarzenia.js') < html.indexOf('app.js') && fs.readFileSync(path.join(root, 'sw.js'), 'utf8').includes("'./zdarzenia.js'"));
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);

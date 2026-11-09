@@ -135,6 +135,7 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 | --- | --- |
 | `index.html` | szkielet strony, manifest, ikony |
 | `app.js`, `app.css` | logika i wygląd aplikacji |
+| `zdarzenia.js` | „Co się wydarzyło” i jeden cel aktywny z mapą wpływów: czyste funkcje bez DOM, testowane w `tests/smoke.js` |
 | `pet.js` | zwierzak: stan, rysunek SVG, reakcje, ekran postępu, tryb pokazowy |
 | `sw.js`, `sw-register.js` | działanie offline; rejestracja tylko na HTTPS lub localhost |
 | `manifest.webmanifest`, `icons/` | instalacja na ekranie początkowym |
