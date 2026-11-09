@@ -151,6 +151,20 @@ test('ekran główny: kroki w Ustawieniach, iPhone najpierw na iPhonie', async (
   expect(errors).toEqual([]);
 });
 
+test('Mój dzień: cel wybrany dotykiem, zdarzenia z danych i lista wpływów ze źródłami', async ({ page }) => {
+  const errors = await open(page);
+  await page.evaluate(() => { S.cel = null; });
+  await show(page, 'day');
+  await expect(page.locator('#zdarzenia li').first()).toBeVisible();
+  const btn = page.locator('#cel [data-cel]').first();
+  await btn.scrollIntoViewIfNeeded();
+  await btn.click();
+  await expect(page.locator('#cel')).toContainText('Na co jeszcze wpływa');
+  await expect(page.locator('#cel a[href^="https://"]').first()).toBeVisible();
+  expect(await page.evaluate(() => S.cel && S.cel.since === todayKey())).toBe(true);
+  expect(errors).toEqual([]);
+});
+
 test('kopia bez danych o zdrowiu ma tylko ustawienia, wczytanie nie kasuje danych', async ({ page }) => {
   const errors = await open(page);
   const r = await page.evaluate(() => {
