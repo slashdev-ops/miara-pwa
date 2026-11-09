@@ -265,7 +265,7 @@ function renderSos(){
     const left=Math.max(0,Math.ceil((sosEnd-Date.now())/1000));
     h+=sosEnd?`<section class="readout"><h3>Przerwa przed decyzją</h3><div class="big" id="sosclock" style="font-size:44px;font-weight:700;text-align:center">${mmss(left)}</div></section>`:'<p><button class="btn" data-sosstart="1">Start 10 minut przerwy</button></p>';
     h+='<h2>Po przerwie</h2><div class="panel"><button class="opt" data-sosout="minela"><span>Ochota minęła</span></button><button class="opt" data-sosout="plan"><span>Zjem planowaną przekąskę</span></button><button class="opt" data-sosout="inne"><span>Zjem coś innego</span></button></div>';
-    if(st==='inne')h+=`<div class="panel"><div class="field"><label for="s_n">Co</label><input type="text" id="s_n" style="width:170px;text-align:left" placeholder="np. ciastka"></div><div class="field"><label for="s_k">Ile, w przybliżeniu</label><input type="text" inputmode="numeric" id="s_k" placeholder="0"><span class="unit">kcal</span></div></div><p><button class="btn" data-sossave="1">Zapisz</button></p><p class="small muted">Zapis jest ważniejszy niż sam wybór. Dla skali: 100 kcal to ok. ${fmt(100/walkPerMin())} min spaceru, ${(()=>{const l=targetKcal()-eatenToday();return l>=0?`a dziś zostało ok. ${fmt(l)} kcal.`:`a cel dnia jest już przekroczony o ok. ${fmt(-l)} kcal; zapis i tak się liczy.`})()}</p>`;
+    if(st==='inne')h+=`<div class="panel"><div class="field"><label for="s_n">Co</label><input type="text" id="s_n" style="width:170px;text-align:left" placeholder="np. ciastka"></div><div class="field"><label for="s_k">Ile, w przybliżeniu</label><input type="text" inputmode="numeric" id="s_k" placeholder="0"><span class="unit">kcal</span></div>${kcalChips('s_k')}</div><p><button class="btn" data-sossave="1">Zapisz</button></p><p class="small muted">Zapis jest ważniejszy niż sam wybór. Dla skali: 100 kcal to ok. ${fmt(100/walkPerMin())} min spaceru, ${(()=>{const l=targetKcal()-eatenToday();return l>=0?`a dziś zostało ok. ${fmt(l)} kcal.`:`a cel dnia jest już przekroczony o ok. ${fmt(-l)} kcal; zapis i tak się liczy.`})()}</p>`;
   }
   h+='<h2 id="ochoty">Twoje ochoty</h2>'+whyP('ochoty')+'<div class="note">'+urgeStats()+'</div>';
   document.getElementById('main').innerHTML=h;
@@ -486,7 +486,7 @@ function renderReview(){
 // Wprowadzenie (rada/2026-11-09_pierwsze-uruchomienie): jeden ekran danych, bez kart z samym opisem (NN/g odradza);
 // „3 rzeczy dziennie” prowadzą Pierwsze kroki, a zwierzaka zapowiada komunikat po Zaczynam
 function renderIntro(){
-  let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+'<div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalHint()+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
+  let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+'<div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalHint()+goalPctHtml()+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
   h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
   document.getElementById('main').innerHTML=h;
 }
@@ -738,7 +738,14 @@ function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.is
 // Nieustawione wartości nie są potwierdzonymi danymi: podpis „wartość startowa”, krok „Sprawdź swoje dane” niezaliczony.
 const START={K:{kg:70,cm:165,age:35},M:{kg:85,cm:178,age:35}},START_K=['kg','cm','age','goal'];
 const isStart=k=>!(S.touched||{})[k];
-function goalHint(){return S.mode==='utrzymanie'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny, jeśli chcesz.</p>'+srcHtml('nhlbi')}
+// Opis wartości suwaka dla czytnika ekranu (WCAG 4.1.2, aria-valuetext w APG slider)
+function rTxt(k,v){v=num(v);return k==='minP'?`co najmniej ${v} g białka`:k==='maxK'?(v>=1000?'kalorie bez limitu':`najwyżej ${v} kcal`):k==='maxC'?(v>=130?'węglowodany bez limitu':`najwyżej ${v} g węglowodanów`):`porcja ${fmt1(v)} ×`}
+// Gotowe cele: 5-10% (NHLBI) i 7% (DPP); zaznaczony ten, który odpowiada obecnemu celowi
+const goalOf=p=>Math.round(num(S.kg)*(1-p/100)*2)/2;
+function goalPctHtml(){if(S.mode==='utrzymanie')return '';return '<div class="chips">'+[5,7,10].map(p=>{const on=Math.abs(num(S.goal)-goalOf(p))<0.01;return `<button class="chip${on?' inc':''}" data-goalpct="${p}" aria-pressed="${on}">${p}% mniej</button>`}).join('')+'</div>'+srcHtml(['nhlbi','dpp'])}
+// Gotowe wartości kalorii przy szacunku (NN/g: wartości domyślne zmniejszają wysiłek); wpis zostaje
+const kcalChips=id=>'<div class="chips quick">'+[100,200,300,500].map(v=>`<button class="chip" data-kcalset="${id}:${v}">${v} kcal</button>`).join('')+'</div>';
+function goalHint(){return S.mode==='utrzymanie'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny albo wybierz niżej.</p>'}
 function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
 function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,STEP.goal)}
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),fixTouched(JSON.parse(r)));}catch(e){}return clone(DEF)}
@@ -1167,10 +1174,10 @@ function renderMeals(){
   h+='<h2>Produkty</h2><p class="small muted">Dotknij raz: chcę. Drugi raz: bez tego. Trzeci: bez znaczenia.</p><div class="chips">'+CHIPS.map(c=>{const s=S.f.chips[c]||0;return `<button class="chip ${s===1?'inc':s===-1?'exc':''}" data-chip="${c}">${c}</button>`}).join('')+'</div>';
   h+='<h2 id="podtrening">Pod trening</h2>'+whyP('podtrening')+seg([['auto','Auto'],['1','Bez treningu'],['1.25','Lekki'],['1.5','Siłownia, cardio']],S.f.carb,'carb','scroll')+`<p class="small muted">${carbTxt} Zmienia tylko porcję kaszy, ryżu, ziemniaków, pieczywa i płatków.</p>`;
   h+='<h2 id="makro">Makro na porcję</h2>'+whyP('makro')+'<div class="panel">'+
-    `<div class="slider"><div class="top"><span>Białko co najmniej</span><b id="l_minP">${S.f.minP} g</b></div><input type="range" min="0" max="60" step="5" value="${S.f.minP}" data-r="minP" aria-label="Białko co najmniej"></div>`+
-    `<div class="slider"><div class="top"><span>Kalorie najwyżej</span><b id="l_maxK">${S.f.maxK>=1000?'bez limitu':S.f.maxK+' kcal'}</b></div><input type="range" min="150" max="1000" step="25" value="${S.f.maxK}" data-r="maxK" aria-label="Kalorie najwyżej"></div>`+
-    `<div class="slider"><div class="top"><span>Węglowodany najwyżej</span><b id="l_maxC">${S.f.maxC>=130?'bez limitu':S.f.maxC+' g'}</b></div><input type="range" min="0" max="130" step="5" value="${S.f.maxC}" data-r="maxC" aria-label="Węglowodany najwyżej"></div>`+
-    `<div class="slider"><div class="top"><span>Wielkość porcji</span><b id="l_portion">×${fmt1(S.f.portion)}</b></div><input type="range" min="0.7" max="1.5" step="0.05" value="${S.f.portion}" data-r="portion" aria-label="Wielkość porcji"></div>`+
+    `<div class="slider"><div class="top"><span>Białko co najmniej</span><b id="l_minP">${S.f.minP} g</b></div><input type="range" min="0" max="60" step="5" value="${S.f.minP}" data-r="minP" aria-label="Białko co najmniej" aria-valuetext="${rTxt('minP',S.f.minP)}"></div>`+
+    `<div class="slider"><div class="top"><span>Kalorie najwyżej</span><b id="l_maxK">${S.f.maxK>=1000?'bez limitu':S.f.maxK+' kcal'}</b></div><input type="range" min="150" max="1000" step="25" value="${S.f.maxK}" data-r="maxK" aria-label="Kalorie najwyżej" aria-valuetext="${rTxt('maxK',S.f.maxK)}"></div>`+
+    `<div class="slider"><div class="top"><span>Węglowodany najwyżej</span><b id="l_maxC">${S.f.maxC>=130?'bez limitu':S.f.maxC+' g'}</b></div><input type="range" min="0" max="130" step="5" value="${S.f.maxC}" data-r="maxC" aria-label="Węglowodany najwyżej" aria-valuetext="${rTxt('maxC',S.f.maxC)}"></div>`+
+    `<div class="slider"><div class="top"><span>Wielkość porcji</span><b id="l_portion">×${fmt1(S.f.portion)}</b></div><input type="range" min="0.7" max="1.5" step="0.05" value="${S.f.portion}" data-r="portion" aria-label="Wielkość porcji" aria-valuetext="${rTxt('portion',S.f.portion)}"></div>`+
     '</div>';
   h+='<h2>Sortuj</h2>'+seg([['p','Najwięcej białka na kcal'],['k','Najmniej kcal'],['t','Najszybsze']],S.f.sort,'sort','scroll');
   h+='</div></details><div id="mlist"></div>';
@@ -1244,7 +1251,7 @@ function renderDay(){
   more+=relHtml();
   h+='<details class="fold" data-fold="zapisane"'+(OPEN_F.has('zapisane')?' open':'')+'><summary>Zapisane dziś: posiłki '+ml.length+', treningi '+tr.length+'</summary><h3 class="rh" style="margin:4px 16px 8px">Treningi</h3><div class="panel">'+(tr.length?tr.map(e=>`<div class="entry"><span class="txt">${e.label}, ${fmt(e.min)} min</span><span class="val">${fmt(e.gross)} kcal</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join(''):'<div class="empty">Brak treningów. <button class="btn ghost small" data-tab="train">Przejdź do Treningu</button></div>')+'</div>';
   h+='<h3 class="rh" style="margin:12px 16px 8px">Posiłki</h3><div class="panel">'+(ml.length?ml.map(e=>`<div class="entry"><span class="txt">${e.label}</span><span class="val">${fmt(e.k)} kcal, B ${fmt(e.p)} g</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join(''):'<div class="empty">Brak posiłków. <button class="btn ghost small" data-tab="meals">Przejdź do Posiłków</button></div>')+'</div></details>';
-  h+=`<details class="fold" data-fold="szybki"${OPEN_F.has('szybki')?' open':''}><summary>Szybki wpis albo powtórz wczoraj</summary><div class="panel"><div class="field"><label for="q_n">Co</label><input type="text" id="q_n" style="width:170px;text-align:left" placeholder="np. kawa z mlekiem"></div><div class="field"><label for="q_k">Ile</label><input type="text" inputmode="numeric" id="q_k" placeholder="0"><span class="unit">kcal</span></div></div><p><button class="btn" data-quick="1">Zapisz</button> <button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki</button><button class="btn ghost" data-nav="meals#zamowione">Zamówione jedzenie</button></p><p class="small muted">Wpis przybliżony wystarczy. W badaniach z wynikiem redukcji wiązała się częstość zapisywania, nie jego dokładność.</p></details>`;
+  h+=`<details class="fold" data-fold="szybki"${OPEN_F.has('szybki')?' open':''}><summary>Szybki wpis albo powtórz wczoraj</summary><div class="panel"><div class="field"><label for="q_n">Co</label><input type="text" id="q_n" style="width:170px;text-align:left" placeholder="np. kawa z mlekiem"></div><div class="field"><label for="q_k">Ile</label><input type="text" inputmode="numeric" id="q_k" placeholder="0"><span class="unit">kcal</span></div>${kcalChips('q_k')}</div><p><button class="btn" data-quick="1">Zapisz</button> <button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki</button><button class="btn ghost" data-nav="meals#zamowione">Zamówione jedzenie</button></p><p class="small muted">Wpis przybliżony wystarczy. W badaniach z wynikiem redukcji wiązała się częstość zapisywania, nie jego dokładność.</p></details>`;
   more+='<div class="navrow"><button class="btn ghost" data-tab="impact">Mój wpływ</button><button class="btn ghost" data-tab="challenge">Wspólne wyzwanie</button><button class="btn ghost" data-tab="review">Przegląd tygodnia</button></div>';
   if(d.length)more+='<p><button class="btn ghost" data-clear="1">Wyczyść dzień</button></p>';
   more+=`<details class="fold" data-fold="cel"${OPEN_F.has('cel')?' open':''}><summary>Jak liczony jest cel</summary><div class="note small" style="margin:0 12px 12px">${S.mode==='utrzymanie'?'Tryb utrzymania: cel to zapotrzebowanie bez deficytu, '+(measuredTdee()?'zmierzone z jedzenia i trendu wagi.':'na razie ze wzoru (spoczynkowe zużycie × 1,3 plus treningi netto).'):measuredTdee()?'Jak liczony jest cel: zmierzone zapotrzebowanie (jedzenie i trend wagi) minus 20%.':`Jak liczony jest cel: na start szacunek, czyli spoczynkowe zużycie energii ${fmt(R)} kcal (wzór Mifflina-St Jeora) × 1,3 dla pracy siedzącej, plus treningi netto, minus 20%. Po 2-4 tygodniach ważenia i zapisywania aplikacja przejdzie na zapotrzebowanie zmierzone.`} Nigdy poniżej spoczynkowego zużycia. Białko: 1,4 g na kg wagi docelowej. Mnożnik 1,3 i deficyt 20% to założenia planu, nie pomiar. Zapisuj na bieżąco, najlepiej zaraz po każdym posiłku.</div></details>`;
@@ -1269,7 +1276,7 @@ function nextHtml(cur){const g=guideActive()?guideSteps().find(x=>!x.done):null,
   return `<p class="nextbar"><button class="btn" data-${a}="${v}">${t}</button></p>`}
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
-  let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalHint();
+  let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalHint()+goalPctHtml();
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+dataHtml();
   h+=`<h2 id="wpisy">Wpisy</h2><div class="panel"><div class="field"><label for="once">Wpisuję raz dziennie, wieczorem</label><input type="checkbox" class="switch" id="once" data-k="once" ${S.once?'checked':''}></div></div><p class="small muted">Mój dzień pokaże jeden wpis dnia, a zwierzak przypomni o posiłkach dopiero od 19:00.</p>`;
   h+='<h2 id="komunikaty">Komunikaty</h2>'+seg([['std','Zwykle'],['long','Dłużej'],['stay','Do zamknięcia']],S.toastLen||'std','toastlen')+'<p class="small muted">Jak długo widać dymek po zapisie. Każdy zamkniesz przyciskiem ×.</p>';
@@ -1405,6 +1412,8 @@ document.addEventListener('click',e=>{
   else if(d.kroknext){const j=kNext(S.krok.step);if(j<0)S.krok.fin=true;else kStart(j);toast(j<0?'Ścieżka gotowania ukończona':'Nowy krok: '+KROKI[j].n)}
   else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')}
   else if(d.krokeasy){kStart(S.krok.step);S.krok.easy=true;toast('Łatwiejsza wersja kroku od tego tygodnia')}
+  else if(d.goalpct){S.goal=stpFmt(goalOf(+d.goalpct),STEP.goal);(S.touched=S.touched||{}).goal=true}
+  else if(d.kcalset){const [id,v]=d.kcalset.split(':'),el=document.getElementById(id);if(el){el.value=v;if(el.focus)el.focus()}return}
   else if(d.revsave){const g=id=>document.getElementById(id).value.trim();S.reviews=S.reviews||{};S.reviews[reviewKey()]={a:g('r_a'),b:g('r_b'),c:g('r_c'),d:todayKey()};S.tab='day';toast('Zapisano przegląd');window.scrollTo(0,0)}
   else if(d.mode){S.mode=d.mode;if(d.mode==='utrzymanie'){S.maintRef=Math.round((avg7()||kg())*10)/10;S.maintSince=todayKey()}else{S.maintSince=''}toast(d.mode==='utrzymanie'?'Tryb utrzymania':'Tryb redukcji')}
   else if(d.leg){const [key,n]=d.leg.split(':'),k=todayKey();S.legs=S.legs||{};S.legs[k]=S.legs[k]||{};S.legs[k][key]=+n}
@@ -1482,15 +1491,17 @@ document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&
   const rep=()=>{n++;stpApply(k,d,holdMult(n));stpShow(k);HOLD.t=setTimeout(rep,holdGap(n))};HOLD={k,d:b.dataset.d,t:setTimeout(rep,HOLD_DELAY)}});
 function holdEnd(){if(!HOLD)return;clearTimeout(HOLD.t);const h=HOLD;HOLD=null;STP_SKIP=true;save();setTimeout(()=>{STP_SKIP=false;stpDone(h.k,h.d)},350)}
 document.addEventListener('pointerup',holdEnd);document.addEventListener('pointercancel',holdEnd);
-// Strzałki w górę i w dół w polu liczbowym zmieniają wartość o krok (wzorzec spinbutton)
-document.addEventListener('keydown',e=>{const el=e.target;if(!el||!el.dataset||(e.key!=='ArrowUp'&&e.key!=='ArrowDown'))return;
-  const k=el.dataset.sl?`meas.${el.dataset.day}.sleep`:el.dataset.k;if(!k||!STEP[k.split('.').pop()])return;e.preventDefault();if(!stpApply(k,e.key==='ArrowUp'?1:-1,1))return;stpShow(k);save()});
+// Strzałki w górę i w dół w polu liczbowym zmieniają wartość o krok, Page Up i Page Down o 10 kroków (wzorzec spinbutton APG)
+const KEYSTEP={ArrowUp:[1,1],ArrowDown:[-1,1],PageUp:[1,10],PageDown:[-1,10]};
+document.addEventListener('keydown',e=>{const el=e.target,ks=KEYSTEP[e.key];if(!el||!el.dataset||!ks)return;
+  const k=el.dataset.sl?`meas.${el.dataset.day}.sleep`:el.dataset.k;if(!k||!STEP[k.split('.').pop()])return;e.preventDefault();if(!stpApply(k,ks[0],ks[1]))return;stpShow(k);save()});
 document.addEventListener('input',e=>{
   const el=e.target;
   if(el.id==='help_q'){S.helpQ=el.value;document.getElementById('helpres').innerHTML=helpRes(el.value);return}
   if(el.dataset.r){const k=el.dataset.r,v=num(el.value);S.f[k]=v;save();
     const lab=document.getElementById('l_'+k);
     if(lab)lab.textContent=k==='minP'?v+' g':k==='maxK'?(v>=1000?'bez limitu':v+' kcal'):k==='maxC'?(v>=130?'bez limitu':v+' g'):'×'+fmt1(v);
+    el.setAttribute('aria-valuetext',rTxt(k,v));
     renderMealList();return}
   if(el.dataset.sl){const k=el.dataset.day,hs=String(document.getElementById('m_sleep').value).trim(),ms=String(document.getElementById('m_sleepm').value).trim();
     const bad=!/^\d{0,2}$/.test(hs)||!/^\d{0,2}$/.test(ms)?'Wpisz same cyfry':+ms>59?'Minuty od 0 do 59':(+hs||0)+(+ms||0)/60>16?'Sen najwyżej 16 godzin':'';
