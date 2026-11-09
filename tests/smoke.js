@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -118,7 +118,7 @@ tryc('pet.react: nawyk pokazuje +punkty', () => { P().react('habit', 10); withPe
 const appCss = fs.readFileSync(path.join(root, "app.css"), "utf8");
 check('app.css: prefers-reduced-motion wyłącza animacje zwierzaka', /prefers-reduced-motion[^{]*\{[^@]*\.pet[^{]*\{[^}]*animation:none/.test(appCss));
 
-const views = ['meals', 'train', 'day', 'health', 'set', 'sos', 'labs', 'intro', 'review', 'recipe', 'knee', 'impact', 'challenge', 'pet', 'krok'];
+const views = ['meals', 'train', 'day', 'health', 'set', 'sos', 'labs', 'intro', 'review', 'recipe', 'knee', 'impact', 'challenge', 'pet', 'krok', 'import'];
 let renderErr = '';
 for (const tab of views) for (const sex of ['K', 'M']) for (const mode of ['redukcja', 'utrzymanie']) {
   const S = T.S(); S.onb = true; S.tab = tab; S.sex = sex; S.mode = mode; S.recipe = 'o1';
@@ -790,6 +790,20 @@ tryc('mam dużo mięśni: włącza drogę talii i zdanie NHS o BMI', () => { vie
 tryc('dane: cel poniżej BMI 20 daje ostrzeżenie o dolnej części normy', () => { view('set', { ...GB(), goal: '56' }); click({ datasave: '1' }); return mainHtml().includes('poniżej 20'); });
 tryc('wskaźniki: FFMI z wagi BIA z medianą odniesienia (Schutz 2002) i tłuszcz bez zakresu (Gallagher 2000)', () => { const h = view('set', GB({ sex: 'M', meas: { [dk(2)]: { ffm: '65', fat: '18' } } })); return h.includes('FFMI 22,5') && h.includes('18,9') && h.includes('pubmed.ncbi.nlm.nih.gov/12080449') && h.includes('pubmed.ncbi.nlm.nih.gov/10966886') && h.includes('uznanych zakresów'); });
 tryc('wskaźniki: bez pomiaru BIA bez FFMI', () => !view('set', GB()).includes('FFMI'));
+// Rada 09.11.2026 (integracja z Apple Zdrowie): dane ze Skrótu w adresie po „#” albo w schowku, zapis dopiero po potwierdzeniu
+tryc('import: adres w=80,1&kroki=8000&sen=7:15', () => { const r = T.parseImport('w=80,1&kroki=8000&sen=7:15'); return r.date === dk(0) && T.num(r.vals.w) === 80.1 && T.num(r.vals.steps) === 8000 && T.num(r.vals.sleep) === 7.25 && !r.bad.length; });
+tryc('import: kropka i zakodowane spacje (10%20000)', () => { const r = T.parseImport('w=80.1&kroki=10%20000'); return T.num(r.vals.w) === 80.1 && T.num(r.vals.steps) === 10000; });
+tryc('import: wartości spoza zakresu odrzucone, nieznane pola pominięte', () => { const r = T.parseImport('w=800&kroki=abc&x=1'); return !Object.keys(r.vals).length && r.bad.length === 2; });
+tryc('import: data z adresu, zła data to dziś, przyszła odrzucona', () => T.parseImport('w=70&data=' + dk(1)).date === dk(1) && T.parseImport('w=70&data=jutro').date === dk(0) && T.parseImport('w=70&data=2999-01-01').date === dk(0));
+tryc('import: tekst ze schowka w liniach', () => { const r = T.parseImport('Miara\nwaga=80,1\nkroki=8000'); return T.num(r.vals.w) === 80.1 && T.num(r.vals.steps) === 8000; });
+tryc('import: adres #import otwiera ekran potwierdzenia bez zapisu', () => { view('day', BASE({ meas: {} })); T.impFromHash('#import?w=80,1&kroki=8000'); T.render(); const h = mainHtml(); return T.S().tab === 'import' && h.includes('Zapisać?') && h.includes('data-impsave') && !(T.S().meas[dk(0)] || {}).w; });
+tryc('import: Zapisz wpisuje pomiary dnia i czyści dane importu', () => { view('day', BASE({ meas: {} })); T.impFromHash('#import?w=80,1&kroki=8000&sen=7:15'); T.render(); click({ impsave: '1' }); const m = T.S().meas[dk(0)] || {}; return T.num(m.w) === 80.1 && T.num(m.steps) === 8000 && T.num(m.sleep) === 7.25 && !T.S().imp && T.S().tab === 'day'; });
+tryc('import: Pomiń niczego nie zapisuje', () => { view('day', BASE({ meas: {} })); T.impFromHash('#import?w=80,1'); T.render(); click({ impskip: '1' }); return !(T.S().meas[dk(0)] || {}).w && !T.S().imp; });
+tryc('import: pokazuje obecną wartość, gdy dzień ma już wpis', () => { view('day', BASE({ meas: { [dk(0)]: { w: '79' } } })); T.impFromHash('#import?w=80,1'); T.render(); return mainHtml().includes('obecnie 79'); });
+tryc('import: inny adres niż #import nic nie robi', () => { view('day', BASE()); return T.impFromHash('#demo-start') === false && T.impFromHash('') === false; });
+tryc('import: dane importu nie trafiają do kopii', () => /const BK_SKIP=\[[^\]]*'imp'/.test(code));
+tryc('Pomoc: instrukcja Skrótu z adresem #import', () => { const h = view('help', BASE({ helpQ: '' })); return h.includes('id="skrot"') && h.includes('#import?w='); });
+tryc('Pomiary dnia: przycisk Wklej ze Skrótu', () => view('day', BASE()).includes('data-imppaste'));
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
 chain.then(() => {

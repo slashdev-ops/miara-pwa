@@ -167,7 +167,7 @@ function sleepField(k,m){const has=String(m.sleep||'').trim()!=='',[H,M]=has?hm(
 function measHtml(){
   const k=todayKey(),m=S.meas[k]||(S.meas[k]={});
   const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" placeholder="${ph||lastMeas(key,k)}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`;
-  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, po toalecie, przed jedzeniem. Kroki i sen przepisz z zegarka. Obwody co 2 tygodnie. Sen wpisz w godzinach i minutach, tak jak pokazuje zegarek.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+stepsChip(k,m)+sleepField(k,m)+sleepChips(k,m)+'</div>'+cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej zawsze w tych samych warunkach: rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). Wpisany BMR z pomiaru BIA zastępuje wzór przez 90 dni, a waga z pomiarów zastępuje wagę z ustawień.</p></details>';
+  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, po toalecie, przed jedzeniem. Kroki i sen przepisz z zegarka. Obwody co 2 tygodnie. Sen wpisz w godzinach i minutach, tak jak pokazuje zegarek.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+stepsChip(k,m)+sleepField(k,m)+sleepChips(k,m)+'</div><p><button class="btn ghost small" data-imppaste="1">Wklej ze Skrótu</button></p>'+cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej zawsze w tych samych warunkach: rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). Wpisany BMR z pomiaru BIA zastępuje wzór przez 90 dni, a waga z pomiarów zastępuje wagę z ustawień.</p></details>';
   const ks=lastKeys(28).reverse(),val=(x,key)=>{const v=num((S.meas[x]||{})[key]);return v>0?v:null};
   const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
   const ws=ks.map(x=>val(x,'w')),w1=avg(ws.slice(-7)),w0=avg(ws.slice(-14,-7)),st=avg(ks.slice(-7).map(x=>val(x,'steps'))),sl=avg(ks.slice(-7).map(x=>val(x,'sleep')));
@@ -474,6 +474,33 @@ function krokRevHtml(mk,end){const k=S.krok;if(!k||!k.conf||k.fin||k.since>end)r
 function petSay(ks){if(!S.pet)return '';const n=ks.filter(k=>(S.days[k]||[]).length||Object.values(S.meas[k]||{}).some(v=>num(v)>0)).length;
   const t=n===0?'Jestem tu. Jeden wpis w nowym tygodniu i znów rosnę.':n===7?'Wszystkie 7 dni z wpisami: to był nasz wspólny tydzień.':n>=4?`${n} dni z wpisami: rosnę razem z Tobą.`:`${n} ${n===1?'dzień':'dni'} z wpisami: każdy taki dzień to dla mnie krok do przodu.`;
   return `<div class="petsay">${PET.svg(S.pet.kind,'chick','happy',null)}<p><b>${esc(PET.nameOf(S.pet))}:</b> ${t}</p></div>`}
+// ---------- Dane ze Skrótu (Apple Zdrowie): adres #import?w=…&kroki=…&sen=…&data=… albo tekst w schowku (rada/2026-11-09_integracja-zdrowie) ----------
+// Część adresu po „#” nie trafia na serwer (MDN); zapis dopiero po potwierdzeniu, te same zakresy co wpis ręczny
+const IMP_K={w:'w',waga:'w',weight:'w',kroki:'steps',steps:'steps',sen:'sleep',sleep:'sleep'},IMP_N={w:'Waga',steps:'Kroki',sleep:'Sen'};
+function parseImport(t){const r={date:todayKey(),vals:{},bad:[]};
+  String(t||'').split(String.fromCharCode(10)).join('&').split(/[&;]/).forEach(p=>{const i=p.indexOf('=');if(i<1)return;const k=p.slice(0,i).trim().toLowerCase();let v=p.slice(i+1).trim();try{v=decodeURIComponent(v.split('+').join(' '))}catch(e){}
+    if(k==='data'||k==='date'){if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(v)&&v<=todayKey())r.date=v;return}
+    const f=IMP_K[k];if(!f||v==='')return;const c=checkNum('meas.d.'+f,v);if(c.err)r.bad.push(`${IMP_N[f]}: ${v}`);else r.vals[f]=c.s});
+  return r}
+function impFromHash(h){h=String(h||'');if(!/^#import[?]/.test(h))return false;S.imp=parseImport(h.slice(8));S.tab='import';
+  try{if(typeof history!=='undefined'&&history.replaceState)history.replaceState(null,'',location.pathname+location.search)}catch(e){}return true}
+const impShow=(f,v)=>f==='w'?fmt1(num(v))+' kg':f==='steps'?fmt(num(v)):fmtSleep(num(v));
+function renderImport(){const I=S.imp;let h='<h2>Dane ze Skrótu</h2>';
+  if(!I){document.getElementById('main').innerHTML=h+'<p>Brak danych do zapisania.</p><p><button class="btn ghost" data-tab="day">Mój dzień</button></p>';return}
+  const m=S.meas[I.date]||{},ks=Object.keys(I.vals);
+  if(ks.length)h+=`<div class="note">Dzień ${fmtDate(I.date)}:<br>`+ks.map(f=>`${IMP_N[f]}: <b>${impShow(f,I.vals[f])}</b>${num(m[f])>0?` (obecnie ${impShow(f,m[f])}, zostanie zastąpione)`:''}`).join('<br>')+'</div><p>Zapisać?</p><p><button class="btn" data-impsave="1">Zapisz</button></p>';
+  else h+='<div class="note warn">Brak wartości do zapisania.</div>';
+  if(I.bad.length)h+=`<p class="small muted">Pominięte, bo poza zakresem: ${esc(I.bad.join(', '))}.</p>`;
+  h+='<p><button class="btn ghost" data-impskip="1">Pomiń</button></p><p class="small muted">Dane przyszły w adresie albo w schowku tego telefonu i nie trafiają na serwer. Instrukcja Skrótu jest w Pomocy.</p>';
+  document.getElementById('main').innerHTML=h}
+function skrotHelpHtml(){const base=typeof location!=='undefined'&&location.origin&&location.origin!=='null'?location.origin+location.pathname:'https://miara-pwa.vercel.app/';
+  return `<h2 id="skrot">Pobieraj wagę, kroki i sen z Apple Zdrowie</h2><div class="panel" style="padding:4px 16px 12px"><ol class="small" style="padding-left:20px">`
+    +'<li>Otwórz aplikację Skróty i dodaj nowy skrót.</li>'
+    +'<li>Dodaj działania, które pobierają dane zdrowia (w wyszukiwarce działań wpisz „Zdrowie”): ostatnią wagę, sumę kroków z dziś i sen z ostatniej nocy w godzinach i minutach.</li>'
+    +`<li>Dodaj działanie „Otwórz URL” z adresem <code style="word-break:break-all">${esc(base)}#import?w=[waga]&amp;kroki=[kroki]&amp;sen=[sen]</code> i w nawiasy wstaw wyniki z kroku 2.</li>`
+    +'<li>Miara pokaże ekran „Dane ze Skrótu”: sprawdź wartości i naciśnij Zapisz. Bez tego nic się nie zapisze.</li>'
+    +'<li>Codziennie samo: w Skrótach Automatyzacja, Pora dnia, np. 21:00, i ten skrót.</li></ol>'
+    +'<p class="small muted">Jeśli adres otwiera Safari zamiast Miary z ikony, użyj w skrócie działania „Kopiuj do schowka” z tekstem w=[waga]&amp;kroki=[kroki]&amp;sen=[sen], a w Moim dniu w Pomiarach dnia naciśnij Wklej ze Skrótu. Nazwy działań mogą się różnić w wersjach iOS.</p></div>'}
 function renderReview(){
   const mk=reviewKey(),st=weekStats(mk),ex=(S.reviews||{})[mk]||{},end=st.ks.at(-1);
   const ta=(id,lab,ph,v)=>`<h2>${lab}</h2><div class="panel" style="padding:10px 16px"><textarea id="${id}" rows="2" placeholder="${ph}" aria-label="${lab}" style="width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)">${esc(v||'')}</textarea></div>`;
@@ -703,7 +730,7 @@ function fold(id,title,inner){return `<details class="fold" id="fold_${id}" data
 document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.fold){t.open?OPEN_F.add(t.dataset.fold):OPEN_F.delete(t.dataset.fold)}},true);
 
 // ---------- Kopia danych: eksport i import pliku (np. przez iCloud Drive) ----------
-const BK_SKIP=['tab','introStep','sosStep','sosTrig','recipe','recipeBack','labSel'];
+const BK_SKIP=['imp','tab','introStep','sosStep','sosTrig','recipe','recipeBack','labSel'];
 let BK_PENDING=null;
 function bkBuild(noHealth){const d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.kopia)delete d.kopia.token;if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){d.prof={cond:{},pill:''};d.labs=[];d.urges={};d.legs={};d.pain={};d.visit=null;Object.values(d.meas||{}).forEach(m=>{delete m.fat;delete m.ffm;delete m.ecw;delete m.bmr;delete m.cyc})}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
 function bkParse(text){try{const o=JSON.parse(text);if(!o||o.app!=='talerz-i-trening'||o.v!==1||!o.data||typeof o.data!=='object'||Array.isArray(o.data))return null;return o}catch(e){return null}}
@@ -1185,7 +1212,7 @@ const TABS=[
 ];
 function renderTabs(){const tb=document.getElementById('tabs');if(tb&&tb.style)tb.style.display=S.tab==='intro'?'none':'';
   document.getElementById('tabs').innerHTML=TABS.map(([k,l,ic])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}" aria-label="${l}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>${l}</button>`).join('');
-  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{help:'Pomoc',sos:'Ochota na przekąskę',labs:'Moje badania',visit:'Lista na wizytę',intro:'Wprowadzenie',review:'Przegląd tygodnia',krok:'Krok po kroku',recipe:'Przepis',knee:'Program kolana',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
+  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{help:'Pomoc',sos:'Ochota na przekąskę',labs:'Moje badania',visit:'Lista na wizytę',intro:'Wprowadzenie',review:'Przegląd tygodnia',krok:'Krok po kroku',import:'Dane ze Skrótu',recipe:'Przepis',knee:'Program kolana',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
   document.getElementById('who').textContent=new Date().toLocaleDateString('pl-PL',{weekday:'short',day:'numeric',month:'numeric'});
 }
 function seg(items,cur,attr,cls=''){return `<div class="seg ${cls}">`+items.map(([v,l])=>`<button class="${String(cur)===String(v)?'on':''}" data-${attr}="${v}">${l}</button>`).join('')+'</div>'}
@@ -1355,6 +1382,7 @@ const HELP=[
   ['Posiłki','Wybrać, co gotuję dziś','Otwórz przepis i naciśnij Gotuję to dziś. Wieczorem Według planu zapisze to danie.','meals#plan'],
   ['Posiłki','Znaleźć szybkie danie albo większe na weekend','Nad listą dań wybierz Na co dzień albo Na weekend.','meals#rytm'],
   ['Mój dzień','Sprawdzić, co mi utrudnia, i dostać krok na tydzień','Krok po kroku: 5 pytań, potem jeden krok na tydzień z postępem z Twoich zapisów.','krok'],
+  ['Mój dzień','Pobierać wagę, kroki i sen z Apple Zdrowie','Skrót w aplikacji Skróty pobiera dane i otwiera Miarę; zapisujesz jednym przyciskiem.','help#skrot'],
   ['Posiłki','Zapisać jedzenie z dostawy','Zamówione: danie, ilość, dodatki i jeden przycisk.','meals#zamowione'],
   ['Posiłki','Zrobić zakupy na tydzień','Lista zakupów z planu jest pod planem dnia.','meals#zakupy'],
   ['Mój dzień','Wpisać wagę','Pomiary dnia. Przyciski − i + zaczynają od ostatniego ważenia.','day#m_w'],
@@ -1381,9 +1409,9 @@ function helpRes(q){const w=fold0(q||'').split(/\s+/).filter(x=>x.length>1),hit=
   if(C.length)h+='<h2>Sprawdź działanie</h2><p class="small muted">Dane przykładowe: nic się nie zapisuje, Twoje dane zostają. Wyjdź wraca do nich.</p><div class="panel" style="padding:0 16px">'+C.map(([n,x])=>hStep(x.t,x.chk,`data-scen="${n}"`,'Otwórz')).join('')+'</div>';
   return h}
 function renderHelp(){let h=`<div class="panel" style="padding:4px 16px"><div class="field"><label for="help_q">Szukaj w Pomocy</label><input type="search" id="help_q" style="width:180px;text-align:left" placeholder="np. białko, sen" value="${esc(S.helpQ||'')}"></div></div><div id="helpres">${helpRes(S.helpQ)}</div>`;
-  h+='<h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
+  h+=skrotHelpHtml()+'<h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
   document.getElementById('main').innerHTML=h}
-function render(){startSync();renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+function render(){startSync();renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -1441,6 +1469,9 @@ document.addEventListener('click',e=>{
   else if(d.kroknext){const j=kNext(S.krok.step);if(j<0)S.krok.fin=true;else kStart(j);toast(j<0?'Ścieżka gotowania ukończona':'Nowy krok: '+KROKI[j].n)}
   else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')}
   else if(d.krokeasy){kStart(S.krok.step);S.krok.easy=true;toast('Łatwiejsza wersja kroku od tego tygodnia')}
+  else if(d.impsave){const I=S.imp;if(I){const m=S.meas[I.date]=S.meas[I.date]||{};Object.entries(I.vals).forEach(([f,v])=>{m[f]=f==='sleep'?sleepFmt(num(v)):v})}S.imp=null;S.tab='day';toast('Zapisano dane ze Skrótu')}
+  else if(d.impskip){S.imp=null;S.tab='day'}
+  else if(d.imppaste){if(typeof navigator!=='undefined'&&navigator.clipboard&&navigator.clipboard.readText)navigator.clipboard.readText().then(t=>{S.imp=parseImport(t);S.tab='import';save();render()},()=>toast('Nie udało się odczytać schowka. Zezwól na wklejenie albo użyj adresu ze Skrótu.'));else toast('Ta przeglądarka nie pozwala odczytać schowka.');return}
   else if(d.goalway){S.goalWay=d.goalway}
   else if(d.bmicut){S.bmiCut=d.bmicut}
   else if(d.goalbmi){S.goal=stpFmt(Math.round(+d.goalbmi*Math.pow((num(S.cm)||165)/100,2)*2)/2,STEP.goal);(S.touched=S.touched||{}).goal=true}
@@ -1570,6 +1601,8 @@ document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.lab
 // usuń dni starsze niż 60
 (function(){const lim=Date.now()-60*864e5;for(const k in S.days){if(new Date(k).getTime()<lim)delete S.days[k]}save()})();
 if(!S.onb){S.tab='intro';S.introStep=0}
+if(typeof location!=='undefined'&&S.onb)impFromHash(location.hash);
+if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('hashchange',()=>{if(S.onb&&impFromHash(location.hash))render()});
 render();
 if(!DEMO)chInit();
 // Automatyczna wysyłka kopii dla rady po starcie (bez blokowania widoku)
