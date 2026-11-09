@@ -6,3 +6,6 @@ __pycache__/
 # kopie danych z aplikacji zawierają dane zdrowotne: nigdy do repozytorium
 miara-kopia-*.json
 talerz-kopia-*.json
+# wyniki testów w przeglądarce (zrzuty, ślady)
+tests/przegladarka/test-results/
+tests/przegladarka/playwright-report/

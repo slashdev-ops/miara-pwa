@@ -28,3 +28,31 @@ jobs:
           node -e "JSON.parse(require('fs').readFileSync('manifest.webmanifest','utf8'))"
       - name: Test dymny aplikacji
         run: node tests/smoke.js
+
+  przegladarka:
+    # Chromium i WebKit (silnik Safari), tryb jasny i ciemny, iPhone 13 i 320 px: tests/przegladarka/miara.spec.js
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tests/przegladarka
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/przegladarka/package-lock.json
+      - name: Zależności testów
+        run: npm ci --no-audit --no-fund
+      - name: Przeglądarki
+        run: npx playwright install --with-deps chromium webkit
+      - name: Testy w przeglądarce
+        run: npx playwright test
+      - name: Raport po błędzie
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: raport-przegladarka
+          path: tests/przegladarka/playwright-report/
+          retention-days: 7
