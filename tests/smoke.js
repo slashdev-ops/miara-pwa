@@ -813,6 +813,7 @@ tryAsync('pole: odtworzenie pola po znaku nie zaznacza ponownie', async () => { 
 tryAsync('pole: po wyjściu z pola i powrocie zaznacza znowu', async () => { const a = inp('f_age', 'age', '35', 'numeric'); fire('focusin', a); await tick(); fire('focusout', a); const b = inp('f_age', 'age', '35', 'numeric'); fire('focusin', b); await tick(); return b.sel && b.sel[1] === 2; });
 tryAsync('pole: zwykłe pole tekstowe bez zaznaczania', async () => { const a = inp('q_n', '', 'kawa', null); fire('focusin', a); await tick(); return a.sel === null; });
 tryAsync('pole: sen (godziny i minuty) też zaznacza', async () => { const a = { ...inp('m_sleep', '', '7', 'numeric'), dataset: { sl: '1', day: dk(0) } }; fire('focusin', a); await tick(); return a.sel && a.sel[1] === 1; });
+tryc('Pomoc: instrukcja Skrótu najpierw przez schowek dla Miary z ekranu początkowego', () => { const h = view('help', BASE({ helpQ: '' })); const i = h.indexOf('id="skrot"'), c = h.indexOf('Kopiuj do schowka', i), u = h.indexOf('#import?w=', i); return i > 0 && c > i && u > c && h.includes('Pokaż powiadomienie') && h.includes('ekranie początkowym'); });
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
 chain.then(() => {
