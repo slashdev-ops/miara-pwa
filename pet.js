@@ -92,12 +92,14 @@ var PET = (function () {
     if (a === 'korona') return `<path class="acc korona" d="M${hx - 12} ${hy - 12}l4 -12l6 7l4 -9l4 9l6 -7l-2 12z"/>`;
     return '';
   }
-  function svg(kindIn, stage, mood, a, big) {
+  // Pęknięcia jajka: liczba (0-4) z Pierwszych kroków; bez liczby jedno pęknięcie jak dotąd
+  const CRACKS = ['M42 50l7 5l6 -7l6 7l6 -5l8 5', 'M34 74l8 -4l5 6l7 -5', 'M62 88l6 -6l6 5l8 -4', 'M58 36l4 7l-5 5l6 6'];
+  function svg(kindIn, stage, mood, a, big, crack) {
     const kind = kindIn === 'kaczka' ? 'kaczka' : 'gaska'; // rodzaj może pochodzić z importowanej kopii: tylko znane wartości
-    const cls = `pet pet-${mood} pet-${stage} pet-${kind}${big ? ' big' : ''}`, label = `${KIND_PL[kind] || 'Zwierzak'}: ${MOOD_PL[mood] || ''}`;
+    const cls = `pet pet-${mood} pet-${stage} pet-${kind}${big ? ' big' : ''}`, label = `${KIND_PL[kind] || 'Zwierzak'}: ${MOOD_PL[mood] || ''}${stage === 'egg' && crack != null ? `, jajko, pęknięcia ${crack} z 4` : ''}`;
     let fig;
     if (stage === 'egg') {
-      fig = `<ellipse class="egg" cx="60" cy="70" rx="28" ry="36"/><path class="crack" d="M42 50l7 5l6 -7l6 7l6 -5l8 5"/>`
+      fig = `<ellipse class="egg" cx="60" cy="70" rx="28" ry="36"/>` + CRACKS.slice(0, crack == null ? 1 : crack).map((d) => `<path class="crack" d="${d}"/>`).join('')
         + (mood === 'sleep' ? eyes(60, 72, 'sleep') : `<circle class="eye" cx="53" cy="72" r="2.4"/><circle class="eye" cx="67" cy="72" r="2.4"/>`);
     } else {
       const goose = kind === 'gaska', hx = goose ? 76 : 74, hy = goose ? 36 : 48;
@@ -137,12 +139,12 @@ var PET = (function () {
   const nameOf = (pet) => (pet && String(pet.name || '').trim()) || 'Kluska';
 
   function card(st, pet, esc) {
-    return `<button class="petcard" data-tab="pet" aria-label="Mój zwierzak: ${esc(nameOf(pet))}. ${esc(st.line)}">${svg(pet.kind, st.stage, st.mood, st.acc)}`
-      + `<span class="petinfo"><b>${esc(nameOf(pet))}</b><span class="small">${esc(st.line)}</span>${st.stage === 'egg' ? '<span class="small muted">Jajo wykluje się po dniu z co najmniej 30 punktami.</span>' : ''}${bars(st.meters)}</span></button>`;
+    return `<button class="petcard" data-tab="pet" aria-label="Mój zwierzak: ${esc(nameOf(pet))}. ${esc(st.line)}">${svg(pet.kind, st.stage, st.mood, st.acc, false, st.crack)}`
+      + `<span class="petinfo"><b>${esc(nameOf(pet))}</b><span class="small">${esc(st.line)}</span>${st.stage === 'egg' ? `<span class="small muted">${st.crack != null && st.crack < 4 ? `Pierwsze kroki: pęknięcia ${st.crack} z 4. ` : ''}Jajo wykluje się po dniu z co najmniej 30 punktami.</span>` : ''}${bars(st.meters)}</span></button>`;
   }
   function screen(st, pet, sum, esc) {
     const nx = NEXT_STAGE[st.stage], row = (a, b) => `<div class="entry"><span class="txt">${a}</span><span class="val">${b}</span></div>`;
-    let h = `<div class="petstage">${svg(pet.kind, st.stage, st.mood, st.acc, true)}<h2>${esc(nameOf(pet))}</h2><p>${esc(st.line)}</p>`
+    let h = `<div class="petstage">${svg(pet.kind, st.stage, st.mood, st.acc, true, st.crack)}<h2>${esc(nameOf(pet))}</h2><p>${esc(st.line)}</p>`
       + `<p class="small muted">${STAGE_PL[st.stage]}${st.acc ? ', ' + ACC_PL[st.acc] : ''}${nx && nx[0] > st.active ? `. Do etapu ${nx[1]}: ${activeDaysPl(Math.max(0, nx[0] - st.active))} (co najmniej 30 pkt)` : ''}.</p></div>`;
     h += `<div class="panel" style="padding:8px 16px">${bars(st.meters)}</div>`;
     const w = sum.week, a = sum.all;
@@ -230,5 +232,5 @@ var PET = (function () {
     return { S, frames: FRAMES.slice() };
   }
 
-  return { state, milestones, svg, card, screen, badgeList, body, react, flush, demo };
+  return { state, milestones, svg, card, screen, nameOf, badgeList, body, react, flush, demo };
 })();

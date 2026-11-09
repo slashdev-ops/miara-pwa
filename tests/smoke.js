@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -738,6 +738,21 @@ tryc('przegląd tygodnia bez wpisów: podpowiedź i przycisk do Mojego dnia', ()
 tryc('przegląd tygodnia z wpisami: bez podpowiedzi pustego tygodnia', () => { const ks = wkKeys(RK()); return !view('review', BASE({ meas: { [ks[1]]: { w: '80' } } })).includes('Pierwszy przegląd ma sens'); });
 tryc('Zwierzak bez wyboru: wybór na miejscu zamiast przeniesienia do Ustawień', () => { const h = view('pet', BASE({ pet: null })); return T.S().tab === 'pet' && h.includes('Wybierz towarzysza') && h.includes('data-petkind'); });
 tryc('Pierwsze kroki: Wybierz towarzysza prowadzi do ekranu zwierzaka', () => T.guideSteps().find((x) => x.id === 'pet').arg === 'pet');
+// Rada 09.11.2026 (A+1, punkty 2 i 3): jajko pęka z Pierwszymi krokami, zwierzak mówi jedno zdanie w przeglądzie tygodnia
+const GD = (o) => ({ guide: { hidden: false, dataOk: false, seenPet: false, ...o } });
+const petCard = (h) => { const m = h.match(/<button class="petcard"[\s\S]*?<\/button>/); return m ? m[0] : ''; };
+const cracks = (h) => (petCard(h).match(/class="crack"/g) || []).length;
+tryc('jajko bez zwierzaka: bez pierwszych kroków 0 pęknięć i 0 z 4', () => { const h = view('day', BASE({ pet: null, ...GD() })); return cracks(h) === 0 && petCard(h).includes('0 z 4'); });
+tryc('jajko bez zwierzaka: dane i waga to 2 pęknięcia', () => { const h = view('day', BASE({ pet: null, ...GD({ dataOk: true }), meas: { [dk(0)]: { w: '80' } } })); return cracks(h) === 2 && petCard(h).includes('pęknięcia 2 z 4'); });
+tryc('jajko bez zwierzaka: 4 z 4 gotowe do wyklucia', () => { const h = view('day', BASE({ pet: null, ...GD({ dataOk: true }), meas: { [dk(0)]: { w: '80', steps: '5000' } }, days: { [dk(0)]: [mEnt('s3')] } })); return cracks(h) === 4 && petCard(h).includes('gotowe do wyklucia'); });
+tryc('jajko wybranego zwierzaka też pęka z pierwszymi krokami', () => { const h = view('day', BASE(GD({ dataOk: true }))); return petCard(h).includes('pęknięcia 1 z 4') && cracks(h) === 1; });
+tryc('jajko: bez liczby pęknięć rysunek jak dotąd (1 pęknięcie)', () => (T.PET.svg('gaska', 'egg', 'ok', null).match(/class="crack"/g) || []).length === 1);
+tryc('karta wyboru towarzysza prowadzi do ekranu zwierzaka', () => { view('day', BASE({ pet: null })); click({ petpick: '1' }); return T.S().tab === 'pet'; });
+const revDays = (n) => { const ks = wkKeys(RK()); return Object.fromEntries(ks.slice(0, n).map((k) => [k, [mEnt('s3')]])); };
+tryc('przegląd: zwierzak mówi jedno zdanie z liczbą dni z wpisami', () => { const h = view('review', BASE({ days: revDays(3) })); return h.includes('<b>A:</b>') && h.includes('3 dni z wpisami') && h.includes('class="petsay"'); });
+tryc('przegląd: zdanie zwierzaka bez wpisów i przy pełnym tygodniu', () => view('review', BASE()).includes('Jestem tu') && view('review', BASE({ days: revDays(7) })).includes('Wszystkie 7 dni'));
+tryc('przegląd: zdanie zwierzaka bez wstydu i kar', () => [0, 1, 4, 7].every((n) => { const m = view('review', BASE({ days: revDays(n) })).match(/class="petsay"[\s\S]*?<\/div>/); return m && !/szkoda|zawiod|smut|wstyd|niestety|tylko \d/i.test(m[0]); }));
+tryc('przegląd: bez zwierzaka bez zdania', () => !view('review', BASE({ pet: null, days: revDays(3) })).includes('class="petsay"'));
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
 chain.then(() => {
