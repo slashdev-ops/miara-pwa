@@ -486,7 +486,7 @@ function renderReview(){
 // Wprowadzenie (rada/2026-11-09_pierwsze-uruchomienie): jeden ekran danych, bez kart z samym opisem (NN/g odradza);
 // „3 rzeczy dziennie” prowadzą Pierwsze kroki, a zwierzaka zapowiada komunikat po Zaczynam
 function renderIntro(){
-  let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
+  let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+'<div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalHint()+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
   h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
   document.getElementById('main').innerHTML=h;
 }
@@ -727,18 +727,26 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
-const DEF={kg:'80',cm:'170',age:'35',sex:'K',goal:'72',korekta:true,tab:'meals',
+const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
-function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),JSON.parse(r));}catch(e){}return clone(DEF)}
+// Wartości startowe (rada/2026-11-09_wartosci-startowe): punkt startowy do ustawiania przyciskami, zależny od płci; to założenie
+// aplikacji, nie średnia (GUS 2019 podaje dla dorosłych tylko rozkład BMI). Cel startowy: 5% mniej niż waga (NHLBI: 5-10% w ok. 6 miesięcy).
+// Nieustawione wartości nie są potwierdzonymi danymi: podpis „wartość startowa”, krok „Sprawdź swoje dane” niezaliczony.
+const START={K:{kg:70,cm:165,age:35},M:{kg:85,cm:178,age:35}},START_K=['kg','cm','age','goal'];
+const isStart=k=>!(S.touched||{})[k];
+function goalHint(){return S.mode==='utrzymanie'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny, jeśli chcesz.</p>'+srcHtml('nhlbi')}
+function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
+function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,STEP.goal)}
+function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),fixTouched(JSON.parse(r)));}catch(e){}return clone(DEF)}
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
 // ---------- Scenariusze do sprawdzania: dane przykładowe pod #demo-<nazwa>, nic się nie zapisuje ----------
 const SCEN={
-  start:{t:'Pierwsze wejście',chk:'Wprowadzenie, potem „Pierwsze kroki 0 z 6” w Moim dniu i wskazówka „Pierwszy raz tutaj?” na każdym ekranie.',f:()=>({onb:false,guide:{hidden:false,dataOk:false,seenPet:false},tips:{},pet:null,petSeen:[],days:{},meas:{},hab:{},reviews:{}})},
+  start:{t:'Pierwsze wejście',chk:'Wprowadzenie, potem „Pierwsze kroki 0 z 6” w Moim dniu i wskazówka „Pierwszy raz tutaj?” na każdym ekranie.',f:()=>({onb:false,touched:{},guide:{hidden:false,dataOk:false,seenPet:false},tips:{},pet:null,petSeen:[],days:{},meas:{},hab:{},reviews:{}})},
   wpisy:{t:'Wpisy dnia',tab:'day',chk:'Mój dzień, Pomiary dnia: + przy wadze wstawia wczorajsze 80,4 kg, przytrzymanie zmienia wartość coraz szybciej, sen wpisujesz cyframi (6 i 13), minuty 75 pokazują błąd pod polem i wracają.',
     f:b=>{const m=Object.assign({},b.meas);m[nAgo(0)]={};m[nAgo(1)]=Object.assign({},m[nAgo(1)],{w:'80,4',sleep:'6:13',steps:'8500'});return {meas:m}}},
   migrena:{t:'Migrena z aurą i Yaz',tab:'health',chk:'Zdrowie: „Najpierw” każe porozmawiać z ginekologiem, bo Yaz zawiera estrogen; licznik 10 dni z lekiem w 30 dniach; w 12 tygodniach ocena 3 cykli. Mój dzień: dzień z bólem i karta „Po krótkich nocach”.',f:b=>migPain(b,'yaz')},
@@ -754,7 +762,7 @@ function migPain(b,pill){const pain={},m=Object.assign({},b.meas);for(let i=0;i<
 function scenS(n){const b=PET.demo().S,sc=SCEN[n];if(!sc)return b;return Object.assign(b,sc.f(b),sc.tab?{tab:sc.tab}:{})}
 const DEMO_N=typeof location!=='undefined'&&/^#demo-/.test(location.hash)&&SCEN[location.hash.slice(6)]?location.hash.slice(6):'';
 let DEMO=typeof location!=='undefined'&&(location.hash==='#demo'||!!DEMO_N),DEMO_I=0;
-let S=DEMO?merge(clone(DEF),DEMO_N?scenS(DEMO_N):PET.demo().S):load();
+let S=DEMO?merge(clone(DEF),fixTouched(DEMO_N?scenS(DEMO_N):PET.demo().S)):load();
 if(DEMO&&!DEMO_N)setInterval(()=>{DEMO_I++;const a=document.activeElement;if((S.tab==='day'||S.tab==='pet')&&!HOLD&&!(a&&a.dataset&&(a.dataset.k||a.dataset.sl)))render()},3000);
 const open=new Set();
 
@@ -767,7 +775,7 @@ const STP0={sleep:7,steps:5000,wmin:45,wk:300,min:45,speed:5,grade:0,watts:100,c
 function stpStart(k){const a=k.split('.'),f=a[a.length-1];if(a[0]==='meas'){const ks=Object.keys(S.meas||{}).filter(x=>x<a[1]&&num((S.meas[x]||{})[f])>0).sort();if(ks.length)return num(S.meas[ks[ks.length-1]][f]);if(f==='w')return kg()}if(f==='goal')return kg();if(f==='kg')return kg();return STP0[f]!=null?STP0[f]:LIM[f][0]}
 // Krok − i +: jedna funkcja dla dotknięcia, przytrzymania i strzałek; mult to mnożnik kroku przy długim trzymaniu
 function stpApply(k,dir,mult){const f=k.split('.').pop(),st=STEP[f],L=LIM[f],a=k.split('.');if(!st)return false;if(a[0]==='meas'){S.meas[a[1]]=S.meas[a[1]]||{}}
-  const raw=k.split('.').reduce((o,x)=>o==null?o:o[x],S),has=raw!=null&&String(raw).trim()!=='';let v=has?num(raw)+dir*st*(mult||1):stpStart(k);v=Math.min(L[1],Math.max(L[0],v));setPath(k,f==='sleep'?sleepFmt(v):stpFmt(v,st));return true}
+  const raw=k.split('.').reduce((o,x)=>o==null?o:o[x],S),has=raw!=null&&String(raw).trim()!=='';if(START_K.includes(k))(S.touched=S.touched||{})[k]=true;let v=has?num(raw)+dir*st*(mult||1):stpStart(k);v=Math.min(L[1],Math.max(L[0],v));setPath(k,f==='sleep'?sleepFmt(v):stpFmt(v,st));return true}
 function stpVal(k){return k.split('.').reduce((o,x)=>o==null?o:o[x],S)}
 // W trakcie przytrzymania zmienia się tylko pole, bez przerysowania ekranu (przycisk zostaje pod palcem)
 function stpShow(k){if(/\.sleep$/.test(k)){const [H,M]=hm(num(stpVal(k))),a=document.getElementById('m_sleep'),b=document.getElementById('m_sleepm');if(a)a.value=H;if(b)b.value=M;return}
@@ -979,6 +987,7 @@ const SRC={
   fdcRice:['https://fdc.nal.usda.gov/food-details/2708408/nutrients','USDA: ryż'],
   fdcFries:['https://fdc.nal.usda.gov/food-details/2709461/nutrients','USDA: frytki'],
   fdcSlaw:['https://fdc.nal.usda.gov/food-details/2709814/nutrients','USDA: coleslaw'],
+  nhlbi:['https://www.nhlbi.nih.gov/health/heart-healthy-living/healthy-weight','NHLBI: zdrowa waga'],
   michie:['https://pmc.ncbi.nlm.nih.gov/articles/PMC3096582/','Michie 2011 (COM-B)'],
   lally:['https://pmc.ncbi.nlm.nih.gov/articles/PMC11641623/','Singh 2024 (czas tworzenia nawyku)'],
   harkin:['https://pubmed.ncbi.nlm.nih.gov/26479070/','Harkin 2016 (zapisywanie postępu)'],
@@ -1148,7 +1157,7 @@ function seg(items,cur,attr,cls=''){return `<div class="seg ${cls}">`+items.map(
 function optList(list,cur,attr){return '<div class="panel">'+list.map(o=>`<button class="opt ${o.id===cur?'on':''}" data-${attr}="${o.id}"><span class="dot"></span><span>${o.n}</span>${o.met?`<span class="met">MET ${fmt1(o.met)}</span>`:''}</button>`).join('')+'</div>'}
 // Przyciski − i + przy polu liczbowym: wpis bez klawiatury; klawiatura zostaje dla chętnych
 function stpWrap(label,key,inp){const f=key.split('.').pop();return STEP[f]?`<span class="num"><button class="stp" data-stp="${key}" data-d="-1" aria-label="${label}: mniej">−</button>${inp}<button class="stp" data-stp="${key}" data-d="1" aria-label="${label}: więcej">+</button></span>`:inp}
-function field(label,key,val,unit,mode){return `<div class="field"><label for="f_${key}">${label}</label>${stpWrap(label,key,`<input type="text" inputmode="${mode||'decimal'}" id="f_${key}" data-k="${key}" value="${esc(val)}">`)}<span class="unit">${unit}</span></div>`}
+function field(label,key,val,unit,mode){return `<div class="field"><label for="f_${key}">${label}${START_K.includes(key)&&isStart(key)?'<small class="hint">wartość startowa</small>':''}</label>${stpWrap(label,key,`<input type="text" inputmode="${mode||'decimal'}" id="f_${key}" data-k="${key}" value="${esc(val)}">`)}<span class="unit">${unit}</span></div>`}
 
 function renderMeals(){
   const cm=carbMult(),n=trainNet();
@@ -1260,7 +1269,7 @@ function nextHtml(cur){const g=guideActive()?guideSteps().find(x=>!x.done):null,
   return `<p class="nextbar"><button class="btn" data-${a}="${v}">${t}</button></p>`}
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
-  let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>';
+  let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalHint();
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+dataHtml();
   h+=`<h2 id="wpisy">Wpisy</h2><div class="panel"><div class="field"><label for="once">Wpisuję raz dziennie, wieczorem</label><input type="checkbox" class="switch" id="once" data-k="once" ${S.once?'checked':''}></div></div><p class="small muted">Mój dzień pokaże jeden wpis dnia, a zwierzak przypomni o posiłkach dopiero od 19:00.</p>`;
   h+='<h2 id="komunikaty">Komunikaty</h2>'+seg([['std','Zwykle'],['long','Dłużej'],['stay','Do zamknięcia']],S.toastLen||'std','toastlen')+'<p class="small muted">Jak długo widać dymek po zapisie. Każdy zamkniesz przyciskiem ×.</p>';
@@ -1338,7 +1347,7 @@ function helpRes(q){const w=fold0(q||'').split(/\s+/).filter(x=>x.length>1),hit=
 function renderHelp(){let h=`<div class="panel" style="padding:4px 16px"><div class="field"><label for="help_q">Szukaj w Pomocy</label><input type="search" id="help_q" style="width:180px;text-align:left" placeholder="np. białko, sen" value="${esc(S.helpQ||'')}"></div></div><div id="helpres">${helpRes(S.helpQ)}</div>`;
   h+='<h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
   document.getElementById('main').innerHTML=h}
-function render(){renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+function render(){startSync();renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -1353,6 +1362,7 @@ function setPath(p,v){const a=p.split('.');let o=S;for(let i=0;i<a.length-1;i++)
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;
   if(d.toastclose){toastHide();return}
+  if(d.preset||d.datasave)S.touched={kg:true,cm:true,age:true,goal:true};
   if(b.parentNode&&b.parentNode.id==='toast')toastHide();
   if(d.nav){const [tab,id,fd]=d.nav.split('#');S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
     if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.classList){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2400)}}else window.scrollTo(0,0);return}
@@ -1382,7 +1392,7 @@ document.addEventListener('click',e=>{
   else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m);day().push({kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net});PET.react('train');save();toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
   else if(d.del!=null){day().splice(+d.del,1)}
   else if(d.clear){S.days[todayKey()]=[]}
-  else if(d.introdone){const ok=d.introdone==='ok';if(ok&&S.guide)S.guide.dataOk=true;S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);if(ok){save();render();toast(`Twój cel na start: ${fmt(targetKcal())} kcal dziennie.`+(S.pet?'':' W Moim dniu czeka jajko: wybierz, kto się z niego wykluje.'),S.pet?0:{act:'tab',arg:'pet',label:'Wybierz'});return}}
+  else if(d.introdone){const ok=d.introdone==='ok',st=['kg','cm','age'].filter(isStart);if(ok&&st.length){S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);save();render();const nm=st.map(k=>({kg:'waga',cm:'wzrost',age:'wiek'})[k]),lst=nm.length>1?nm.slice(0,-1).join(', ')+' i '+nm.at(-1):nm[0];toast(`${lst[0].toUpperCase()+lst.slice(1)} ${nm.length>1?'są':'jest'} na wartościach startowych. Ustaw swoje w Ustawieniach, żeby kalorie były liczone dla Ciebie.`,{act:'tab',arg:'set',label:'Ustawienia'});return}if(ok&&S.guide)S.guide.dataOk=true;S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);if(ok){save();render();toast(`Twój cel na start: ${fmt(targetKcal())} kcal dziennie.`+(S.pet?'':' W Moim dniu czeka jajko: wybierz, kto się z niego wykluje.'),S.pet?0:{act:'tab',arg:'pet',label:'Wybierz'});return}}
   else if(d.intro){S.introStep=0;S.tab='intro';window.scrollTo(0,0)}
   else if(d.goto){const el=document.getElementById(d.goto);if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.focus)el.focus({preventScroll:true})}return}
   else if(d.kq){const [q,v]=d.kq.split(':');S.krok=S.krok||{ans:{},eq:{},done:false,conf:false,zap:{}};S.krok.ans[q]=v}
@@ -1401,7 +1411,7 @@ document.addEventListener('click',e=>{
   else if(d.cyc){const k=todayKey();S.meas[k]=S.meas[k]||{};S.meas[k].cyc=S.meas[k].cyc===d.cyc?'':d.cyc}
   else if(d.bkexp){bkExport();return}
   else if(d.bkpaste){const o=bkParse(document.getElementById('bk_text').value.trim());if(!o){BK_PENDING=null;toast('To nie jest kopia tej aplikacji');return}BK_PENDING=o}
-  else if(d.bkapply){if(!BK_PENDING)return;S=merge(clone(DEF),BK_PENDING.data);S.onb=true;S.tab='set';BK_PENDING=null;toast('Wczytano kopię')}
+  else if(d.bkapply){if(!BK_PENDING)return;S=merge(clone(DEF),fixTouched(BK_PENDING.data));S.onb=true;S.tab='set';BK_PENDING=null;toast('Wczytano kopię')}
   else if(d.bkcancel){BK_PENDING=null}
   else if(d.chmode){S.chMode=d.chmode}
   else if(d.wi){const [a,b]=d.wi.split(':');S.wi=S.wi||{snack:0,steps:0,train:0};S.wi[a]=+b}
@@ -1487,6 +1497,7 @@ document.addEventListener('input',e=>{
     el.classList.toggle('bad',!!bad);el.setAttribute('aria-invalid',bad?'true':'false');el.title=bad;fieldErr(el,bad);if(bad)return;
     S.meas[k]=S.meas[k]||{};S.meas[k].sleep=hs===''&&ms===''?'':`${+hs||0}:${String(+ms||0).padStart(2,'0')}`;save();return}
   const k=el.dataset.k;if(!k)return;
+  if(START_K.includes(k))(S.touched=S.touched||{})[k]=true;
   if(el.type==='checkbox'){setPath(k,el.checked);if(k==='body'&&el.checked)toast('Sylwetka pokazuje trend 4 tygodni. Pojedyncze pomiary się wahają.');save();render();return}
   let v=el.value;const im=el.getAttribute('inputmode');
   if(im==='decimal'||im==='numeric'){const c=checkNum(k,v);el.classList.toggle('bad',!!c.err);el.setAttribute('aria-invalid',c.err?'true':'false');el.title=c.err||'';fieldErr(el,c.err||'');if(c.err)return}

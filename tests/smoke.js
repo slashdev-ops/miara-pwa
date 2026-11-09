@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -211,10 +211,10 @@ tryc('bez ślepych zaułków: przyciski do Treningu i Posiłków', () => { const
 tryc('karta: jajo mówi, jak się wykluć', () => view('day', { ...NEWU(), pet: { ...PETA } }).includes('wykluje się'));
 tryc('wprowadzenie: cel aplikacji i dane w telefonie na ekranie danych, Pomiń widoczne', () => { const h = view('intro', { introStep: 0 }); return h.includes('liczy kalorie z Twoich danych') && h.includes('tylko w tym telefonie') && h.includes('>Pomiń<'); });
 tryc('wprowadzenie: stare dane z krokiem 4 otwierają ekran danych bez błędu', () => view('intro', { introStep: 4 }).includes('Twoje dane'));
-tryc('wprowadzenie: po Zaczynam komunikat z celem kalorii i jajkiem do wyboru towarzysza', () => { view('intro', { introStep: 0, onb: false, pet: null }); click({ introdone: 'ok' }); const t = els.toast.innerHTML; return /Twój cel na start: [0-9 ]+ kcal dziennie/.test(t) && t.includes('jajko') && t.includes('data-tab="pet"'); });
-tryc('wprowadzenie: z wybranym zwierzakiem komunikat tylko z celem', () => { view('intro', { introStep: 0, onb: false, pet: { ...PETA } }); click({ introdone: 'ok' }); const t = els.toast.innerHTML; return t.includes('kcal dziennie') && !t.includes('jajko'); });
+tryc('wprowadzenie: po Zaczynam komunikat z celem kalorii i jajkiem do wyboru towarzysza', () => { view('intro', { introStep: 0, onb: false, pet: null, touched: { kg: true, cm: true, age: true, goal: true } }); click({ introdone: 'ok' }); const t = els.toast.innerHTML; return /Twój cel na start: [0-9 ]+ kcal dziennie/.test(t) && t.includes('jajko') && t.includes('data-tab="pet"'); });
+tryc('wprowadzenie: z wybranym zwierzakiem komunikat tylko z celem', () => { view('intro', { introStep: 0, onb: false, pet: { ...PETA }, touched: { kg: true, cm: true, age: true, goal: true } }); click({ introdone: 'ok' }); const t = els.toast.innerHTML; return t.includes('kcal dziennie') && !t.includes('jajko'); });
 tryc('wprowadzenie: Pomiń bez komunikatu o celu', () => { els.toast.innerHTML = ''; view('intro', { introStep: 0, onb: false }); click({ introdone: '1' }); return !els.toast.innerHTML.includes('kcal dziennie'); });
-tryc('wprowadzenie: Zaczynam na danych zalicza dane, Pomiń nie', () => { view('intro', { introStep: 0, onb: false, guide: { hidden: false, dataOk: false, seenPet: false } }); click({ introdone: 'ok' }); const a = T.S().guide.dataOk && T.S().onb; view('intro', { introStep: 0, onb: false, guide: { hidden: false, dataOk: false, seenPet: false } }); click({ introdone: '1' }); return a && !T.S().guide.dataOk; });
+tryc('wprowadzenie: Zaczynam na danych zalicza dane, Pomiń nie', () => { view('intro', { introStep: 0, onb: false, touched: { kg: true, cm: true, age: true, goal: true }, guide: { hidden: false, dataOk: false, seenPet: false } }); click({ introdone: 'ok' }); const a = T.S().guide.dataOk && T.S().onb; view('intro', { introStep: 0, onb: false, guide: { hidden: false, dataOk: false, seenPet: false } }); click({ introdone: '1' }); return a && !T.S().guide.dataOk; });
 tryc('komunikat po akcji wskazuje następny krok', () => { view('day', { ...NEWU(), pet: { ...PETA } }); return T.guideToast('Dodano do dnia') === 'Dodano do dnia. Dalej: sprawdź swoje dane.'; });
 
 // Rada 05.11.2026, P1: wskaźnik mierzy zapisywanie, nie jedzenie; wybór zwierzaka nie świętuje dawnych osiągnięć
@@ -753,6 +753,18 @@ tryc('przegląd: zwierzak mówi jedno zdanie z liczbą dni z wpisami', () => { c
 tryc('przegląd: zdanie zwierzaka bez wpisów i przy pełnym tygodniu', () => view('review', BASE()).includes('Jestem tu') && view('review', BASE({ days: revDays(7) })).includes('Wszystkie 7 dni'));
 tryc('przegląd: zdanie zwierzaka bez wstydu i kar', () => [0, 1, 4, 7].every((n) => { const m = view('review', BASE({ days: revDays(n) })).match(/class="petsay"[\s\S]*?<\/div>/); return m && !/szkoda|zawiod|smut|wstyd|niestety|tylko \d/i.test(m[0]); }));
 tryc('przegląd: bez zwierzaka bez zdania', () => !view('review', BASE({ pet: null, days: revDays(3) })).includes('class="petsay"'));
+// Rada 09.11.2026 (wartości startowe): punkt startowy zależny od płci, cel 5% mniej (NHLBI), wartości startowe nie są potwierdzonymi danymi
+const NEWD = (o) => ({ onb: false, introStep: 0, touched: {}, sex: 'K', ...o });
+tryc('start: kobieta: 165 cm, 35 lat, 70 kg, cel 66,5 kg', () => { view('intro', NEWD()); const S = T.S(); return T.num(S.cm) === 165 && T.num(S.age) === 35 && T.num(S.kg) === 70 && T.num(S.goal) === 66.5; });
+tryc('start: mężczyzna: 178 cm, 35 lat, 85 kg, cel 81 kg', () => { view('intro', NEWD({ sex: 'M' })); const S = T.S(); return T.num(S.cm) === 178 && T.num(S.age) === 35 && T.num(S.kg) === 85 && T.num(S.goal) === 81; });
+tryc('start: zmiana płci zmienia tylko nieustawione wartości', () => { view('intro', NEWD({ cm: '160', touched: { cm: true } })); click({ sex: 'M' }); const S = T.S(); return T.num(S.cm) === 160 && T.num(S.kg) === 85; });
+tryc('start: cel idzie za wagą, dopóki nie ustawisz celu', () => { view('intro', NEWD({ kg: '90', touched: { kg: true } })); const a = T.num(T.S().goal); view('intro', NEWD({ kg: '90', goal: '80', touched: { kg: true, goal: true } })); return a === 85.5 && T.num(T.S().goal) === 80; });
+tryc('start: przy nieustawionej wartości podpis „wartość startowa”', () => { const h = view('intro', NEWD()); const k = view('intro', NEWD({ touched: { kg: true, cm: true, age: true, goal: true } })); return (h.match(/wartość startowa/g) || []).length === 4 && !k.includes('wartość startowa'); });
+tryc('start: + i - ustawiają wartość jako Twoją', () => { view('intro', NEWD()); T.stpApply('kg', 1, 1); return T.S().touched.kg === true && !T.S().touched.cm; });
+tryc('start: cel startowy ze źródłem NHLBI (5-10% w ok. 6 miesięcy)', () => { const h = view('intro', NEWD()); return h.includes('nhlbi.nih.gov') && h.includes('5% mniej'); });
+tryc('start: Zaczynam z wartościami startowymi nie zalicza danych i prowadzi do Ustawień', () => { view('intro', NEWD({ guide: { hidden: false, dataOk: false, seenPet: false } })); click({ introdone: 'ok' }); const t = els.toast.innerHTML; return !T.S().guide.dataOk && t.includes('wartościach startowych') && t.includes('data-tab="set"'); });
+tryc('start: Zapisz i sprawdź w Ustawieniach potwierdza wartości', () => { view('set', { ...NEWD(), onb: true, guide: { hidden: false, dataOk: false, seenPet: false } }); click({ datasave: '1' }); const t = T.S().touched; return t.kg && t.cm && t.age && t.goal && T.S().guide.dataOk; });
+tryc('start: zapisane wcześniej dane bez znacznika traktowane jako ustawione', () => { const o = T.fixTouched({ kg: '90', cm: '180' }); return o.touched.kg && o.touched.goal; });
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
 chain.then(() => {
