@@ -448,7 +448,8 @@ const themeBlocks = () => { const light = sysCss.match(/:root\{([^}]*)\}/)[1], d
 const tok = (block, name) => { const m = block.match(new RegExp('--' + name + ':\\s*([^;]+);')); return m ? m[1].trim() : null; };
 const lum = (hex) => { const v = hex.replace('#', '').match(/../g).map((x) => parseInt(x, 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4))); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
 const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-const SYS = ['bg', 'surface', 'surface2', 'ink', 'muted', 'line', 'green', 'on-green', 'brass', 'brass-ink', 'clay', 'warn-ink', 'warn-bg', 'shadow'];
+const SYS = ['bg', 'surface', 'surface2', 'ink', 'muted', 'line', 'field', 'green', 'on-green', 'on-green-muted', 'tint', 'brass', 'brass-ink', 'clay', 'warn-ink', 'warn-bg', 'shadow'];
+const ruleOf = (sel) => { const i = sysCss.indexOf(sel + '{'); return i < 0 ? '' : sysCss.slice(i + sel.length + 1, sysCss.indexOf('}', i)); };
 tryc('wygląd: zmienne systemu w motywie jasnym i w obu ciemnych', () => { const b = themeBlocks(); return [b.light, b.darkMq, b.dark].every((x) => SYS.every((n) => tok(x, n))) && b.darkMq.replace(/\s/g, '') === b.dark.replace(/\s/g, ''); });
 tryc('wygląd: kontrast tekstu co najmniej 4,5:1 (WCAG AA) w obu motywach', () => {
   const pairs = [['ink', 'bg'], ['ink', 'surface'], ['muted', 'bg'], ['muted', 'surface'], ['green', 'surface'], ['green', 'bg'], ['on-green', 'green'], ['brass-ink', 'surface'], ['brass-ink', 'bg'], ['clay', 'surface'], ['warn-ink', 'warn-bg']];
@@ -462,6 +463,27 @@ tryc('wygląd: krój nagłówków z własnej domeny, pliki istnieją, licencja d
   return urls.length === 2 && urls.every((u) => fs.existsSync(path.join(root, u))) && fs.existsSync(path.join(root, 'fonts', 'Fraunces-OFL.txt')) && !/https?:\/\//.test(sysCss);
 });
 tryc('wygląd: przycisk ochoty w palecie logo (mosiądz), bez fioletu', () => { const r = sysCss.match(/\.btn\.sos\{([^}]*)\}/); return !!r && r[1].includes('var(--brass') && !sysCss.includes('--plum') && !code.includes('--plum'); });
+tryc('wygląd: obramowanie pól i znaczników wyboru co najmniej 3:1 (WCAG 1.4.11) w obu motywach', () => {
+  const b = themeBlocks(), bad = [];
+  for (const [name, blk] of [['jasny', b.light], ['ciemny', b.dark]]) for (const g of ['surface', 'bg', 'surface2']) { const c = contrast(tok(blk, 'field'), tok(blk, g)); if (c < 3) bad.push(`${name} field/${g} ${c.toFixed(2)}`); }
+  for (const sel of ['.field input[type=text],.field input[type=date],.field input[type=password]', '.field select', '.opt .dot', '.switch', '.hab .box', '.step .box']) if (!ruleOf(sel).includes('var(--field)')) bad.push(sel);
+  if (bad.length) throw new Error(bad.join('; '));
+  return true;
+});
+tryc('wygląd: Stan dziś jako zielona karta, tekst pomocniczy co najmniej 4,5:1 w obu motywach', () => {
+  const b = themeBlocks(), bad = [];
+  for (const [name, blk] of [['jasny', b.light], ['ciemny', b.dark]]) { const c = contrast(tok(blk, 'on-green-muted'), tok(blk, 'green')); if (c < 4.5) bad.push(`${name} ${c.toFixed(2)}`); }
+  const st = ruleOf('.stan');
+  if (!st.includes('background:var(--green)') || !st.includes('color:var(--on-green)')) bad.push('.stan');
+  for (const sel of ['.stan .stan-lab', '.stan .stan-src', '.stan .stan-val small']) if (!ruleOf(sel).includes('var(--on-green-muted)')) bad.push(sel);
+  if (bad.length) throw new Error(bad.join('; '));
+  return true;
+});
+tryc('wygląd: karta zwierzaka z delikatnym tłem, tekst czytelny w obu motywach', () => {
+  const b = themeBlocks();
+  return ruleOf('.petcard').includes('linear-gradient(135deg,var(--tint)') && [b.light, b.dark].every((blk) => contrast(tok(blk, 'ink'), tok(blk, 'tint')) >= 4.5 && contrast(tok(blk, 'muted'), tok(blk, 'tint')) >= 4.5);
+});
+tryc('wygląd: nagłówki z akcentem, bez akcentu na zielonej karcie', () => ruleOf('h2::before').includes('background:var(--green)') && ruleOf('.stan h2::before').includes('display:none'));
 tryc('wygląd: najwyżej 5 zaokrągleń i 8 rozmiarów pisma w całym CSS', () => {
   const radii = new Set([...sysCss.matchAll(/border-radius:\s*([^;}]+)/g)].map((m) => m[1].trim())), sizes = new Set([...sysCss.matchAll(/font-size:\s*([^;}]+)/g)].map((m) => m[1].trim()));
   if (radii.size > 5 || sizes.size > 8) throw new Error(`zaokrąglenia ${[...radii].join(' ')} | pismo ${[...sizes].join(' ')}`);
