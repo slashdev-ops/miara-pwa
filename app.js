@@ -494,13 +494,14 @@ function renderImport(){const I=S.imp;let h='<h2>Dane ze Skrótu</h2>';
   h+='<p><button class="btn ghost" data-impskip="1">Pomiń</button></p><p class="small muted">Dane przyszły w adresie albo w schowku tego telefonu i nie trafiają na serwer. Instrukcja Skrótu jest w Pomocy.</p>';
   document.getElementById('main').innerHTML=h}
 function skrotHelpHtml(){const base=typeof location!=='undefined'&&location.origin&&location.origin!=='null'?location.origin+location.pathname:'https://miara-pwa.vercel.app/';
-  return `<h2 id="skrot">Pobieraj wagę, kroki i sen z Apple Zdrowie</h2><div class="panel" style="padding:4px 16px 12px"><ol class="small" style="padding-left:20px">`
+  return `<h2 id="skrot">Pobieraj wagę, kroki i sen z Apple Zdrowie</h2><div class="panel" style="padding:4px 16px 12px"><p class="small"><b>Dla Miary z ikony na ekranie początkowym</b> (dane i kopia zostają w tej aplikacji):</p><ol class="small" style="padding-left:20px">`
     +'<li>Otwórz aplikację Skróty i dodaj nowy skrót.</li>'
     +'<li>Dodaj działania, które pobierają dane zdrowia (w wyszukiwarce działań wpisz „Zdrowie”): ostatnią wagę, sumę kroków z dziś i sen z ostatniej nocy w godzinach i minutach.</li>'
-    +`<li>Dodaj działanie „Otwórz URL” z adresem <code style="word-break:break-all">${esc(base)}#import?w=[waga]&amp;kroki=[kroki]&amp;sen=[sen]</code> i w nawiasy wstaw wyniki z kroku 2.</li>`
-    +'<li>Miara pokaże ekran „Dane ze Skrótu”: sprawdź wartości i naciśnij Zapisz. Bez tego nic się nie zapisze.</li>'
-    +'<li>Codziennie samo: w Skrótach Automatyzacja, Pora dnia, np. 21:00, i ten skrót.</li></ol>'
-    +'<p class="small muted">Jeśli adres otwiera Safari zamiast Miary z ikony, użyj w skrócie działania „Kopiuj do schowka” z tekstem w=[waga]&amp;kroki=[kroki]&amp;sen=[sen], a w Moim dniu w Pomiarach dnia naciśnij Wklej ze Skrótu. Nazwy działań mogą się różnić w wersjach iOS.</p></div>'}
+    +'<li>Dodaj działanie „Kopiuj do schowka” z tekstem <code>w=[waga]&amp;kroki=[kroki]&amp;sen=[sen]</code>, w nawiasy wstaw wyniki z kroku 2.</li>'
+    +'<li>Dodaj działanie „Pokaż powiadomienie” z tekstem „Dane dla Miary w schowku”.</li>'
+    +'<li>Otwórz Miarę z ikony: Mój dzień, Pomiary dnia, Wklej ze Skrótu, sprawdź wartości i naciśnij Zapisz. Bez tego nic się nie zapisze.</li>'
+    +'<li>Codziennie samo: w Skrótach Automatyzacja, Pora dnia, np. 21:00, i ten skrót; wieczorem zostaje jedno dotknięcie w Mierze.</li></ol>'
+    +`<p class="small muted">Inna droga, dla Miary w Safari: zamiast kroków 3-4 działanie „Otwórz URL” z adresem <code style="word-break:break-all">${esc(base)}#import?w=[waga]&amp;kroki=[kroki]&amp;sen=[sen]</code>. Adres otwiera się w Safari (sprawdzone na iPhonie), które ma inne dane niż Miara z ikony, więc przy ekranie początkowym wybierz schowek. Nazwy działań mogą się różnić w wersjach iOS.</p></div>`}
 function renderReview(){
   const mk=reviewKey(),st=weekStats(mk),ex=(S.reviews||{})[mk]||{},end=st.ks.at(-1);
   const ta=(id,lab,ph,v)=>`<h2>${lab}</h2><div class="panel" style="padding:10px 16px"><textarea id="${id}" rows="2" placeholder="${ph}" aria-label="${lab}" style="width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)">${esc(v||'')}</textarea></div>`;
