@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -140,7 +140,7 @@ tryc('odznaka świętowana raz (petSeen)', () => {
   const seen = T.S().petSeen.includes('review1'), second = view('pet');
   return first.includes('pet-celebrate') && seen && !second.includes('pet-celebrate');
 });
-tryc('wprowadzenie: 5 kroków, krok 3 to wybór zwierzaka', () => view('intro', { introStep: 2 }).includes('data-petkind') && view('intro', { introStep: 4 }).includes('Krok 5 z 5'));
+tryc('wprowadzenie: 1 ekran danych, Zaczynam, bez kropek postępu i bez wyboru zwierzaka', () => { const a = view('intro', { introStep: 0 }); return a.includes('Twoje dane') && !a.includes('data-intronext') && a.includes('>Zaczynam<') && !a.includes('Krok 1 z') && !a.includes('data-petkind'); });
 const swSrc = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 check('sw.js: pet.js i krój pisma w pamięci podręcznej, CACHE miara-v3 (duże wydanie)', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v3'") && swSrc.includes("'./fonts/fraunces-latin-ext-600-normal.woff2'"));
 check('index.html: pet.js przed app.js', /pet\.js[\s\S]*app\.js/.test(html));
@@ -209,7 +209,12 @@ tryc('guide: Zapisz w Ustawieniach zalicza dane, ekran zwierzaka zalicza poznani
 tryc('Dziś: podpowiedź akcji i wyróżniony następny krok', () => { const h = view('day', NEWU()); return h.includes('Otwórz Posiłki i naciśnij Zjem') && h.includes('class="opt hab next"'); });
 tryc('bez ślepych zaułków: przyciski do Treningu i Posiłków', () => { const h = view('day', NEWU()); return !h.includes('w zakładce Trening') && h.includes('Przejdź do Treningu') && h.includes('Przejdź do Posiłków'); });
 tryc('karta: jajo mówi, jak się wykluć', () => view('day', { ...NEWU(), pet: { ...PETA } }).includes('wykluje się'));
-tryc('wprowadzenie: ostatni ekran zapowiada pierwsze kroki', () => view('intro', { introStep: 4 }).includes('pierwsze kroki'));
+tryc('wprowadzenie: cel aplikacji i dane w telefonie na ekranie danych, Pomiń widoczne', () => { const h = view('intro', { introStep: 0 }); return h.includes('liczy kalorie z Twoich danych') && h.includes('tylko w tym telefonie') && h.includes('>Pomiń<'); });
+tryc('wprowadzenie: stare dane z krokiem 4 otwierają ekran danych bez błędu', () => view('intro', { introStep: 4 }).includes('Twoje dane'));
+tryc('wprowadzenie: po Zaczynam komunikat z celem kalorii i jajkiem do wyboru towarzysza', () => { view('intro', { introStep: 0, onb: false, pet: null }); click({ introdone: 'ok' }); const t = els.toast.innerHTML; return /Twój cel na start: [0-9 ]+ kcal dziennie/.test(t) && t.includes('jajko') && t.includes('data-tab="pet"'); });
+tryc('wprowadzenie: z wybranym zwierzakiem komunikat tylko z celem', () => { view('intro', { introStep: 0, onb: false, pet: { ...PETA } }); click({ introdone: 'ok' }); const t = els.toast.innerHTML; return t.includes('kcal dziennie') && !t.includes('jajko'); });
+tryc('wprowadzenie: Pomiń bez komunikatu o celu', () => { els.toast.innerHTML = ''; view('intro', { introStep: 0, onb: false }); click({ introdone: '1' }); return !els.toast.innerHTML.includes('kcal dziennie'); });
+tryc('wprowadzenie: Zaczynam na danych zalicza dane, Pomiń nie', () => { view('intro', { introStep: 0, onb: false, guide: { hidden: false, dataOk: false, seenPet: false } }); click({ introdone: 'ok' }); const a = T.S().guide.dataOk && T.S().onb; view('intro', { introStep: 0, onb: false, guide: { hidden: false, dataOk: false, seenPet: false } }); click({ introdone: '1' }); return a && !T.S().guide.dataOk; });
 tryc('komunikat po akcji wskazuje następny krok', () => { view('day', { ...NEWU(), pet: { ...PETA } }); return T.guideToast('Dodano do dnia') === 'Dodano do dnia. Dalej: sprawdź swoje dane.'; });
 
 // Rada 05.11.2026, P1: wskaźnik mierzy zapisywanie, nie jedzenie; wybór zwierzaka nie świętuje dawnych osiągnięć
@@ -724,6 +729,15 @@ tryc('Mój dzień: wybrany plan „jeśli…, to…” przypomniany przy kroku',
 tryc('Mój dzień: własna zmiana widoczna obok kroku', () => view('day', BASE({ krok: KR(), reviews: { [T.mondayOf(new Date())]: { a: '', b: '', c: 'herbata o 15', d: dk(0) } } })).includes('herbata o 15'));
 tryc('Pomoc: Krok po kroku i objaśnienie planu „jeśli…, to…” ze źródłem', () => { const h = view('help', BASE()); return h.includes('data-tab="krok"') && h.includes('Plan „jeśli…, to…”'); });
 tryc('krok: wskazówka przy pierwszym wejściu', () => view('krok', BASE({ krok: null, tips: {} })).includes('data-tipok="krok"'));
+// Rada 09.11.2026 (pierwsze uruchomienie): wyszukiwanie w Pomocy i puste stany
+tryc('Pomoc: pole Szukaj w Pomocy z etykietą', () => { const h = view('help', BASE({ helpQ: '' })); return /<label for="help_q"[^>]*>Szukaj w Pomocy<\/label>/.test(h) && h.includes('id="help_q"') && h.includes('id="helpres"'); });
+tryc('Pomoc: szukanie bez polskich znaków („bialko” znajduje Białko za złotówkę)', () => { const h = view('help', BASE({ helpQ: 'bialko' })); return h.includes('Białko za złotówkę') && !h.includes('Zapisać zjedzony posiłek'); });
+tryc('Pomoc: szukanie po kilku słowach i w opisach', () => { const h = T.helpRes('zjem posiłek'); return h.includes('Zapisać zjedzony posiłek') && !h.includes('Białko za złotówkę'); });
+tryc('Pomoc: brak wyników: komunikat i najczęstsze zadania', () => { const h = T.helpRes('xyzqw'); return h.includes('Nic nie znaleziono') && (h.match(/data-(nav|tab)=/g) || []).length === 3; });
+tryc('przegląd tygodnia bez wpisów: podpowiedź i przycisk do Mojego dnia', () => { const h = view('review', BASE()); return h.includes('Pierwszy przegląd ma sens po tygodniu wpisów') && h.includes('data-tab="day"'); });
+tryc('przegląd tygodnia z wpisami: bez podpowiedzi pustego tygodnia', () => { const ks = wkKeys(RK()); return !view('review', BASE({ meas: { [ks[1]]: { w: '80' } } })).includes('Pierwszy przegląd ma sens'); });
+tryc('Zwierzak bez wyboru: wybór na miejscu zamiast przeniesienia do Ustawień', () => { const h = view('pet', BASE({ pet: null })); return T.S().tab === 'pet' && h.includes('Wybierz towarzysza') && h.includes('data-petkind'); });
+tryc('Pierwsze kroki: Wybierz towarzysza prowadzi do ekranu zwierzaka', () => T.guideSteps().find((x) => x.id === 'pet').arg === 'pet');
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
 chain.then(() => {
