@@ -142,6 +142,7 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 | `vercel.json`, `.vercelignore` | nagłówki bezpieczeństwa i lista plików publikowanych na Vercel |
 | `deploy/nginx.conf` | te same nagłówki dla własnego serwera (nginx 1.24+) |
 | `tests/smoke.js`, `.github/` | test dymny w GitHub Actions, Dependabot |
+| `tests/przegladarka/` | testy w przeglądarce (Playwright): Chromium i WebKit, tryb jasny i ciemny, 320 px; błędy strony i CSP, kontrast z wyliczonych kolorów, kopia, praca bez sieci |
 | `tools/` | generator logo (`make_logo.py`) i ikon PNG (`render_icons.py`, wymaga Playwright) |
 
 ## Uruchomienie lokalnie
@@ -150,6 +151,15 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 python3 -m http.server 8000
 # http://localhost:8000
 node tests/smoke.js
+```
+
+Testy w przeglądarce (Chromium i WebKit):
+
+```bash
+cd tests/przegladarka
+npm ci
+npx playwright install chromium webkit
+npx playwright test
 ```
 
 Wdrożenie na Vercel, własny serwer nginx i instalacja na iPhonie: [WDROZENIE.md](WDROZENIE.md).

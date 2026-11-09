@@ -1,0 +1,11 @@
+{
+  "name": "miara-testy-przegladarka",
+  "private": true,
+  "description": "Testy Miary w przeglądarce (Chromium i WebKit). Osobny katalog, żeby zależność testowa nie trafiała do funkcji Vercel.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}
