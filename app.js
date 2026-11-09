@@ -1581,6 +1581,11 @@ document.addEventListener('input',e=>{
 });
 // Wartość sprzed edycji pola: render() po każdym znaku odtwarza pole i ponownie wywołuje focusin, więc zapis tylko przy zmianie pola
 let EDIT=null,REDRAW=false;
+// Wejście w pole liczbowe zaznacza całą wartość: wpis zastępuje, wyjście bez wpisu zostawia (rada/2026-11-09_pole-po-dotknieciu; WCAG 3.2.1, 3.3.7).
+// Tylko przy wejściu w nowe pole: render() po każdym znaku odtwarza pole i znowu wywołuje focusin
+let SEL_ID=null;
+document.addEventListener('focusin',e=>{const el=e.target,im=el&&el.getAttribute&&el.getAttribute('inputmode');if(!el||(im!=='decimal'&&im!=='numeric')||el.id===SEL_ID)return;SEL_ID=el.id;setTimeout(()=>{try{el.setSelectionRange(0,String(el.value).length)}catch(_){}},0)});
+document.addEventListener('focusout',()=>{if(!REDRAW)SEL_ID=null});
 document.addEventListener('focusin',e=>{const k=e.target.dataset&&e.target.dataset.k;if(k&&(!EDIT||EDIT.k!==k))EDIT={k,v:k.split('.').reduce((o,x)=>o==null?o:o[x],S)}});
 // Wyjście z pola liczbowego: błędny wpis wraca do wartości sprzed edycji, poprawny jest normalizowany (10 000 -> 10000, 82,4 kg -> 82,4).
 // Pełne przerysowanie dopiero, gdy żadne pole nie jest aktywne, żeby nie zamykać klawiatury przy przejściu do następnego pola.

@@ -804,6 +804,15 @@ tryc('import: inny adres niż #import nic nie robi', () => { view('day', BASE())
 tryc('import: dane importu nie trafiają do kopii', () => /const BK_SKIP=\[[^\]]*'imp'/.test(code));
 tryc('Pomoc: instrukcja Skrótu z adresem #import', () => { const h = view('help', BASE({ helpQ: '' })); return h.includes('id="skrot"') && h.includes('#import?w='); });
 tryc('Pomiary dnia: przycisk Wklej ze Skrótu', () => view('day', BASE()).includes('data-imppaste'));
+// Rada 09.11.2026 (pole po dotknięciu): zaznaczenie całej wartości przy wejściu w pole liczbowe, bez czyszczenia
+const inp = (id, k, v, im) => ({ id, dataset: k ? { k } : {}, value: v, sel: null, classList: { contains: () => false, toggle() {}, add() {}, remove() {} }, setAttribute() {}, getAttribute: (a) => (a === 'inputmode' ? im : null), setSelectionRange(a, b) { this.sel = [a, b]; } });
+const fire = (t, el) => (lis[t] || []).forEach((f) => f({ target: el }));
+const tick = () => new Promise((r) => setTimeout(r, 20));
+tryAsync('pole: wejście w pole liczbowe zaznacza całą wartość i jej nie czyści', async () => { view('set', BASE({ touched: { ...TA4 } })); const el = inp('f_kg', 'kg', '80,1', 'decimal'); fire('focusout', inp('x', '', '', null)); fire('focusin', el); await tick(); return el.sel && el.sel[0] === 0 && el.sel[1] === 4 && el.value === '80,1'; });
+tryAsync('pole: odtworzenie pola po znaku nie zaznacza ponownie', async () => { const a = inp('f_cm', 'cm', '170', 'numeric'); fire('focusin', a); await tick(); const b = inp('f_cm', 'cm', '1705', 'numeric'); fire('focusin', b); await tick(); return a.sel && b.sel === null; });
+tryAsync('pole: po wyjściu z pola i powrocie zaznacza znowu', async () => { const a = inp('f_age', 'age', '35', 'numeric'); fire('focusin', a); await tick(); fire('focusout', a); const b = inp('f_age', 'age', '35', 'numeric'); fire('focusin', b); await tick(); return b.sel && b.sel[1] === 2; });
+tryAsync('pole: zwykłe pole tekstowe bez zaznaczania', async () => { const a = inp('q_n', '', 'kawa', null); fire('focusin', a); await tick(); return a.sel === null; });
+tryAsync('pole: sen (godziny i minuty) też zaznacza', async () => { const a = { ...inp('m_sleep', '', '7', 'numeric'), dataset: { sl: '1', day: dk(0) } }; fire('focusin', a); await tick(); return a.sel && a.sel[1] === 1; });
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
 chain.then(() => {
