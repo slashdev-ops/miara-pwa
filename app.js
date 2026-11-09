@@ -411,16 +411,17 @@ const DQ=[['cook','Jak często przygotowujesz posiłek?',[['0','prawie nigdy'],[
   ['when','Kiedy najczęściej jesz poza planem?',[['rano','rano'],['pop','po południu'],['wiecz','wieczorem'],['roz','różnie'],['rzad','rzadko']]],
   ['why','Z jakiego powodu najczęściej?',[['stres','stres'],['zmecz','zmęczenie'],['nuda','nuda'],['glod','głód'],['nw','nie wiem']]]];
 const EQ=[['mikrofala','Mikrofala'],['piekarnik','Piekarnik'],['blender','Blender'],['czajnik','Czajnik'],['zamrazarka','Zamrażarka lub zamrażalnik'],['plyta','Płyta grzewcza'],['airfryer','Frytkownica beztłuszczowa'],['pojemniki','Pojemniki na zapas']];
-const ZAP=[['skyr','Skyr'],['twarog','Twaróg'],['chleb','Chleb żytni'],['tunczyk','Tuńczyk w puszce'],['owoce','Mrożone owoce']];
-const NOCOOK=m=>eqOf(m)[0]==='bez gotowania'&&m.min<=5;
+// Podstawy kroku 2 to składniki dań z kroku 1; krok 1 to posiłki (nie przekąski) bez żadnego gotowania, także bez jajek na twardo z zapasu
+const ZAP=[['skyr','Skyr'],['twarog','Twaróg'],['chleb','Chleb żytni'],['tunczyk','Tuńczyk w puszce'],['fasola','Fasola w puszce']];
+const NOCOOK=m=>m.t!=='przekaska'&&m.min<=10&&eqOf(m)[0]==='bez gotowania'&&!/na twardo|z zapasu/i.test((STEPS[m.id]||[m.how]).join(' '));
 const KROKI=[
-  {n:'Bez gotowania',co:'3 razy w tygodniu danie złożone w 5 minut',cel:3,lz:1,f:NOCOOK,nie:'Powtórz krok w łatwiejszej wersji: 1 danie w tygodniu.',
+  {n:'Bez gotowania',co:'3 razy w tygodniu posiłek złożony bez gotowania, do 10 minut',cel:3,lz:1,f:NOCOOK,nie:'Powtórz krok w łatwiejszej wersji: 1 danie w tygodniu.',
     jt:['Jeśli wracam po 18 i nie mam pomysłu, to najpierw jem danie z listy, a potem decyduję o zamówieniu.','Jeśli rano nie mam czasu, to biorę miskę skyru z płatkami.']},
   {n:'Zapas w domu',co:'kup 5 podstaw i zaznacz je „mam w domu”, zjedz 3 dania z kroku 1',cel:3,lz:3,zt:5,lzt:3,f:NOCOOK,nie:'Łatwiejsza wersja: 3 podstawy zamiast 5.',
     jt:['Jeśli robię zakupy, to najpierw biorę podstawy z listy.','Jeśli w domu kończy się podstawa, to od razu dopisuję ją do listy zakupów.']},
-  {n:'Mikrofala',eq:'mikrofala',co:'2 razy w tygodniu danie z mikrofali',cel:2,lz:1,f:m=>{const e=eqOf(m);return e.includes('mikrofala')&&!e.includes('piekarnik')&&!m.prep},nie:'Zostań przy kroku 2 i dodaj 1 danie z mikrofali.',
+  {n:'Mikrofala',eq:'mikrofala',co:'2 razy w tygodniu danie z mikrofali',cel:2,lz:1,f:m=>{const e=eqOf(m);return m.t!=='przekaska'&&m.min>=7&&e.includes('mikrofala')&&!e.includes('piekarnik')&&!m.prep},nie:'Zostań przy kroku 2 i dodaj 1 danie z mikrofali.',
     jt:['Jeśli wracam bez siły, to robię danie z mikrofali z listy.','Jeśli mam 10 minut, to robię jajecznicę w mikrofali.']},
-  {n:'Jedna blacha na 2 dni',eq:'piekarnik',co:'1 danie z piekarnika, zjedzone w 2 dni',cel:2,lz:2,same:1,f:(m,e)=>eqOf(m).includes('piekarnik')&&(!e||m.min<=20),nie:'Łatwiejsza wersja: danie z piekarnika do 20 minut.',
+  {n:'Jedna blacha na 2 dni',eq:'piekarnik',co:'1 danie z piekarnika, zjedzone w 2 dni',cel:2,lz:2,same:1,f:(m,e)=>!m.prep&&eqOf(m).includes('piekarnik')&&(!e||m.min<=20),nie:'Łatwiejsza wersja: danie z piekarnika do 20 minut.',
     jt:['Jeśli jest niedziela wieczorem, to wkładam do piekarnika jedną blachę na 2 dni.','Jeśli piekarnik się grzeje, to od razu kroję warzywa na drugi dzień.']},
   {n:'Na zapas w weekend',co:'1 gotowanie w weekend, potem 3 posiłki z zapasu w tygodniu',cel:3,lz:2,f:m=>!!m.prep,nie:'Łatwiejsza wersja: 2 posiłki z zapasu.',
     jt:['Jeśli jest sobota przed południem, to gotuję jedno danie na zapas.','Jeśli w tygodniu brakuje czasu, to sięgam po pudełko z zapasu.']}];
@@ -428,7 +429,7 @@ function krokMeals(i,easy){const K=KROKI[i],e=(S.krok||{}).eq||{},own=Object.key
   return MEALS.filter(m=>K.f(m,easy)&&(!own.length||eqOf(m).every(x=>x==='bez gotowania'||own.includes(x))))}
 function kNext(i){for(let j=i+1;j<KROKI.length;j++)if(krokMeals(j).length)return j;return -1}
 function kProg(mk){const k=S.krok,K=KROKI[k.step],ids=new Set(krokMeals(k.step,k.easy).map(m=>m.id)),base=Date.parse(mk+'T12:00:00'),cnt={};let n=0;
-  for(let i=0;i<7;i++)(S.days[keyOf(new Date(base+i*864e5))]||[]).forEach(e=>{if(e.kind==='m'&&ids.has(e.id)){n++;cnt[e.id]=(cnt[e.id]||new Set()).add(i)}});
+  for(let i=0;i<7;i++){const dk=keyOf(new Date(base+i*864e5));if(k.since&&dk<k.since)continue;(S.days[dk]||[]).forEach((e,j)=>{if(dk===k.since&&j<(k.from||0))return;if(e.kind==='m'&&ids.has(e.id)){n++;cnt[e.id]=(cnt[e.id]||new Set()).add(i)}})}
   if(K.same)n=Math.max(0,...Object.values(cnt).map(s=>s.size));
   const cel=k.easy?K.lz:K.cel,zt=K.zt?(k.easy?K.lzt:K.zt):0,z=ZAP.filter(([id])=>(k.zap||{})[id]).length;return {n,cel,z,zt,ok:n>=cel&&z>=zt}}
 function kChain(){const a=S.krok.ans,L=[];const bar={umiej:'nie wiesz, co i jak ugotować',czas:'brak czasu na gotowanie',sila:'brak siły wieczorem',skl:'brak składników w domu'}[a.bar];
@@ -438,10 +439,10 @@ function kChain(){const a=S.krok.ans,L=[];const bar={umiej:'nie wiesz, co i jak 
   return L}
 function kData(){let o=0,u=0;const t={};for(let i=0;i<14;i++){const k=keyOf(new Date(Date.now()-i*864e5));(S.days[k]||[]).forEach(e=>{if(e.ord)o++});(S.urges[k]||[]).forEach(x=>{u++;t[x.trig]=(t[x.trig]||0)+1})}
   const top=Object.entries(t).sort((a,b)=>b[1]-a[1])[0];return o||u?`Z Twoich zapisów z 14 dni: zamówienia ${o}, ochoty ${u}${top&&TRIGN[top[0]]?` (najczęściej: ${TRIGN[top[0]]})`:''}.`:'Brak zapisów z 14 dni, więc łańcuch wynika tylko z odpowiedzi.'}
-function krokCardHtml(){const k=S.krok;if(!k||!k.conf)return changeHtml()+(S.onb&&!k?'<p><button class="btn ghost" data-tab="krok">Co mi utrudnia? 2 minuty</button></p>':'');
+function krokCardHtml(){const k=S.krok;if(!k||!k.conf)return changeHtml()+(!S.onb?'':!k?'<p><button class="btn ghost" data-tab="krok">Co mi utrudnia? 2 minuty</button></p>':'<p><button class="btn ghost" data-tab="krok">Dokończ rozpoznanie</button></p>');
   if(k.fin)return '<div class="note"><b>Ścieżka gotowania ukończona.</b> Kolejne ścieżki (zamawianie, ochoty) pojawią się w następnym etapie.</div>';
   const K=KROKI[k.step],p=kProg(mondayOf(new Date()));
-  return `<div class="note"><b>Twój krok na ten tydzień:</b> ${K.n} (${k.step+1} z 5)${k.easy?', łatwiejsza wersja':''}<br>${K.co}. Postęp: ${p.n} z ${p.cel}${p.zt?`, zapas ${p.z} z ${p.zt}`:''}.${p.ok?' <b>Krok wykonany.</b>':''}</div><p><button class="btn ghost" data-tab="krok">${p.ok?'Następny krok':'Co zrobić w tym kroku'}</button></p>`}
+  return `<div class="note"><b>Twój krok na ten tydzień:</b> ${K.n} (${k.step+1} z 5)${k.easy?', łatwiejsza wersja':''}<br>${K.co}. Postęp: ${p.n} z ${p.cel}${p.zt?`, zapas ${p.z} z ${p.zt}`:''}.${p.ok?' <b>Krok wykonany.</b>':''}${k.jt!=null&&K.jt[k.jt]?`<br>Twój plan: ${K.jt[k.jt]}`:''}</div><p><button class="btn ghost" data-tab="krok">${p.ok?'Następny krok':'Co zrobić w tym kroku'}</button></p>`+changeHtml()}
 function renderKrok(){const k=S.krok,chip=(on,data,l,c)=>`<button class="chip${c?' '+c:''}${on?' inc':''}" ${data} aria-pressed="${!!on}">${l}</button>`;
   let h='<p><button class="btn ghost" data-tab="day">Wróć</button></p>';
   if(!k||!k.done){const a=(k||{}).ans||{},e=(k||{}).eq||{};
@@ -458,13 +459,16 @@ function renderKrok(){const k=S.krok,chip=(on,data,l,c)=>`<button class="chip${c
     h+=`<h2>Krok ${k.step+1} z 5: ${K.n}</h2><div class="note"><b>W tym tygodniu:</b> ${K.co}.<br>Postęp z Twoich zapisów: ${p.n} z ${p.cel}${p.zt?`, zapas ${p.z} z ${p.zt}`:''}.${p.ok?' <b>Krok wykonany.</b>':''}</div>`;
     if(K.zt)h+='<p style="margin:12px 4px 4px"><b>Podstawy do kupienia</b></p><div class="chips">'+ZAP.map(([v,l])=>chip((k.zap||{})[v],`data-kzap="${v}"`,(k.zap||{})[v]?l+': mam w domu':l)).join('')+'</div>';
     h+='<h3 class="rh" style="margin:12px 4px 8px">Dania tego kroku</h3><div class="panel">'+ms.map(m=>`<div class="entry"><span class="txt">${m.n}, ${m.min} min</span><button class="btn ghost small" data-recipe="${m.id}">Przepis</button></div>`).join('')+'</div>';
-    h+='<p style="margin:12px 4px 4px"><b>Twój plan „jeśli…, to…”</b></p><div class="chips">'+K.jt.map((t,i)=>chip(k.jt===i,`data-kjt="${i}"`,t,'opt')).join('')+'</div>';
+    h+='<p style="margin:12px 4px 4px"><b>Twój plan „jeśli…, to…”</b>'+(k.jt==null?' Wybierz jeden: zobaczysz go w Moim dniu.':'')+'</p><div class="chips">'+K.jt.map((t,i)=>chip(k.jt===i,`data-kjt="${i}"`,t,'opt')).join('')+'</div>';
     h+=`<p><b>Gdy się nie uda:</b> ${K.nie} Pominięty dzień nie przerywa kroku.</p>`;
     if(p.ok)h+='<p><button class="btn" data-kroknext="1">Następny krok</button></p>';
     h+='<p class="small muted">Miara sama sprawdza krok w przeglądzie tygodnia. Jedna nowa rzecz naraz.</p>'+srcHtml(['harkin','gollw','lally'])+'<p><button class="btn ghost" data-kdiag="1">Rozpoznanie od nowa</button></p>'}
   document.getElementById('main').innerHTML=h}
-function kStart(i){const k=S.krok;k.step=i;k.easy=false;k.since=mondayOf(new Date());k.jt=0}
-function krokRevHtml(mk,end){const k=S.krok;if(!k||!k.conf||k.fin||k.since>end)return '';const K=KROKI[k.step],p=kProg(mk);
+function kStart(i){const k=S.krok,t=todayKey();k.step=i;k.easy=false;k.since=t;k.from=(S.days[t]||[]).length;k.jt=null}
+// Potwierdzenie przeszkód: pierwszy raz albo po ukończeniu od kroku 1; przy powtórce rozpoznania bieżący krok zostaje (z postępem), chyba że brak do niego sprzętu
+function kConfirm(){const k=S.krok,fresh=k.step==null||k.fin,i=fresh?kNext(-1):krokMeals(k.step).length?k.step:kNext(k.step);k.conf=true;k.zap=k.zap||{};if(!fresh&&i===k.step)return;k.fin=i<0;if(i>=0)kStart(i)}
+function krokRevHtml(mk,end){const k=S.krok;if(!k||!k.conf||k.fin||k.since>end)return '';const K=KROKI[k.step],p=kProg(mk),base=Date.parse(mk+'T12:00:00'),act=Array.from({length:7},(_,i)=>keyOf(new Date(base+i*864e5))).filter(x=>x>=k.since).length;
+  if(act<4&&!p.ok)return `<h2>Twój krok: ${K.n}</h2><div class="note">Krok trwa od ${fmtDate(k.since)}, za krótko na ocenę: oceni go następny przegląd. Postęp liczy się dalej w tym tygodniu.</div>`;
   return `<h2>Twój krok: ${K.n}</h2><div class="note">${p.ok?'<b>Krok wykonany</b>':'Krok jeszcze nie wyszedł'}: ${p.n} z ${p.cel}${p.zt?`, zapas ${p.z} z ${p.zt}`:''}.${p.ok?'':' To informacja, nie ocena.'}</div>`+(p.ok?'<p><button class="btn" data-kroknext="1">Następny krok</button></p>':'<div class="navrow"><button class="btn ghost" data-krokrep="1">Powtórz krok</button><button class="btn ghost" data-krokeasy="1">Łatwiejsza wersja</button><button class="btn ghost" data-krokdiag="1">Inna przeszkoda</button></div>')}
 function renderReview(){
   const mk=reviewKey(),st=weekStats(mk),ex=(S.reviews||{})[mk]||{},end=st.ks.at(-1);
@@ -824,6 +828,7 @@ const TIPS={day:'Tu jest Twój dzień: co zrobić dziś i jak idzie. Naciśnij k
   train:'Masz zegarek? Wpisz czas i kalorie z zegarka na górze. Bez zegarka wybierz niżej rodzaj treningu i czas.',
   health:'Badania, suplementy i wiedza. Nic tu nie jest obowiązkowe, zajrzyj, gdy potrzebujesz.',
   set:'Twoje dane liczą kalorie: sprawdź je i naciśnij Zapisz i sprawdź. Tu też włączysz wpisywanie raz dziennie.',
+  krok:'Odpowiedz na 5 pytań jednym dotknięciem. Miara pokaże możliwy łańcuch przyczyn i jeden mały krok na ten tydzień.',
   pet:'Zwierzak rośnie z dni z wpisami. Nie umiera i nie cofa się w rozwoju, nawet po przerwie.'};
 function tipHtml(tab){if(DEMO||!TIPS[tab]||(S.tips||{})[tab]||(tab==='day'&&guideActive()))return '';return `<div class="tip panel" role="note"><p><b>Pierwszy raz tutaj?</b> ${TIPS[tab]}</p><button class="btn small" data-tipok="${tab}">Rozumiem</button></div>`}
 // Dzień aktywny: 30 pkt albo, w trybie raz dziennie, zapisany wpis dnia (posiłki oraz trening albo kroki)
@@ -1279,6 +1284,7 @@ ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź ob
 // ---------- Przewodnik „Co chcesz zrobić?”: każde zadanie przenosi na ekran i podświetla miejsce ----------
 // „Po co”: ta sama treść pod nagłówkiem sekcji i w Pomocy („Co to znaczy?”)
 const GLOSS=[
+  ['jesli','Plan „jeśli…, to…”','Zdanie, które z góry łączy sytuację z działaniem, np. „Jeśli wracam po 18, to najpierw jem danie z listy”. Takie plany pomagają osiągać cele (metaanaliza 94 badań). Wybierasz go jednym dotknięciem w kroku tygodnia.','krok','gollw'],
   ['bialko','Białko za złotówkę','Porównujesz, z którego produktu białko wychodzi najtaniej: koszt 20 g białka, mniej więcej tyle, ile ma 100 g piersi z kurczaka. Ranking pokaże najtańsze źródła na zakupy.','health#bialko'],
   ['makro','Makro na porcję','Zawęża listę dań do tych, które pasują do Twojego dnia: co najmniej tyle białka, najwyżej tyle kalorii i węglowodanów na porcję. Wielkość porcji przelicza gramatury.','meals#makro#filtry'],
   ['podtrening','Pod trening','W dni z treningiem zwiększa porcję kaszy, ryżu, ziemniaków, pieczywa i płatków, żeby ciało miało z czego się regenerować. Auto bierze trening zapisany dziś.','meals#podtrening#filtry'],
@@ -1301,6 +1307,7 @@ const HELP=[
   ['Posiłki','Zapisać zjedzony posiłek','W planie dnia naciśnij Zjem przy daniu.','meals#plan'],
   ['Posiłki','Wybrać, co gotuję dziś','Otwórz przepis i naciśnij Gotuję to dziś. Wieczorem Według planu zapisze to danie.','meals#plan'],
   ['Posiłki','Znaleźć szybkie danie albo większe na weekend','Nad listą dań wybierz Na co dzień albo Na weekend.','meals#rytm'],
+  ['Mój dzień','Sprawdzić, co mi utrudnia, i dostać krok na tydzień','Krok po kroku: 5 pytań, potem jeden krok na tydzień z postępem z Twoich zapisów.','krok'],
   ['Posiłki','Zapisać jedzenie z dostawy','Zamówione: danie, ilość, dodatki i jeden przycisk.','meals#zamowione'],
   ['Posiłki','Zrobić zakupy na tydzień','Lista zakupów z planu jest pod planem dnia.','meals#zakupy'],
   ['Mój dzień','Wpisać wagę','Pomiary dnia. Przyciski − i + zaczynają od ostatniego ważenia.','day#m_w'],
@@ -1370,9 +1377,9 @@ document.addEventListener('click',e=>{
   else if(d.goto){const el=document.getElementById(d.goto);if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.focus)el.focus({preventScroll:true})}return}
   else if(d.kq){const [q,v]=d.kq.split(':');S.krok=S.krok||{ans:{},eq:{},done:false,conf:false,zap:{}};S.krok.ans[q]=v}
   else if(d.keq){S.krok=S.krok||{ans:{},eq:{},done:false,conf:false,zap:{}};S.krok.eq[d.keq]=!S.krok.eq[d.keq]}
-  else if(d.kres){const a=(S.krok||{}).ans||{},miss=DQ.filter(([q])=>!a[q]);if(miss.length){toast('Odpowiedz jeszcze na: '+miss.map(x=>x[1].toLowerCase()).join(' '));return}S.krok.done=true;window.scrollTo(0,0)}
-  else if(d.kconf){S.krok.conf=true;S.krok.fin=false;S.krok.zap=S.krok.zap||{};kStart(kNext(-1));window.scrollTo(0,0)}
-  else if(d.kdiag||d.krokdiag){S.krok.done=false;S.krok.conf=false;S.krok.fin=false;S.tab='krok';window.scrollTo(0,0)}
+  else if(d.kres){const a=(S.krok||{}).ans||{},miss=DQ.filter(([q])=>!a[q]);if(miss.length){toast('Odpowiedz jeszcze na: '+miss.map(x=>x[1].toLowerCase()).join('; '));return}S.krok.done=true;window.scrollTo(0,0)}
+  else if(d.kconf){kConfirm();window.scrollTo(0,0)}
+  else if(d.kdiag||d.krokdiag){S.krok.done=false;S.krok.conf=false;S.tab='krok';window.scrollTo(0,0)}
   else if(d.kjt){S.krok.jt=+d.kjt}
   else if(d.kzap){S.krok.zap=S.krok.zap||{};S.krok.zap[d.kzap]=!S.krok.zap[d.kzap]}
   else if(d.kroknext){const j=kNext(S.krok.step);if(j<0)S.krok.fin=true;else kStart(j);toast(j<0?'Ścieżka gotowania ukończona':'Nowy krok: '+KROKI[j].n)}
