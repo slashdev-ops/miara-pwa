@@ -474,20 +474,16 @@ function renderReview(){
   const mk=reviewKey(),st=weekStats(mk),ex=(S.reviews||{})[mk]||{},end=st.ks.at(-1);
   const ta=(id,lab,ph,v)=>`<h2>${lab}</h2><div class="panel" style="padding:10px 16px"><textarea id="${id}" rows="2" placeholder="${ph}" aria-label="${lab}" style="width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)">${esc(v||'')}</textarea></div>`;
   let h='<p><button class="btn ghost" data-tab="day">Wróć</button></p>';
-  h+=`<div class="note"><b>Tydzień ${fmtDate(mk)}-${fmtDate(end)}</b><br>Pełny zapis posiłków: ${st.md} z 7 dni. Punkty: ${fmt(st.pts)}. Ochoty: ${st.ur}${st.ur?`, w tym ${st.uok} bez jedzenia spoza planu`:''}.${st.w!=null?` Średnia waga: ${fmt1(st.w)} kg${st.pw!=null?`, tydzień wcześniej ${fmt1(st.pw)} kg`:''}.`:' Brak ważeń w tym tygodniu.'}</div>`+krokRevHtml(mk,end);
+  h+=`<div class="note"><b>Tydzień ${fmtDate(mk)}-${fmtDate(end)}</b><br>Pełny zapis posiłków: ${st.md} z 7 dni. Punkty: ${fmt(st.pts)}. Ochoty: ${st.ur}${st.ur?`, w tym ${st.uok} bez jedzenia spoza planu`:''}.${st.w!=null?` Średnia waga: ${fmt1(st.w)} kg${st.pw!=null?`, tydzień wcześniej ${fmt1(st.pw)} kg`:''}.`:' Brak ważeń w tym tygodniu.'}</div>`+(!st.md&&st.w==null&&!st.ur&&!st.pts?'<div class="note">Pierwszy przegląd ma sens po tygodniu wpisów. Zacznij od wagi i posiłków w Moim dniu, a za tydzień zobaczysz tu podsumowanie.</div><p><button class="btn" data-tab="day">Przejdź do Mojego dnia</button></p>':'')+krokRevHtml(mk,end);
   h+=ta('r_a','Co zadziałało?','np. przekąska w torbie w pracy',ex.a)+ta('r_b','Co nie zadziałało?','np. podjadanie po 15:00',ex.b)+(S.krok&&S.krok.conf&&!S.krok.fin?'<details class="fold"><summary>Własna zmiana (opcjonalnie)</summary>'+ta('r_c','Własna zmiana na przyszły tydzień','np. herbata o 15:00 zamiast ciastka',ex.c)+'</details>':ta('r_c','Jedna zmiana na przyszły tydzień','np. herbata o 15:00 zamiast ciastka',ex.c));
   h+='<p><button class="btn" data-revsave="1">Zapisz przegląd</button></p><p class="small muted">Jedna zmiana naraz. Zobaczysz ją przez tydzień na górze Mojego dnia.</p>';
   document.getElementById('main').innerHTML=h;
 }
+// Wprowadzenie (rada/2026-11-09_pierwsze-uruchomienie): jeden ekran danych, bez kart z samym opisem (NN/g odradza);
+// „3 rzeczy dziennie” prowadzą Pierwsze kroki, a zwierzaka zapowiada komunikat po Zaczynam
 function renderIntro(){
-  const s=S.introStep||0,next=(a,l)=>`<p><button class="btn" data-${a}="1">${l}</button></p>`;
-  let h='<div style="display:flex;gap:8px;justify-content:center;margin:8px 0 16px" aria-label="Krok '+(s+1)+' z 5">'+[0,1,2,3,4].map(i=>`<span style="width:${i===s?24:8}px;height:8px;border-radius:4px;background:${i===s?'var(--green)':'var(--line)'}"></span>`).join('')+'</div>';
-  if(s===0)h+='<h2 style="font-size:24px">Plan na zdrową wagę, bez kartki i wyrzutów</h2><p>Aplikacja podpowiada, co zjeść, liczy kalorie z Twoich danych i pokazuje, dokąd prowadzą wybory.</p>'+next('intronext','Dalej');
-  if(s===1)h+='<h2 style="font-size:24px">Codziennie tylko 3 rzeczy</h2><div class="panel"><div class="entry"><span class="txt"><b>1.</b> Zważ się rano</span></div><div class="entry"><span class="txt"><b>2.</b> Zapisz posiłki jednym dotknięciem „Zjem”</span></div><div class="entry"><span class="txt"><b>3.</b> Ruch: trening albo kroki z zegarka</span></div></div><p>Gdy łapie ochota na przekąskę, naciśnij przycisk „Mam ochotę coś przekąsić”. Reszta jest opcjonalna.</p>'+next('intronext','Dalej');
-  if(s===2)h+='<h2 style="font-size:24px">Wybierz towarzysza</h2><p>Gąska albo kaczuszka reaguje na Twoje wpisy: posiłki, ruch, sen i nawyki. Imię nadasz od razu albo później w Ustawieniach.</p>'+petPickHtml()+next('intronext','Dalej');
-  if(s===3)h+='<h2 style="font-size:24px">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+next('intronext','Dalej');
-  if(s>=4)h+='<h2 style="font-size:24px">Gotowe</h2><p>Na górze Mojego dnia czekają pierwsze kroki: pokażą, co uzupełnić i dokąd przejść.</p><p>Dane zostają tylko w tym telefonie. Badania, suplementy i wiedzę znajdziesz w zakładce Zdrowie. Wprowadzenie otworzysz ponownie w Ustawieniach.</p>'+next('introdone','Zaczynam');
-  if(s<4)h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
+  let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
+  h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
   document.getElementById('main').innerHTML=h;
 }
 
@@ -911,12 +907,12 @@ function waistDelta(){const ks=Object.keys(S.meas||{}).filter(k=>num(S.meas[k].w
 function petSum(st){const k=todayKey(),m=S.meas[k]||{},d=day(),done=[num(m.w)>0,d.filter(e=>e.kind==='m').length>=3,d.some(e=>e.kind==='t')||num(m.steps)>0].filter(Boolean).length,wp=weekPts(),nx=LEVELS.find(x=>x[0]>wp),si=stageInfo(),a7=avgAgo(0,7,'w');
   return {today:{done,pts:dayPts(k)},week:{pts:wp,level:level(wp)[1],next:nx?{name:nx[1],need:nx[0]-wp}:null},all:{active:st.active,streak:streak(),dw:si&&a7!=null?a7-si.start:null,waist:waistDelta(),pct:si?si.pct:null},badges:PET.badgeList([...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])]),body:S.body?petBodyHtml():''}}
 function petBodyHtml(){const b=PET.body(S.meas,new Date(),num);return '<h2>Sylwetka</h2>'+(b.ok?`<div class="panel petbody">${b.svg}<p class="small muted">Linia przerywana: start (pierwsze 4 tygodnie pomiarów). Pełna: ostatnie 4 tygodnie. Kontur ze średnich obwodów talii, bioder i uda.</p></div>`:`<p class="small muted">${b.msg}. Potrzebne są 2 pomiary obwodów odległe o co najmniej 14 dni.</p>`)}
-function renderPet(){if(!S.pet){S.tab='set';return renderSet()}const st=petState();document.getElementById('main').innerHTML=PET.screen(st,S.pet,petSum(st),esc);if(S.petCeleb&&!DEMO){S.petCeleb=null;save()}if(S.guide&&!S.guide.seenPet){S.guide.seenPet=true;save()}document.getElementById('main').innerHTML+=nextHtml('pet')}
+function renderPet(){if(!S.pet){document.getElementById('main').innerHTML='<h2>Wybierz towarzysza</h2><p>Gąska albo kaczuszka reaguje na Twoje wpisy: posiłki, ruch, sen i nawyki. Rośnie z dni z wpisami i nie cofa się po przerwie.</p>'+petPickHtml();return}const st=petState();document.getElementById('main').innerHTML=PET.screen(st,S.pet,petSum(st),esc);if(S.petCeleb&&!DEMO){S.petCeleb=null;save()}if(S.guide&&!S.guide.seenPet){S.guide.seenPet=true;save()}document.getElementById('main').innerHTML+=nextHtml('pet')}
 // ---------- Pierwsze kroki: prowadzenie nowej osoby, kroki zaliczane z danych ----------
 function guideSteps(){const g=S.guide||{},anyMeas=f=>Object.values(S.meas||{}).some(m=>num((m||{})[f])>0),anyDay=kind=>Object.values(S.days||{}).some(d=>(d||[]).some(e=>e.kind===kind)),past=Object.keys(S.days||{}).some(k=>k<todayKey()&&(S.days[k]||[]).length);
   return [
     {id:'data',label:'Sprawdź swoje dane',hint:'Waga, wzrost, wiek i cel liczą Twoje kalorie. Na końcu naciśnij Zapisz i sprawdź.',btn:'Ustawienia',act:'tab',arg:'set',done:!!g.dataOk||past},
-    {id:'pet',label:'Wybierz towarzysza',hint:'Gąska albo kaczuszka będzie reagować na Twoje wpisy.',btn:'Wybierz',act:'tab',arg:'set',done:!!S.pet},
+    {id:'pet',label:'Wybierz towarzysza',hint:'Gąska albo kaczuszka będzie reagować na Twoje wpisy.',btn:'Wybierz',act:'tab',arg:'pet',done:!!S.pet},
     {id:'weight',label:'Wpisz dzisiejszą wagę',hint:'Pole Waga w Pomiarach dnia, niżej na tym ekranie.',btn:'Wpisz wagę',act:'nav',arg:'day#m_w',done:anyMeas('w')},
     {id:'meal',label:'Zapisz pierwszy posiłek',hint:'W Posiłkach naciśnij Zjem przy daniu.',btn:'Posiłki',act:'tab',arg:'meals',done:anyDay('m')},
     {id:'move',label:'Dodaj ruch',hint:'Zapisz trening albo wpisz kroki w Pomiarach dnia.',btn:'Trening',act:'tab',arg:'train',done:anyDay('t')||anyMeas('steps')},
@@ -1321,11 +1317,20 @@ const HELP=[
   ['Ustawienia','Wpisywać raz dziennie','Jeden wieczorny wpis zamiast kilku w ciągu dnia.','set#wpisy'],
   ['Ustawienia','Ustawić, jak długo widać komunikaty','Zwykle, dłużej albo do zamknięcia.','set#komunikaty'],
   ['Ustawienia','Zrobić kopię danych','Plik kopii albo zaszyfrowana kopia.','set#kopia']];
-function renderHelp(){let h='<h2>Co chcesz zrobić?</h2><p class="small muted">Naciśnij Pokaż: Miara przeniesie Cię na właściwy ekran i podświetli miejsce.</p>',g='';
-  HELP.forEach(([grp,lab,how,to])=>{if(grp!==g){h+=(g?'</div>':'')+`<h3 class="rh">${grp}</h3><div class="panel" style="padding:0 16px">`;g=grp}h+=`<div class="step"><span class="lab">${lab}<small class="hint">${how}</small></span><button class="btn small ghost" data-${to.includes('#')?'nav':'tab'}="${to}">Pokaż</button></div>`});
-  h+='</div><h2>Co to znaczy?</h2><div class="panel" style="padding:0 16px">'+GLOSS.map(([,t,w,to])=>`<div class="step"><span class="lab">${t}<small class="hint">${w}</small></span><button class="btn small ghost" data-${to.includes('#')?'nav':'tab'}="${to}">Pokaż</button></div>`).join('');
-  h+='</div><h2>Sprawdź działanie</h2><p class="small muted">Dane przykładowe: nic się nie zapisuje, Twoje dane zostają. Wyjdź wraca do nich.</p><div class="panel" style="padding:0 16px">'+Object.entries(SCEN).map(([n,s])=>`<div class="step"><span class="lab">${s.t}<small class="hint">${s.chk}</small></span><button class="btn small ghost" data-scen="${n}">Otwórz</button></div>`).join('');
-  h+='</div><h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
+// Pomoc z wyszukiwaniem (NN/g: pomoc „easy to search”): słowa bez polskich znaków, każde słowo musi wystąpić
+const fold0=t=>String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l');
+const hStep=(lab,how,attr,btn)=>`<div class="step"><span class="lab">${lab}<small class="hint">${how}</small></span><button class="btn small ghost" ${attr}>${btn}</button></div>`;
+const hNav=to=>`data-${to.includes('#')?'nav':'tab'}="${to}"`;
+function helpRes(q){const w=fold0(q||'').split(/\s+/).filter(x=>x.length>1),hit=(...t)=>{const x=fold0(t.join(' '));return w.every(v=>x.includes(v))};
+  const H=HELP.filter(x=>hit(x[0],x[1],x[2])),G=GLOSS.filter(x=>hit(x[1],x[2])),C=Object.entries(SCEN).filter(([,x])=>hit(x.t,x.chk));
+  if(w.length&&!H.length&&!G.length&&!C.length)return '<p>Nic nie znaleziono. Spróbuj innego słowa albo zacznij od najczęstszych zadań:</p><div class="panel" style="padding:0 16px">'+HELP.slice(0,3).map(([,lab,how,to])=>hStep(lab,how,hNav(to),'Pokaż')).join('')+'</div>';
+  let h='',g='';
+  if(H.length){h+='<h2>Co chcesz zrobić?</h2><p class="small muted">Naciśnij Pokaż: Miara przeniesie Cię na właściwy ekran i podświetli miejsce.</p>';H.forEach(([grp,lab,how,to])=>{if(grp!==g){h+=(g?'</div>':'')+`<h3 class="rh">${grp}</h3><div class="panel" style="padding:0 16px">`;g=grp}h+=hStep(lab,how,hNav(to),'Pokaż')});h+='</div>'}
+  if(G.length)h+='<h2>Co to znaczy?</h2><div class="panel" style="padding:0 16px">'+G.map(([,t,x,to])=>hStep(t,x,hNav(to),'Pokaż')).join('')+'</div>';
+  if(C.length)h+='<h2>Sprawdź działanie</h2><p class="small muted">Dane przykładowe: nic się nie zapisuje, Twoje dane zostają. Wyjdź wraca do nich.</p><div class="panel" style="padding:0 16px">'+C.map(([n,x])=>hStep(x.t,x.chk,`data-scen="${n}"`,'Otwórz')).join('')+'</div>';
+  return h}
+function renderHelp(){let h=`<div class="panel" style="padding:4px 16px"><div class="field"><label for="help_q">Szukaj w Pomocy</label><input type="search" id="help_q" style="width:180px;text-align:left" placeholder="np. białko, sen" value="${esc(S.helpQ||'')}"></div></div><div id="helpres">${helpRes(S.helpQ)}</div>`;
+  h+='<h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
   document.getElementById('main').innerHTML=h}
 function render(){renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
@@ -1371,8 +1376,7 @@ document.addEventListener('click',e=>{
   else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m);day().push({kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net});PET.react('train');save();toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
   else if(d.del!=null){day().splice(+d.del,1)}
   else if(d.clear){S.days[todayKey()]=[]}
-  else if(d.intronext){if((S.introStep||0)===3&&S.guide)S.guide.dataOk=true;S.introStep=(S.introStep||0)+1;window.scrollTo(0,0)}
-  else if(d.introdone){S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0)}
+  else if(d.introdone){const ok=d.introdone==='ok';if(ok&&S.guide)S.guide.dataOk=true;S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);if(ok){save();render();toast(`Twój cel na start: ${fmt(targetKcal())} kcal dziennie.`+(S.pet?'':' W Moim dniu czeka jajko: wybierz, kto się z niego wykluje.'),S.pet?0:{act:'tab',arg:'pet',label:'Wybierz'});return}}
   else if(d.intro){S.introStep=0;S.tab='intro';window.scrollTo(0,0)}
   else if(d.goto){const el=document.getElementById(d.goto);if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.focus)el.focus({preventScroll:true})}return}
   else if(d.kq){const [q,v]=d.kq.split(':');S.krok=S.krok||{ans:{},eq:{},done:false,conf:false,zap:{}};S.krok.ans[q]=v}
@@ -1467,6 +1471,7 @@ document.addEventListener('keydown',e=>{const el=e.target;if(!el||!el.dataset||(
   const k=el.dataset.sl?`meas.${el.dataset.day}.sleep`:el.dataset.k;if(!k||!STEP[k.split('.').pop()])return;e.preventDefault();if(!stpApply(k,e.key==='ArrowUp'?1:-1,1))return;stpShow(k);save()});
 document.addEventListener('input',e=>{
   const el=e.target;
+  if(el.id==='help_q'){S.helpQ=el.value;document.getElementById('helpres').innerHTML=helpRes(el.value);return}
   if(el.dataset.r){const k=el.dataset.r,v=num(el.value);S.f[k]=v;save();
     const lab=document.getElementById('l_'+k);
     if(lab)lab.textContent=k==='minP'?v+' g':k==='maxK'?(v>=1000?'bez limitu':v+' kcal'):k==='maxC'?(v>=130?'bez limitu':v+' g'):'×'+fmt1(v);
