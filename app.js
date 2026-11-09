@@ -501,7 +501,7 @@ function skrotHelpHtml(){const base=typeof location!=='undefined'&&location.orig
     +'<li>Dodaj działanie „Pokaż powiadomienie” z tekstem „Dane dla Miary w schowku”.</li>'
     +'<li>Otwórz Miarę z ikony: Mój dzień, Pomiary dnia, Wklej ze Skrótu, sprawdź wartości i naciśnij Zapisz. Bez tego nic się nie zapisze.</li>'
     +'<li>Codziennie samo: w Skrótach Automatyzacja, Pora dnia, np. 21:00, i ten skrót; wieczorem zostaje jedno dotknięcie w Mierze.</li></ol>'
-    +`<p class="small muted">Inna droga, dla Miary w Safari: zamiast kroków 3-4 działanie „Otwórz URL” z adresem <code style="word-break:break-all">${esc(base)}#import?w=[waga]&amp;kroki=[kroki]&amp;sen=[sen]</code>. Adres otwiera się zwykle w Safari, które ma inne dane niż Miara z ikony, więc przy ekranie początkowym wybierz schowek. Nazwy działań mogą się różnić w wersjach iOS.</p></div>`}
+    +`<p class="small muted">Inna droga, dla Miary w Safari: zamiast kroków 3-4 działanie „Otwórz URL” z adresem <code style="word-break:break-all">${esc(base)}#import?w=[waga]&amp;kroki=[kroki]&amp;sen=[sen]</code>. Adres otwiera się w Safari (sprawdzone na iPhonie), które ma inne dane niż Miara z ikony, więc przy ekranie początkowym wybierz schowek. Nazwy działań mogą się różnić w wersjach iOS.</p></div>`}
 function renderReview(){
   const mk=reviewKey(),st=weekStats(mk),ex=(S.reviews||{})[mk]||{},end=st.ks.at(-1);
   const ta=(id,lab,ph,v)=>`<h2>${lab}</h2><div class="panel" style="padding:10px 16px"><textarea id="${id}" rows="2" placeholder="${ph}" aria-label="${lab}" style="width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)">${esc(v||'')}</textarea></div>`;
