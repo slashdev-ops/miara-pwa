@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -118,7 +118,7 @@ tryc('pet.react: nawyk pokazuje +punkty', () => { P().react('habit', 10); withPe
 const appCss = fs.readFileSync(path.join(root, "app.css"), "utf8");
 check('app.css: prefers-reduced-motion wyłącza animacje zwierzaka', /prefers-reduced-motion[^{]*\{[^@]*\.pet[^{]*\{[^}]*animation:none/.test(appCss));
 
-const views = ['meals', 'train', 'day', 'health', 'set', 'sos', 'labs', 'intro', 'review', 'recipe', 'knee', 'impact', 'challenge', 'pet'];
+const views = ['meals', 'train', 'day', 'health', 'set', 'sos', 'labs', 'intro', 'review', 'recipe', 'knee', 'impact', 'challenge', 'pet', 'krok'];
 let renderErr = '';
 for (const tab of views) for (const sex of ['K', 'M']) for (const mode of ['redukcja', 'utrzymanie']) {
   const S = T.S(); S.onb = true; S.tab = tab; S.sex = sex; S.mode = mode; S.recipe = 'o1';
@@ -164,7 +164,7 @@ tryc('tryb demo: save() nie zapisuje', () => { let n = 0; const o = sandbox.loca
 
 // Poprawki po przeglądzie końcowym (I1-I5)
 const PETA = { kind: 'gaska', name: 'A', since: '2026-11-01' }, REV = { r: { a: 'x', d: '2026-11-01' } };
-const CLEAN = () => ({ days: {}, meas: {}, hab: {}, urges: {}, reviews: {}, mode: 'redukcja', petCeleb: null }), NOREV = SEEN_ALL.filter((x) => x !== 'review1');
+const CLEAN = () => ({ days: {}, meas: {}, hab: {}, urges: {}, reviews: {}, mode: 'redukcja', petCeleb: null, krok: null }), NOREV = SEEN_ALL.filter((x) => x !== 'review1');
 tryc('I1: świętowanie trwa do obejrzenia ekranu zwierzaka', () => {
   const d1 = view('day', { ...CLEAN(), pet: { ...PETA }, petSeen: [...NOREV], reviews: REV }), d2 = view('day');
   const p1 = view('pet'), d3 = view('day');
@@ -672,6 +672,59 @@ tryc('źródła: usunięte liczby bez źródła (1-2 kg, 3-5 godzin, 5 godzin, s
 tryc('źródła: minitabletka bez słowa dopuszczalna, tempura usunięta', () => !/dopuszczalna przy aurze|tempura albo majonez/.test(code));
 tryc('źródła: cel przy IO co najmniej 7% (DPP)', () => planOf(view('health', BASE(PROF(['io'], '')))).includes('co najmniej 7%'));
 tryc('źródła: zakrzepica przy dezogestrelu 9-12, przy lewonorgestrelu 5-7', () => planOf(view('health', BASE(PROF([], 'novynette')))).includes('9-12 na 10 000') && planOf(view('health', BASE(PROF([], 'microgynon')))).includes('Ok. 5-7 na 10 000'));
+
+// Rada 08.11.2026 (ścieżka krok po kroku): rozpoznanie przeszkód i ścieżka gotowania, jeden krok na tydzień
+const ANS = { cook: '0', bar: 'skl', ord: '2', when: 'wiecz', why: 'zmecz' };
+const EQ3 = { mikrofala: true, piekarnik: true, blender: true };
+const KR = (o) => ({ ans: { ...ANS }, eq: { ...EQ3 }, done: true, conf: true, step: 0, since: T.mondayOf(new Date()), easy: false, jt: 0, zap: {}, ...o });
+const mEnt = (id) => ({ kind: 'm', id, label: id, k: 300, p: 20, f: 10, c: 30 });
+const wkKeys = (mk) => Array.from({ length: 7 }, (_, i) => { const d = new Date(mk + 'T12:00:00'); d.setDate(d.getDate() + i); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); });
+tryc('krok: Mój dzień bez ścieżki zaprasza do rozpoznania', () => view('day', BASE({ krok: null })).includes('data-tab="krok"'));
+tryc('krok: ekran ma tytuł Krok po kroku', () => { view('krok', BASE({ krok: null })); return els.title.textContent === 'Krok po kroku'; });
+tryc('krok: rozpoznanie ma 5 pytań i pytanie o sprzęt (8 do wyboru)', () => { const h = view('krok', BASE({ krok: null })); return ['cook', 'bar', 'ord', 'when', 'why'].every((k) => h.includes(`data-kq="${k}:`)) && (h.match(/data-keq="/g) || []).length === 8 && h.includes('Frytkownica'); });
+tryc('krok: odpowiedź jednym dotknięciem, wynik dopiero po 5 odpowiedziach', () => { view('krok', BASE({ krok: null })); ['cook:0', 'bar:skl', 'ord:2', 'when:wiecz'].forEach((x) => click({ kq: x })); click({ kres: '1' }); const a = !T.S().krok.done; click({ kq: 'why:zmecz' }); click({ kres: '1' }); return a && T.S().krok.done === true && T.S().krok.ans.bar === 'skl'; });
+tryc('krok: sprzęt zaznaczany wielokrotnie', () => { view('krok', BASE({ krok: null })); click({ keq: 'mikrofala' }); click({ keq: 'blender' }); click({ keq: 'blender' }); const e = T.S().krok.eq; return e.mikrofala === true && !e.blender; });
+tryc('krok: łańcuch z odpowiedzi jako przypuszczenie do potwierdzenia', () => { const h = view('krok', BASE({ krok: KR({ conf: false }) })); return h.includes('brak składników w domu → zamawianie 4 i więcej razy w tygodniu → jedzenie poza planem wieczorem ze zmęczenia') && h.includes('Czy to o Tobie?') && h.includes('data-kconf'); });
+tryc('krok: dane z 14 dni uzupełniają odpowiedzi', () => { const h = view('krok', BASE({ krok: KR({ conf: false }), days: { [dk(1)]: [{ ...mEnt('zam_sushi'), ord: 1 }], [dk(3)]: [{ ...mEnt('zam_tofu'), ord: 1 }] }, urges: { [dk(2)]: [{ h: 21, trig: 'zmecz', out: 'minela' }] } })); return h.includes('zamówienia 2') && h.includes('ochoty 1') && h.includes('najczęściej: Zmęczenie'); });
+tryc('krok: łańcuch bez słów oceniających', () => !/leniw|wina|porażk|musisz|powinna/i.test(view('krok', BASE({ krok: KR({ conf: false }) }))));
+tryc('krok: Tak zaczyna krok 1, Mój dzień pokazuje Twój krok na ten tydzień', () => { view('krok', BASE({ krok: KR({ conf: false, step: undefined }) })); click({ kconf: '1' }); const k = T.S().krok, h = view('day'); return k.conf && k.step === 0 && h.includes('Twój krok na ten tydzień') && h.includes('Bez gotowania') && h.includes('0 z 3'); });
+tryc('krok 1: posiłki bez gotowania do 10 minut, bez przekąsek i bez jajek z zapasu', () => { const m = T.krokMeals(0); return m.length >= 4 && m.some((x) => x.id === 'k2') && m.every((x) => x.min <= 10 && x.t !== 'przekaska' && !/°C|mikrofal|blender|na twardo|z zapasu/i.test(T.STEPS[x.id].join(' '))); });
+tryc('krok 2: każda podstawa jest składnikiem dania z kroku 1', () => T.ZAP.length === 5 && T.ZAP.every(([id]) => T.krokMeals(1).some((m) => m.ing.some((x) => x[0] === id))));
+tryc('krok 3: dania z mikrofali, bez przekąsek i dań, gdzie mikrofala tylko rozmraża', () => { const m = T.krokMeals(2); return m.length >= 4 && m.every((x) => x.t !== 'przekaska' && x.min >= 7) && !m.some((x) => ['s8', 's9', 'p1'].includes(x.id)); });
+tryc('krok 4 i krok 5 nie mają wspólnych dań', () => { const a = new Set(T.krokMeals(4).map((m) => m.id)); return !T.krokMeals(3).some((m) => a.has(m.id)); });
+tryc('krok: postęp z zapisanych dań z listy kroku', () => { const id = T.krokMeals(0)[0].id; view('day', BASE({ krok: KR(), days: { [dk(0)]: [mEnt(id), mEnt(id), mEnt('o1')] } })); return T.kProg(T.mondayOf(new Date())).n === 2 && mainHtml().includes('2 z 3'); });
+tryc('krok: łatwiejsza wersja obniża próg kroku 1 do 1 dania', () => { view('day', BASE({ krok: KR({ easy: true }) })); return T.kProg(T.mondayOf(new Date())).cel === 1; });
+tryc('krok 2: zapas: zaznaczenie „mam w domu” i postęp 5 podstaw', () => { view('krok', BASE({ krok: KR({ step: 1 }) })); click({ kzap: 'skyr' }); click({ kzap: 'chleb' }); const p = T.kProg(T.mondayOf(new Date())); return T.S().krok.zap.skyr === true && p.z === 2 && p.zt === 5 && mainHtml().includes('data-kzap="tunczyk"'); });
+tryc('krok 4: sukces, gdy to samo danie z piekarnika jest zapisane 2 dni', () => { const mk = T.mondayOf(new Date()), ks = wkKeys(mk), id = T.krokMeals(3)[0].id; view('day', BASE({ krok: KR({ step: 3, since: mk }), days: { [ks[0]]: [mEnt(id)], [ks[1]]: [mEnt(id)] } })); const p = T.kProg(mk); return p.n === 2 && p.ok; });
+tryc('krok 4: dania tylko z piekarnika, łatwiejsza wersja do 20 minut', () => { const a = T.krokMeals(3), e = T.krokMeals(3, true); view('day', BASE({ krok: KR({ step: 3 }) })); return a.length > 0 && a.every((m) => /°C/.test(T.STEPS[m.id].join(' '))) && e.length > 0 && e.every((m) => m.min <= 20); });
+tryc('krok 5: dania na zapas', () => T.krokMeals(4).length > 0 && T.krokMeals(4).every((m) => m.prep));
+tryc('krok: brak mikrofali pomija krok 3', () => { view('krok', BASE({ krok: KR({ step: 1, eq: { piekarnik: true } }) })); const n = T.krokMeals(2).length; click({ kroknext: '1' }); return n === 0 && T.S().krok.step === 3; });
+tryc('krok: bez zaznaczonego sprzętu wszystkie dania', () => { view('krok', BASE({ krok: KR({ eq: {} }) })); return T.krokMeals(2).length > 0 && T.krokMeals(3).length > 0; });
+tryc('krok: plan „jeśli…, to…” jednym dotknięciem', () => { view('krok', BASE({ krok: KR() })); click({ kjt: '1' }); return T.S().krok.jt === 1 && /aria-pressed="true"[^>]*>Jeśli rano/.test(mainHtml()); });
+tryc('krok: ekran kroku: co zrobić, dania, gdy się nie uda, źródła', () => { const h = view('krok', BASE({ krok: KR() })); return h.includes('Gdy się nie uda') && h.includes('data-recipe="') && h.includes('class="srcl"') && h.includes('pubmed.ncbi.nlm.nih.gov/26479070'); });
+tryc('krok: przepis z kroku wraca do kroku', () => { view('krok', BASE({ krok: KR() })); click({ recipe: T.krokMeals(0)[0].id }); return T.S().recipeBack === 'krok'; });
+const RK = () => T.reviewKey();
+tryc('przegląd: krok zastępuje pole „Jedna zmiana”, własna zmiana jako opcja', () => { const a = view('review', BASE({ krok: KR({ since: '2026-01-05' }) })), b = view('review', BASE({ krok: null })); return /<details[\s\S]*Własna zmiana[\s\S]*id="r_c"/.test(a) && a.includes('Twój krok') && !/<details[\s\S]*id="r_c"/.test(b) && b.includes('Jedna zmiana na przyszły tydzień'); });
+tryc('przegląd: krok niewykonany: powtórz, łatwiejsza wersja, inna przeszkoda', () => { const h = view('review', BASE({ krok: KR({ since: '2026-01-05' }) })); return h.includes('data-krokrep') && h.includes('data-krokeasy') && h.includes('data-krokdiag') && !h.includes('data-kroknext'); });
+tryc('przegląd: krok wykonany: następny krok', () => { const ks = wkKeys(RK()), ids = T.krokMeals(0).map((m) => m.id); const h = view('review', BASE({ krok: KR({ since: '2026-01-05' }), days: { [ks[0]]: [mEnt(ids[0])], [ks[2]]: [mEnt(ids[1])], [ks[4]]: [mEnt(ids[0])] } })); click({ kroknext: '1' }); return h.includes('data-kroknext') && T.S().krok.step === 1 && T.S().krok.since === T.todayKey(); });
+tryc('przegląd: łatwiejsza wersja i powtórka zaczynają krok od tego tygodnia', () => { view('review', BASE({ krok: KR({ since: '2026-01-05' }) })); click({ krokeasy: '1' }); const k = T.S().krok; return k.easy && k.step === 0 && k.since === T.todayKey(); });
+tryc('krok: inna przeszkoda wraca do pytań z zachowanymi odpowiedziami', () => { view('review', BASE({ krok: KR({ since: '2026-01-05' }) })); click({ krokdiag: '1' }); const k = T.S().krok; return !k.done && !k.conf && k.ans.bar === 'skl' && T.S().tab === 'krok'; });
+tryc('krok: po kroku 5 ścieżka ukończona', () => { view('krok', BASE({ krok: KR({ step: 4 }) })); click({ kroknext: '1' }); return T.S().krok.fin === true && view('day').includes('Ścieżka gotowania ukończona'); });
+tryc('krok: scenariusz pokazowy #demo-sciezka', () => { const s = T.scenS('sciezka'); return s.tab === 'krok' && s.krok && s.krok.conf && T.SCEN.sciezka.chk.length > 20; });
+tryc('krok: napisy na przyciskach najwyżej 28 znaków na każdym etapie', () => { const long = []; for (const k of [null, KR({ done: false, conf: false }), KR({ conf: false }), KR(), KR({ step: 1 }), KR({ step: 3 }), KR({ fin: true })]) for (const t of ['krok', 'day', 'review']) for (const m of view(t, BASE({ krok: k && { ...k, since: '2026-01-05' } })).matchAll(/<button class="btn[^"]*"[^>]*>([^<]*)<\/button>/g)) if (m[1].trim().length > 28) long.push(m[1]); if (long.length) throw new Error(long.join(' | ')); return true; });
+tryc('krok: długie opcje planu zawijają się (klasa opt, styl w app.css)', () => { const h = view('krok', BASE({ krok: KR() })); return (h.match(/class="chip opt[^"]*" data-kjt/g) || []).length === 2 && /\.chip\.opt\{[^}]*white-space:normal/.test(fs.readFileSync(path.join(root, 'app.css'), 'utf8')); });
+tryc('krok: dania zapisane przed startem kroku nie liczą się do nowego kroku', () => { const id = T.krokMeals(0)[0].id; view('krok', BASE({ krok: KR(), days: { [dk(0)]: [mEnt(id), mEnt(id), mEnt(id)] } })); click({ kroknext: '1' }); const a = T.kProg(T.mondayOf(new Date())).n; T.S().days[dk(0)].push(mEnt(id)); return T.S().krok.step === 1 && a === 0 && T.kProg(T.mondayOf(new Date())).n === 1; });
+tryc('przegląd: krok zaczęty w ostatnich 3 dniach tygodnia nie jest oceniany', () => { const ks = wkKeys(RK()), h = view('review', BASE({ krok: KR({ since: ks[4] }) })); return h.includes('oceni go następny przegląd') && !h.includes('data-krokrep') && !h.includes('data-kroknext'); });
+tryc('krok: ponowne rozpoznanie zachowuje bieżący krok', () => { view('krok', BASE({ krok: KR({ step: 2 }) })); click({ kdiag: '1' }); click({ kres: '1' }); click({ kconf: '1' }); return T.S().krok.step === 2 && T.S().krok.conf; });
+tryc('krok: bez mikrofali po ponownym rozpoznaniu krok 3 przechodzi do następnego dostępnego', () => { view('krok', BASE({ krok: KR({ step: 2, conf: false, eq: { piekarnik: true } }) })); click({ kconf: '1' }); return T.S().krok.step === 3; });
+tryc('krok: po ukończonej ścieżce rozpoznanie zaczyna od kroku 1', () => { view('krok', BASE({ krok: KR({ step: 4, fin: true }) })); click({ kdiag: '1' }); click({ kres: '1' }); click({ kconf: '1' }); const k = T.S().krok; return k.step === 0 && !k.fin; });
+tryc('krok: nowy krok bez z góry wybranego planu „jeśli…, to…”', () => { view('krok', BASE({ krok: KR({ jt: 1 }) })); click({ kroknext: '1' }); return T.S().krok.jt === null; });
+tryc('Mój dzień: rozpoczęte rozpoznanie ma przycisk Dokończ', () => view('day', BASE({ krok: { ans: { cook: '0' }, eq: {}, done: false, conf: false, zap: {} } })).includes('Dokończ rozpoznanie'));
+tryc('Mój dzień: wybrany plan „jeśli…, to…” przypomniany przy kroku', () => view('day', BASE({ krok: KR({ jt: 1 }) })).includes('Jeśli rano') && !view('day', BASE({ krok: KR({ jt: null }) })).includes('Jeśli rano'));
+tryc('Mój dzień: własna zmiana widoczna obok kroku', () => view('day', BASE({ krok: KR(), reviews: { [T.mondayOf(new Date())]: { a: '', b: '', c: 'herbata o 15', d: dk(0) } } })).includes('herbata o 15'));
+tryc('Pomoc: Krok po kroku i objaśnienie planu „jeśli…, to…” ze źródłem', () => { const h = view('help', BASE()); return h.includes('data-tab="krok"') && h.includes('Plan „jeśli…, to…”'); });
+tryc('krok: wskazówka przy pierwszym wejściu', () => view('krok', BASE({ krok: null, tips: {} })).includes('data-tipok="krok"'));
+tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
