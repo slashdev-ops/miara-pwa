@@ -41,7 +41,7 @@ Kolejność kroków się nie zmienia.
 ## 3. iPhone: instalacja i dane
 
 1. Otwórz adres aplikacji w **Safari**.
-2. Udostępnij, potem **Dodaj do ekranu początkowego**. Od tej chwili otwieraj Miarę tylko z ikony:
+2. Przycisk menu strony (…), potem Udostępnij, potem **Do ekranu głównego** (opcja „Otwórz jako aplikację www”), potem **Dodaj**. Od tej chwili otwieraj Miarę tylko z ikony:
    ikona i karta Safari mogą mieć osobną pamięć danych.
 3. Przeniesienie danych z innego telefonu lub przeglądarki:
    - w starym miejscu: Ustawienia, **Zapisz kopię**, zapisz plik w Plikach na iCloud Drive,

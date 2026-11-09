@@ -855,7 +855,25 @@ tryAsync('pole: odtworzenie pola po znaku nie zaznacza ponownie', async () => { 
 tryAsync('pole: po wyjściu z pola i powrocie zaznacza znowu', async () => { const a = inp('f_age', 'age', '35', 'numeric'); fire('focusin', a); await tick(); fire('focusout', a); const b = inp('f_age', 'age', '35', 'numeric'); fire('focusin', b); await tick(); return b.sel && b.sel[1] === 2; });
 tryAsync('pole: zwykłe pole tekstowe bez zaznaczania', async () => { const a = inp('q_n', '', 'kawa', null); fire('focusin', a); await tick(); return a.sel === null; });
 tryAsync('pole: sen (godziny i minuty) też zaznacza', async () => { const a = { ...inp('m_sleep', '', '7', 'numeric'), dataset: { sl: '1', day: dk(0) } }; fire('focusin', a); await tick(); return a.sel && a.sel[1] === 1; });
-tryc('Pomoc: instrukcja Skrótu najpierw przez schowek dla Miary z ekranu początkowego', () => { const h = view('help', BASE({ helpQ: '' })); const i = h.indexOf('id="skrot"'), c = h.indexOf('Kopiuj do schowka', i), u = h.indexOf('#import?w=', i); return i > 0 && c > i && u > c && h.includes('Pokaż powiadomienie') && h.includes('ekranie początkowym'); });
+tryc('Pomoc: instrukcja Skrótu najpierw przez schowek dla Miary z ekranu początkowego', () => { const h = view('help', BASE({ helpQ: '' })); const i = h.indexOf('id="skrot"'), c = h.indexOf('Kopiuj do schowka', i), u = h.indexOf('#import?w=', i); return i > 0 && c > i && u > c && h.includes('Pokaż powiadomienie') && h.includes('ekranie głównym'); });
+// Na ekran główny: kroki z pomocy Apple (Podręcznik iPhone'a, Safari) i Google (Chrome na Androidzie), otwarte 10.11.2026
+const UA = (ua, app) => { sandbox.navigator.userAgent = ua; sandbox.navigator.standalone = !!app; };
+const IOS = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15', AND = 'Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 Chrome/140.0 Mobile Safari/537.36';
+const ekran = (h) => { const i = h.indexOf('id="ekran"'); return i < 0 ? '' : h.slice(i, h.indexOf('<h2', i + 10) > 0 ? h.indexOf('<h2', i + 10) : undefined); };
+tryc('ekran główny: Ustawienia mają kroki dla iPhone’a i Androida z nazwami Apple i Google oraz źródłami', () => {
+  UA(IOS); const h = ekran(view('set', BASE())); UA('');
+  return ['Do ekranu głównego', 'Udostępnij', 'Otwórz jako aplikację www', 'Edytuj czynności', 'Dodaj', 'Zainstaluj i utwórz skrót', 'Więcej', 'support.apple.com', 'support.google.com'].every((x) => h.includes(x)) && !view('set', BASE()).includes('Dodaj do ekranu początkowego');
+});
+tryc('ekran główny: kolejność według telefonu (iPhone najpierw iPhone, Android najpierw Android)', () => {
+  UA(IOS); const a = ekran(view('set', BASE())); UA(AND); const b = ekran(view('set', BASE())); UA('');
+  return a.indexOf('iPhone') < a.indexOf('Android') && b.indexOf('Android') < b.indexOf('iPhone');
+});
+tryc('ekran główny: Miara otwarta z ikony nie pokazuje kroków, tylko potwierdzenie', () => { UA(IOS, true); const h = ekran(view('set', BASE())); UA(''); return h.includes('Miara jest na ekranie głównym') && !h.includes('Do ekranu głównego'); });
+tryc('ekran główny: wprowadzenie pokazuje kroki w przeglądarce, a z ikony nie', () => {
+  UA(IOS); view('intro', { introStep: 0, onb: false }); const a = els.main.innerHTML; UA(IOS, true); view('intro', { introStep: 0, onb: false }); const b = els.main.innerHTML; UA('');
+  return a.includes('Do ekranu głównego') && !b.includes('Do ekranu głównego');
+});
+tryc('ekran główny: Pomoc znajduje instrukcję po słowie „ekran”', () => view('help', BASE({ helpQ: 'ekran główny' })).includes('set#ekran'));
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
 chain.then(() => {

@@ -140,6 +140,17 @@ test('drugie dotknięcie ustawia kursor do poprawki jednej cyfry', async ({ page
   expect(errors).toEqual([]);
 });
 
+test('ekran główny: kroki w Ustawieniach, iPhone najpierw na iPhonie', async ({ page }) => {
+  const errors = await open(page);
+  await show(page, 'set');
+  const sec = await page.evaluate(() => { const h = document.getElementById('ekran'); let t = h.textContent, e = h.nextElementSibling; while (e && e.tagName !== 'H2') { t += ' ' + e.textContent; e = e.nextElementSibling; } return { t, ua: navigator.userAgent }; });
+  expect(sec.t).toContain('Do ekranu głównego');
+  expect(sec.t).toContain('Zainstaluj i utwórz skrót');
+  if (sec.ua.includes('iPhone')) expect(sec.t.indexOf('iPhone')).toBeLessThan(sec.t.indexOf('Android'));
+  await expect(page.locator('#ekran')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('kopia bez danych o zdrowiu ma tylko ustawienia, wczytanie nie kasuje danych', async ({ page }) => {
   const errors = await open(page);
   const r = await page.evaluate(() => {

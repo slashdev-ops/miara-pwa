@@ -494,14 +494,14 @@ function renderImport(){const I=S.imp;let h='<h2>Dane ze Skrótu</h2>';
   h+='<p><button class="btn ghost" data-impskip="1">Pomiń</button></p><p class="small muted">Dane przyszły w adresie albo w schowku tego telefonu i nie trafiają na serwer. Instrukcja Skrótu jest w Pomocy.</p>';
   document.getElementById('main').innerHTML=h}
 function skrotHelpHtml(){const base=typeof location!=='undefined'&&location.origin&&location.origin!=='null'?location.origin+location.pathname:'https://miara-pwa.vercel.app/';
-  return `<h2 id="skrot">Pobieraj wagę, kroki i sen z Apple Zdrowie</h2><div class="panel" style="padding:4px 16px 12px"><p class="small"><b>Dla Miary z ikony na ekranie początkowym</b> (dane i kopia zostają w tej aplikacji):</p><ol class="small" style="padding-left:20px">`
+  return `<h2 id="skrot">Pobieraj wagę, kroki i sen z Apple Zdrowie</h2><div class="panel" style="padding:4px 16px 12px"><p class="small"><b>Dla Miary z ikony na ekranie głównym</b> (dane i kopia zostają w tej aplikacji):</p><ol class="small" style="padding-left:20px">`
     +'<li>Otwórz aplikację Skróty i dodaj nowy skrót.</li>'
     +'<li>Dodaj działania, które pobierają dane zdrowia (w wyszukiwarce działań wpisz „Zdrowie”): ostatnią wagę, sumę kroków z dziś i sen z ostatniej nocy w godzinach i minutach.</li>'
     +'<li>Dodaj działanie „Kopiuj do schowka” z tekstem <code>w=[waga]&amp;kroki=[kroki]&amp;sen=[sen]</code>, w nawiasy wstaw wyniki z kroku 2.</li>'
     +'<li>Dodaj działanie „Pokaż powiadomienie” z tekstem „Dane dla Miary w schowku”.</li>'
     +'<li>Otwórz Miarę z ikony: Mój dzień, Pomiary dnia, Wklej ze Skrótu, sprawdź wartości i naciśnij Zapisz. Bez tego nic się nie zapisze.</li>'
     +'<li>Codziennie samo: w Skrótach Automatyzacja, Pora dnia, np. 21:00, i ten skrót; wieczorem zostaje jedno dotknięcie w Mierze.</li></ol>'
-    +`<p class="small muted">Inna droga, dla Miary w Safari: zamiast kroków 3-4 działanie „Otwórz URL” z adresem <code style="word-break:break-all">${esc(base)}#import?w=[waga]&amp;kroki=[kroki]&amp;sen=[sen]</code>. Adres otwiera się w Safari (sprawdzone na iPhonie), które ma inne dane niż Miara z ikony, więc przy ekranie początkowym wybierz schowek. Nazwy działań mogą się różnić w wersjach iOS.</p></div>`}
+    +`<p class="small muted">Inna droga, dla Miary w Safari: zamiast kroków 3-4 działanie „Otwórz URL” z adresem <code style="word-break:break-all">${esc(base)}#import?w=[waga]&amp;kroki=[kroki]&amp;sen=[sen]</code>. Adres otwiera się w Safari (sprawdzone na iPhonie), które ma inne dane niż Miara z ikony, więc przy ekranie głównym wybierz schowek. Nazwy działań mogą się różnić w wersjach iOS.</p></div>`}
 function renderReview(){
   const mk=reviewKey(),st=weekStats(mk),ex=(S.reviews||{})[mk]||{},end=st.ks.at(-1);
   const ta=(id,lab,ph,v)=>`<h2>${lab}</h2><div class="panel" style="padding:10px 16px"><textarea id="${id}" rows="2" placeholder="${ph}" aria-label="${lab}" style="width:100%;font:inherit;border:1px solid var(--field);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)">${esc(v||'')}</textarea></div>`;
@@ -513,8 +513,18 @@ function renderReview(){
 }
 // Wprowadzenie (rada/2026-11-09_pierwsze-uruchomienie): jeden ekran danych, bez kart z samym opisem (NN/g odradza);
 // „3 rzeczy dziennie” prowadzą Pierwsze kroki, a zwierzaka zapowiada komunikat po Zaczynam
+// Na ekran główny: kroki z Podręcznika użytkownika iPhone'a (Safari) i Pomocy Google Chrome (Android), otwarte 10.11.2026
+function isApp(){try{return navigator.standalone===true||(typeof matchMedia==='function'&&matchMedia('(display-mode: standalone)').matches)}catch(e){return false}}
+function ekranHtml(inner){
+  if(isApp())return (inner?'':'<h2 id="ekran">Na ekranie głównym</h2>')+'<p class="small">Miara jest na ekranie głównym i otwierasz ją z ikony. Dane zostają w tym telefonie.</p>';
+  const and=String(navigator.userAgent||'').includes('Android');
+  const ios='<p><b>iPhone</b> (Safari)</p><ol class="steps"><li>Otwórz tę stronę w Safari.</li><li>Stuknij w przycisk menu strony (…), a potem w Udostępnij. Przy układzie kart Na dole lub Na górze od razu stuknij w przycisk udostępniania.</li><li>Przewiń listę w dół i stuknij w „Do ekranu głównego”. Jeśli jej nie ma, na dole listy stuknij w „Edytuj czynności” i dodaj „Do ekranu głównego”.</li><li>Wybierz „Otwórz jako aplikację www”, jeśli widzisz tę opcję, i stuknij w „Dodaj”.</li></ol>';
+  const an='<p><b>Android</b> (Chrome)</p><ol class="steps"><li>Otwórz tę stronę w Chrome.</li><li>Na prawo od paska adresu stuknij w Więcej (⋮), potem w „Zainstaluj i utwórz skrót”, a potem w „Zainstaluj”.</li><li>Postępuj zgodnie z instrukcjami na ekranie.</li></ol>';
+  return (inner?'':'<h2 id="ekran">Na ekran główny</h2>')+'<p class="small">Z ikony Miara otwiera się jak aplikacja i działa bez internetu. Otwieraj ją zawsze z ikony: ikona i przeglądarka mogą mieć osobne dane.</p>'+(and?an+ios:ios+an)+'<p class="small muted">Źródła: <a href="https://support.apple.com/pl-pl/guide/iphone/iph42ab2f3a7/ios" target="_blank" rel="noopener">Podręcznik użytkownika iPhone’a</a>, <a href="https://support.google.com/chrome/answer/9658361?hl=pl&amp;co=GENIE.Platform%3DAndroid" target="_blank" rel="noopener">Pomoc Google Chrome</a>. Masz już dane w przeglądarce? Przenieś je plikiem kopii (Ustawienia, Kopia danych).</p>';
+}
 function renderIntro(){
   let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+'<div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalHint()+goalPctHtml()+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
+  if(!isApp())h+=fold('ekranintro','Jak dodać Miarę do ekranu głównego',ekranHtml(true));
   h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
   document.getElementById('main').innerHTML=h;
 }
@@ -1346,7 +1356,7 @@ function renderSet(){
 ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź objawy nóg (lipodemia)</label><input type="checkbox" class="switch" id="lip" data-k="lip" ${S.lip?'checked':''}></div></div>`:''}
   <p class="small muted">Klasyczny MET zakłada 1 kcal na kg na godzinę w spoczynku. Korekta zastępuje to wartością ze wzoru Mifflina-St Jeora, co dla kobiet i osób z wyższym udziałem tkanki tłuszczowej zwykle daje niższe, bliższe rzeczywistości wyniki (wniosek z definicji MET, niesprawdzony pomiarem).</p>
   <div class="note">${wskTxt()} Spoczynkowe zużycie energii ok. ${fmt(rmr())} kcal na dobę.</div>
-  <h2>Na ekran początkowy iPhone’a</h2><p class="small">W Safari: Udostępnij, potem „Dodaj do ekranu początkowego”. Dane zostają w tej przeglądarce na tym telefonie.</p>
+  ${ekranHtml()}
   ${bkHtml()}
   <h2>Fitatu</h2><p class="small">Bezpośredniego połączenia nie ma. Fitatu wymienia dane przez Apple Zdrowie, a strona otwarta w przeglądarce nie ma do niego dostępu. Najprostsza droga: posiłek wybierasz tutaj, w karcie posiłku kopiujesz składniki z gramaturą i wpisujesz je w Fitatu. Treningi z zegarka lub telefonu Fitatu pobiera samo.</p>
   <h2>Źródła</h2><ol class="src">
@@ -1385,6 +1395,7 @@ const HELP=[
   ['Posiłki','Wybrać, co gotuję dziś','Otwórz przepis i naciśnij Gotuję to dziś. Wieczorem Według planu zapisze to danie.','meals#plan'],
   ['Posiłki','Znaleźć szybkie danie albo większe na weekend','Nad listą dań wybierz Na co dzień albo Na weekend.','meals#rytm'],
   ['Mój dzień','Sprawdzić, co mi utrudnia, i dostać krok na tydzień','Krok po kroku: 5 pytań, potem jeden krok na tydzień z postępem z Twoich zapisów.','krok'],
+  ['Ustawienia','Dodać Miarę do ekranu głównego','Ikona na ekranie głównym. iPhone: Safari, Udostępnij, Do ekranu głównego. Android: Chrome, Więcej, Zainstaluj i utwórz skrót.','set#ekran'],
   ['Mój dzień','Pobierać wagę, kroki i sen z Apple Zdrowie','Skrót w aplikacji Skróty pobiera dane i otwiera Miarę; zapisujesz jednym przyciskiem.','help#skrot'],
   ['Posiłki','Zapisać jedzenie z dostawy','Zamówione: danie, ilość, dodatki i jeden przycisk.','meals#zamowione'],
   ['Posiłki','Zrobić zakupy na tydzień','Lista zakupów z planu jest pod planem dnia.','meals#zakupy'],
