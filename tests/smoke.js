@@ -788,6 +788,8 @@ tryc('cel talia: cel to połowa wzrostu, z ostatnim pomiarem i źródłem NHS', 
 tryc('wskaźniki: BMI z kategorią według progów i talia do wzrostu', () => { const a = view('set', GB({ meas: { [dk(1)]: { waist: '80' } } })); const b = view('set', GB({ kg: '68', bmiCut: 'nhs' })); return a.includes('BMI 31,1: otyłość') && a.includes('talia do wzrostu 0,47') && b.includes('BMI 23,5: nadwaga'); });
 tryc('mam dużo mięśni: włącza drogę talii i zdanie NHS o BMI', () => { view('set', GB()); const el = { dataset: { k: 'muscle' }, type: 'checkbox', checked: true, value: '', getAttribute() { return null; }, setAttribute() {}, classList: { toggle() {} } }; (lis.input || []).forEach((f) => f({ target: el })); const h = view('set'); return T.S().muscle === true && T.S().goalWay === 'talia' && h.includes('nie odróżnia mięśni od tłuszczu'); });
 tryc('dane: cel poniżej BMI 20 daje ostrzeżenie o dolnej części normy', () => { view('set', { ...GB(), goal: '56' }); click({ datasave: '1' }); return mainHtml().includes('poniżej 20'); });
+tryc('wskaźniki: FFMI z wagi BIA z medianą odniesienia (Schutz 2002) i tłuszcz bez zakresu (Gallagher 2000)', () => { const h = view('set', GB({ sex: 'M', meas: { [dk(2)]: { ffm: '65', fat: '18' } } })); return h.includes('FFMI 22,5') && h.includes('18,9') && h.includes('pubmed.ncbi.nlm.nih.gov/12080449') && h.includes('pubmed.ncbi.nlm.nih.gov/10966886') && h.includes('uznanych zakresów'); });
+tryc('wskaźniki: bez pomiaru BIA bez FFMI', () => !view('set', GB()).includes('FFMI'));
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
 chain.then(() => {

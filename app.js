@@ -753,8 +753,12 @@ function bmiCut(){return S.bmiCut==='who'||S.bmiCut==='nhs'?S.bmiCut:bmiCutFor(t
 const bmiOf=kg=>num(kg)/Math.pow((num(S.cm)||165)/100,2);
 function bmiCat(b){const n=bmiCut()==='nhs',[o,ob]=n?[23,27.5]:[25,30];return b<18.5?'niedowaga':b<o?'norma':b<ob?'nadwaga':'otyłość'}
 const fmt2=x=>(Math.round(x*100)/100).toFixed(2).replace('.',',');
-function lastWaist(){const k=Object.keys(S.meas||{}).filter(x=>num(S.meas[x].waist)>0).sort().pop();return k?num(S.meas[k].waist):0}
-function wskTxt(){const b=bmiOf(S.kg),w=lastWaist();return `BMI ${fmt1(b)}: ${bmiCat(b)} (progi ${bmiCut()==='nhs'?'NHS: 23 i 27,5':'WHO: 25 i 30'})`+(w?`, talia do wzrostu ${fmt2(w/(num(S.cm)||165))} (cel poniżej 0,50)`:'')+'.'+(S.muscle?' BMI nie odróżnia mięśni od tłuszczu (NHS), więc przy dużej masie mięśniowej lepszą miarą jest talia.':'')}
+function lastM(key){const k=Object.keys(S.meas||{}).filter(x=>num(S.meas[x][key])>0).sort().pop();return k?num(S.meas[k][key]):0}
+const lastWaist=()=>lastM('waist');
+function wskTxt(){const b=bmiOf(S.kg),w=lastWaist();return `BMI ${fmt1(b)}: ${bmiCat(b)} (progi ${bmiCut()==='nhs'?'NHS: 23 i 27,5':'WHO: 25 i 30'})`+(w?`, talia do wzrostu ${fmt2(w/(num(S.cm)||165))} (cel poniżej 0,50)`:'')+'.'+(S.muscle?' BMI nie odróżnia mięśni od tłuszczu (NHS), więc przy dużej masie mięśniowej lepszą miarą jest talia.':'')+bodyCompTxt()}
+// Skład ciała z wagi BIA: FFMI z medianą odniesienia (Schutz 2002, 5635 osób), tłuszcz % jako trend, bo uznanych zakresów brak (Gallagher 2000)
+function bodyCompTxt(){const ffm=lastM('ffm'),fat=lastM('fat');if(!ffm&&!fat)return '';const h2=Math.pow((num(S.cm)||165)/100,2);
+  return (ffm?` FFMI ${fmt1(ffm/h2)} (beztłuszczowa masa ciała na m²; mediana w wieku 18-34 lat: ${S.sex==='M'?'18,9 u mężczyzn':'15,4 u kobiet'}).`:'')+(fat?` Tłuszcz ${fmt1(fat)}%: pokazujemy jako trend, bo uznanych zakresów procentu tłuszczu brak.`:'')+srcHtml(['schutz','gallagher'])}
 function goalWayHtml(){if(S.mode==='utrzymanie')return '';const w=S.goalWay||'proc',h2=Math.pow((num(S.cm)||165)/100,2);
   let h='<p style="margin:12px 4px 4px"><b>Jak ustalić cel?</b></p>'+seg([['proc','5-10% mniej'],['bmi','Zdrowe BMI'],['talia','Talia']],w,'goalway');
   if(w==='proc')return h+goalHint()+goalPctHtml();
@@ -1013,6 +1017,8 @@ const SRC={
   fdcRice:['https://fdc.nal.usda.gov/food-details/2708408/nutrients','USDA: ryż'],
   fdcFries:['https://fdc.nal.usda.gov/food-details/2709461/nutrients','USDA: frytki'],
   fdcSlaw:['https://fdc.nal.usda.gov/food-details/2709814/nutrients','USDA: coleslaw'],
+  schutz:['https://pubmed.ncbi.nlm.nih.gov/12080449/','Schutz 2002 (FFMI)'],
+  gallagher:['https://pubmed.ncbi.nlm.nih.gov/10966886/','Gallagher 2000 (tłuszcz %)'],
   bmimort:['https://pmc.ncbi.nlm.nih.gov/articles/PMC4995441/','Lancet 2016: BMI a śmiertelność'],
   whoob:['https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight','WHO: otyłość i nadwaga'],
   nhsob:['https://www.nhs.uk/conditions/obesity/','NHS: nadwaga i otyłość'],
