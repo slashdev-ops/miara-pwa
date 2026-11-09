@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -776,6 +776,20 @@ tryc('waga docelowa: przycisk 10% mniej ustawia cel zaokrąglony do 0,5 kg i ozn
 tryc('waga docelowa: w utrzymaniu bez przycisków procentowych', () => !view('set', BASE({ mode: 'utrzymanie', touched: { ...TA4 } })).includes('data-goalpct'));
 tryc('szybki wpis: przyciski 100, 200, 300, 500 kcal wypełniają pole', () => { const h = view('day', BASE()); click({ kcalset: 'q_k:300' }); return ['100', '200', '300', '500'].every((x) => h.includes(`data-kcalset="q_k:${x}"`)) && els.q_k.value === '300'; });
 tryc('ochota, coś innego: przyciski kcal wypełniają pole', () => { const h = view('sos', BASE({ sosStep: 'inne' })); click({ kcalset: 's_k:200' }); return h.includes('data-kcalset="s_k:500"') && els.s_k.value === '200'; });
+// Rada 09.11.2026 (cel z BMI i składu ciała): trzy drogi celu, progi BMI z regionu, talia do wzrostu, przełącznik mięśni
+const GB = (o) => BASE({ mode: 'redukcja', kg: '90', cm: '170', age: '40', sex: 'K', touched: { ...TA4 }, goalWay: 'proc', muscle: false, bmiCut: 'auto', ...o });
+tryc('cel: trzy drogi do wyboru nad wagą docelową', () => { const h = view('set', GB()); return ['proc', 'bmi', 'talia'].every((x) => h.includes(`data-goalway="${x}"`)); });
+tryc('cel BMI: 170 cm i BMI 24,9 to 72 kg; najniższa śmiertelność dla wieku 40 to BMI 22 (63,5 kg)', () => { const h = view('set', GB({ goalWay: 'bmi' })); click({ goalbmi: '24.9' }); const a = T.num(T.S().goal); view('set', GB({ goalWay: 'bmi' })); click({ goalbmi: '22' }); return h.includes('data-goalbmi="24.9"') && h.includes('data-goalbmi="22"') && a === 72 && T.num(T.S().goal) === 63.5 && T.S().touched.goal; });
+tryc('cel BMI: wiek 60 to BMI 23, poniżej 35 bez wartości dla wieku', () => view('set', GB({ goalWay: 'bmi', age: '60' })).includes('data-goalbmi="23"') && !view('set', GB({ goalWay: 'bmi', age: '28' })).includes('data-goalbmi="22"'));
+tryc('cel BMI: bez celów poniżej BMI 20 i ze źródłem (Lancet 2016)', () => { const h = view('set', GB({ goalWay: 'bmi' })); const v = [...h.matchAll(/data-goalbmi="([0-9.]+)"/g)].map((m) => +m[1]); return v.length && v.every((x) => x >= 20) && h.includes('PMC4995441'); });
+tryc('cel BMI: progi NHS (23) dają cel poniżej 23', () => view('set', GB({ goalWay: 'bmi', bmiCut: 'nhs' })).includes('data-goalbmi="22.9"'));
+tryc('progi BMI: automatycznie z regionu telefonu (pl-PL: WHO, zh-CN: NHS)', () => T.bmiCutFor('pl-PL') === 'who' && T.bmiCutFor('zh-CN') === 'nhs' && T.bmiCutFor('en-IN') === 'nhs' && T.bmiCutFor('en-GB') === 'who' && T.bmiCutFor('') === 'who');
+tryc('cel talia: cel to połowa wzrostu, z ostatnim pomiarem i źródłem NHS', () => { const h = view('set', GB({ goalWay: 'talia', meas: { [dk(3)]: { waist: '92' } } })); return h.includes('poniżej 85 cm') && h.includes('0,54') && h.includes('nhs.uk/conditions/obesity'); });
+tryc('wskaźniki: BMI z kategorią według progów i talia do wzrostu', () => { const a = view('set', GB({ meas: { [dk(1)]: { waist: '80' } } })); const b = view('set', GB({ kg: '68', bmiCut: 'nhs' })); return a.includes('BMI 31,1: otyłość') && a.includes('talia do wzrostu 0,47') && b.includes('BMI 23,5: nadwaga'); });
+tryc('mam dużo mięśni: włącza drogę talii i zdanie NHS o BMI', () => { view('set', GB()); const el = { dataset: { k: 'muscle' }, type: 'checkbox', checked: true, value: '', getAttribute() { return null; }, setAttribute() {}, classList: { toggle() {} } }; (lis.input || []).forEach((f) => f({ target: el })); const h = view('set'); return T.S().muscle === true && T.S().goalWay === 'talia' && h.includes('nie odróżnia mięśni od tłuszczu'); });
+tryc('dane: cel poniżej BMI 20 daje ostrzeżenie o dolnej części normy', () => { view('set', { ...GB(), goal: '56' }); click({ datasave: '1' }); return mainHtml().includes('poniżej 20'); });
+tryc('wskaźniki: FFMI z wagi BIA z medianą odniesienia (Schutz 2002) i tłuszcz bez zakresu (Gallagher 2000)', () => { const h = view('set', GB({ sex: 'M', meas: { [dk(2)]: { ffm: '65', fat: '18' } } })); return h.includes('FFMI 22,5') && h.includes('18,9') && h.includes('pubmed.ncbi.nlm.nih.gov/12080449') && h.includes('pubmed.ncbi.nlm.nih.gov/10966886') && h.includes('uznanych zakresów'); });
+tryc('wskaźniki: bez pomiaru BIA bez FFMI', () => !view('set', GB()).includes('FFMI'));
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
 chain.then(() => {

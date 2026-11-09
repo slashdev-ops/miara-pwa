@@ -727,7 +727,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
-const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},korekta:true,tab:'meals',
+const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},goalWay:'proc',muscle:false,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
@@ -745,6 +745,29 @@ const goalOf=p=>Math.round(num(S.kg)*(1-p/100)*2)/2;
 function goalPctHtml(){if(S.mode==='utrzymanie')return '';return '<div class="chips">'+[5,7,10].map(p=>{const on=Math.abs(num(S.goal)-goalOf(p))<0.01;return `<button class="chip${on?' inc':''}" data-goalpct="${p}" aria-pressed="${on}">${p}% mniej</button>`}).join('')+'</div>'+srcHtml(['nhlbi','dpp'])}
 // Gotowe wartości kalorii przy szacunku (NN/g: wartości domyślne zmniejszają wysiłek); wpis zostaje
 const kcalChips=id=>'<div class="chips quick">'+[100,200,300,500].map(v=>`<button class="chip" data-kcalset="${id}:${v}">${v} kcal</button>`).join('')+'</div>';
+// Cel z BMI i składu ciała (rada/2026-11-09_cel-bmi-sklad-ciala): trzy drogi celu; progi BMI WHO (25, 30) albo NHS (23, 27,5),
+// automatycznie z regionu telefonu; najniższa śmiertelność przy BMI 20-25, zależnie od wieku 22/23/24 (Lancet 2016); talia poniżej połowy wzrostu (NHS)
+const BMI_LOW=['IN','PK','BD','LK','NP','BT','MV','AF','CN','HK','MO','TW','JP','KR','KP','MN','SG','MY','TH','VN','PH','ID','KH','LA','MM','BN','TL','SA','AE','QA','KW','BH','OM','YE','IR','IQ','JO','LB','SY','PS','IL','EG','NG','GH','KE','ET','ZA','SN','CI','CM','UG','TZ','JM','TT','BB','HT'];
+function bmiCutFor(lang){const r=(String(lang||'').split(/[-_]/)[1]||'').toUpperCase();return BMI_LOW.includes(r)?'nhs':'who'}
+function bmiCut(){return S.bmiCut==='who'||S.bmiCut==='nhs'?S.bmiCut:bmiCutFor(typeof navigator!=='undefined'&&navigator.language)}
+const bmiOf=kg=>num(kg)/Math.pow((num(S.cm)||165)/100,2);
+function bmiCat(b){const n=bmiCut()==='nhs',[o,ob]=n?[23,27.5]:[25,30];return b<18.5?'niedowaga':b<o?'norma':b<ob?'nadwaga':'otyłość'}
+const fmt2=x=>(Math.round(x*100)/100).toFixed(2).replace('.',',');
+function lastM(key){const k=Object.keys(S.meas||{}).filter(x=>num(S.meas[x][key])>0).sort().pop();return k?num(S.meas[k][key]):0}
+const lastWaist=()=>lastM('waist');
+function wskTxt(){const b=bmiOf(S.kg),w=lastWaist();return `BMI ${fmt1(b)}: ${bmiCat(b)} (progi ${bmiCut()==='nhs'?'NHS: 23 i 27,5':'WHO: 25 i 30'})`+(w?`, talia do wzrostu ${fmt2(w/(num(S.cm)||165))} (cel poniżej 0,50)`:'')+'.'+(S.muscle?' BMI nie odróżnia mięśni od tłuszczu (NHS), więc przy dużej masie mięśniowej lepszą miarą jest talia.':'')+bodyCompTxt()}
+// Skład ciała z wagi BIA: FFMI z medianą odniesienia (Schutz 2002, 5635 osób), tłuszcz % jako trend, bo uznanych zakresów brak (Gallagher 2000)
+function bodyCompTxt(){const ffm=lastM('ffm'),fat=lastM('fat');if(!ffm&&!fat)return '';const h2=Math.pow((num(S.cm)||165)/100,2);
+  return (ffm?` FFMI ${fmt1(ffm/h2)} (beztłuszczowa masa ciała na m²; mediana w wieku 18-34 lat: ${S.sex==='M'?'18,9 u mężczyzn':'15,4 u kobiet'}).`:'')+(fat?` Tłuszcz ${fmt1(fat)}%: pokazujemy jako trend, bo uznanych zakresów procentu tłuszczu brak.`:'')+srcHtml(['schutz','gallagher'])}
+function goalWayHtml(){if(S.mode==='utrzymanie')return '';const w=S.goalWay||'proc',h2=Math.pow((num(S.cm)||165)/100,2);
+  let h='<p style="margin:12px 4px 4px"><b>Jak ustalić cel?</b></p>'+seg([['proc','5-10% mniej'],['bmi','Zdrowe BMI'],['talia','Talia']],w,'goalway');
+  if(w==='proc')return h+goalHint()+goalPctHtml();
+  if(w==='bmi'){const n=bmiCut()==='nhs',up=n?22.9:24.9,a=num(S.age),nd=a>=70?24:a>=50?23:a>=35?22:0,o=[[up,`poniżej ${n?23:25}`]];if(nd&&nd<up)o.push([nd,'najniżej dla wieku']);
+    h+='<div class="chips">'+o.map(([v,l])=>{const g=Math.round(v*h2*2)/2,on=Math.abs(num(S.goal)-g)<0.01;return `<button class="chip opt${on?' inc':''}" data-goalbmi="${v}" aria-pressed="${on}">BMI ${fmt1(v)} (${l}): ${fmt1(g)} kg</button>`}).join('')+'</div>';
+    h+=`<p class="small muted">Najniższa śmiertelność w badaniach przy BMI 20-25; dolna część normy (18,5-20) wiązała się z wyższą. Najniżej: BMI 22 w wieku 35-49 lat, 23 w wieku 50-69, 24 w wieku 70-89.${bmiOf(S.kg)<up?' Twoje BMI już jest w tym zakresie.':' Przy dużej różnicy zacznij od 5-10% mniej.'}</p>`+srcHtml(['bmimort','whoob'].concat(n?['nhsob']:[]));return h}
+  const c=num(S.cm)||165,lw=lastWaist();
+  return h+`<div class="note">Cel: talia poniżej ${fmt(c/2)} cm (połowa wzrostu).${lw?` Ostatni pomiar: ${fmt1(lw)} cm, talia do wzrostu ${fmt2(lw/c)}.`:' Zmierz talię w Pomiarach dnia, w obwodach.'} Waga docelowa jest tu opcjonalna: postęp pokaże talia.</div>`+srcHtml('nhsob')}
+function bmiSetHtml(){const a=bmiCutFor(typeof navigator!=='undefined'&&navigator.language);return '<p style="margin:12px 4px 4px"><b>Progi BMI</b></p>'+seg([['auto','Region'],['who','WHO'],['nhs','NHS']],S.bmiCut||'auto','bmicut')+`<p class="small muted">WHO: nadwaga od BMI 25, otyłość od 30. NHS: od 23 i 27,5 dla osób pochodzenia azjatyckiego, bliskowschodniego, afrykańskiego i afrykańsko-karaibskiego. Region telefonu wskazuje progi ${a==='nhs'?'NHS':'WHO'}. Ustawienie zostaje w telefonie.</p>`+`<div class="panel"><div class="field"><label for="muscle">Mam dużo mięśni (trenuję siłowo)</label><input type="checkbox" class="switch" id="muscle" data-k="muscle" ${S.muscle?'checked':''}></div></div>`}
 function goalHint(){return S.mode==='utrzymanie'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny albo wybierz niżej.</p>'}
 function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
 function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,STEP.goal)}
@@ -994,6 +1017,11 @@ const SRC={
   fdcRice:['https://fdc.nal.usda.gov/food-details/2708408/nutrients','USDA: ryż'],
   fdcFries:['https://fdc.nal.usda.gov/food-details/2709461/nutrients','USDA: frytki'],
   fdcSlaw:['https://fdc.nal.usda.gov/food-details/2709814/nutrients','USDA: coleslaw'],
+  schutz:['https://pubmed.ncbi.nlm.nih.gov/12080449/','Schutz 2002 (FFMI)'],
+  gallagher:['https://pubmed.ncbi.nlm.nih.gov/10966886/','Gallagher 2000 (tłuszcz %)'],
+  bmimort:['https://pmc.ncbi.nlm.nih.gov/articles/PMC4995441/','Lancet 2016: BMI a śmiertelność'],
+  whoob:['https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight','WHO: otyłość i nadwaga'],
+  nhsob:['https://www.nhs.uk/conditions/obesity/','NHS: nadwaga i otyłość'],
   nhlbi:['https://www.nhlbi.nih.gov/health/heart-healthy-living/healthy-weight','NHLBI: zdrowa waga'],
   michie:['https://pmc.ncbi.nlm.nih.gov/articles/PMC3096582/','Michie 2011 (COM-B)'],
   lally:['https://pmc.ncbi.nlm.nih.gov/articles/PMC11641623/','Singh 2024 (czas tworzenia nawyku)'],
@@ -1265,6 +1293,7 @@ function dataCheck(){const err=[],warn=[];let first=null;
   DATA_F.forEach(([k,acc,nom,u])=>{const v=num(S[k]),[a,b]=LIM[k];if(!(v>0)){err.push('Uzupełnij '+acc+'.');first=first||k}else if(v<a||v>b){err.push(`${nom}: wpisz wartość od ${a} do ${b} ${u}.`);first=first||k}});
   if(!err.length&&S.mode==='redukcja'&&num(S.goal)>=num(S.kg)){err.push('Waga docelowa w redukcji powinna być niższa od obecnej.');first='goal'}
   if(!err.length&&num(S.goal)/Math.pow(num(S.cm)/100,2)<18.5)warn.push('Waga docelowa daje BMI poniżej 18,5. Ustal cel z lekarzem lub dietetykiem.');
+  else if(!err.length&&S.mode==='redukcja'&&num(S.goal)/Math.pow(num(S.cm)/100,2)<20)warn.push('Waga docelowa daje BMI poniżej 20: w badaniach dolna część normy (18,5-20) wiązała się z wyższą śmiertelnością niż BMI 20-25.');
   return {err,warn,first}}
 function dataHtml(){const c=dataCheck(),ok=S.guide&&S.guide.dataOk,w=c.warn.map(x=>`<div class="note warn">${x}</div>`).join(''),btn='<p><button class="btn" data-datasave="1">Zapisz i sprawdź</button></p>';
   if(c.err.length)return `<div class="note warn"><b>Do poprawy:</b> ${c.err.join(' ')}</div>`+btn;
@@ -1276,7 +1305,7 @@ function nextHtml(cur){const g=guideActive()?guideSteps().find(x=>!x.done):null,
   return `<p class="nextbar"><button class="btn" data-${a}="${v}">${t}</button></p>`}
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
-  let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalHint()+goalPctHtml();
+  let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalWayHtml()+bmiSetHtml();
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex')+dataHtml();
   h+=`<h2 id="wpisy">Wpisy</h2><div class="panel"><div class="field"><label for="once">Wpisuję raz dziennie, wieczorem</label><input type="checkbox" class="switch" id="once" data-k="once" ${S.once?'checked':''}></div></div><p class="small muted">Mój dzień pokaże jeden wpis dnia, a zwierzak przypomni o posiłkach dopiero od 19:00.</p>`;
   h+='<h2 id="komunikaty">Komunikaty</h2>'+seg([['std','Zwykle'],['long','Dłużej'],['stay','Do zamknięcia']],S.toastLen||'std','toastlen')+'<p class="small muted">Jak długo widać dymek po zapisie. Każdy zamkniesz przyciskiem ×.</p>';
@@ -1286,7 +1315,7 @@ function renderSet(){
   h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div></div>
 ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź objawy nóg (lipodemia)</label><input type="checkbox" class="switch" id="lip" data-k="lip" ${S.lip?'checked':''}></div></div>`:''}
   <p class="small muted">Klasyczny MET zakłada 1 kcal na kg na godzinę w spoczynku. Korekta zastępuje to wartością ze wzoru Mifflina-St Jeora, co dla kobiet i osób z wyższym udziałem tkanki tłuszczowej zwykle daje niższe, bliższe rzeczywistości wyniki (wniosek z definicji MET, niesprawdzony pomiarem).</p>
-  <div class="note">BMI ${fmt1(bmi)}. Spoczynkowe zużycie energii ok. ${fmt(rmr())} kcal na dobę.</div>
+  <div class="note">${wskTxt()} Spoczynkowe zużycie energii ok. ${fmt(rmr())} kcal na dobę.</div>
   <h2>Na ekran początkowy iPhone’a</h2><p class="small">W Safari: Udostępnij, potem „Dodaj do ekranu początkowego”. Dane zostają w tej przeglądarce na tym telefonie.</p>
   ${bkHtml()}
   <h2>Fitatu</h2><p class="small">Bezpośredniego połączenia nie ma. Fitatu wymienia dane przez Apple Zdrowie, a strona otwarta w przeglądarce nie ma do niego dostępu. Najprostsza droga: posiłek wybierasz tutaj, w karcie posiłku kopiujesz składniki z gramaturą i wpisujesz je w Fitatu. Treningi z zegarka lub telefonu Fitatu pobiera samo.</p>
@@ -1412,6 +1441,9 @@ document.addEventListener('click',e=>{
   else if(d.kroknext){const j=kNext(S.krok.step);if(j<0)S.krok.fin=true;else kStart(j);toast(j<0?'Ścieżka gotowania ukończona':'Nowy krok: '+KROKI[j].n)}
   else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')}
   else if(d.krokeasy){kStart(S.krok.step);S.krok.easy=true;toast('Łatwiejsza wersja kroku od tego tygodnia')}
+  else if(d.goalway){S.goalWay=d.goalway}
+  else if(d.bmicut){S.bmiCut=d.bmicut}
+  else if(d.goalbmi){S.goal=stpFmt(Math.round(+d.goalbmi*Math.pow((num(S.cm)||165)/100,2)*2)/2,STEP.goal);(S.touched=S.touched||{}).goal=true}
   else if(d.goalpct){S.goal=stpFmt(goalOf(+d.goalpct),STEP.goal);(S.touched=S.touched||{}).goal=true}
   else if(d.kcalset){const [id,v]=d.kcalset.split(':'),el=document.getElementById(id);if(el){el.value=v;if(el.focus)el.focus()}return}
   else if(d.revsave){const g=id=>document.getElementById(id).value.trim();S.reviews=S.reviews||{};S.reviews[reviewKey()]={a:g('r_a'),b:g('r_b'),c:g('r_c'),d:todayKey()};S.tab='day';toast('Zapisano przegląd');window.scrollTo(0,0)}
@@ -1509,7 +1541,7 @@ document.addEventListener('input',e=>{
     S.meas[k]=S.meas[k]||{};S.meas[k].sleep=hs===''&&ms===''?'':`${+hs||0}:${String(+ms||0).padStart(2,'0')}`;save();return}
   const k=el.dataset.k;if(!k)return;
   if(START_K.includes(k))(S.touched=S.touched||{})[k]=true;
-  if(el.type==='checkbox'){setPath(k,el.checked);if(k==='body'&&el.checked)toast('Sylwetka pokazuje trend 4 tygodni. Pojedyncze pomiary się wahają.');save();render();return}
+  if(el.type==='checkbox'){setPath(k,el.checked);if(k==='muscle'&&el.checked)S.goalWay='talia';if(k==='body'&&el.checked)toast('Sylwetka pokazuje trend 4 tygodni. Pojedyncze pomiary się wahają.');save();render();return}
   let v=el.value;const im=el.getAttribute('inputmode');
   if(im==='decimal'||im==='numeric'){const c=checkNum(k,v);el.classList.toggle('bad',!!c.err);el.setAttribute('aria-invalid',c.err?'true':'false');el.title=c.err||'';fieldErr(el,c.err||'');if(c.err)return}
   setPath(k,v);save();
