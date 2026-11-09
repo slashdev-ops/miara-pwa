@@ -23,7 +23,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -470,6 +470,7 @@ tryc('wygląd: obramowanie pól i znaczników wyboru co najmniej 3:1 (WCAG 1.4.1
   if (bad.length) throw new Error(bad.join('; '));
   return true;
 });
+tryc('wygląd: pola w kodzie aplikacji bez słabego obramowania (1.4.11)', () => { const bad = (code.match(/<(textarea|input|select)[^>]*>/g) || []).filter((t) => t.includes('var(--line)')); if (bad.length) throw new Error(bad.length + ' pól: ' + bad.map((t) => t.slice(0, 40)).join(' | ')); return true; });
 tryc('wygląd: Stan dziś jako zielona karta, tekst pomocniczy co najmniej 4,5:1 w obu motywach', () => {
   const b = themeBlocks(), bad = [];
   for (const [name, blk] of [['jasny', b.light], ['ciemny', b.dark]]) { const c = contrast(tok(blk, 'on-green-muted'), tok(blk, 'green')); if (c < 4.5) bad.push(`${name} ${c.toFixed(2)}`); }
@@ -591,7 +592,26 @@ tryc('plan: lipodemia: talia i uda osobno, kompresja', () => { const h = planOf(
 tryc('plan: każde działanie podaje siłę dowodów', () => { const h = planOf(view('health', BASE(PROF(['hashi', 'lip', 'mig', 'io'], 'yaz')))), n = (h.match(/<div class="act/g) || []).length, e = (h.match(/class="ev"/g) || []).length; return n >= 8 && n === e; });
 tryc('12 tygodni: tabela 12 tygodni z wagą w przedziale', () => { const h = view('health', BASE({ ...PROF(['hashi'], ''), kg: '80', goal: '70' })), m = h.match(/<table class="weeks"[\s\S]*?<\/table>/); return !!m && (m[0].match(/<tr class="wk"/g) || []).length === 12 && /7[0-9],[0-9]-7[0-9],[0-9] kg/.test(m[0]); });
 tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h = view('health', BASE({ ...PROF(['hashi', 'mig'], 'yaz'), kg: '80', goal: '70' })), m = (h.match(/<table class="weeks"[\s\S]*?<\/table>/) || [''])[0]; return !/TSH (spadnie|wyniesie)|samopoczucie (wzro|popraw)/.test(m) && h.includes('nie prognozuje'); });
-tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof.pill && !Object.keys(d.prof.cond).length; });
+tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
+// Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
+const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord'];
+const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen'];
+tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
+tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
+  view('day', BASE({ kg: '90', age: '50', sex: 'M', muscle: true, bmiCut: 'nhs', meas: { [dk(0)]: { w: '90', steps: '8000', waist: '100' } }, days: { [dk(0)]: ML(1, 500, 30) }, krok: { step: 1, since: dk(3), ans: { why: 'zmeczenie' } }, knee: { start: dk(3), sessions: [{ d: dk(1), pain: 4 }], morning: {}, days: [2], tmpPain: null, tmpCramp: null } }));
+  const o = JSON.parse(T.bkBuild(true)), d = o.data, extra = Object.keys(d).filter((k) => !NH_KEEP.includes(k));
+  if (extra.length) throw new Error('w pliku: ' + extra.join(', '));
+  const full = JSON.parse(T.bkBuild(false)).data;
+  return o.noHealth === true && full.kg === '90' && !!full.meas[dk(0)] && !!full.krok;
+});
+tryc('kopia bez zdrowia: wczytanie zmienia tylko ustawienia i ceny, dane osoby zostają', () => {
+  view('set', BASE({ kg: '82', meas: { [dk(0)]: { w: '82' } }, days: { [dk(0)]: ML(1, 400, 20) }, discreet: false }));
+  T.setPending({ app: 'talerz-i-trening', v: 1, created: '2026-11-09T10:00:00Z', noHealth: true, data: { discreet: true, prices: { twarog: { p: '5', g: '250' } } } });
+  const h = view('set', T.S()); if (!h.includes('zmieni tylko ustawienia i ceny')) throw new Error('brak opisu wczytania');
+  click({ bkapply: '1' }); const s = T.S();
+  return s.kg === '82' && s.meas[dk(0)].w === '82' && s.days[dk(0)].length === 1 && s.discreet === true && s.prices.twarog.p === '5';
+});
+tryc('kopia bez zdrowia: opis przełącznika mówi, co jest w pliku', () => view('set', BASE()).includes('Tylko ustawienia i ceny: bez wagi, pomiarów, posiłków i odpowiedzi'));
 
 // Zgłoszenie 06.11.2026: sen 6 h 13 min nie da się wpisać przecinkiem; sen jako godziny i minuty, bez dwuznaczności
 const typeSleep = (h, m) => { mk('m_sleep').value = h; mk('m_sleepm').value = m; let bad = false; const t = { dataset: { sl: 'm', day: dk(0) }, value: m, title: '', classList: { toggle: (c, on) => { if (c === 'bad') bad = !!on; } }, setAttribute() {}, getAttribute: () => 'numeric' }; (lis.input || []).forEach((f) => f({ target: t })); return bad; };
