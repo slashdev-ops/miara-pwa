@@ -119,9 +119,24 @@ test('dotknięcie pola zaznacza wartość, wpis ją zastępuje', async ({ page }
   await show(page, 'set');
   const kg = page.locator('#f_kg');
   await kg.scrollIntoViewIfNeeded();
+  // zajęty procesor: klawisz może przyjść przed setTimeout(…, 0); zaznaczenie nie może od niego zależeć (CI 09.11.2026: „8750,1”)
+  await page.evaluate(() => { const st = window.setTimeout; window.setTimeout = (f, d, ...a) => (d ? st(f, d, ...a) : 0); });
   await kg.click();
   await page.keyboard.type('75');
   await expect(kg).toHaveValue('75');
+  expect(errors).toEqual([]);
+});
+
+test('drugie dotknięcie ustawia kursor do poprawki jednej cyfry', async ({ page }) => {
+  const errors = await open(page);
+  await show(page, 'set');
+  const kg = page.locator('#f_kg');
+  await kg.scrollIntoViewIfNeeded();
+  await kg.click();
+  await expect.poll(() => kg.evaluate((el) => el.selectionEnd - el.selectionStart)).toBe(4);
+  await page.waitForTimeout(100);
+  await kg.click({ position: { x: 8, y: 10 } });
+  await expect.poll(() => kg.evaluate((el) => el.selectionEnd - el.selectionStart)).toBe(0);
   expect(errors).toEqual([]);
 });
 

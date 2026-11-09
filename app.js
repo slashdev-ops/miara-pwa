@@ -760,7 +760,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},goalWay:'proc',muscle:false,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},swaps:{},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 // Wartości startowe (rada/2026-11-09_wartosci-startowe): punkt startowy do ustawiania przyciskami, zależny od płci; to założenie
@@ -1586,8 +1586,14 @@ document.addEventListener('input',e=>{
 let EDIT=null,REDRAW=false;
 // Wejście w pole liczbowe zaznacza całą wartość: wpis zastępuje, wyjście bez wpisu zostawia (rada/2026-11-09_pole-po-dotknieciu; WCAG 3.2.1, 3.3.7).
 // Tylko przy wejściu w nowe pole: render() po każdym znaku odtwarza pole i znowu wywołuje focusin
-let SEL_ID=null;
-document.addEventListener('focusin',e=>{const el=e.target,im=el&&el.getAttribute&&el.getAttribute('inputmode');if(!el||(im!=='decimal'&&im!=='numeric')||el.id===SEL_ID)return;SEL_ID=el.id;setTimeout(()=>{try{el.setSelectionRange(0,String(el.value).length)}catch(_){}},0)});
+let SEL_ID=null,SEL_PTR=0,SEL_HOLD=null;
+// Zaznaczenie od razu (klawiatura) i przy kliknięciu po dotknięciu, bo kursor z dotknięcia nadpisuje zaznaczenie z fokusu,
+// a zajęty procesor może obsłużyć pierwszy klawisz przed setTimeout(…, 0) (CI 09.11.2026: „8750,1”); setTimeout zostaje dla iOS.
+// WebKit ustawia kursor z dotknięcia już po kliknięciu: przez 500 ms zwinięte zaznaczenie wraca do całości, do wpisu albo kolejnego dotknięcia.
+document.addEventListener('pointerdown',()=>{SEL_PTR=Date.now();SEL_HOLD=null},true);
+document.addEventListener('beforeinput',()=>{SEL_HOLD=null},true);
+document.addEventListener('selectionchange',()=>{const h=SEL_HOLD;if(!h)return;const el=h.el;if(Date.now()>h.until||document.activeElement!==el){SEL_HOLD=null;return}if(el.selectionStart===el.selectionEnd)h.all()});
+document.addEventListener('focusin',e=>{const el=e.target,im=el&&el.getAttribute&&el.getAttribute('inputmode');if(!el||(im!=='decimal'&&im!=='numeric')||el.id===SEL_ID)return;SEL_ID=el.id;const all=()=>{try{el.setSelectionRange(0,String(el.value).length)}catch(_){}};all();setTimeout(all,0);if(el.addEventListener&&Date.now()-SEL_PTR<1000){el.addEventListener('click',all,{once:true});SEL_HOLD={el,all,until:Date.now()+500}}});
 document.addEventListener('focusout',()=>{if(!REDRAW)SEL_ID=null});
 document.addEventListener('focusin',e=>{const k=e.target.dataset&&e.target.dataset.k;if(k&&(!EDIT||EDIT.k!==k))EDIT={k,v:k.split('.').reduce((o,x)=>o==null?o:o[x],S)}});
 // Wyjście z pola liczbowego: błędny wpis wraca do wartości sprzed edycji, poprawny jest normalizowany (10 000 -> 10000, 82,4 kg -> 82,4).
