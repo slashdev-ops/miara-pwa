@@ -223,6 +223,117 @@ test('wszystkie schorzenia i Yaz: sygnał UKMEC, następny cel, schorzenia razem
   expect(errors).toEqual([]);
 });
 
+// Paleta 2+1 (rada/2026-11-10_kolory-2-1.md): piasek i las jako bazy, terakota jako akcent; tło z charakterem; stany
+const PAL_JS = () => {
+  const { rgba, ratio } = eval(`(${window.__CJS})`)();
+  const v = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  return { rgba, ratio, v };
+};
+async function pal(page) { await page.evaluate((src) => { window.__CJS = src; }, CONTRAST_JS.toString()); }
+
+test('paleta 2+1: akcent, las i obramowanie kafelków z kontrastem do tła', async ({ page }) => {
+  const errors = await open(page);
+  await pal(page);
+  const r = await page.evaluate((src) => {
+    const { rgba, ratio, v } = eval(`(${src})`)();
+    const bg = rgba(v('--bg')), c = (a, b) => ratio(rgba(v(a)), b ? rgba(v(b)) : bg);
+    return { accent: c('--accent'), onAccent: c('--on-accent', '--accent'), green: c('--green'), edge: c('--edge'), edgeSurf: c('--edge', '--surface') };
+  }, PAL_JS.toString());
+  expect(r.accent, 'akcent do tła').toBeGreaterThanOrEqual(3);
+  expect(r.onAccent, 'tekst na akcencie').toBeGreaterThanOrEqual(4.5);
+  expect(r.green, 'las do tła').toBeGreaterThanOrEqual(3);
+  expect(r.edge, 'obramowanie kafelka do tła').toBeGreaterThanOrEqual(3);
+  expect(r.edgeSurf, 'obramowanie kafelka do kafelka').toBeGreaterThanOrEqual(3);
+  expect(errors).toEqual([]);
+});
+
+test('tło z charakterem: plamy w body::before (najwyżej 0,08), body z jednolitym kolorem', async ({ page }) => {
+  const errors = await open(page);
+  const r = await page.evaluate(() => {
+    const b = getComputedStyle(document.body), p = getComputedStyle(document.body, '::before');
+    const alphas = [...p.backgroundImage.matchAll(/rgba?\(([^)]+)\)/g)].map((m) => { const x = m[1].split(/[ ,/]+/).filter(Boolean); return x.length > 3 ? parseFloat(x[3]) : 1; });
+    return { bodyImg: b.backgroundImage, img: p.backgroundImage, alphas, pos: p.position, z: p.zIndex, pe: p.pointerEvents };
+  });
+  expect(r.bodyImg).toBe('none');
+  expect(r.img).toContain('gradient');
+  expect(r.alphas.length).toBeGreaterThan(0);
+  expect(Math.max(...r.alphas)).toBeLessThanOrEqual(0.08);
+  expect(r.pos).toBe('fixed');
+  expect(r.pe).toBe('none');
+  expect(errors).toEqual([]);
+});
+
+test('kafelki i przyciski-kafelki mają obramowanie co najmniej 3:1 do tła pod nimi', async ({ page }) => {
+  const errors = await open(page);
+  const bad = [];
+  for (const v of ['day', 'meals', 'set']) {
+    await show(page, v);
+    const found = await page.evaluate((src) => {
+      const { rgba, ratio, bgOf, visible } = eval(src)();
+      const out = [];
+      for (const el of document.querySelectorAll('.panel,.fold,.chip,.seg,.petcard,.note:not(.warn):not(.demo)')) {
+        if (!visible(el)) continue;
+        // panel w rozwijanej sekcji albo w innym panelu: obramowanie ma kontener
+        if (el.matches('.panel') && el.parentElement.closest('.fold,.panel')) continue;
+        const s = getComputedStyle(el), bg = bgOf(el.parentElement);
+        if (!bg) continue;
+        const w = parseFloat(s.borderTopWidth), r = ratio(rgba(s.borderTopColor), bg);
+        if (!(w >= 1) || r < 3) out.push(`${el.className.split(' ')[0]} ${w}px ${r.toFixed(2)}`);
+      }
+      return out;
+    }, `(${CONTRAST_JS})`);
+    for (const f of found) bad.push(`${v}: ${f}`);
+  }
+  expect([...new Set(bad)], 'za słabe obramowanie kafelka').toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('każdy stan ma reakcję: dotknięcie, fokus z klawiatury w akcencie, wybrany w lesie, wyłączony', async ({ page }) => {
+  const errors = await open(page);
+  await show(page, 'set');
+  const chip = page.locator('.chip').first();
+  await chip.scrollIntoViewIfNeeded();
+  const look = () => chip.evaluate((el) => { const s = getComputedStyle(el); return [s.backgroundColor, s.transform, s.borderTopColor, s.boxShadow].join('|'); });
+  const rest = await look();
+  const box = await chip.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  const pressed = await look();
+  await page.mouse.up();
+  expect(pressed, 'dotknięcie zmienia wygląd').not.toBe(rest);
+  // Fokus z klawiatury: obrys co najmniej 3 px w kolorze akcentu
+  await page.evaluate(() => document.querySelector('.seg button').scrollIntoView());
+  await page.locator('.seg button').first().focus();
+  await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Tab');
+  const f = await page.evaluate(() => { const a = document.activeElement, s = getComputedStyle(a), acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); const cv = document.createElement('canvas').getContext('2d'); cv.fillStyle = acc; return { w: parseFloat(s.outlineWidth), c: s.outlineColor, acc: cv.fillStyle, style: s.outlineStyle }; });
+  expect(f.w).toBeGreaterThanOrEqual(3);
+  expect(f.style).not.toBe('none');
+  const hex = (c) => { const m = c.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number); return '#' + m.map((x) => Math.round(x).toString(16).padStart(2, '0')).join(''); };
+  expect(hex(f.c)).toBe(f.acc.toLowerCase());
+  // Wybrany: tło w kolorze lasu; wyłączony: przygaszony
+  const sel = await page.evaluate(() => { const b = document.querySelector('.seg button[aria-pressed="true"]'), g = getComputedStyle(document.documentElement).getPropertyValue('--green').trim(), cv = document.createElement('canvas').getContext('2d'); cv.fillStyle = g; const bg = getComputedStyle(b).backgroundColor.match(/\d+/g).slice(0, 3).map((x) => (+x).toString(16).padStart(2, '0')).join(''); return { bg: '#' + bg, g: cv.fillStyle.toLowerCase() }; });
+  expect(sel.bg).toBe(sel.g);
+  const dis = await page.evaluate(() => { const b = document.createElement('button'); b.className = 'btn'; b.disabled = true; b.textContent = 'x'; document.getElementById('main').appendChild(b); return parseFloat(getComputedStyle(b).opacity); });
+  expect(dis).toBeLessThan(1);
+  expect(errors).toEqual([]);
+});
+
+test.describe('ograniczenie ruchu', () => {
+  test.use({ reducedMotion: 'reduce' });
+  test('przy ograniczeniu ruchu dotknięcie nie skaluje przycisku', async ({ page }) => {
+    await open(page);
+    await show(page, 'set');
+    const chip = page.locator('.chip').first();
+    await chip.scrollIntoViewIfNeeded();
+    const box = await chip.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    const t = await chip.evaluate((el) => getComputedStyle(el).transform);
+    await page.mouse.up();
+    expect(t).toBe('none');
+  });
+});
+
 test.describe('bez sieci', () => {
   test.use({ serviceWorkers: 'allow' });
   test('po pierwszym otwarciu aplikacja działa bez sieci', async ({ page, context }) => {
