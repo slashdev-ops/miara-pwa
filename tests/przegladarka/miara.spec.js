@@ -49,6 +49,25 @@ const CONTRAST_JS = () => {
   return { rgba, ratio, bgOf, visible };
 };
 
+// Elementy tekstu z kontrastem poniżej progu na bieżącym ekranie
+const lowContrast = (page) => page.evaluate((src) => {
+  const { rgba, ratio, bgOf, visible } = eval(src)();
+  const out = [];
+  for (const el of document.querySelectorAll('body *')) {
+    if (!visible(el) || el.closest('svg,[aria-hidden="true"],:disabled')) continue;
+    const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+    if (!own) continue;
+    const s = getComputedStyle(el), bg = bgOf(el);
+    if (!bg) continue;
+    const fg = rgba(s.color);
+    if (fg[3] < 1) continue;
+    const size = parseFloat(s.fontSize), bold = Number(s.fontWeight) >= 700;
+    const need = size >= 24 || (size >= 18.66 && bold) ? 3 : 4.5, r = ratio(fg, bg);
+    if (r < need) out.push(`${el.tagName.toLowerCase()}.${el.className} „${el.textContent.trim().slice(0, 30)}” ${r.toFixed(2)}`);
+  }
+  return out;
+}, `(${CONTRAST_JS})`);
+
 test('każdy widok bez błędów strony i CSP, bez przewijania w poziomie', async ({ page }) => {
   const errors = await open(page);
   const wide = [];
@@ -66,23 +85,7 @@ test('tekst ma kontrast co najmniej 4,5:1 (duży 3:1) na głównych ekranach', a
   const bad = [];
   for (const v of MAIN) {
     await show(page, v);
-    const found = await page.evaluate((src) => {
-      const { rgba, ratio, bgOf, visible } = eval(src)();
-      const out = [];
-      for (const el of document.querySelectorAll('body *')) {
-        if (!visible(el) || el.closest('svg,[aria-hidden="true"],:disabled')) continue;
-        const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
-        if (!own) continue;
-        const s = getComputedStyle(el), bg = bgOf(el);
-        if (!bg) continue;
-        const fg = rgba(s.color);
-        if (fg[3] < 1) continue;
-        const size = parseFloat(s.fontSize), bold = Number(s.fontWeight) >= 700;
-        const need = size >= 24 || (size >= 18.66 && bold) ? 3 : 4.5, r = ratio(fg, bg);
-        if (r < need) out.push(`${el.tagName.toLowerCase()}.${el.className} „${el.textContent.trim().slice(0, 30)}” ${r.toFixed(2)}`);
-      }
-      return out;
-    }, `(${CONTRAST_JS})`);
+    const found = await lowContrast(page);
     for (const f of found) bad.push(`${v}: ${f}`);
   }
   expect([...new Set(bad)], 'za słaby kontrast').toEqual([]);
@@ -202,6 +205,21 @@ test('usunięcie wpisu ma „Cofnij” w komunikacie i przywraca wpis', async ({
   expect(await page.evaluate(() => day().length)).toBe(n - 1);
   await page.locator('#toast').getByRole('button', { name: 'Cofnij' }).click();
   expect(await page.evaluate(() => day().length)).toBe(n);
+  expect(errors).toEqual([]);
+});
+
+test('wszystkie schorzenia i Yaz: sygnał UKMEC, następny cel, schorzenia razem, zapowiedź zwierzaka', async ({ page }) => {
+  const errors = await open(page, '#demo-wszystkie');
+  await show(page, 'day');
+  await expect(page.locator('.note.warn').filter({ hasText: 'UKMEC 2025' })).toBeVisible();
+  await expect(page.locator('#cel')).toContainText('Następny cel');
+  await expect(page.locator('#fold_razem summary')).toHaveText('Twoje schorzenia razem');
+  await expect(page.locator('.petnext').first()).toBeVisible();
+  expect(await lowContrast(page), 'za słaby kontrast').toEqual([]);
+  const w = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+  expect(w[0]).toBeLessThanOrEqual(w[1]);
+  await show(page, 'pet');
+  await expect(page.getByRole('heading', { name: 'Co się zmieni' })).toBeVisible();
   expect(errors).toEqual([]);
 });
 

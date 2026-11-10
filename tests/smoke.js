@@ -104,7 +104,7 @@ tryc('pet.svg: kaczka dziób płaski, gąska długi', () => P().svg('kaczka', 'y
 tryc('pet.svg: dodatek korona', () => P().svg('gaska', 'adult', 'ok', 'korona').includes('class="acc korona"'));
 tryc('pet.card: imię escapowane', () => P().card(st(mkCtx({ name: '<b>' })), { kind: 'gaska', name: '<b>' }, T.esc).includes('&lt;b&gt;'));
 const SUM = { today: { done: 2, pts: 35 }, week: { pts: 120, level: 'Brąz', next: { name: 'Srebro', need: 60 } }, all: { active: 12, streak: 5, dw: -1.4, waist: -2, pct: 40 }, badges: [] };
-tryc('pet.badgeList: etykiety i zdobyte', () => { const b = P().badgeList(['streak7', 'level-Brąz']); return b.length === 11 && b.find((x) => x.id === 'streak7').got && b.find((x) => x.id === 'level-Brąz').label === 'Tydzień na poziomie Brąz' && !b.find((x) => x.id === 'w5').got; });
+tryc('pet.badgeList: etykiety i zdobyte', () => { const b = P().badgeList(['streak7', 'level-Brąz']); return b.length === 12 && b.find((x) => x.id === 'streak7').got && b.find((x) => x.id === 'level-Brąz').label === 'Tydzień na poziomie Brąz' && !b.find((x) => x.id === 'w5').got; });
 tryc('pet.screen: postęp i odznaki', () => { const h = P().screen(st(mkCtx()), { kind: 'kaczka', name: 'Kluska' }, { ...SUM, badges: P().badgeList(['streak7']) }, T.esc); return h.includes('Seria 7 dni') && h.includes('class="badge got"') && h.includes('-1,4 kg') && h.includes('do poziomu Srebro brakuje 60 pkt'); });
 tryc('pet.screen: odmiana „aktywny dzień / aktywne dni / aktywnych dni”', () => {
   const at = (n) => P().screen({ ...st(mkCtx()), stage: 'young', active: 30 - n }, { kind: 'gaska', name: 'A' }, { ...SUM, badges: [] }, T.esc);
@@ -887,9 +887,9 @@ const ZS = (o) => ({ days: {}, meas: {}, pain: {}, urges: {}, hab: {}, prof: { c
 const MS = (pairs) => { const m = {}; for (const [n, v] of pairs) m[zk(n)] = { ...(m[zk(n)] || {}), ...v }; return m; };
 const ev = (s, ctx) => Z().events(s, D0, ctx || {});
 const evId = (s, id, ctx) => ev(s, ctx).filter((e) => e.id === id);
-const VERIFIED = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 17];
+const VERIFIED = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 17, 18, 19];
 
-tryc('zdarzenia: moduł ma events, goals, suggest, progress, impact, signals', () => !!Z() && ['events', 'suggest', 'progress', 'impact', 'signals'].every((f) => typeof Z()[f] === 'function') && Z().goals.length === 6);
+tryc('zdarzenia: moduł ma events, goals, suggest, progress, impact, signals', () => !!Z() && ['events', 'suggest', 'progress', 'impact', 'signals'].every((f) => typeof Z()[f] === 'function') && Z().goals.length === 7);
 tryc('zdarzenia: 2 noce z rzędu poniżej 6 h to „Krótkie noce”, jedna noc albo 6 h nie', () => {
   const a = evId(ZS({ meas: MS([[0, { sleep: '5,5' }], [1, { sleep: '5,9' }]]) }), 'krotki_sen');
   const b = evId(ZS({ meas: MS([[0, { sleep: '5,5' }], [1, { sleep: '6' }]]) }), 'krotki_sen');
@@ -987,7 +987,7 @@ tryc('Mój dzień: bez celu propozycja z przyciskiem; wybór zapisuje cel od dzi
 });
 tryc('Mój dzień: aktywny cel z postępem, listą wpływów ze źródłami i zmianą celu (6 do wyboru)', () => {
   const c = secCel(view('day', BASE({ cel: { id: 'sen', since: dk(2) } })));
-  return c.includes('Mniej krótkich nocy') && c.includes('Na co jeszcze wpływa') && c.includes('https://pubmed.ncbi.nlm.nih.gov/27804960/') && (c.match(/data-cel="/g) || []).length === 6;
+  return c.includes('Mniej krótkich nocy') && c.includes('Na co jeszcze wpływa') && c.includes('https://pubmed.ncbi.nlm.nih.gov/27804960/') && (c.match(/data-cel="/g) || []).length === 7;
 });
 tryc('Mój dzień: zmiana celu nie kasuje danych', () => {
   view('day', BASE({ cel: { id: 'sen', since: dk(5) }, meas: { [dk(0)]: { w: '80' } } })); click({ cel: 'ruch' });
@@ -1045,6 +1045,100 @@ tryc('strażnik: usuwanie danych w obsłudze kliknięć zawsze z „Cofnij”', 
     .map(([id]) => id);
   if (bad.length) throw new Error(bad.join(', '));
   return true;
+});
+// Etap 3: wspólna ścieżka, kolejka celów, cel „siła”, zwierzak z zapowiedzią (docs/specs/2026-11-10-etap3-laczenie-i-zwierzak-design.md)
+const ALL4 = { hashi: true, lip: true, io: true, mig: true };
+const tr = (label) => ({ kind: 't', label, min: 45, gross: 300, net: 240 });
+tryc('etap 3: sygnał UKMEC przy migrenie bez aury z estrogenem; nie przy aurze, bez estrogenu, bez migreny', () => {
+  const sig = (cond, est, pain) => Z().signals(ZS({ prof: { cond, pill: 'yaz' }, pain: pain || {} }), D0, { est }).map((x) => x.id);
+  const a = Z().signals(ZS({ prof: { cond: { mig: true }, pill: 'yaz' } }), D0, { est: true });
+  const m = a.find((x) => x.id === 'mig_estrogen');
+  return !!m && m.x.includes('UKMEC 2025') && m.x.includes('kontynuacja') && m.row === 18
+    && !sig({ aura: true, mig: true }, true).includes('mig_estrogen') && !sig({ mig: true }, false).includes('mig_estrogen')
+    && !sig({}, true).includes('mig_estrogen') && !sig({ mig: true }, true, { [zk(2)]: { aura: true } }).includes('mig_estrogen');
+});
+tryc('etap 3: cel „siła” w katalogu, postęp z treningów Siłownia i programu kolana', () => {
+  const days = { [zk(0)]: [tr('Siłownia, całe ciało')], [zk(3)]: [{ ...tr('Program kolana'), knee: 1 }], [zk(4)]: [tr('Rower')] };
+  const p = Z().progress(ZS({ days }), 'sila', D0, {});
+  return Z().goals.length === 7 && !!Z().goalOf('sila') && p.ok === 2 && p.txt.includes('2');
+});
+tryc('etap 3: progi zaliczenia tygodnia (tuż poniżej i na progu)', () => {
+  const D = Z().done, s7 = (n, v) => MS([...Array(7).keys()].map((i) => [i, i < n ? v : {}]));
+  const meals = (n, p) => Object.fromEntries([...Array(n).keys()].map((i) => [zk(i), [{ kind: 'm', p, k: 400 }]]));
+  const r = [
+    D(ZS({ meas: s7(5, { w: '80' }) }), 'zapisy', D0, {}), !D(ZS({ meas: s7(4, { w: '80' }) }), 'zapisy', D0, {}),
+    D(ZS({ meas: s7(6, { sleep: '6' }) }), 'sen', D0, {}), !D(ZS({ meas: s7(5, { sleep: '7' }) }), 'sen', D0, {}),
+    D(ZS({ days: meals(5, 100) }), 'bialko', D0, { pT: 90 }), !D(ZS({ days: meals(4, 100) }), 'bialko', D0, { pT: 90 }),
+    D(ZS({ meas: s7(4, { steps: '8000' }) }), 'ruch', D0, {}), !D(ZS({ meas: s7(4, { steps: '7999' }) }), 'ruch', D0, {}), !D(ZS({ meas: s7(3, { steps: '9000' }) }), 'ruch', D0, {}),
+    D(ZS({ days: { [zk(0)]: [tr('Siłownia')], [zk(2)]: [tr('Siłownia')] } }), 'sila', D0, {}), !D(ZS({ days: { [zk(0)]: [tr('Siłownia')] } }), 'sila', D0, {}),
+    D(ZS({ pain: { [zk(3)]: {}, [zk(30)]: {}, [zk(31)]: {} } }), 'bol', D0, {}), !D(ZS({ pain: { [zk(3)]: {}, [zk(30)]: {} } }), 'bol', D0, {}),
+    !D(ZS({ meas: s7(7, { w: '80' }) }), 'waga', D0, {}),
+  ];
+  const i = r.indexOf(false); if (i >= 0) throw new Error('próg nr ' + i);
+  return true;
+});
+tryc('etap 3: propozycja „ból” znika, gdy dni z bólem maleją; „siła” tylko przy IO; pominięcie bieżącego celu', () => {
+  const base = { meas: MS([0, 1, 2, 3, 4, 5, 6].map((n) => [n, { w: '80', sleep: '7', steps: '9000' }])) };
+  const less = Z().suggest(ZS({ ...base, prof: { cond: { mig: true } }, pain: { [zk(3)]: {}, [zk(30)]: {}, [zk(32)]: {} } }), D0, { pT: 0 });
+  const more = Z().suggest(ZS({ ...base, prof: { cond: { mig: true } }, pain: { [zk(3)]: {}, [zk(5)]: {}, [zk(30)]: {} } }), D0, { pT: 0 });
+  const io = Z().suggest(ZS({ ...base, prof: { cond: { io: true } } }), D0, { pT: 0 }), no = Z().suggest(ZS(base), D0, { pT: 0 });
+  const sk = Z().suggest(ZS({ ...base, prof: { cond: { io: true } } }), D0, { pT: 0 }, ['sila']);
+  if ([less, more, io, no, sk].join() !== 'waga,bol,sila,waga,waga') throw new Error([less, more, io, no, sk].join());
+  return true;
+});
+tryc('etap 3: wpływy celu „siła” z wierszy 19 i 13; wiersze 18 i 19 sprawdzone', () => {
+  const rows = Z().impact('sila', { cond: { io: true } }).map((x) => x.row);
+  return rows.includes(19) && rows.includes(13) && Z().impact('sila', {}).every((x) => [10, 13, 18, 19].includes(x.row) && /^https:/.test(x.url));
+});
+tryc('Mój dzień: sygnał UKMEC nad celem przy migrenie bez aury i Yaz', () => {
+  const h = view('day', BASE({ prof: { cond: { mig: true }, pill: 'yaz' } })); const i = h.indexOf('UKMEC 2025');
+  return i > 0 && i < h.indexOf('id="cel"');
+});
+tryc('Zdrowie: pozycja UKMEC przy migrenie bez aury i Yaz, przed listą reszty', () => {
+  const h = view('health', BASE({ prof: { cond: { mig: true }, pill: 'yaz' } }));
+  return firstAct(h).includes('UKMEC 2025') && firstAct(h).includes('kontynuacja');
+});
+tryc('Mój dzień: zaliczony tydzień celu pokazuje „Następny cel” z przyciskiem; niezaliczony nie', () => {
+  const m = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((n) => [dk(n), { w: '80' }]));
+  const a = secCel(view('day', BASE({ cel: { id: 'zapisy', since: dk(7) }, meas: m })));
+  const b = secCel(view('day', BASE({ cel: { id: 'zapisy', since: dk(7) }, meas: { [dk(1)]: { w: '80' } } })));
+  return a.includes('Tydzień zaliczony') && a.includes('Następny cel') && /data-cel="(?!zapisy)/.test(a.slice(a.indexOf('Następny cel'))) && !b.includes('Następny cel');
+});
+tryc('Mój dzień: „Twoje schorzenia razem” przy 2 schorzeniach, bez przy 1', () => {
+  const a = view('day', BASE({ prof: { cond: { io: true, mig: true }, pill: '' } })), b = view('day', BASE({ prof: { cond: { io: true }, pill: '' } }));
+  return a.includes('Twoje schorzenia razem') && a.includes('Razem: insulinooporność i migrena') && !b.includes('Twoje schorzenia razem');
+});
+tryc('scenariusz wszystkie: profil 4 schorzeń i Yaz, sygnał, następny cel, razem, zwierzak z zapowiedzią', () => {
+  const s = T.scenS('wszystkie'); const h = view('day', s);
+  return !!T.SCEN.wszystkie && s.prof.pill === 'yaz' && Object.keys(ALL4).every((c) => s.prof.cond[c]) && !s.prof.cond.aura
+    && h.includes('UKMEC 2025') && h.includes('Następny cel') && h.includes('Twoje schorzenia razem') && h.includes('petnext');
+});
+// Zwierzak: zapowiedź „Co się zmieni”
+const PNX = (o, goal) => sandbox.PET.next(st(mkCtx(o)), { ...mkCtx(o), goal });
+tryc('pet: zapowiedź najwyżej 3 pozycje, kolejno cel, etap, odznaka; bez obietnic', () => {
+  const g = { t: 'Mniej krótkich nocy', left: '2 noce co najmniej 6 h', gain: 'Po skróconym śnie osoby jadły więcej, średnio ok. 385 kcal na dobę.' };
+  const a = PNX({ active: 3, streak: 4, seen: [] }, g);
+  const txt = a.map((x) => x.t).join(' | ');
+  return a.length === 3 && a[0].t.includes('Mniej krótkich nocy') && a[0].t.includes('W badaniach') && a[1].t.includes('Młoda') && a[1].t.includes('4 aktywne dni')
+    && a[2].t.includes('Seria 7 dni') && !/na pewno|wyleczy|gwarant/i.test(txt);
+});
+tryc('pet: bez celu zapowiedź z etapu i odznaki; dorosła z pełną serią bez pozycji etapu', () => {
+  const a = PNX({ active: 3, streak: 4, seen: [] }, null), b = PNX({ active: 40, streak: 31 }, null);
+  return a.length === 2 && a[0].t.includes('Młoda') && b.every((x) => !/etap|będzie (Młoda|Dorosła)/.test(x.t));
+});
+tryc('pet: dorosła z pełną serią: zapowiedź następnego celu i dodatku za poziom tygodnia', () => {
+  const c = { ...mkCtx({ active: 40, streak: 31 }), goal: { t: 'Regularne zapisy', left: 'tydzień zaliczony', gain: '', nx: 'Mniej dni z bólem głowy' }, nextLevel: { name: 'Brąz', need: 30 } };
+  const a = sandbox.PET.next(st(c), c).map((x) => x.t);
+  return a.length === 2 && a[0].includes('Następny cel: Mniej dni z bólem głowy') && a[1].includes('30 pkt') && a[1].includes('szalik');
+});
+tryc('pet: zaliczony tydzień celu to odznaka „Pierwszy zaliczony cel” i świętowanie', () => {
+  const s = st({ ...mkCtx({ seen: SEEN_ALL }), goalDone: true });
+  return s.milestone === 'cel1' && s.mood === 'celebrate' && sandbox.PET.badgeList([]).some((b) => b.id === 'cel1' && b.label === 'Pierwszy zaliczony cel');
+});
+tryc('pet: karta w Moim dniu ma pierwszą zapowiedź, ekran zwierzaka sekcję „Co się zmieni”', () => {
+  const s = BASE({ pet: { kind: 'gaska', name: 'Kluska', since: dk(3) }, cel: { id: 'sen', since: dk(2) } });
+  const d = view('day', s), p = view('pet', s);
+  return d.includes('class="small petnext"') && p.includes('Co się zmieni') && p.includes('Mniej krótkich nocy');
 });
 
 chain.then(() => {
