@@ -4,7 +4,7 @@ var PET = (function () {
   const LINES = {
     celebrate: '{n} świętuje! Nowa odznaka.', sleep: '{n} śpi. Dobranoc.', sad: '{n} tęskni. Zapisz cokolwiek, a odżyje.',
     hungry: '{n} czeka na wpis posiłku.', rest: '{n} odpoczywa razem z Tobą. Dziś liczy się odpoczynek.', tired: '{n} jest zmęczona. Sen albo spacer doda jej energii.',
-    happy: '{n} jest w świetnej formie.', ok: '{n} ma się dobrze.'
+    happy: '{n} jest w świetnej formie.', ok: '{n} ma się dobrze.', goal: '{n} świętuje zaliczony tydzień celu!'
   };
   const ACC = { 'Brąz': 'szalik', 'Srebro': 'czapka', 'Złoto': 'okulary', 'Platyna': 'korona' };
   const clamp = (v) => Math.max(10, Math.min(100, Math.round(v)));
@@ -41,6 +41,7 @@ var PET = (function () {
     const g = c.stage();
     if (g && g.pct >= 100) out.push('w5');
     if (c.reviewed) out.push('review1');
+    if (c.goalDone) out.push('cel1');
     const lv = c.level(c.weekPts())[1];
     if (ACC[lv]) out.push('level-' + lv);
     return out;
@@ -70,7 +71,7 @@ var PET = (function () {
     const name = (c.pet && String(c.pet.name || '').trim()) || 'Kluska';
     // Tryb pokazowy: klatka narzuca minę, etap i dodatek; bez kamienia milowego (nic nie trafia do petSeen)
     if (c.force) return { meters, przerwa, mood: c.force.mood, stage: c.force.stage, acc: c.force.acc || null, active, milestone: null, line: LINES[c.force.mood].replace('{n}', name) };
-    return { meters, przerwa, mood: md, stage, acc: ACC[c.level(c.weekPts())[1]] || null, active, milestone, line: LINES[rest && md === 'sleep' ? 'rest' : md].replace('{n}', name) };
+    return { meters, przerwa, mood: md, stage, acc: ACC[c.level(c.weekPts())[1]] || null, active, milestone, line: LINES[milestone === 'cel1' ? 'goal' : rest && md === 'sleep' ? 'rest' : md].replace('{n}', name) };
   }
 
   // ---------- Rysunek: SVG 120×120, kolory z CSS (klasy), animacje w app.css ----------
@@ -118,7 +119,7 @@ var PET = (function () {
 
   // ---------- Karta, ekran, odznaki ----------
   const BADGES = [['week1', 'Pierwszy tydzień'], ['streak7', 'Seria 7 dni'], ['streak14', 'Seria 14 dni'], ['streak30', 'Seria 30 dni'],
-    ['w2', '-2% wagi'], ['w5', '-5% wagi'], ['review1', 'Pierwszy przegląd'],
+    ['w2', '-2% wagi'], ['w5', '-5% wagi'], ['review1', 'Pierwszy przegląd'], ['cel1', 'Pierwszy zaliczony cel'],
     ['level-Brąz', 'Tydzień na poziomie Brąz'], ['level-Srebro', 'Tydzień na poziomie Srebro'], ['level-Złoto', 'Tydzień na poziomie Złoto'], ['level-Platyna', 'Tydzień na poziomie Platyna']];
   const STAGE_PL = { egg: 'Jajo', chick: 'Pisklę', young: 'Młoda', adult: 'Dorosła' };
   const NEXT_STAGE = { egg: [1, 'Pisklę'], chick: [7, 'Młoda'], young: [30, 'Dorosła'] };
@@ -131,6 +132,23 @@ var PET = (function () {
     return `${n} ${few ? 'aktywne dni' : 'aktywnych dni'}`;
   }
 
+  // Zapowiedź „Co się zmieni”: cel (stan i co pokazały badania), etap zwierzaka, najbliższa odznaka; bez obietnic zdrowotnych
+  const ACC_BIE = { szalik: 'szalik', czapka: 'czapkę', okulary: 'okulary', korona: 'koronę' };
+  const daysPl = (n) => (n === 1 ? '1 dzień' : `${n} dni`);
+  function next(st, c) {
+    const out = [], name = nameOf(c.pet), g = c.goal;
+    if (g) out.push({ t: `Cel „${g.t}”: ${g.left}.` + (g.nx ? ` Następny cel: ${g.nx}.` : '') + (g.gain ? ` W badaniach: ${g.gain}` : '') });
+    const nx = NEXT_STAGE[st.stage];
+    if (nx && nx[0] > st.active) {
+      const n = nx[0] - st.active;
+      out.push({ t: st.stage === 'egg' ? `Jeszcze ${activeDaysPl(n)} (co najmniej 30 pkt) i z jajka wykluje się pisklę.` : `Jeszcze ${activeDaysPl(n)} (co najmniej 30 pkt) i ${name} będzie ${nx[1]}, z nowym wyglądem.` });
+    }
+    const s = c.streak(), lim = [7, 14, 30].find((x) => s < x);
+    if (lim) out.push({ t: `Jeszcze ${daysPl(lim - s)} z wpisem z rzędu do odznaki „Seria ${lim} dni”.` });
+    const lv = c.nextLevel;
+    if (lv && ACC[lv.name]) out.push({ t: `Jeszcze ${lv.need} pkt w tym tygodniu do poziomu ${lv.name}: ${name} dostanie ${ACC_BIE[ACC[lv.name]]}.` });
+    return out.slice(0, 3);
+  }
   function badgeList(got) { return BADGES.map(([id, label]) => ({ id, label, got: got.includes(id) })); }
   function bars(m) {
     return '<span class="petbars">' + [['Posiłki', m.food], ['Energia', m.energy], ['Humor', m.mood]].map(([l, v]) =>
@@ -140,7 +158,7 @@ var PET = (function () {
 
   function card(st, pet, esc) {
     return `<button class="petcard" data-tab="pet" aria-label="Mój zwierzak: ${esc(nameOf(pet))}. ${esc(st.line)}">${svg(pet.kind, st.stage, st.mood, st.acc, false, st.crack)}`
-      + `<span class="petinfo"><b>${esc(nameOf(pet))}</b><span class="small">${esc(st.line)}</span>${st.stage === 'egg' ? `<span class="small muted">${st.crack != null && st.crack < 4 ? `Pierwsze kroki: pęknięcia ${st.crack} z 4. ` : ''}Jajo wykluje się po dniu z co najmniej 30 punktami.</span>` : ''}${bars(st.meters)}</span></button>`;
+      + `<span class="petinfo"><b>${esc(nameOf(pet))}</b><span class="small">${esc(st.line)}</span>${st.next && st.next.length ? `<span class="small petnext">${esc(st.next[0].t)}</span>` : ''}${st.stage === 'egg' ? `<span class="small muted">${st.crack != null && st.crack < 4 ? `Pierwsze kroki: pęknięcia ${st.crack} z 4. ` : ''}Jajo wykluje się po dniu z co najmniej 30 punktami.</span>` : ''}${bars(st.meters)}</span></button>`;
   }
   function screen(st, pet, sum, esc) {
     const nx = NEXT_STAGE[st.stage], row = (a, b) => `<div class="entry"><span class="txt">${a}</span><span class="val">${b}</span></div>`;
@@ -155,6 +173,7 @@ var PET = (function () {
       + (a.dw != null ? row('Średnia waga (7 dni) względem startu', `${sign(a.dw)} kg`) : '')
       + (a.waist != null ? row('Talia (średnia 4 tygodni)', `${sign(a.waist)} cm`) : '')
       + (a.pct != null ? row('Etap -5%', `${Math.round(a.pct)}%`) : '') + '</div>';
+    if (st.next && st.next.length) h += '<h2>Co się zmieni</h2><ul class="zd panel">' + st.next.map((x) => `<li>${esc(x.t)}</li>`).join('') + '</ul>';
     h += '<h2>Odznaki</h2><div class="badges">' + sum.badges.map((b) => `<span class="badge${b.got ? ' got' : ''}">${b.label}</span>`).join('') + '</div>';
     return h + (sum.body || '') + '<p><button class="btn ghost" data-tab="day" style="width:100%">Wróć</button></p>';
   }
@@ -232,5 +251,5 @@ var PET = (function () {
     return { S, frames: FRAMES.slice() };
   }
 
-  return { state, milestones, svg, card, screen, nameOf, badgeList, body, react, flush, demo };
+  return { state, milestones, next, svg, card, screen, nameOf, badgeList, body, react, flush, demo };
 })();
