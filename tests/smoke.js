@@ -1231,6 +1231,13 @@ tryc('prostota: zapisane dziś bez pustej sekcji „Brak treningów”', () => {
   return !h.includes('Brak treningów') && h.includes('Owsianka');
 });
 
+// Prostota P2 (rada/2026-11-11_prostota.md, działanie 7): „Pomiary dnia” bez zdań, które powtarza ekran
+tryc('prostota: instrukcja „Pomiary dnia” w 2 krótkich zdaniach, bez powtórzeń nagłówka obwodów i formatu snu', () => {
+  const h = view('day', BASE()), i = h.indexOf('<h2>Pomiary dnia</h2>'), p = h.slice(i, h.indexOf('</p>', i));
+  return i > 0 && p.includes('Waga rano, przed jedzeniem.') && !p.includes('po toalecie') && !p.includes('Obwody co 2 tygodnie') && !p.includes('tak jak pokazuje zegarek')
+    && p.replace(/<[^>]+>/g, ' ').split(/(?<=\.)\s+/).filter((x) => x.trim()).length <= 3;
+});
+
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
