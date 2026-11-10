@@ -25,7 +25,7 @@ const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
 const zdPath = path.join(root, 'zdarzenia.js');
 if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,CHIPS,DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,CHIPS,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -597,7 +597,7 @@ tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h =
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
 const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord'];
-const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel'];
+const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
   view('day', BASE({ kg: '90', age: '50', sex: 'M', muscle: true, bmiCut: 'nhs', meas: { [dk(0)]: { w: '90', steps: '8000', waist: '100' } }, days: { [dk(0)]: ML(1, 500, 30) }, krok: { step: 1, since: dk(3), ans: { why: 'zmeczenie' } }, knee: { start: dk(3), sessions: [{ d: dk(1), pain: 4 }], morning: {}, days: [2], tmpPain: null, tmpCramp: null } }));
@@ -1179,6 +1179,40 @@ tryc('jasne etykiety: tydzień cyklu „Tydzień 1” zamiast „1”, dni sesji
   const d = view('day', BASE({ sex: 'K' })), k = view('knee', BASE());
   return d.includes('>Tydzień 1</button>') && k.includes('aria-label="poniedziałek"') && k.includes('aria-label="niedziela"');
 });
+
+// Propozycja trybu po wprowadzeniu danych i tryb „Przyrost masy” (decyzja 10.11.2026; Iraki i in. 2019 PMC6680710, ISSN 2017 PMC5477153)
+const MB = (o) => BASE({ kg: '70', cm: '170', goal: '66,5', mode: 'redukcja', modeKeep: '', ...o });
+const secMode = (h) => { const i = h.indexOf('id="trybprop"'); return i < 0 ? '' : h.slice(i, h.indexOf('</section>', i)); };
+tryc('tryb: propozycja z danych na granicach (niżej o 1,1 kg, ±1 kg, wyżej o 1,1 kg, BMI poniżej 18,5)', () => {
+  const r = [['68,9', 'redukcja'], ['69', 'utrzymanie'], ['71', 'utrzymanie'], ['71,1', 'masa']].map(([g, m]) => { Object.assign(T.S(), { goal: g, kg: '70', cm: '170' }); return T.modeSuggest().m === m; });
+  T.S().kg = '52'; T.S().cm = '170'; T.S().goal = '50'; const low = T.modeSuggest();
+  if (r.includes(false)) throw new Error(r.join());
+  return low.m === 'masa' && low.low === true;
+});
+tryc('tryb: karta „Proponowany tryb” w Moim dniu, gdy propozycja różni się od trybu; bez karty, gdy zgodna', () => {
+  const a = secMode(view('day', MB({ goal: '75' }))), b = view('day', MB());
+  return a.includes('Proponowany tryb') && a.includes('data-mode="masa"') && a.includes('Wybieram: Przyrost masy') && a.includes('data-modekeep') && !b.includes('id="trybprop"');
+});
+tryc('tryb: karta także w Ustawieniach pod „Tryb”', () => { const h = view('set', MB({ goal: '70,5' })); const i = h.indexOf('id="trybprop"'); return i > h.indexOf('id="tryb"') && secMode(h).includes('data-mode="utrzymanie"'); });
+tryc('tryb: wybór z karty ustawia tryb; „Zostaję” ukrywa kartę do zmiany danych', () => {
+  view('day', MB({ goal: '75' })); click({ mode: 'masa' });
+  if (T.S().mode !== 'masa' || view('day').includes('id="trybprop"')) throw new Error('wybór');
+  view('day', MB({ goal: '75' })); click({ modekeep: '1' });
+  if (view('day').includes('id="trybprop"')) throw new Error('zostaję');
+  T.S().goal = '76'; return view('day').includes('id="trybprop"');
+});
+tryc('tryb: przy BMI poniżej 18,5 karta mówi o lekarzu', () => secMode(view('day', MB({ kg: '52', goal: '50' }))).includes('porozmawiaj z lekarzem'));
+tryc('masa: cel kalorii o 10% wyższy niż w utrzymaniu, białko 1,6 g/kg masy ciała', () => {
+  view('day', MB({ mode: 'utrzymanie', goal: '75' })); const u = T.targetKcal();
+  view('day', MB({ mode: 'masa', goal: '75' })); const m = T.targetKcal();
+  return Math.abs(m - u * 1.1) < 1 && Math.abs(T.protTarget() - 1.6 * 70) < 0.01;
+});
+tryc('masa: Mój dzień opisuje nadwyżkę, tempo przyrostu i źródła; bez „x% mniej” w Ustawieniach', () => {
+  const d = view('day', MB({ mode: 'masa', goal: '75' })), s = view('set', MB({ mode: 'masa', goal: '75' }));
+  return d.includes('Przyrost masy') && d.includes('0,25-0,5%') && d.includes('PMC6680710') && !s.includes('% mniej</button>') && s.includes('>Przyrost masy</button>');
+});
+tryc('masa: waga docelowa niższa od obecnej daje ostrzeżenie', () => { view('set', MB({ mode: 'masa', goal: '65' })); click({ datasave: '1' }); return (els.toast || {}).innerHTML.includes('przyroście masy') || view('set').includes('przyroście masy'); });
+tryc('masa: Pomoc opisuje 3 tryby', () => { const h = view('help', BASE({ helpQ: 'tryb' })); return h.includes('Przyrost masy') && h.includes('10%'); });
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
