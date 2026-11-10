@@ -223,11 +223,11 @@ tryc('komunikat po akcji wskazuje następny krok', () => { view('day', { ...NEWU
 tryc('P1-1: pasek nazywa się Posiłki, bez słowa Najedzenie', () => { const h = P().card(st(mkCtx({ today: { sleep: 7, steps: 7000 } })), { kind: 'gaska', name: 'Kluska' }, T.esc); return h.includes('Posiłki') && !h.includes('Najedzenie'); });
 tryc('P1-1: mina bez posiłku nie mówi o głodzie i nie pokazuje miski', () => { const s = st(mkCtx({ today: { sleep: 7, steps: 7000 } })), c = { kind: 'gaska', name: 'Kluska' }; const h = P().card(s, c, T.esc) + P().screen(s, c, { today: { done: 0, pts: 0 }, week: { pts: 0, level: 'Start', next: null }, all: { active: 1, streak: 0, dw: null, waist: null, pct: null }, badges: [], body: '' }, T.esc); return s.mood === 'hungry' && !/głodn/i.test(h) && !h.includes('class="bowl"') && h.includes('class="note"'); });
 tryc('P1-2: pierwszy wybór zwierzaka zalicza dawne osiągnięcia bez świętowania', () => {
-  view('set', { ...CLEAN(), pet: null, petSeen: [], reviews: REV }); click({ petkind: 'gaska' });
+  view('set', { ...CLEAN(), pet: null, petSeen: [], reviews: REV }); click({ petprev: 'gaska' }); click({ petok: '1' });
   return T.S().petSeen.includes('review1') && !view('day').includes('pet-celebrate');
 });
 tryc('P1-2: to samo po odtworzeniu starej kopii bez petSeen', () => {
-  const S = T.S(); view('set', { ...CLEAN(), pet: null, reviews: REV }); delete S.petSeen; click({ petkind: 'kaczka' });
+  const S = T.S(); view('set', { ...CLEAN(), pet: null, reviews: REV }); delete S.petSeen; click({ petprev: 'kaczka' }); click({ petok: '1' });
   return (T.S().petSeen || []).includes('review1') && !view('day').includes('pet-celebrate');
 });
 tryc('P1-2: zmiana rodzaju istniejącego zwierzaka nie zmienia odznak', () => { view('set', { ...CLEAN(), pet: { ...PETA }, petSeen: ['week1'], reviews: REV }); click({ petkind: 'kaczka' }); return T.S().petSeen.join() === 'week1' && T.S().pet.kind === 'kaczka'; });
@@ -780,7 +780,7 @@ tryc('Pomoc: szukanie po kilku słowach i w opisach', () => { const h = T.helpRe
 tryc('Pomoc: brak wyników: komunikat i najczęstsze zadania', () => { const h = T.helpRes('xyzqw'); return h.includes('Nic nie znaleziono') && (h.match(/data-(nav|tab)=/g) || []).length === 3; });
 tryc('przegląd tygodnia bez wpisów: podpowiedź i przycisk do Mojego dnia', () => { const h = view('review', BASE()); return h.includes('Pierwszy przegląd ma sens po tygodniu wpisów') && h.includes('data-tab="day"'); });
 tryc('przegląd tygodnia z wpisami: bez podpowiedzi pustego tygodnia', () => { const ks = wkKeys(RK()); return !view('review', BASE({ meas: { [ks[1]]: { w: '80' } } })).includes('Pierwszy przegląd ma sens'); });
-tryc('Zwierzak bez wyboru: wybór na miejscu zamiast przeniesienia do Ustawień', () => { const h = view('pet', BASE({ pet: null })); return T.S().tab === 'pet' && h.includes('Wybierz towarzysza') && h.includes('data-petkind'); });
+tryc('Zwierzak bez wyboru: wybór na miejscu zamiast przeniesienia do Ustawień', () => { const h = view('pet', BASE({ pet: null })); return T.S().tab === 'pet' && h.includes('Wybierz towarzysza') && h.includes('data-petprev'); });
 tryc('Pierwsze kroki: Wybierz towarzysza prowadzi do ekranu zwierzaka', () => T.guideSteps().find((x) => x.id === 'pet').arg === 'pet');
 // Rada 09.11.2026 (A+1, punkty 2 i 3): jajko pęka z Pierwszymi krokami, zwierzak mówi jedno zdanie w przeglądzie tygodnia
 const GD = (o) => ({ guide: { hidden: false, dataOk: false, seenPet: false, ...o } });
@@ -999,6 +999,53 @@ tryc('Mój dzień: sygnał „najpierw lekarz” nad celem', () => {
   return i > 0 && i < h.indexOf('id="cel"');
 });
 tryc('etap 1: pole cel w DEF, zdarzenia.js w index.html przed app.js i w pamięci podręcznej', () => T.DEF().cel === null && html.indexOf('zdarzenia.js') > 0 && html.indexOf('zdarzenia.js') < html.indexOf('app.js') && fs.readFileSync(path.join(root, 'sw.js'), 'utf8').includes("'./zdarzenia.js'"));
+
+// Wybór bez zatwierdzania i cofanie usunięć (błąd 10.11.2026: dotknięcie „Kaczuszka” zatwierdzało wybór na ekranie porównania)
+const toastHtml = () => (els.toast || {}).innerHTML || '';
+tryc('towarzysz: dotknięcie rodzaju to podgląd, nie wybór; porównanie obu, zatwierdzenie przyciskiem', () => {
+  for (const tab of ['pet', 'set']) {
+    let h = view(tab, BASE({ pet: null }));
+    if (!h.includes('data-petprev="kaczka"') || h.includes('data-petkind')) throw new Error(tab + ': brak podglądu');
+    click({ petprev: 'kaczka' }); h = view(tab);
+    if (T.S().pet !== null || !h.includes('Wybieram: Kaczuszka') || !h.includes('data-petok')) throw new Error(tab + ': kaczka zatwierdzona albo brak przycisku');
+    click({ petprev: 'gaska' }); h = view(tab);
+    if (T.S().pet !== null || !h.includes('Wybieram: Gąska')) throw new Error(tab + ': gąska zatwierdzona');
+    click({ petok: '1' });
+    if (!T.S().pet || T.S().pet.kind !== 'gaska') throw new Error(tab + ': zatwierdzenie nie zapisało gąski');
+  }
+  return true;
+});
+tryc('towarzysz: przed podglądem nie ma przycisku zatwierdzenia', () => !view('pet', BASE({ pet: null })).includes('data-petok'));
+const UNDO_CASES = [
+  ['posiłek', () => BASE({ days: { [dk(0)]: [{ kind: 'm', label: 'Owsianka', k: 400, p: 30 }] } }), { del: '0' }, (S) => S.days[dk(0)].length === 1],
+  ['dzień', () => BASE({ days: { [dk(0)]: [{ kind: 'm', label: 'Owsianka', k: 400, p: 30 }] } }), { clear: '1' }, (S) => S.days[dk(0)].length === 1],
+  ['wynik badania', () => BASE({ labs: [{ id: 'x1', test: 'tsh', v: '2', u: 'mIU/l', d: dk(3) }] }), { labdel: 'x1' }, (S) => S.labs.length === 1],
+  ['ból głowy', () => BASE({ pain: { [dk(0)]: { aura: false, med: true } } }), { painoff: '1' }, (S) => !!S.pain[dk(0)] && S.pain[dk(0)].med],
+  ['ustawienia domyślne', () => BASE({ prof: { cond: { io: true }, pill: 'yaz' }, cel: { id: 'sen', since: dk(1) } }), { reset: '1' }, (S) => S.prof.cond.io && S.cel && S.cel.id === 'sen'],
+];
+for (const [n, mk, act, back] of UNDO_CASES) {
+  tryc(`cofnięcie: ${n} usunięte jednym dotknięciem wraca przez „Cofnij”`, () => {
+    view('day', mk()); click(act);
+    if (back(T.S())) throw new Error('nic nie usunięto');
+    if (!toastHtml().includes('data-undo') || !toastHtml().includes('Cofnij')) throw new Error('brak „Cofnij”');
+    click({ undo: '1' });
+    return back(T.S());
+  });
+}
+// Strażnik: każda obsługa kliknięcia, która usuwa dane (splice, delete, filter na liście, czyszczenie, reset), musi iść przez undoable()
+tryc('strażnik: usuwanie danych w obsłudze kliknięć zawsze z „Cofnij”', () => {
+  const ALLOW = {
+    consentoff: 'wycofanie zgody RODO ma być tak proste jak jej udzielenie; klucz usuwany celowo',
+    chip: 'filtr przepisów: przełącza widok, nie usuwa danych',
+    swap: 'zamiana dania w planie dnia: kolejne dotknięcie wraca do oryginału',
+  };
+  const bad = code.split('\n').filter((l) => /^\s*(else )?if\(d\.\w+/.test(l))
+    .map((l) => [l.match(/if\(d\.(\w+)/)[1], l])
+    .filter(([id, l]) => !ALLOW[id] && /\.splice\(|delete S\.|=\[\]|S\.labs=S\.labs\.filter|clone\(DEF\)/.test(l) && !l.includes('undoable('))
+    .map(([id]) => id);
+  if (bad.length) throw new Error(bad.join(', '));
+  return true;
+});
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);

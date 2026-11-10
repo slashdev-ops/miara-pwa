@@ -986,7 +986,10 @@ function petState(){if(DEMO&&!DEMO_N){const fr=PET.demo().frames,f=fr[DEMO_I%fr.
 // Jajko pęka z Pierwszymi krokami (dane, waga, posiłek, ruch): rada/2026-11-09_pierwsze-uruchomienie, punkt 2
 function eggCrack(){return guideSteps().filter(x=>['data','weight','meal','move'].includes(x.id)&&x.done).length}
 function petCardHtml(){const c=eggCrack();if(!S.pet)return `<button class="petcard" data-petpick="1">${PET.svg('gaska','egg','ok',null,false,c)}<span class="petinfo"><b>Wybierz towarzysza</b><span class="small">${c>=4?'Jajko gotowe do wyklucia: wybierz, kto z niego wyjdzie.':`Jajko pęka z każdym pierwszym krokiem: ${c} z 4. Wybierz, kto się wykluje.`}</span></span></button>`;const st=petState();st.crack=c;return PET.card(st,S.pet,esc)}
-function petPickHtml(){const p=S.pet;return `<div class="petstage">${PET.svg(p?p.kind:'gaska',p?'chick':'egg','happy',null)}</div>`+seg([['gaska','Gąska'],['kaczka','Kaczuszka']],p?p.kind:'','petkind')+(p?`<div class="panel"><div class="field"><label for="petname">Imię</label><input type="text" id="petname" data-k="pet.name" value="${esc(p.name||'')}" placeholder="Kluska" maxlength="20"></div></div>`:'')}
+// Pierwszy wybór: dotknięcie rodzaju to tylko podgląd (PET_PREV, bez zapisu); zatwierdza przycisk „Wybieram: …”.
+// Przy istniejącym zwierzaku zmiana rodzaju to zwykłe ustawienie, które da się od razu zmienić z powrotem.
+let PET_PREV='';
+function petPickHtml(){const p=S.pet,KN={gaska:'Gąska',kaczka:'Kaczuszka'};if(!p){const v=PET_PREV;return `<div class="petstage">${PET.svg(v||'gaska',v?'chick':'egg','happy',null)}</div>`+seg([['gaska','Gąska'],['kaczka','Kaczuszka']],v,'petprev')+(v?`<p class="small">Dotknij drugiego, żeby porównać. Wybór zatwierdzasz przyciskiem.</p><p><button class="btn" data-petok="1">Wybieram: ${KN[v]}</button></p>`:'<p class="small">Dotknij, żeby zobaczyć. Możesz porównać oba, zanim wybierzesz.</p>')}return `<div class="petstage">${PET.svg(p.kind,'chick','happy',null)}</div>`+seg([['gaska','Gąska'],['kaczka','Kaczuszka']],p.kind,'petkind')+(p?`<div class="panel"><div class="field"><label for="petname">Imię</label><input type="text" id="petname" data-k="pet.name" value="${esc(p.name||'')}" placeholder="Kluska" maxlength="20"></div></div>`:'')}
 function waistDelta(){const ks=Object.keys(S.meas||{}).filter(k=>num(S.meas[k].waist)>0).sort();if(ks.length<2)return null;const t0=Date.parse(ks[0]),t1=Date.parse(ks.at(-1));if(t1-t0<14*864e5)return null;const av=a=>a.reduce((s,k)=>s+num(S.meas[k].waist),0)/a.length;return av(ks.filter(k=>Date.parse(k)>=t1-27*864e5))-av(ks.filter(k=>Date.parse(k)<=t0+27*864e5))}
 function petSum(st){const k=todayKey(),m=S.meas[k]||{},d=day(),done=[num(m.w)>0,d.filter(e=>e.kind==='m').length>=3,d.some(e=>e.kind==='t')||num(m.steps)>0].filter(Boolean).length,wp=weekPts(),nx=LEVELS.find(x=>x[0]>wp),si=stageInfo(),a7=avgAgo(0,7,'w');
   return {today:{done,pts:dayPts(k)},week:{pts:wp,level:level(wp)[1],next:nx?{name:nx[1],need:nx[0]-wp}:null},all:{active:st.active,streak:streak(),dw:si&&a7!=null?a7-si.start:null,waist:waistDelta(),pct:si?si.pct:null},badges:PET.badgeList([...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])]),body:S.body?petBodyHtml():''}}
@@ -1466,14 +1469,18 @@ function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:
 function toastHide(){const el=document.getElementById('toast');clearTimeout(toast._t);el.classList.remove('show')}
 function toast(t,o){const el=document.getElementById('toast'),a=o&&typeof o==='object'&&o.act?o:null;
   el.innerHTML=`<span class="tmsg">${esc(t)}</span><button class="tclose" data-toastclose="1" aria-label="Zamknij komunikat">×</button>`+(a?`<button class="btn small" data-${a.act}="${esc(a.arg)}">${esc(a.label)}</button>`:'');
-  el.classList.add('show');clearTimeout(toast._t);const ms=toastMs(t);if(ms)toast._t=setTimeout(()=>el.classList.remove('show'),Math.max(ms,typeof o==='number'?o:0));
+  el.classList.add('show');clearTimeout(toast._t);const ms=toastMs(t);if(ms)toast._t=setTimeout(()=>el.classList.remove('show'),Math.max(ms,typeof o==='number'?o:0,(a&&a.ms)||0));
   if(o&&o.focus){const f=document.getElementById(o.focus);if(f&&f.scrollIntoView)f.scrollIntoView({behavior:'smooth',block:'center'});if(f&&f.focus)f.focus({preventScroll:true})}}
+// Cofanie: każde usunięcie danych jednym dotknięciem zapisuje stan sprzed zmiany i pokazuje „Cofnij” (test strażnika w smoke.js)
+let UNDO=null;
+function undoable(msg){UNDO=JSON.stringify(S);toast(msg,{act:'undo',arg:'1',label:'Cofnij',ms:8000})}
 function setPath(p,v){const a=p.split('.');let o=S;for(let i=0;i<a.length-1;i++)o=o[a[i]];o[a[a.length-1]]=v}
 
 // ---------- Zdarzenia ----------
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;
   if(d.toastclose){toastHide();return}
+  if(d.undo){if(UNDO){const tab=S.tab;S=JSON.parse(UNDO);S.tab=tab;UNDO=null;save();render();toast('Przywrócono')}else toastHide();return}
   if(d.preset||d.datasave)S.touched={kg:true,cm:true,age:true,goal:true};
   if(b.parentNode&&b.parentNode.id==='toast')toastHide();
   if(d.nav){const [tab,id,fd]=d.nav.split('#');S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
@@ -1502,8 +1509,8 @@ document.addEventListener('click',e=>{
   else if(d.dayplan){const lg=new Set(day().filter(e=>e.kind==='m').map(e=>e.id));let n=0;planIds().forEach(id=>{if(lg.has(id))return;const m=MEALS.find(x=>x.id===id),x=macros(m,carbMult(),num(S.f.portion)||1);day().push({kind:'m',id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c,plan:true});lg.add(id);n++});if(n)PET.react('meal');save();toast(n?`Dodano ${n} ${n===1?'posiłek':'posiłki'} z planu, wartości szacunkowe`:'Plan na dziś jest już zapisany',3200);return}
   else if(d.dayother){OPEN_F.add('szybki')}
   else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m);day().push({kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net});PET.react('train');save();toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
-  else if(d.del!=null){day().splice(+d.del,1)}
-  else if(d.clear){S.days[todayKey()]=[]}
+  else if(d.del!=null){undoable('Usunięto wpis');day().splice(+d.del,1)}
+  else if(d.clear){undoable('Wyczyszczono wpisy z dziś');S.days[todayKey()]=[]}
   else if(d.introdone){const ok=d.introdone==='ok',st=['kg','cm','age'].filter(isStart);if(ok&&st.length){S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);save();render();const nm=st.map(k=>({kg:'waga',cm:'wzrost',age:'wiek'})[k]),lst=nm.length>1?nm.slice(0,-1).join(', ')+' i '+nm.at(-1):nm[0];toast(`${lst[0].toUpperCase()+lst.slice(1)} ${nm.length>1?'są':'jest'} na wartościach startowych. Ustaw swoje w Ustawieniach, żeby kalorie były liczone dla Ciebie.`,{act:'tab',arg:'set',label:'Ustawienia'});return}if(ok&&S.guide)S.guide.dataOk=true;S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);if(ok){save();render();toast(`Twój cel na start: ${fmt(targetKcal())} kcal dziennie.`+(S.pet?'':' W Moim dniu czeka jajko: wybierz, kto się z niego wykluje.'),S.pet?0:{act:'tab',arg:'pet',label:'Wybierz'});return}}
   else if(d.intro){S.introStep=0;S.tab='intro';window.scrollTo(0,0)}
   else if(d.goto){const el=document.getElementById(d.goto);if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.focus)el.focus({preventScroll:true})}return}
@@ -1532,7 +1539,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.cyc){const k=todayKey();S.meas[k]=S.meas[k]||{};S.meas[k].cyc=S.meas[k].cyc===d.cyc?'':d.cyc}
   else if(d.bkexp){bkExport();return}
   else if(d.bkpaste){const o=bkParse(document.getElementById('bk_text').value.trim());if(!o){BK_PENDING=null;toast('To nie jest kopia tej aplikacji');return}BK_PENDING=o}
-  else if(d.bkapply){if(!BK_PENDING)return;if(BK_PENDING.noHealth)BK_NH_KEEP.forEach(k=>{if(!(k in BK_PENDING.data))return;const v=clone(BK_PENDING.data[k]);S[k]=v&&typeof v==='object'&&!Array.isArray(v)?merge(clone(DEF[k]||{}),v):v});else S=merge(clone(DEF),fixTouched(BK_PENDING.data));S.onb=true;S.tab='set';BK_PENDING=null;toast('Wczytano kopię')}
+  else if(d.bkapply){if(!BK_PENDING)return;if(BK_PENDING.noHealth)BK_NH_KEEP.forEach(k=>{if(!(k in BK_PENDING.data))return;const v=clone(BK_PENDING.data[k]);S[k]=v&&typeof v==='object'&&!Array.isArray(v)?merge(clone(DEF[k]||{}),v):v});else S=merge(clone(DEF),fixTouched(BK_PENDING.data));S.onb=true;S.tab='set';BK_PENDING=null;undoable('Wczytano kopię')}
   else if(d.bkcancel){BK_PENDING=null}
   else if(d.chmode){S.chMode=d.chmode}
   else if(d.wi){const [a,b]=d.wi.split(':');S.wi=S.wi||{snack:0,steps:0,train:0};S.wi[a]=+b}
@@ -1546,7 +1553,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.shop){const t='Lista zakupów na tydzień\n'+shopLines().join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano listę'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
   else if(d.recipe){if(S.tab!=='recipe')S.recipeBack=S.tab;S.recipe=d.recipe;S.tab='recipe';window.scrollTo(0,0)}
   else if(d.labsave){const g=id=>document.getElementById(id),v=g('l_val').value.trim(),dt=g('l_date').value;if(!v||!isFinite(parseFloat(v.replace(',','.')))){toast('Wpisz wynik liczbowo');return}if(!dt){toast('Wpisz datę');return}S.labs.push({id:Date.now().toString(36),test:LABN[S.labSel]?S.labSel:'tsh',date:dt,val:v.replace(',','.'),unit:g('l_unit').value.trim(),fast:g('l_fast').checked,bio:g('l_bio')?g('l_bio').checked:undefined,cyc:g('l_cyc')?g('l_cyc').value.trim():'',cr:g('l_cr')?g('l_cr').checked:false});toast('Zapisano wynik')}
-  else if(d.labdel){S.labs=S.labs.filter(e=>e.id!==d.labdel)}
+  else if(d.labdel){undoable('Usunięto wynik badania');S.labs=S.labs.filter(e=>e.id!==d.labdel)}
   else if(d.labcopy){const t=LABS.map(x=>{const es=S.labs.filter(e=>e.test===x.id).sort((a,b)=>a.date.localeCompare(b.date));return es.length?x.n+': '+es.map(e=>fmtDate(e.date)+' '+e.val+' '+e.unit).join('; '):''}).filter(Boolean).join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
   else if(d.quick){const n=document.getElementById('q_n').value.trim(),k=num(document.getElementById('q_k').value);if(k<=0){toast('Wpisz liczbę kalorii');return}day().push({kind:'m',label:n||'Szybki wpis',k,p:0,f:0,c:0})}
   else if(d.repeat){const y=(S.days[keyOf(new Date(Date.now()-864e5))]||[]).filter(e=>e.kind==='m');if(!y.length){toast('Wczoraj nie ma zapisanych posiłków');return}y.forEach(e=>day().push(Object.assign({},e)));PET.react('meal')}
@@ -1556,12 +1563,14 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
     if(navigator.share){navigator.share({text:t}).catch(()=>{})}
     else if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>toast('Skopiowano do schowka'),()=>toast('Nie udało się skopiować'))}
     return}
-  else if(d.petkind){const first=!S.pet;S.pet={kind:d.petkind,name:(S.pet&&S.pet.name)||'',since:(S.pet&&S.pet.since)||todayKey()};if(first)S.petSeen=[...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])]}
+  else if(d.petprev){PET_PREV=d.petprev;render();return}
+  else if(d.petok){if(!PET_PREV)return;S.pet={kind:PET_PREV,name:'',since:todayKey()};PET_PREV='';S.petSeen=[...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])];toast('Witaj, '+(S.pet.kind==='kaczka'?'kaczuszko':'gąsko')+'! Imię nadasz w Ustawieniach.')}
+  else if(d.petkind){if(!S.pet)return;S.pet.kind=d.petkind}
   else if(d.petpick){S.tab='pet';window.scrollTo(0,0)}
   else if(d.datasave){const c=dataCheck();if(c.err.length){toast(c.err[0],3200);const el=document.getElementById('f_'+c.first);if(el&&el.focus)el.focus()}else{S.guide=S.guide||{};S.guide.dataOk=true;save();toast('Dane zapisane')}}
   else if(d.pain){const k=d.pain==='yday'?nAgo(1):todayKey();S.pain=S.pain||{};S.pain[k]=S.pain[k]||{aura:false,med:false};toast(d.pain==='yday'?'Wczoraj zapisany jako dzień z bólem':'Dzień z bólem: seria się nie przerwie',2400)}
   else if(d.painaura||d.painmed){const p=painAt(todayKey());if(p){const f=d.painaura?'aura':'med';p[f]=!p[f]}}
-  else if(d.painoff){if(S.pain)delete S.pain[todayKey()]}
+  else if(d.painoff){if(S.pain&&S.pain[todayKey()]){undoable('Usunięto dzień z bólem');delete S.pain[todayKey()]}}
   else if(d.consent){if(!(document.getElementById('c_ok')||{}).checked){toast('Zaznacz pole zgody');return}S.consent={v:CONSENT_V,at:new Date().toISOString()};toast('Zgoda zapisana. Teraz ustaw hasło kopii.',2400)}
   else if(d.consentshow){S.consentShow=!S.consentShow}
   else if(d.consentoff){S.consent=null;S.kopia=null;KS.del().catch(()=>{});toast('Zgoda wycofana. Wysyłanie zatrzymane; kopie zostaną usunięte.',3200)}
@@ -1588,7 +1597,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.demoexit){location.hash='';location.reload();return}
   else if(d.scen){location.hash='#demo-'+d.scen;location.reload();return}
   else if(d.sex){S.sex=d.sex}
-  else if(d.reset){const days=S.days;S=clone(DEF);S.days=days;S.tab='set'}
+  else if(d.reset){undoable('Przywrócono ustawienia domyślne');const days=S.days;S=clone(DEF);S.days=days;S.tab='set'}
   else return;
   save();render();
 });
