@@ -556,7 +556,9 @@ function legHtml(){
   const ago=last?Math.round((Date.parse(k)-Date.parse(last))/864e5):null,trend=ks.length>=2?` Pierwszy wpis ${fmtDate(ks[0])}: ból ${L[ks[0]].b}, ciężkość ${L[ks[0]].c}.`:'';
   if(last&&last!==k&&ago<7)return `<details class="fold"><summary>Nogi: ból ${L[last].b}, ciężkość ${L[last].c} (${fmtDate(last)})</summary><div class="panel" style="padding:4px 16px 12px"><p>Następny wpis za ${7-ago} ${7-ago===1?'dzień':'dni'}.${trend}</p></div></details>`;
   const row=(key,lab)=>`<p style="margin:10px 0 4px">${lab}</p><div class="chips">`+[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="chip ${cur[key]===n?'inc':''}" data-leg="${key}:${n}" aria-pressed="${cur[key]===n}" style="min-width:38px">${n}</button>`).join('')+'</div>';
-  return `<h2>Nogi, raz w tygodniu</h2><div class="panel" style="padding:4px 16px 12px">${row('b','Ból nóg (0 brak, 10 najgorszy)')}${row('c','Uczucie ciężkości nóg')}<p class="small muted">Przy lipodemii obwód uda spada wolno; ból i ciężkość pokazują, czy ruch i kompresja działają.${trend}</p></div>`;
+  // Zwinięte, gdy czas na wpis (22 przyciski); rozwinięte, gdy dzisiejszy wpis jest zaczęty
+  const op=cur.b!=null||cur.c!=null||OPEN_F.has('nogi');
+  return `<details class="fold" id="fold_nogi" data-fold="nogi"${op?' open':''}><summary>Nogi, raz w tygodniu: czas na wpis</summary><div class="panel" style="padding:4px 16px 12px">${row('b','Ból nóg (0 brak, 10 najgorszy)')}${row('c','Uczucie ciężkości nóg')}<p class="small muted">Przy lipodemii obwód uda spada wolno; ból i ciężkość pokazują, czy ruch i kompresja działają.${trend}</p></div></details>`;
 }
 
 // ---------- Tryb utrzymania ----------
@@ -1346,7 +1348,7 @@ function celHtml(){
   h+='<section class="panel zdsec" id="cel" aria-label="Twój cel"><h2>Twój cel</h2>';
   if(!cur){
     const sug=ZD.suggest(S,todayKey(),ctx),g=ZD.goalOf(sug);
-    h+=`<p>Proponowany cel z Twoich danych: <b>${g.t}</b>. Jeden cel naraz; zmienisz go w każdej chwili.</p><p>${pick(sug,'Wybieram ten cel')}</p>`;
+    h+=`<p>Proponowany cel: <b>${g.t}</b>.</p><p>${pick(sug,'Wybieram ten cel')}</p>`;
     h+=fold('celwybor','Inne cele',`<div class="chips">${ZD.goals.filter(x=>x.id!==sug).map(x=>pick(x.id,x.t)).join('')}</div>`);
   }else{
     const p=ZD.progress(S,cur.id,todayKey(),ctx);
@@ -1384,7 +1386,7 @@ function renderDay(){
   more+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
   more+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
   more+=relHtml();
-  h+='<details class="fold" data-fold="zapisane"'+(OPEN_F.has('zapisane')?' open':'')+'><summary>Zapisane dziś: posiłki '+ml.length+', treningi '+tr.length+'</summary><h3 class="rh" style="margin:4px 16px 8px">Treningi</h3><div class="panel">'+(tr.length?tr.map(e=>`<div class="entry"><span class="txt">${e.label}, ${fmt(e.min)} min</span><span class="val">${fmt(e.gross)} kcal</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join(''):'<div class="empty">Brak treningów. <button class="btn ghost small" data-tab="train">Przejdź do Treningu</button></div>')+'</div>';
+  h+='<details class="fold" data-fold="zapisane"'+(OPEN_F.has('zapisane')?' open':'')+'><summary>Zapisane dziś: posiłki '+ml.length+', treningi '+tr.length+'</summary>'+(tr.length?'<h3 class="rh" style="margin:4px 16px 8px">Treningi</h3><div class="panel">'+tr.map(e=>`<div class="entry"><span class="txt">${e.label}, ${fmt(e.min)} min</span><span class="val">${fmt(e.gross)} kcal</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join('')+'</div>':'<p style="margin:4px 16px"><button class="btn ghost small" data-tab="train">Przejdź do Treningu</button></p>');
   h+='<h3 class="rh" style="margin:12px 16px 8px">Posiłki</h3><div class="panel">'+(ml.length?ml.map(e=>`<div class="entry"><span class="txt">${e.label}</span><span class="val">${fmt(e.k)} kcal, B ${fmt(e.p)} g</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join(''):'<div class="empty">Brak posiłków. <button class="btn ghost small" data-tab="meals">Przejdź do Posiłków</button></div>')+'</div></details>';
   h+=`<details class="fold" data-fold="szybki"${OPEN_F.has('szybki')?' open':''}><summary>Szybki wpis albo powtórz wczoraj</summary><div class="panel"><div class="field"><label for="q_n">Co</label><input type="text" id="q_n" style="width:170px;text-align:left" placeholder="np. kawa z mlekiem"></div><div class="field"><label for="q_k">Ile</label><input type="text" inputmode="numeric" id="q_k" placeholder="0"><span class="unit">kcal</span></div>${kcalChips('q_k')}</div><p><button class="btn" data-quick="1">Zapisz</button> <button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki</button><button class="btn ghost" data-nav="meals#zamowione">Zamówione jedzenie</button></p><p class="small muted">Wpis przybliżony wystarczy. W badaniach z wynikiem redukcji wiązała się częstość zapisywania, nie jego dokładność.</p></details>`;
   more+='<div class="navrow"><button class="btn ghost" data-tab="impact">Mój wpływ</button><button class="btn ghost" data-tab="challenge">Wspólne wyzwanie</button><button class="btn ghost" data-tab="review">Przegląd tygodnia</button></div>';

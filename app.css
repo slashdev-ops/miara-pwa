@@ -354,3 +354,9 @@ button:disabled{opacity:.55;cursor:not-allowed;filter:none;transform:none}
   button:not(:disabled):active,summary:active{transform:none}
   button,summary,.chip,.opt{transition:none}
 }
+
+/* ---------- Prostota (rada/2026-11-11_prostota.md): ramka tylko na kafelku najwyższego poziomu ---------- */
+/* :not(#_) podnosi specyficzność ponad regułę palety .note:not(.warn):not(.demo) */
+:is(.panel,.fold,.note,.petcard,.card) :is(.panel,.fold,.note,.card,.seg,.chip):not(#_){border:0;box-shadow:none}
+:is(.panel,.fold,.note,.petcard,.card) .chip:not(.inc):not(.exc){background:var(--surface2)}
+:is(.panel,.fold,.note,.petcard,.card) .chip.exc:not(#_){border:1px solid var(--clay)}

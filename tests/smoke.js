@@ -1214,6 +1214,23 @@ tryc('masa: Mój dzień opisuje nadwyżkę, tempo przyrostu i źródła; bez „
 tryc('masa: waga docelowa niższa od obecnej daje ostrzeżenie', () => { view('set', MB({ mode: 'masa', goal: '65' })); click({ datasave: '1' }); return (els.toast || {}).innerHTML.includes('przyroście masy') || view('set').includes('przyroście masy'); });
 tryc('masa: Pomoc opisuje 3 tryby', () => { const h = view('help', BASE({ helpQ: 'tryb' })); return h.includes('Przyrost masy') && h.includes('10%'); });
 
+// Prostota (rada/2026-11-11_prostota.md): mniej słów i przycisków na Moim dniu
+tryc('prostota: karta celu bez zdań powtarzających przycisk', () => {
+  const c = secCel(view('day', BASE({ cel: null })));
+  return c.includes('Proponowany cel: <b>') && !c.includes('Jeden cel naraz') && !c.includes('z Twoich danych');
+});
+tryc('prostota: dziennik nóg zwinięty, gdy czas na wpis; rozwinięty po pierwszym zaznaczeniu', () => {
+  const a = view('day', BASE({ sex: 'K', lip: true, legs: {} }));
+  const i = a.indexOf('id="fold_nogi"'), tag = a.slice(i - 60, a.indexOf('>', i) + 1);
+  const b = view('day', BASE({ sex: 'K', lip: true, legs: { [dk(0)]: { b: 3 } } }));
+  const j = b.indexOf('id="fold_nogi"'), tagB = b.slice(j - 60, b.indexOf('>', j) + 1);
+  return i > 0 && a.includes('Nogi, raz w tygodniu: czas na wpis') && !/\sopen/.test(tag) && /\sopen/.test(tagB);
+});
+tryc('prostota: zapisane dziś bez pustej sekcji „Brak treningów”', () => {
+  const h = view('day', BASE({ days: { [dk(0)]: [{ kind: 'm', label: 'Owsianka', k: 400, p: 30 }] } }));
+  return !h.includes('Brak treningów') && h.includes('Owsianka');
+});
+
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

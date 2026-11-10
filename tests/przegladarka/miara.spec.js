@@ -274,7 +274,7 @@ test('kafelki i przyciski-kafelki mają obramowanie co najmniej 3:1 do tła pod 
       for (const el of document.querySelectorAll('.panel,.fold,.chip,.seg,.petcard,.note:not(.warn):not(.demo)')) {
         if (!visible(el)) continue;
         // panel w rozwijanej sekcji albo w innym panelu: obramowanie ma kontener
-        if (el.matches('.panel') && el.parentElement.closest('.fold,.panel')) continue;
+        if (el.parentElement.closest('.panel,.fold,.note,.petcard,.card')) continue; // wewnątrz kafelka ramkę ma kafelek
         const s = getComputedStyle(el), bg = bgOf(el.parentElement);
         if (!bg) continue;
         const w = parseFloat(s.borderTopWidth), r = ratio(rgba(s.borderTopColor), bg);
@@ -315,6 +315,30 @@ test('każdy stan ma reakcję: dotknięcie, fokus z klawiatury w akcencie, wybra
   expect(sel.bg).toBe(sel.g);
   const dis = await page.evaluate(() => { const b = document.createElement('button'); b.className = 'btn'; b.disabled = true; b.textContent = 'x'; document.getElementById('main').appendChild(b); return parseFloat(getComputedStyle(b).opacity); });
   expect(dis).toBeLessThan(1);
+  expect(errors).toEqual([]);
+});
+
+// Strażnik prostoty (rada/2026-11-11_prostota.md): ramka tylko na kafelku najwyższego poziomu, nigdy ramka w ramce
+test('bez ramki w ramce: wewnątrz kafelka panel, sekcja, notka, żeton i przełącznik bez obramowania i cienia', async ({ page }) => {
+  const errors = await open(page);
+  const bad = [];
+  for (const v of ['day', 'meals', 'train', 'health', 'set', 'pet']) {
+    await show(page, v);
+    await page.evaluate(() => document.querySelectorAll('details.fold').forEach((d) => { d.open = true; }));
+    const found = await page.evaluate(() => {
+      const TILE = '.panel,.fold,.note,.petcard,.card', IN = '.panel,.fold,.note,.card,.seg,.chip:not(.exc)';
+      const out = [];
+      for (const el of document.querySelectorAll('#main ' + IN.split(',').join(',#main '))) {
+        if (!el.parentElement.closest(TILE)) continue;
+        const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
+        const s = getComputedStyle(el);
+        if (parseFloat(s.borderTopWidth) > 0 || s.boxShadow !== 'none') out.push(el.className.split(' ').slice(0, 2).join('.'));
+      }
+      return out;
+    });
+    for (const f of found) bad.push(`${v}: ${f}`);
+  }
+  expect([...new Set(bad)], 'ramka w ramce').toEqual([]);
   expect(errors).toEqual([]);
 });
 
