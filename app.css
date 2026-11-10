@@ -56,6 +56,7 @@ button{font:inherit;color:inherit}
 .seg.scroll{overflow-x:auto;scrollbar-width:none}
 .seg.scroll::-webkit-scrollbar{display:none}
 .seg button{flex:1 0 auto;border:0;background:transparent;padding:8px 12px;border-radius:var(--r-s);font-size:15px;white-space:nowrap;min-height:44px;color:var(--muted)}
+.seg:not(.scroll) button{flex:1 1 auto;min-width:0;white-space:normal;line-height:1.2}
 .seg button.on{background:var(--surface);font-weight:600;color:var(--ink);box-shadow:var(--shadow)}
 
 .panel{background:var(--surface);border-radius:var(--r);padding:4px 0;margin:12px 0;box-shadow:var(--shadow)}
