@@ -183,6 +183,31 @@ test('kopia bez danych o zdrowiu ma tylko ustawienia, wczytanie nie kasuje danyc
   expect(errors).toEqual([]);
 });
 
+test('wybór towarzysza: dotknięcie to podgląd, zatwierdza przycisk „Wybieram”', async ({ page }) => {
+  const errors = await open(page, '#demo-start');
+  await page.evaluate(() => { S.onb = true; });
+  await show(page, 'pet');
+  await page.getByRole('button', { name: 'Kaczuszka' }).click();
+  await expect(page.getByRole('button', { name: 'Wybieram: Kaczuszka' })).toBeVisible();
+  expect(await page.evaluate(() => S.pet)).toBeNull();
+  await page.getByRole('button', { name: 'Gąska' }).click();
+  await page.getByRole('button', { name: 'Wybieram: Gąska' }).click();
+  expect(await page.evaluate(() => S.pet && S.pet.kind)).toBe('gaska');
+  expect(errors).toEqual([]);
+});
+
+test('usunięcie wpisu ma „Cofnij” w komunikacie i przywraca wpis', async ({ page }) => {
+  const errors = await open(page);
+  await show(page, 'day');
+  const n = await page.evaluate(() => day().length);
+  await page.locator('[data-del]').first().scrollIntoViewIfNeeded();
+  await page.locator('[data-del]').first().click();
+  expect(await page.evaluate(() => day().length)).toBe(n - 1);
+  await page.locator('#toast').getByRole('button', { name: 'Cofnij' }).click();
+  expect(await page.evaluate(() => day().length)).toBe(n);
+  expect(errors).toEqual([]);
+});
+
 test('wszystkie schorzenia i Yaz: sygnał UKMEC, następny cel, schorzenia razem, zapowiedź zwierzaka', async ({ page }) => {
   const errors = await open(page, '#demo-wszystkie');
   await show(page, 'day');
