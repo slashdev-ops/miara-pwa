@@ -25,7 +25,7 @@ const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
 const zdPath = path.join(root, 'zdarzenia.js');
 if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,CHIPS,DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -1139,6 +1139,45 @@ tryc('pet: karta w Moim dniu ma pierwszą zapowiedź, ekran zwierzaka sekcję �
   const s = BASE({ pet: { kind: 'gaska', name: 'Kluska', since: dk(3) }, cel: { id: 'sen', since: dk(2) } });
   const d = view('day', s), p = view('pet', s);
   return d.includes('class="small petnext"') && p.includes('Co się zmieni') && p.includes('Mniej krótkich nocy');
+});
+
+// Jasne wybory (10.11.2026): każda grupa opcji ma nazwę, każda opcja mówi, czy jest wybrana, a etykieta zrozumiała bez zgadywania
+const allChoiceHtml = () => {
+  const out = [];
+  for (const v of ['intro', 'meals', 'train', 'day', 'health', 'set', 'pet', 'knee', 'challenge']) out.push(view(v, BASE({ sex: 'K', lip: true, pet: null })));
+  out.push(view('set', BASE({ pet: { ...PETA } })));
+  for (const cat of ['bieznia', 'spinning']) out.push(view('train', BASE({ tr: { ...T.S().tr, cat } })));
+  return out.join('\n');
+};
+tryc('strażnik: każda grupa wyboru (seg) w kodzie ma nazwę', () => {
+  const calls = code.match(/\bseg\(\[\[/g).length, named = (code.match(/\bseg\(\[\[[\s\S]*?\]\],[^,]+,'\w+',(?:'[^']*'|""),'[^']{3,}'\)/g) || []).length;
+  if (calls !== named) throw new Error(`${calls - named} z ${calls} bez nazwy`);
+  return true;
+});
+tryc('strażnik: w każdym widoku grupy wyboru mają role="group" z nazwą, opcje aria-pressed', () => {
+  const h = allChoiceHtml();
+  const segs = h.match(/<div class="seg[^"]*"[^>]*>/g) || [];
+  const noName = segs.filter((x) => !/role="group" aria-label="[^"]{3,}"/.test(x));
+  // Żeton, który może być zaznaczony (klasa inc w szablonie), musi mieć aria-pressed; żetony akcji (wstaw wartość) nie
+  const chips = (code.match(/<button class="chip[^>]*>/g) || []).filter((x) => /inc/.test(x) && !/aria-pressed=/.test(x));
+  const segBtns = [...h.matchAll(/<div class="seg[^"]*"[^>]*>([\s\S]*?)<\/div>/g)].flatMap((m) => m[1].match(/<button[^>]*>/g) || []).filter((x) => !/aria-pressed=/.test(x));
+  if (!segs.length) throw new Error('brak grup');
+  if (noName.length || chips.length || segBtns.length) throw new Error(`bez nazwy ${noName.length}, żetony bez stanu ${chips.length}, opcje bez stanu ${segBtns.length}: ${(chips[0] || segBtns[0] || noName[0] || '').slice(0, 90)}`);
+  return true;
+});
+tryc('jasne etykiety: bez samego „Auto”, „Region”, „Lekki”, „Zwykle”, „Talia” w opcjach', () => {
+  const h = allChoiceHtml(), bad = ['Auto', 'Region', 'Lekki', 'Zwykle', 'Talia'].filter((l) => h.includes(`">${l}</button>`));
+  if (bad.length) throw new Error(bad.join(', '));
+  return h.includes('Auto: z treningów dnia') && h.includes('Lekki trening') && h.includes('Kraj telefonu') && h.includes('Obwód talii');
+});
+tryc('jasne etykiety: filtr produktów pokazuje stan w tekście (chcę, bez)', () => {
+  const S0 = BASE(); const c = T.CHIPS[0]; S0.f = { ...T.S().f, chips: { [c]: 1, [T.CHIPS[1]]: -1 } };
+  const h = view('meals', S0);
+  return h.includes(`${c} (chcę)`) && h.includes(`${T.CHIPS[1]} (bez)`) && h.includes(`aria-pressed="true"`);
+});
+tryc('jasne etykiety: tydzień cyklu „Tydzień 1” zamiast „1”, dni sesji pełną nazwą dla czytnika', () => {
+  const d = view('day', BASE({ sex: 'K' })), k = view('knee', BASE());
+  return d.includes('>Tydzień 1</button>') && k.includes('aria-label="poniedziałek"') && k.includes('aria-label="niedziela"');
 });
 
 chain.then(() => {
