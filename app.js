@@ -136,7 +136,7 @@ const SPIN=[
 const PLAN={1:['s1','o1','k1','p2'],2:['s2','o6','k4','p1'],3:['s3','o16','k2','p5'],4:['s1','o14','k3','p3'],5:['s4','o7','k1','p6'],6:['s2','o9','k2','p4'],0:['s5','o5','k5','p1']};
 const SLOT_T={sniadanie:'Śniadanie',obiad:'Obiad',kolacja:'Kolacja',przekaska:'Przekąska'};
 function slotNow(){const h=new Date().getHours();return h<11?'sniadanie':h<18?'obiad':'kolacja'}
-function targetKcal(){const R=rmr(),M=measuredTdee(),f=S.mode==='utrzymanie'?1:0.8;if(M)return Math.max(R,M.tdee*f);return Math.max(R,(R*1.3+trainNet())*f)}
+function targetKcal(){const R=rmr(),M=measuredTdee(),f=S.mode==='utrzymanie'?1:S.mode==='masa'?1.1:0.8;if(M)return Math.max(R,M.tdee*f);return Math.max(R,(R*1.3+trainNet())*f)}
 function lastKeys(n){const a=[];for(let i=0;i<n;i++)a.push(keyOf(new Date(Date.now()-i*864e5)));return a}
 function measuredTdee(){
   const ks=lastKeys(28).reverse(),W=[],I=[];
@@ -242,7 +242,7 @@ function projHtml(){
   h+=bs.length?line(-bs.reduce((a,b)=>a+b,0)/bs.length,`Średnia z ${bs.length} ${bs.length===1?'zapisanego dnia':'zapisanych dni'} z ostatniego tygodnia`):'<p>Po kilku dniach zapisów pojawi się tu tempo liczone z Twoich danych.</p>';
   const G=dataGap();
   h+=M?`<p><b>Zapotrzebowanie zmierzone: ok. ${fmt(M.tdee)} kcal.</b> Średnio ${fmt(M.avgI)} kcal jedzenia, trend wagi ${M.slope>0?'+':''}${fmt1(M.slope*7)} kg tygodniowo; ${M.nW} ważeń, ${M.nI} pełnych dni.</p>${M.slope<0&&-M.slope*7>kg()*0.01?'<p>Tempo powyżej 1% masy ciała tygodniowo: rozważ mniejszy deficyt (wiedza ogólna).</p>':''}`:`<p>Zapotrzebowanie na razie ze wzoru. Do pomiaru potrzeba w ostatnich 28 dniach co najmniej 6 ważeń rozłożonych na 14 dni i 10 dni z co najmniej 3 zapisanymi posiłkami. Jest: ${G.w} ważeń, ${G.i} takich dni.</p>`;
-  h+=S.mode==='utrzymanie'?maintHtml():line(planDef,'Przy trzymaniu się celu dnia');
+  h+=S.mode==='utrzymanie'?maintHtml():S.mode==='masa'?masaHtml():line(planDef,'Przy trzymaniu się celu dnia');
   h+=`<p class="small muted">Codzienna przekąska 200 kcal ponad plan to ok. ${fmt1(200*30/7700)} kg mniej spadku w miesiącu. Przelicznik 7700 kcal na kg to uproszczenie: tempo z czasem maleje, bo organizm dostosowuje wydatek energii. Niepełny zapis dnia zawyża deficyt.</p></div>`;
   return h;
 }
@@ -533,18 +533,20 @@ function renderIntro(){
 function stageInfo(){const ks=Object.keys(S.meas||{}).filter(k=>num(S.meas[k].w)>0).sort();if(!ks.length)return null;const start=num(S.meas[ks[0]].w),now=kg(),goal=start*0.95;return {start,now,goal,pct:Math.max(0,Math.min(100,(start-now)/(start-goal)*100)),since:ks[0]}}
 function ffmTrend(){const ks=Object.keys(S.meas||{}).filter(k=>num(S.meas[k].ffm)>0).sort();if(ks.length<2)return null;return {a:num(S.meas[ks[0]].ffm),b:num(S.meas[ks.at(-1)].ffm),from:ks[0],to:ks.at(-1)}}
 function sexHtml(){
-  const si=stageInfo(),pT=Math.round(1.4*(num(S.goal)||68));let h='<h2>Twój priorytet</h2><div class="note">';
+  const si=stageInfo(),pT=Math.round(protTarget());let h='<h2>Twój priorytet</h2><div class="note">';
   if(S.sex==='K'){
     h+=`<p><b>Ochrona mięśni.</b> W badaniu PREVIEW kobiety traciły przy redukcji więcej masy beztłuszczowej niż mężczyźni. Dlatego: białko ok. ${pT} g dziennie i 2 treningi siłowe w tygodniu.</p>`;
     const f=ffmTrend();
     if(f){const d=f.b-f.a;h+=d<=-0.5?`<p><b>FFM spadła o ${fmt1(-d)} kg</b> (${fmtDate(f.from)} do ${fmtDate(f.to)}). Sprawdź białko i treningi. Pojedynczy pomiar BIA może się mylić, potwierdź go kolejnym w tych samych warunkach.</p>`:`<p>FFM: z ${fmt1(f.a)} na ${fmt1(f.b)} kg, bez wyraźnego spadku.</p>`}
     else h+='<p class="small muted">Wpisuj FFM z pomiaru BIA co 4 tygodnie, żeby aplikacja pilnowała mięśni.</p>';
+  }else if(S.mode==='masa'){
+    h+=`<p><b>Przyrost masy.</b> Priorytet: trening siłowy, białko ok. ${fmt(protTarget())} g dziennie i powolny przyrost masy, żeby rosły głównie mięśnie.</p>`;
   }else if(S.mode==='utrzymanie'){
     h+='<p><b>Utrzymanie masy.</b> Priorytet: trening siłowy, średnia waga w paśmie ±1 kg i kontrola badań. Gdyby kiedyś zaczął się etap redukcji: w badaniu DiOGenes mężczyźni szybciej chudli, ale częściej odzyskiwali masę.</p>';
   }else{
     h+='<p><b>Utrzymanie po szybkim starcie.</b> W badaniu DiOGenes mężczyźni chudli szybciej, ale w ciągu 6 miesięcy odzyskiwali więcej masy niż kobiety. Dlatego po etapie 5% przejdź do utrzymania, zanim zaczniesz kolejny etap.</p>';
   }
-  if(si&&S.mode!=='utrzymanie')h+=`<p>Etap 5%: z ${fmt1(si.start)} na ${fmt1(si.goal)} kg, wykonano ${Math.round(si.pct)}%.${si.pct>=100?(S.sex==='M'?' <b>Etap osiągnięty: czas na utrzymanie.</b>':' <b>Etap osiągnięty.</b> Ocena z lekarzem i decyzja: utrzymanie albo kolejny etap.'):''}</p>`;
+  if(si&&S.mode==='redukcja')h+=`<p>Etap 5%: z ${fmt1(si.start)} na ${fmt1(si.goal)} kg, wykonano ${Math.round(si.pct)}%.${si.pct>=100?(S.sex==='M'?' <b>Etap osiągnięty: czas na utrzymanie.</b>':' <b>Etap osiągnięty.</b> Ocena z lekarzem i decyzja: utrzymanie albo kolejny etap.'):''}</p>`;
   return h+'</div>';
 }
 function cycHtml(k){if(S.sex!=='K')return '';const c=(S.meas[k]||{}).cyc||'';return '<p id="cykl" style="margin:10px 4px 4px">Tydzień cyklu dziś</p>'+whyP('cykl')+'<div class="chips">'+[['1','Tydzień 1'],['2','Tydzień 2'],['3','Tydzień 3'],['4','Tydzień 4'],['P','Przerwa w tabletkach']].map(([v,l])=>`<button class="chip ${c===v?'inc':''}" data-cyc="${v}" aria-pressed="${c===v}">${l}</button>`).join('')+'</div>'}
@@ -561,7 +563,18 @@ function legHtml(){
 function avg7at(k){const b=Date.parse(k+'T12:00:00'),v=[];for(let i=0;i<7;i++){const x=num((S.meas[keyOf(new Date(b-i*864e5))]||{}).w);if(x>0)v.push(x)}return v.length?v.reduce((a,c)=>a+c,0)/v.length:null}
 function avg7(){return avg7at(todayKey())}
 function flat3w(){const W=[];lastKeys(21).reverse().forEach((k,i)=>{const v=num((S.meas[k]||{}).w);if(v>0)W.push([i,v])});if(W.length<6||W.at(-1)[0]-W[0][0]<14)return false;const n=W.length,mx=W.reduce((a,p)=>a+p[0],0)/n,my=W.reduce((a,p)=>a+p[1],0)/n,sl=W.reduce((a,p)=>a+(p[0]-mx)*(p[1]-my),0)/W.reduce((a,p)=>a+(p[0]-mx)**2,0);return Math.abs(sl*7)<0.1}
-function modeHtml(){if(S.mode==='utrzymanie')return '';const si=stageInfo(),done=si&&si.pct>=100,flat=flat3w();if(!done&&!flat)return '';return `<div class="note"><b>${done?'Etap 5% osiągnięty.':'Waga stoi od 3 tygodni.'}</b> Zamiast dokręcać dietę, przejdź na 4-8 tygodni utrzymania: cel bez deficytu, średnia waga w paśmie ±1 kg.<p><button class="btn" data-mode="utrzymanie">Przejdź na utrzymanie</button></p></div>`}
+function modeHtml(){if(S.mode==='masa')return '<div class="note">'+masaHtml()+'</div>';if(S.mode!=='redukcja')return '';const si=stageInfo(),done=si&&si.pct>=100,flat=flat3w();if(!done&&!flat)return '';return `<div class="note"><b>${done?'Etap 5% osiągnięty.':'Waga stoi od 3 tygodni.'}</b> Zamiast dokręcać dietę, przejdź na 4-8 tygodni utrzymania: cel bez deficytu, średnia waga w paśmie ±1 kg.<p><button class="btn" data-mode="utrzymanie">Przejdź na utrzymanie</button></p></div>`}
+// Przyrost masy: nadwyżka ok. 10% (dolna granica 10-20%) i przyrost 0,25-0,5% masy ciała tygodniowo (Iraki i in. 2019), białko 1,6 g/kg (ISSN 2017: 1,4-2,0)
+function masaHtml(){const w=kg();return `<p><b>Przyrost masy.</b> Cel kalorii ok. 10% powyżej zapotrzebowania (przegląd badań: 10-20%). Tempo: 0,25-0,5% masy ciała tygodniowo, czyli ok. ${fmt1(w*0.0025)}-${fmt1(w*0.005)} kg; szybszy przyrost to częściej tłuszcz. Białko ok. ${fmt(protTarget())} g dziennie i trening siłowy.</p>`+srcHtml(['iraki','issn'])+'<p><button class="btn ghost" data-mode="utrzymanie">Przejdź na utrzymanie</button></p>'}
+// Cel białka: 1,4 g/kg wagi docelowej w redukcji i utrzymaniu, 1,6 g/kg obecnej masy przy przyroście masy
+function protTarget(){return S.mode==='masa'?1.6*kg():1.4*(num(S.goal)||68)}
+// Propozycja trybu z danych: cel niżej o ponad 1 kg redukcja, ±1 kg utrzymanie, wyżej o ponad 1 kg albo BMI poniżej 18,5 masa
+function modeSuggest(){const w=num(S.kg),g=num(S.goal),h=num(S.cm)/100,bmi=w>0&&h>0?w/(h*h):0;if(bmi&&bmi<18.5)return {m:'masa',low:true};if(!(w>0)||!(g>0))return {m:S.mode||'redukcja'};return {m:g>w+1?'masa':g<w-1?'redukcja':'utrzymanie'}}
+const MODE_PL={redukcja:'Redukcja',utrzymanie:'Utrzymanie',masa:'Przyrost masy'};
+const modeSig=()=>[S.kg,S.goal,S.cm].join('|');
+function modePropHtml(){const p=modeSuggest(),cur=S.mode||'redukcja';if(p.m===cur||S.modeKeep===modeSig())return '';
+  const why={redukcja:'Waga docelowa jest niższa od obecnej o ponad 1 kg. Cel kalorii ok. 20% poniżej zapotrzebowania.',utrzymanie:'Waga docelowa różni się od obecnej najwyżej o 1 kg. Cel kalorii równy zapotrzebowaniu, waga w paśmie ±1 kg.',masa:p.low?'BMI poniżej 18,5. Przyrost masy: cel kalorii ok. 10% powyżej zapotrzebowania, białko i trening siłowy.':'Waga docelowa jest wyższa od obecnej o ponad 1 kg. Cel kalorii ok. 10% powyżej zapotrzebowania, białko i trening siłowy.'}[p.m];
+  return `<section class="note" id="trybprop" aria-label="Proponowany tryb"><b>Proponowany tryb z Twoich danych: ${MODE_PL[p.m]}.</b> ${why}${p.low?' Przy BMI poniżej 18,5 porozmawiaj z lekarzem, zanim zaczniesz.':''} Teraz: ${MODE_PL[cur]}.<p class="cardact"><button class="btn small" data-mode="${p.m}">Wybieram: ${MODE_PL[p.m]}</button><button class="btn ghost small" data-modekeep="1">Zostaję przy: ${MODE_PL[cur]}</button></p></section>`}
 function maintHtml(){const r=num(S.maintRef)||kg(),a=avg7();return `<p><b>Tryb utrzymania${S.maintSince?' od '+fmtDate(S.maintSince):''}.</b> Pasmo: ${fmt1(r-1)}-${fmt1(r+1)} kg. ${a!=null?`Średnia z 7 dni: ${fmt1(a)} kg, ${Math.abs(a-r)<=1?'w paśmie':'poza pasmem'}.`:'Brak ważeń z ostatnich 7 dni.'}</p><p><button class="btn ghost" data-mode="redukcja">Wróć do redukcji</button></p>`}
 
 // ---------- Przepisy krok po kroku (piekarnik, mikrofala, blender) ----------
@@ -665,9 +678,9 @@ function renderKnee(){
 // ---------- Mój wpływ: decyzje i zmierzone efekty ----------
 function avgAgo(a,b,key){const v=[];for(let i=a;i<b;i++){const x=num((S.meas[keyOf(new Date(Date.now()-i*864e5))]||{})[key||'w']);if(x>0)v.push(x)}return v.length?v.reduce((s,x)=>s+x,0)/v.length:null}
 function ser(key,n){return lastKeys(n).reverse().map(k=>num((S.meas[k]||{})[key])).filter(v=>v>0)}
-function impactData(){const T=targetKcal(),pT=1.4*(num(S.goal)||68);let full=0,planDays=0,protDays=0,planned=0,extra=0,trainN=0,urAll=0,urOk=0;lastKeys(28).forEach(k=>{const e=S.days[k]||[],ms=e.filter(x=>x.kind==='m');if(ms.length>=3){full++;if(ms.reduce((a,x)=>a+x.k,0)<=T)planDays++;if(ms.reduce((a,x)=>a+(x.p||0),0)>=pT)protDays++}ms.forEach(x=>{if(x.id)planned++;else extra+=x.k});trainN+=e.filter(x=>x.kind==='t').length;(S.urges[k]||[]).forEach(u=>{urAll++;if(u.out!=='inne')urOk++})});return {full,planDays,protDays,planned,extra,trainN,urAll,urOk,pT}}
+function impactData(){const T=targetKcal(),pT=protTarget();let full=0,planDays=0,protDays=0,planned=0,extra=0,trainN=0,urAll=0,urOk=0;lastKeys(28).forEach(k=>{const e=S.days[k]||[],ms=e.filter(x=>x.kind==='m');if(ms.length>=3){full++;if(ms.reduce((a,x)=>a+x.k,0)<=T)planDays++;if(ms.reduce((a,x)=>a+(x.p||0),0)>=pT)protDays++}ms.forEach(x=>{if(x.id)planned++;else extra+=x.k});trainN+=e.filter(x=>x.kind==='t').length;(S.urges[k]||[]).forEach(u=>{urAll++;if(u.out!=='inne')urOk++})});return {full,planDays,protDays,planned,extra,trainN,urAll,urOk,pT}}
 function renderImpact(){
-  const D=impactData(),M=measuredTdee(),goal=num(S.goal)||68,toLose=kg()-goal,maint=S.mode==='utrzymanie',W=S.wi||{snack:0,steps:0,train:0};
+  const D=impactData(),M=measuredTdee(),goal=num(S.goal)||68,toLose=kg()-goal,maint=S.mode!=='redukcja',W=S.wi||{snack:0,steps:0,train:0};
   const planDef=(M?M.tdee:rmr()*1.3)-targetKcal(),base=maint?0:(M?-M.slope*7:planDef*7/7700),kps=walkPerMin()/100,tn=kcal({met:3.5},60).net;
   const dW=(-(W.snack*200)+W.steps*7*kps+W.train*tn)/7700,nw=base+dW,wk=p=>p>0&&toLose>0?`, ${fmt1(goal)} kg za ok. ${fmt(Math.ceil(toLose/p))} tygodni`:'';
   const chips=(key,vals,lab)=>`<p style="margin:12px 0 4px">${lab}</p><div class="chips">`+vals.map(v=>`<button class="chip ${W[key]===v?'inc':''}" data-wi="${key}:${v}" aria-pressed="${W[key]===v}">${fmt(v)}</button>`).join('')+'</div>';
@@ -770,7 +783,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},goalWay:'proc',muscle:false,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},swaps:{},cel:null,hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},swaps:{},cel:null,modeKeep:'',hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 // Wartości startowe (rada/2026-11-09_wartosci-startowe): punkt startowy do ustawiania przyciskami, zależny od płci; to założenie
@@ -782,7 +795,7 @@ const isStart=k=>!(S.touched||{})[k];
 function rTxt(k,v){v=num(v);return k==='minP'?`co najmniej ${v} g białka`:k==='maxK'?(v>=1000?'kalorie bez limitu':`najwyżej ${v} kcal`):k==='maxC'?(v>=130?'węglowodany bez limitu':`najwyżej ${v} g węglowodanów`):`porcja ${fmt1(v)} ×`}
 // Gotowe cele: 5-10% (NHLBI) i 7% (DPP); zaznaczony ten, który odpowiada obecnemu celowi
 const goalOf=p=>Math.round(num(S.kg)*(1-p/100)*2)/2;
-function goalPctHtml(){if(S.mode==='utrzymanie')return '';return '<div class="chips">'+[5,7,10].map(p=>{const on=Math.abs(num(S.goal)-goalOf(p))<0.01;return `<button class="chip${on?' inc':''}" data-goalpct="${p}" aria-pressed="${on}">${p}% mniej</button>`}).join('')+'</div>'+srcHtml(['nhlbi','dpp'])}
+function goalPctHtml(){if(S.mode!=='redukcja')return '';return '<div class="chips">'+[5,7,10].map(p=>{const on=Math.abs(num(S.goal)-goalOf(p))<0.01;return `<button class="chip${on?' inc':''}" data-goalpct="${p}" aria-pressed="${on}">${p}% mniej</button>`}).join('')+'</div>'+srcHtml(['nhlbi','dpp'])}
 // Gotowe wartości kalorii przy szacunku (NN/g: wartości domyślne zmniejszają wysiłek); wpis zostaje
 const kcalChips=id=>'<div class="chips quick">'+[100,200,300,500].map(v=>`<button class="chip" data-kcalset="${id}:${v}">${v} kcal</button>`).join('')+'</div>';
 // Cel z BMI i składu ciała (rada/2026-11-09_cel-bmi-sklad-ciala): trzy drogi celu; progi BMI WHO (25, 30) albo NHS (23, 27,5),
@@ -799,7 +812,7 @@ function wskTxt(){const b=bmiOf(S.kg),w=lastWaist();return `BMI ${fmt1(b)}: ${bm
 // Skład ciała z wagi BIA: FFMI z medianą odniesienia (Schutz 2002, 5635 osób), tłuszcz % jako trend, bo uznanych zakresów brak (Gallagher 2000)
 function bodyCompTxt(){const ffm=lastM('ffm'),fat=lastM('fat');if(!ffm&&!fat)return '';const h2=Math.pow((num(S.cm)||165)/100,2);
   return (ffm?` FFMI ${fmt1(ffm/h2)} (beztłuszczowa masa ciała na m²; mediana w wieku 18-34 lat: ${S.sex==='M'?'18,9 u mężczyzn':'15,4 u kobiet'}).`:'')+(fat?` Tłuszcz ${fmt1(fat)}%: pokazujemy jako trend, bo uznanych zakresów procentu tłuszczu brak.`:'')+srcHtml(['schutz','gallagher'])}
-function goalWayHtml(){if(S.mode==='utrzymanie')return '';const w=S.goalWay||'proc',h2=Math.pow((num(S.cm)||165)/100,2);
+function goalWayHtml(){if(S.mode!=='redukcja')return '';const w=S.goalWay||'proc',h2=Math.pow((num(S.cm)||165)/100,2);
   let h='<p style="margin:12px 4px 4px"><b>Jak ustalić cel?</b></p>'+seg([['proc','5-10% mniej'],['bmi','Zdrowe BMI'],['talia','Obwód talii']],w,'goalway','','Sposób ustalenia celu');
   if(w==='proc')return h+goalHint()+goalPctHtml();
   if(w==='bmi'){const n=bmiCut()==='nhs',up=n?22.9:24.9,a=num(S.age),nd=a>=70?24:a>=50?23:a>=35?22:0,o=[[up,`poniżej ${n?23:25}`]];if(nd&&nd<up)o.push([nd,'najniżej dla wieku']);
@@ -808,7 +821,7 @@ function goalWayHtml(){if(S.mode==='utrzymanie')return '';const w=S.goalWay||'pr
   const c=num(S.cm)||165,lw=lastWaist();
   return h+`<div class="note">Cel: talia poniżej ${fmt(c/2)} cm (połowa wzrostu).${lw?` Ostatni pomiar: ${fmt1(lw)} cm, talia do wzrostu ${fmt2(lw/c)}.`:' Zmierz talię w Pomiarach dnia, w obwodach.'} Waga docelowa jest tu opcjonalna: postęp pokaże talia.</div>`+srcHtml('nhsob')}
 function bmiSetHtml(){const a=bmiCutFor(typeof navigator!=='undefined'&&navigator.language);return '<p style="margin:12px 4px 4px"><b>Progi BMI</b></p>'+seg([['auto','Kraj telefonu'],['who','WHO'],['nhs','NHS']],S.bmiCut||'auto','bmicut','','Progi BMI')+`<p class="small muted">WHO: nadwaga od BMI 25, otyłość od 30. NHS: od 23 i 27,5 dla osób pochodzenia azjatyckiego, bliskowschodniego, afrykańskiego i afrykańsko-karaibskiego. Region telefonu wskazuje progi ${a==='nhs'?'NHS':'WHO'}. Ustawienie zostaje w telefonie.</p>`+`<div class="panel"><div class="field"><label for="muscle">Mam dużo mięśni (trenuję siłowo)</label><input type="checkbox" class="switch" id="muscle" data-k="muscle" ${S.muscle?'checked':''}></div></div>`}
-function goalHint(){return S.mode==='utrzymanie'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny albo wybierz niżej.</p>'}
+function goalHint(){return S.mode!=='redukcja'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny albo wybierz niżej.</p>'}
 function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
 function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,STEP.goal)}
 function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),fixTouched(JSON.parse(r)));}catch(e){}return clone(DEF)}
@@ -1046,6 +1059,8 @@ const SRC={
   gluten:['https://pubmed.ncbi.nlm.nih.gov/37554764/','Piticchio i in. 2023'],
   selen:['https://pubmed.ncbi.nlm.nih.gov/32257959/','ETA 2020'],
   dpp:['https://pubmed.ncbi.nlm.nih.gov/11832527/','DPP 2002'],
+  iraki:['https://pmc.ncbi.nlm.nih.gov/articles/PMC6680710/','Iraki i in. 2019 (przyrost masy)'],
+  issn:['https://pmc.ncbi.nlm.nih.gov/articles/PMC5477153/','ISSN 2017: białko'],
   order:['https://pmc.ncbi.nlm.nih.gov/articles/PMC4876745/','Shukla i in. 2015'],
   ada:['https://pmc.ncbi.nlm.nih.gov/articles/PMC6908414/','ADA 2016'],
   sleepIR:['https://pubmed.ncbi.nlm.nih.gov/20371664/','Donga i in. 2010'],
@@ -1318,7 +1333,7 @@ function stanHtml(){const k=todayKey(),m=S.meas[k]||{},d=day(),ml=d.filter(e=>e.
 // Etap 1: cel aktywny i „Co się wydarzyło” (zdarzenia.js liczy, app.js tylko pokazuje)
 function zdCtx(){
   const k=S.krok;
-  return {pT:1.4*(num(S.goal)||68),est:!!pillOf()[2],krokDone:!!(k&&k.conf&&kProg(mondayOf(new Date())).ok)};
+  return {pT:protTarget(),est:!!pillOf()[2],krokDone:!!(k&&k.conf&&kProg(mondayOf(new Date())).ok)};
 }
 function zdSrc(x){return `<a href="${x.url}" target="_blank" rel="noopener">źródło</a>, siła dowodów: ${x.sila}`}
 // Ostatni pełny tydzień aktywnego celu: koniec tygodnia i czy zaliczony (ZD.done)
@@ -1361,10 +1376,10 @@ function zdHtml(){
 function renderDay(){
   const d=day(),tr=d.filter(e=>e.kind==='t'),ml=d.filter(e=>e.kind==='m');
   const net=tr.reduce((a,e)=>a+e.net,0),eat={k:0,p:0,f:0,c:0};ml.forEach(e=>{eat.k+=e.k;eat.p+=e.p;eat.f+=e.f;eat.c+=e.c});
-  const R=rmr(),target=targetKcal(),pT=1.4*(num(S.goal)||68);
+  const R=rmr(),target=targetKcal(),pT=protTarget();
   const bar=(lab,v,max,unit)=>{const pc=Math.min(100,v/max*100);return `<div class="prog"><div class="top"><span>${lab}</span><span>${fmt(v)} / ${fmt(max)} ${unit}</span></div><div class="track"><div class="fill ${v>max*1.05?'over':''}" style="width:${pc}%"></div></div></div>`};
   const sos='<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>';
-  let h=guideHtml()+stanHtml()+celHtml()+razemHtml()+zdHtml()+cardsHtml('day')+krokCardHtml()+focusHtml()+painHtml()+reviewPromptHtml()+petCardHtml()+sos+measHtml()+legHtml()+kneeBannerHtml();
+  let h=guideHtml()+modePropHtml()+stanHtml()+celHtml()+razemHtml()+zdHtml()+cardsHtml('day')+krokCardHtml()+focusHtml()+painHtml()+reviewPromptHtml()+petCardHtml()+sos+measHtml()+legHtml()+kneeBannerHtml();
   let more=modeHtml()+`<h3 class="rh" style="margin:4px 4px 8px">Energia i białko dziś</h3><div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
   more+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
   more+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
@@ -1374,7 +1389,7 @@ function renderDay(){
   h+=`<details class="fold" data-fold="szybki"${OPEN_F.has('szybki')?' open':''}><summary>Szybki wpis albo powtórz wczoraj</summary><div class="panel"><div class="field"><label for="q_n">Co</label><input type="text" id="q_n" style="width:170px;text-align:left" placeholder="np. kawa z mlekiem"></div><div class="field"><label for="q_k">Ile</label><input type="text" inputmode="numeric" id="q_k" placeholder="0"><span class="unit">kcal</span></div>${kcalChips('q_k')}</div><p><button class="btn" data-quick="1">Zapisz</button> <button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki</button><button class="btn ghost" data-nav="meals#zamowione">Zamówione jedzenie</button></p><p class="small muted">Wpis przybliżony wystarczy. W badaniach z wynikiem redukcji wiązała się częstość zapisywania, nie jego dokładność.</p></details>`;
   more+='<div class="navrow"><button class="btn ghost" data-tab="impact">Mój wpływ</button><button class="btn ghost" data-tab="challenge">Wspólne wyzwanie</button><button class="btn ghost" data-tab="review">Przegląd tygodnia</button></div>';
   if(d.length)more+='<p><button class="btn ghost" data-clear="1">Wyczyść dzień</button></p>';
-  more+=`<details class="fold" data-fold="cel"${OPEN_F.has('cel')?' open':''}><summary>Jak liczony jest cel</summary><div class="note small" style="margin:0 12px 12px">${S.mode==='utrzymanie'?'Tryb utrzymania: cel to zapotrzebowanie bez deficytu, '+(measuredTdee()?'zmierzone z jedzenia i trendu wagi.':'na razie ze wzoru (spoczynkowe zużycie × 1,3 plus treningi netto).'):measuredTdee()?'Jak liczony jest cel: zmierzone zapotrzebowanie (jedzenie i trend wagi) minus 20%.':`Jak liczony jest cel: na start szacunek, czyli spoczynkowe zużycie energii ${fmt(R)} kcal (wzór Mifflina-St Jeora) × 1,3 dla pracy siedzącej, plus treningi netto, minus 20%. Po 2-4 tygodniach ważenia i zapisywania aplikacja przejdzie na zapotrzebowanie zmierzone.`} Nigdy poniżej spoczynkowego zużycia. Białko: 1,4 g na kg wagi docelowej. Mnożnik 1,3 i deficyt 20% to założenia planu, nie pomiar. Zapisuj na bieżąco, najlepiej zaraz po każdym posiłku.</div></details>`;
+  more+=`<details class="fold" data-fold="cel"${OPEN_F.has('cel')?' open':''}><summary>Jak liczony jest cel</summary><div class="note small" style="margin:0 12px 12px">${S.mode==='masa'?'Przyrost masy: cel to zapotrzebowanie plus ok. 10%, '+(measuredTdee()?'zapotrzebowanie zmierzone z jedzenia i trendu wagi.':'na razie zapotrzebowanie ze wzoru (spoczynkowe zużycie × 1,3 plus treningi netto).'):S.mode==='utrzymanie'?'Tryb utrzymania: cel to zapotrzebowanie bez deficytu, '+(measuredTdee()?'zmierzone z jedzenia i trendu wagi.':'na razie ze wzoru (spoczynkowe zużycie × 1,3 plus treningi netto).'):measuredTdee()?'Jak liczony jest cel: zmierzone zapotrzebowanie (jedzenie i trend wagi) minus 20%.':`Jak liczony jest cel: na start szacunek, czyli spoczynkowe zużycie energii ${fmt(R)} kcal (wzór Mifflina-St Jeora) × 1,3 dla pracy siedzącej, plus treningi netto, minus 20%. Po 2-4 tygodniach ważenia i zapisywania aplikacja przejdzie na zapotrzebowanie zmierzone.`} Nigdy poniżej spoczynkowego zużycia. Białko: 1,4 g na kg wagi docelowej. Mnożnik 1,3 i deficyt 20% to założenia planu, nie pomiar. Zapisuj na bieżąco, najlepiej zaraz po każdym posiłku.</div></details>`;
   h+=fold('wiecej','Więcej: nawyki, prognoza, przeglądy',more);
   document.getElementById('main').innerHTML=h;
 }
@@ -1384,6 +1399,7 @@ const DATA_F=[['kg','wagę','Waga','kg'],['cm','wzrost','Wzrost','cm'],['age','w
 function dataCheck(){const err=[],warn=[];let first=null;
   DATA_F.forEach(([k,acc,nom,u])=>{const v=num(S[k]),[a,b]=LIM[k];if(!(v>0)){err.push('Uzupełnij '+acc+'.');first=first||k}else if(v<a||v>b){err.push(`${nom}: wpisz wartość od ${a} do ${b} ${u}.`);first=first||k}});
   if(!err.length&&S.mode==='redukcja'&&num(S.goal)>=num(S.kg)){err.push('Waga docelowa w redukcji powinna być niższa od obecnej.');first='goal'}
+  if(!err.length&&S.mode==='masa'&&num(S.goal)<num(S.kg))warn.push('Waga docelowa w przyroście masy powinna być wyższa od obecnej albo równa.');
   if(!err.length&&num(S.goal)/Math.pow(num(S.cm)/100,2)<18.5)warn.push('Waga docelowa daje BMI poniżej 18,5. Ustal cel z lekarzem lub dietetykiem.');
   else if(!err.length&&S.mode==='redukcja'&&num(S.goal)/Math.pow(num(S.cm)/100,2)<20)warn.push('Waga docelowa daje BMI poniżej 20: w badaniach dolna część normy (18,5-20) wiązała się z wyższą śmiertelnością niż BMI 20-25.');
   return {err,warn,first}}
@@ -1403,7 +1419,7 @@ function renderSet(){
   h+='<h2 id="komunikaty">Komunikaty</h2>'+seg([['std','Zwykły czas'],['long','Dłużej'],['stay','Do zamknięcia']],S.toastLen||'std','toastlen','','Czas wyświetlania komunikatów')+'<p class="small muted">Jak długo widać dymek po zapisie. Każdy zamkniesz przyciskiem ×.</p>';
   h+=`<div class="panel"><div class="field"><label for="discreet">Tryb dyskretny: karty o migrenie i antykoncepcji tylko w Zdrowiu</label><input type="checkbox" class="switch" id="discreet" data-k="discreet" ${S.discreet?'checked':''}></div></div>`;
   h+='<h2 id="towarzysz">Towarzysz</h2>'+petPickHtml()+(S.pet?`<div class="panel"><div class="field"><label for="body">Sylwetka z pomiarów na ekranie zwierzaka</label><input type="checkbox" class="switch" id="body" data-k="body" ${S.body?'checked':''}></div></div>`:'');
-  h+='<h2 id="tryb">Tryb</h2>'+whyP('tryb')+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie']],S.mode,'mode','','Tryb');
+  h+='<h2 id="tryb">Tryb</h2>'+whyP('tryb')+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie'],['masa','Przyrost masy']],S.mode,'mode','','Tryb')+modePropHtml();
   h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div></div>
 ${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź objawy nóg (lipodemia)</label><input type="checkbox" class="switch" id="lip" data-k="lip" ${S.lip?'checked':''}></div></div>`:''}
   <p class="small muted">Klasyczny MET zakłada 1 kcal na kg na godzinę w spoczynku. Korekta zastępuje to wartością ze wzoru Mifflina-St Jeora, co dla kobiet i osób z wyższym udziałem tkanki tłuszczowej zwykle daje niższe, bliższe rzeczywistości wyniki (wniosek z definicji MET, niesprawdzony pomiarem).</p>
@@ -1434,7 +1450,7 @@ const GLOSS=[
   ['prognoza','Prognoza i Twój priorytet','Kiedy dojdziesz do celu przy obecnym tempie i która jedna zmiana da teraz najwięcej.','day#fold_prognoza#wiecej,prognoza'],
   ['wplyw','Mój wpływ','Dokąd prowadzą Twoje wybory: średni bilans z zapisanych dni przeliczony na tempo zmiany wagi.','impact'],
   ['ochoty','Twoje ochoty','Podsumowanie zapisanych ochot na przekąskę. Pomaga zauważyć, kiedy przychodzą najczęściej, i zaplanować coś wcześniej.','sos#ochoty'],
-  ['tryb','Tryb: redukcja albo utrzymanie','Redukcja ustawia cel kalorii ok. 20% poniżej zapotrzebowania. Utrzymanie trzyma osiągniętą wagę: cel równa się zapotrzebowaniu.','set#tryb'],
+  ['tryb','Tryb: redukcja, utrzymanie albo przyrost masy','Redukcja ustawia cel kalorii ok. 20% poniżej zapotrzebowania. Utrzymanie trzyma osiągniętą wagę: cel równa się zapotrzebowaniu. Przyrost masy: ok. 10% powyżej zapotrzebowania, przyrost 0,25-0,5% masy ciała tygodniowo, białko i trening siłowy. Miara proponuje tryb z Twoich danych.','set#tryb',['iraki','issn']],
   ['korekta','Korekta na spoczynkowe zużycie energii','Dokładniejsze kalorie z treningu: spoczynek liczony ze wzoru dla Twojej płci, wieku i wagi zamiast przybliżenia 1 kcal na kg na godzinę.','set#korekta'],
   ['zamowione','Zamówione','Szybki zapis jedzenia z dostawy albo restauracji: wybierasz danie, ilość i dodatki, a Miara szacuje kalorie i białko. Wartości są orientacyjne, lokale się różnią, więc pokazujemy przedział ±30%; regularny zapis liczy się bardziej niż dokładność. Ostatni wybór zostaje zapamiętany.','meals#zamowione','fdcMaki'],
   ['oznaczenia','Oznaczenia przepisów','Słodkie: danie na słodko, słodycz z owoców. Przy IO: co najmniej 20 g białka i do 50 g węglowodanów na porcję, a przekąska do 20 g węglowodanów z białkiem albo tłuszczem. To reguła Miary ułożona pod insulinooporność. Zaznacz oba, żeby zobaczyć słodkie śniadania dobre przy insulinooporności.','meals#oznaczenia'],
@@ -1549,7 +1565,8 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.goalpct){S.goal=stpFmt(goalOf(+d.goalpct),STEP.goal);(S.touched=S.touched||{}).goal=true}
   else if(d.kcalset){const [id,v]=d.kcalset.split(':'),el=document.getElementById(id);if(el){el.value=v;if(el.focus)el.focus()}return}
   else if(d.revsave){const g=id=>document.getElementById(id).value.trim();S.reviews=S.reviews||{};S.reviews[reviewKey()]={a:g('r_a'),b:g('r_b'),c:g('r_c'),d:todayKey()};S.tab='day';toast('Zapisano przegląd');window.scrollTo(0,0)}
-  else if(d.mode){S.mode=d.mode;if(d.mode==='utrzymanie'){S.maintRef=Math.round((avg7()||kg())*10)/10;S.maintSince=todayKey()}else{S.maintSince=''}toast(d.mode==='utrzymanie'?'Tryb utrzymania':'Tryb redukcji')}
+  else if(d.mode){S.mode=d.mode;if(d.mode==='utrzymanie'){S.maintRef=Math.round((avg7()||kg())*10)/10;S.maintSince=todayKey()}else{S.maintSince=''}toast(d.mode==='utrzymanie'?'Tryb utrzymania':d.mode==='masa'?'Tryb przyrostu masy':'Tryb redukcji')}
+  else if(d.modekeep){S.modeKeep=modeSig();toast('Zostajesz przy obecnym trybie. Propozycja wróci po zmianie danych.')}
   else if(d.leg){const [key,n]=d.leg.split(':'),k=todayKey();S.legs=S.legs||{};S.legs[k]=S.legs[k]||{};S.legs[k][key]=+n}
   else if(d.cyc){const k=todayKey();S.meas[k]=S.meas[k]||{};S.meas[k].cyc=S.meas[k].cyc===d.cyc?'':d.cyc}
   else if(d.bkexp){bkExport();return}
