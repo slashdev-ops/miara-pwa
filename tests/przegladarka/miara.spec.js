@@ -208,6 +208,24 @@ test('usunięcie wpisu ma „Cofnij” w komunikacie i przywraca wpis', async ({
   expect(errors).toEqual([]);
 });
 
+test('brzuch i jelita (#demo-jelita): dziennik czytelny, kontrast, bez ramki w ramce, bez przewijania w poziomie', async ({ page }) => {
+  const errors = await open(page, '#demo-jelita');
+  await show(page, 'day');
+  await page.locator('#fold_brzuch summary').click();
+  await expect(page.locator('#fold_brzuch')).toContainText('dni z wzdęciem 5 lub więcej');
+  await page.locator('#fold_brzuch [data-gutb="4"]').click();
+  expect(await page.evaluate(() => S.gut[todayKey()].b)).toBe(4);
+  await page.evaluate(() => { document.getElementById('fold_brzuch').open = true; });
+  expect(await lowContrast(page), 'za słaby kontrast').toEqual([]);
+  const nested = await page.evaluate(() => [...document.querySelectorAll('#fold_brzuch .chip:not(.exc)')].filter((el) => { const s = getComputedStyle(el); return parseFloat(s.borderTopWidth) > 0 || s.boxShadow !== 'none'; }).length);
+  expect(nested, 'ramka w ramce').toBe(0);
+  const w = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+  expect(w[0]).toBeLessThanOrEqual(w[1]);
+  await show(page, 'health');
+  await expect(page.locator('#main')).toContainText('Środki z badań');
+  expect(errors).toEqual([]);
+});
+
 test('wszystkie schorzenia i Yaz: sygnał UKMEC, następny cel, schorzenia razem, zapowiedź zwierzaka', async ({ page }) => {
   const errors = await open(page, '#demo-wszystkie');
   await show(page, 'day');
