@@ -208,7 +208,7 @@ function ordCalc(){const o=S.ord||{},dk=ordDish(),d=ORD[dk],q=num(ordQty()),per=
 function ordLabel(){const o=S.ord||{},dk=ordDish(),d=ORD[dk],q=ordQty(),ad=ORD_ADD.filter(([id])=>(o.add||{})[id]).map(x=>x[3]);
   return `${d.n}, ${dk==='tofu'?d.opts.find(x=>x[0]===q)[1]:d.lab(q)}${dk==='sushi'&&o.alt?', nigiri':''}${ad.length?', z '+ad.join(', '):''}`}
 function orderHtml(){const o=S.ord||{},dk=ordDish(),d=ORD[dk],q=String(ordQty()),t=ordCalc();
-  return `<details class="fold" id="zamowione" data-fold="zamowione"${OPEN_F.has('zamowione')?' open':''}><summary>Zamówione jedzenie</summary><div style="padding:0 16px">`+whyP('zamowione')+'<div class="panel" style="padding:12px 16px">'+seg(Object.entries(ORD).map(([k,v])=>[k,v.n]),dk,'orddish','scroll')
+  return `<details class="fold" id="zamowione" data-fold="zamowione"${OPEN_F.has('zamowione')?' open':''}><summary>Zamówione jedzenie</summary><div style="padding:0 16px">`+whyP('zamowione')+(o.dish?`<p class="small muted">Zapamiętane z ostatniego razu: ${esc(ordLabel())}.</p>`:'')+'<div class="panel" style="padding:12px 16px">'+seg(Object.entries(ORD).map(([k,v])=>[k,v.n]),dk,'orddish','scroll')
     +'<div class="chips">'+d.opts.map(x=>{const [v,l]=Array.isArray(x)?x:[String(x),d.lab(x)];return `<button class="chip${v===q?' inc':''}" data-ordn="${v}" aria-pressed="${v===q}">${l}</button>`}).join('')+'</div>'
     +(d.alt?`<div class="chips"><button class="chip${o.alt?' inc':''}" data-ordalt="1" aria-pressed="${!!o.alt}">${d.alt.lab}</button></div>`:'')
     +'<p class="small" style="margin:8px 0 4px">Dodatki</p><div class="chips">'+ORD_ADD.map(([id,n])=>`<button class="chip${(o.add||{})[id]?' inc':''}" data-ordadd="${id}" aria-pressed="${!!(o.add||{})[id]}">${n}</button>`).join('')+'</div>'
@@ -711,7 +711,7 @@ function gutSum(){const G=S.gut||{},ks=lastKeys(28).filter(k=>G[k]),hi=ks.filter
 function gutHtml(){if(!((S.prof||{}).cond||{}).gut||S.discreet)return '';const k=todayKey(),g=(S.gut||{})[k]||{},m=gutSum();
   const row=(lab,attr,vals,cur)=>`<p style="margin:10px 0 4px">${lab}</p><div class="chips" role="group" aria-label="${lab}">`+vals.map(([v,l])=>{const on=String(cur)===String(v);return `<button class="chip ${on?'inc':''}" data-${attr}="${v}" aria-pressed="${on}"${attr==='gutb'?' style="min-width:38px"':''}>${l}</button>`}).join('')+'</div>';
   return `<details class="fold" id="fold_brzuch" data-fold="brzuch"${OPEN_F.has('brzuch')?' open':''}><summary>Brzuch dziś${g.b!=null?`: wzdęcie ${g.b}`:''}</summary><div class="panel" style="padding:4px 16px 12px">`
-    +row('Wzdęcie (0 brak, 10 najgorsze)','gutb',[0,1,2,3,4,5,6,7,8,9,10].map(v=>[v,v]),g.b)+row('Stolec','gutf',GUT_F,g.f)+row('Wypróżnienia dziś','gutn',[[0,'0'],[1,'1'],[2,'2'],[3,'3 lub więcej']],g.n)
+    +row('Wzdęcie (0 brak, 10 najgorsze)','gutb',[0,1,2,3,4,5,6,7,8,9,10].map(v=>[v,v]),g.b)+row('Stolec','gutf',GUT_F,g.f)+row('Wypróżnienia dziś','gutn',[[0,'0'],[1,'1'],[2,'2'],[3,'3 lub więcej']],g.n)+row('Stresujący dzień','guts',[[1,'tak'],[0,'nie']],g.s)
     +`<p class="small muted">${m.hi} z 28 dni z wzdęciem 5 lub więcej; dni bez wypróżnienia: ${m.none}; dni z luźnym stolcem: ${m.lz} (${m.n} dni z wpisem). Pokaż to na wizycie.</p></div></details>`}
 function mobWeek(){let n=0;for(let i=0;i<7;i++)n+=((S.days||{})[nAgo(i)]||[]).filter(e=>e.kind==='t'&&e.mob).length;return n}
 function renderMob(){
@@ -1686,7 +1686,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.plandel){undoable('Usunięto ćwiczenie z planu');S.plan.items=S.plan.items.filter(x=>x.id!==d.plandel)}
   else if(d.insole){S.insole=S.insole||{days:{},pain:{}};const k=todayKey();S.insole.days[k]=!S.insole.days[k]}
   else if(d.footpain!=null){S.insole=S.insole||{days:{},pain:{}};S.insole.pain=S.insole.pain||{};S.insole.pain[todayKey()]=+d.footpain}
-  else if(d.gutb!=null||d.gutf||d.gutn!=null){S.gut=S.gut||{};const k=todayKey(),g=S.gut[k]=S.gut[k]||{};if(d.gutb!=null)g.b=+d.gutb;if(d.gutf)g.f=d.gutf;if(d.gutn!=null)g.n=+d.gutn}
+  else if(d.gutb!=null||d.gutf||d.gutn!=null||d.guts!=null){S.gut=S.gut||{};const k=todayKey(),g=S.gut[k]=S.gut[k]||{};if(d.gutb!=null)g.b=+d.gutb;if(d.gutf)g.f=d.gutf;if(d.gutn!=null)g.n=+d.gutn;if(d.guts!=null)g.s=+d.guts}
   else if(d.petkind){if(!S.pet)return;S.pet.kind=d.petkind}
   else if(d.petpick){S.tab='pet';window.scrollTo(0,0)}
   else if(d.datasave){const c=dataCheck();if(c.err.length){toast(c.err[0],3200);const el=document.getElementById('f_'+c.first);if(el&&el.focus)el.focus()}else{S.guide=S.guide||{};S.guide.dataOk=true;save();toast('Dane zapisane')}}

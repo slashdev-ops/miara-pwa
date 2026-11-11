@@ -191,8 +191,9 @@ var ZD = (function () {
     if (S.krok) parts.push('aktywny krok tygodnia');
     if (gutCtx) {
       const sh = count(S, k, 7, (s, d) => sleep(s, d) != null && sleep(s, d) < 6);
-      const st = count(S, k, 7, (s, d) => ((s.urges || {})[d] || []).some((u) => u.trig === 'stres'));
-      parts.push(`${sh} ${plural(sh, 'krótka noc', 'krótkie noce', 'krótkich nocy')}`, `${st} ${plural(st, 'dzień', 'dni', 'dni')} z ochotą ze stresu`);
+      // Dzień ze stresem: przełącznik w dzienniku brzucha albo ochota ze stresu (ten sam dzień liczy się raz)
+      const st = count(S, k, 7, (s, d) => ((s.gut || {})[d] || {}).s === 1 || ((s.urges || {})[d] || []).some((u) => u.trig === 'stres'));
+      parts.push(`${sh} ${plural(sh, 'krótka noc', 'krótkie noce', 'krótkich nocy')}`, `${st} ${plural(st, 'dzień', 'dni', 'dni')} ze stresem`);
     }
     return 'w tym czasie: ' + parts.join(', ');
   }
