@@ -32,7 +32,7 @@ jobs:
   przegladarka:
     # Chromium i WebKit (silnik Safari), tryb jasny i ciemny, iPhone 13 i 320 px: tests/przegladarka/miara.spec.js
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: tests/przegladarka
@@ -59,11 +59,13 @@ jobs:
       # Gdy serwery Ubuntu są nieosiągalne, obraz runnera zwykle ma już potrzebne biblioteki: o wyniku decydują testy
       - name: Biblioteki systemowe przeglądarek
         continue-on-error: true
-        timeout-minutes: 13
+        timeout-minutes: 20
         run: |
+          # timeout przerywa npx, ale apt-get działa dalej i trzyma blokadę dpkg: przed ponowieniem czekamy na jej zwolnienie
           for i in 1 2 3; do
-            timeout 240 npx playwright install-deps chromium webkit && exit 0
-            echo "Próba $i nie powiodła się, ponawiam za 20 s"; sleep 20
+            timeout 480 npx playwright install-deps chromium webkit && exit 0
+            echo "Próba $i nie powiodła się, czekam na zwolnienie blokady dpkg"
+            while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done
           done
           exit 1
       - name: Testy w przeglądarce
