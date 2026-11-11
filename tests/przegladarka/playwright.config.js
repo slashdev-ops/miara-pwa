@@ -13,8 +13,9 @@ module.exports = defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0,
-  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
-  use: { baseURL: `http://127.0.0.1:${PORT}`, locale: 'pl-PL', serviceWorkers: 'block', screenshot: 'only-on-failure', trace: 'retain-on-failure' },
+  reporter: [['list'], ['html', { open: 'never' }]], // raport: npx playwright show-report (README.md)
+  // Lokalnie okna przeglądarek są widoczne (decyzja użytkownika 11.11.2026); w CI bez okien. Bez okien lokalnie: HEADLESS=1 npm test
+  use: { headless: !!process.env.CI || !!process.env.HEADLESS, baseURL: `http://127.0.0.1:${PORT}`, locale: 'pl-PL', serviceWorkers: 'block', screenshot: 'only-on-failure', trace: 'retain-on-failure' },
   webServer: { command: 'node serwer.js', env: { PORT: String(PORT) }, url: `http://127.0.0.1:${PORT}/index.html`, reuseExistingServer: !process.env.CI },
   projects: [
     { name: 'chromium-jasny', use: { ...phone, browserName: 'chromium', colorScheme: 'light' } },
