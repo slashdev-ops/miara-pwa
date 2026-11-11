@@ -21,6 +21,7 @@ var ZD = (function () {
   const steps = (S, k) => num(meas(S, k).steps) || null;
   const entries = (S, k) => (S.days || {})[k] || [];
   const pain = (S, k) => (S.pain || {})[k] || null;
+  const bloat = (S, k) => num(((S.gut || {})[k] || {}).b);
   const hasEntry = (S, k) => entries(S, k).length > 0 || Object.values(meas(S, k)).some((v) => num(v) > 0) || !!pain(S, k);
 
   // Średnia z dni [a, b] wstecz od k (0 = k)
@@ -45,6 +46,7 @@ var ZD = (function () {
     15: { sila: 'mocne', url: 'https://ichd-3.org/8-headache-attributed-to-a-substance-or-its-withdrawal/8-3-headache-attributed-to-substance-withdrawal/8-3-1-caffeine-withdrawal-headache/' },
     18: { sila: 'mocne', url: 'https://www.cosrh.org/Common/Uploaded%20files/documents/UKMEC_2025.pdf' },
     19: { sila: 'umiarkowane', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC6908414/' },
+    28: { sila: 'umiarkowane', url: 'https://pubmed.ncbi.nlm.nih.gov/35716771/' },
   };
   const link = (row, to, t, mig) => ({ row, to, t, mig: !!mig, ...SRC[row] });
   const PLAN = link(10, 'Realizacja celu', 'Plan „jeśli…, to…” pomaga zrobić to, co zaplanowane (średni efekt d = 0,65).');
@@ -177,8 +179,8 @@ var ZD = (function () {
     return out;
   }
 
-  // „W tym czasie”: działania z 7 dni kończących się dniem zdarzenia
-  function during(S, k) {
+  // „W tym czasie”: działania z 7 dni kończących się dniem zdarzenia; przy brzuchu także sen i stres (wiersz 28)
+  function during(S, k, gutCtx) {
     let tr = 0, ml = 0;
     for (let i = 0; i < 7; i++) {
       const e = entries(S, back(k, i));
@@ -187,13 +189,18 @@ var ZD = (function () {
     }
     const parts = [`${tr} ${plural(tr, 'trening', 'treningi', 'treningów')}`, `${ml} ${plural(ml, 'zapisany posiłek', 'zapisane posiłki', 'zapisanych posiłków')}`];
     if (S.krok) parts.push('aktywny krok tygodnia');
+    if (gutCtx) {
+      const sh = count(S, k, 7, (s, d) => sleep(s, d) != null && sleep(s, d) < 6);
+      const st = count(S, k, 7, (s, d) => ((s.urges || {})[d] || []).some((u) => u.trig === 'stres'));
+      parts.push(`${sh} ${plural(sh, 'krótka noc', 'krótkie noce', 'krótkich nocy')}`, `${st} ${plural(st, 'dzień', 'dni', 'dni')} z ochotą ze stresu`);
+    }
     return 'w tym czasie: ' + parts.join(', ');
   }
 
   // Zdarzenia z 28 dni kończących się dniem today, od najnowszego
   function events(S, today, ctx) {
     const out = [];
-    const add = (id, k, t, x, z, act) => out.push({ id, k, t, x, z, w: during(S, k), act: act || null });
+    const add = (id, k, t, x, z, act, gutCtx) => out.push({ id, k, t, x, z, w: during(S, k, gutCtx), act: act || null });
 
     for (let i = 0; i < 28; i++) {
       const k = back(today, i), prev = back(k, 1), prev2 = back(k, 2);
@@ -205,6 +212,9 @@ var ZD = (function () {
       // Ból: 3 dni z bólem w 7 dniach, pierwszy dzień, w którym próg został osiągnięty
       const pd = (d) => count(S, d, 7, (s, x) => !!pain(s, x));
       if (pd(k) >= 3 && pd(prev) < 3) add('bol_dni', k, 'Więcej dni z bólem', 'Trzy dni z bólem w ostatnim tygodniu. Lista na wizytę zbiera je dla lekarza.', `${pd(k)} dni z bólem w 7 dniach (dziennik bólu)`);
+      // Brzuch: 3 dni ze wzdęciem 5 lub więcej w 7 dniach, pierwszy dzień progu; obok snu i stresu (wiersz 28)
+      const gd = (d) => count(S, d, 7, (s, x) => bloat(s, x) >= 5);
+      if (gd(k) >= 3 && gd(prev) < 3) add('brzuch_dni', k, 'Więcej dni ze wzdęciem', 'Trzy dni z mocnym wzdęciem w tygodniu. Przegląd badań wiąże zły sen i stres z dolegliwościami brzucha: to związek, nie przyczyna.', `${gd(k)} dni ze wzdęciem 5 lub więcej w 7 dniach (dziennik brzucha)`, link(28, 'Sen i stres', ''), true);
       // Powrót po co najmniej 3 dniach bez wpisów, gdy wcześniej były wpisy
       if (hasEntry(S, k) && [1, 2, 3].every((n) => !hasEntry(S, back(k, n)))) {
         let before = false;

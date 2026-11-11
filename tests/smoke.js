@@ -166,7 +166,7 @@ tryc('tryb demo: save() nie zapisuje', () => { let n = 0; const o = sandbox.loca
 
 // Poprawki po przeglądzie końcowym (I1-I5)
 const PETA = { kind: 'gaska', name: 'A', since: '2026-11-01' }, REV = { r: { a: 'x', d: '2026-11-01' } };
-const CLEAN = () => ({ days: {}, swaps: {}, meas: {}, hab: {}, urges: {}, reviews: {}, mode: 'redukcja', petCeleb: null, krok: null }), NOREV = SEEN_ALL.filter((x) => x !== 'review1');
+const CLEAN = () => ({ days: {}, swaps: {}, meas: {}, hab: {}, urges: {}, gut: {}, reviews: {}, mode: 'redukcja', petCeleb: null, krok: null }), NOREV = SEEN_ALL.filter((x) => x !== 'review1');
 tryc('I1: świętowanie trwa do obejrzenia ekranu zwierzaka', () => {
   const d1 = view('day', { ...CLEAN(), pet: { ...PETA }, petSeen: [...NOREV], reviews: REV }), d2 = view('day');
   const p1 = view('pet'), d3 = view('day');
@@ -887,7 +887,29 @@ const ZS = (o) => ({ days: {}, meas: {}, pain: {}, urges: {}, hab: {}, prof: { c
 const MS = (pairs) => { const m = {}; for (const [n, v] of pairs) m[zk(n)] = { ...(m[zk(n)] || {}), ...v }; return m; };
 const ev = (s, ctx) => Z().events(s, D0, ctx || {});
 const evId = (s, id, ctx) => ev(s, ctx).filter((e) => e.id === id);
-const VERIFIED = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 17, 18, 19];
+const VERIFIED = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 17, 18, 19, 28];
+
+// Brzuch obok snu i stresu (mapa, wiersz 28): związek „w tym czasie”, nigdy przyczyna
+const GZ = (pairs) => { const g = {}; for (const [n, b] of pairs) g[zk(n)] = { b, n: 1, f: 'uform' }; return g; };
+tryc('zdarzenia: 3 dni ze wzdęciem 5+ w 7 dniach to „Więcej dni ze wzdęciem”, 2 dni albo wzdęcie 4 nie', () => {
+  const a = evId(ZS({ gut: GZ([[0, 6], [2, 5], [4, 7]]) }), 'brzuch_dni'), b = evId(ZS({ gut: GZ([[0, 6], [2, 5], [4, 4]]) }), 'brzuch_dni');
+  return a.length === 1 && a[0].k === D0 && a[0].t === 'Więcej dni ze wzdęciem' && a[0].z.includes('3 dni ze wzdęciem 5 lub więcej') && b.length === 0;
+});
+tryc('zdarzenia: przy brzuchu „w tym czasie” liczy krótkie noce i dni z ochotą ze stresu, bez słów o przyczynie', () => {
+  const s = ZS({ gut: GZ([[0, 6], [1, 5], [2, 7]]), meas: MS([[0, { sleep: '5' }], [3, { sleep: '5,5' }], [4, { sleep: '7' }]]), urges: { [zk(1)]: [{ trig: 'stres' }, { trig: 'stres' }], [zk(5)]: [{ trig: 'nuda' }] } });
+  const e = evId(s, 'brzuch_dni')[0], all = e.t + e.x + e.z + e.w;
+  return e.w.startsWith('w tym czasie') && e.w.includes('2 krótkie noce') && e.w.includes('1 dzień z ochotą ze stresu')
+    && e.act && e.act.row === 28 && e.act.url === 'https://pubmed.ncbi.nlm.nih.gov/35716771/' && e.act.sila === 'umiarkowane'
+    && /związek, nie przyczyna/.test(e.x) && !/z powodu|przez (sen|stres)|powoduj|wywołuj/i.test(all);
+});
+tryc('zdarzenia: inne zdarzenia nie dostają snu i stresu w „w tym czasie”', () => {
+  const e = evId(ZS({ meas: MS([[0, { sleep: '5' }], [1, { sleep: '5' }]]) }), 'krotki_sen')[0];
+  return !e.w.includes('krótk') && !e.w.includes('stresu');
+});
+tryc('zdarzenia: „Więcej dni ze wzdęciem” na ekranie Mój dzień ze źródłem', () => {
+  view('day', BASE({ gut: Object.fromEntries([0, 1, 2].map((n) => [dk(n), { b: 6, n: 1, f: 'uform' }])) }));
+  const h = mainHtml(); return h.includes('Więcej dni ze wzdęciem') && h.includes('pubmed.ncbi.nlm.nih.gov/35716771');
+});
 
 tryc('zdarzenia: moduł ma events, goals, suggest, progress, impact, signals', () => !!Z() && ['events', 'suggest', 'progress', 'impact', 'signals'].every((f) => typeof Z()[f] === 'function') && Z().goals.length === 7);
 tryc('zdarzenia: 2 noce z rzędu poniżej 6 h to „Krótkie noce”, jedna noc albo 6 h nie', () => {
@@ -1261,6 +1283,14 @@ const hintsOf = (h) => [...h.matchAll(/<p class="(?:small muted|why)"[^>]*>([\s\
 tryc('strażnik: każde objaśnienie w Ustawieniach ma najwyżej 30 słów', () => {
   const long = hintsOf(view('set', BASE())).map((t) => t.split(/ Źródł[oa]: /)[0]).filter((t) => t.split(' ').length > 30); // źródła są obowiązkowe, nie liczą się
   if (long.length) throw new Error(long.map((t) => t.split(' ').length + ': ' + t.slice(0, 50)).join(' | '));
+  return true;
+});
+// Ten sam strażnik dla Mojego dnia, Posiłków i Zdrowia (rada mówi, 11.11.2026), w danych zwykłych i w scenariuszach
+tryc('strażnik: objaśnienia w Moim dniu, Posiłkach i Zdrowiu mają najwyżej 30 słów', () => {
+  const long = [];
+  for (const tab of ['day', 'meals', 'health']) for (const s of [BASE(), { ...T.scenS('wszystkie'), tab }, { ...T.scenS('jelita'), tab }])
+    for (const t of hintsOf(view(tab, s)).map((x) => x.split(/ Źródł[oa]: /)[0])) if (t.split(' ').length > 30 && !long.includes(tab + ' ' + t)) long.push(tab + ' ' + t);
+  if (long.length) throw new Error(long.length + ' za długich: ' + long.map((t) => t.split(' ').length + ': ' + t.slice(0, 70)).join(' | '));
   return true;
 });
 tryc('Ustawienia: bez zdań, które powtarzają przycisk albo są niesprawdzone', () => {
