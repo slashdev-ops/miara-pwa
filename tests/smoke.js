@@ -597,7 +597,7 @@ tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h =
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
 const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord'];
-const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob'];
+const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
   view('day', BASE({ kg: '90', age: '50', sex: 'M', muscle: true, bmiCut: 'nhs', meas: { [dk(0)]: { w: '90', steps: '8000', waist: '100' } }, days: { [dk(0)]: ML(1, 500, 30) }, krok: { step: 1, since: dk(3), ans: { why: 'zmeczenie' } }, knee: { start: dk(3), sessions: [{ d: dk(1), pain: 4 }], morning: {}, days: [2], tmpPain: null, tmpCramp: null } }));
@@ -1291,6 +1291,49 @@ tryc('mobilność: zapis sesji dodaje trening „Mobilność” raz dziennie i l
 });
 tryc('mobilność: tytuł ekranu w nagłówku', () => { view('mob', MOBB()); return (els.title || {}).textContent === 'Mobilność'; });
 tryc('mobilność: wejście z Treningu, pole w DEF, poza kopią bez danych o zdrowiu', () => view('train', BASE()).includes('data-tab="mob"') && JSON.stringify(T.DEF().mob) === '{"done":{}}' && NH_DROP.includes('mob'));
+
+// Mój plan od specjalisty, wkładki, płaskostopie, ACL (decyzja 11.11.2026, punkty 1-4)
+const PLB = (o) => BASE({ mob: { done: {} }, plan: { items: [], done: {} }, insole: { days: {}, pain: {} }, ...o });
+const wd = () => new Date().getDay();
+tryc('plan: dodanie ćwiczenia od specjalisty z ilością i dniami; dziś widoczne, w inny dzień nie', () => {
+  view('mob', PLB()); T.S().tmpPlan = { n: 'Wyprost kolana leżąc', dose: '3 × 10', days: [wd()] }; click({ planadd: '1' });
+  const it = T.S().plan.items[0]; const h = view('mob');
+  const other = view('mob', PLB({ plan: { items: [{ ...it, days: [(wd() + 1) % 7] }], done: {} } }));
+  return !!it && it.n === 'Wyprost kolana leżąc' && it.dose === '3 × 10' && h.includes('Mój plan od specjalisty') && h.includes(`data-planex="${it.id}"`) && !other.includes(`data-planex="${it.id}"`);
+});
+tryc('plan: odhaczenie ćwiczenia z planu zapisuje dzień; usunięcie ma „Cofnij”', () => {
+  const it = { id: 'p1', n: 'Most', dose: '2 × 10', days: [0, 1, 2, 3, 4, 5, 6] };
+  view('mob', PLB({ plan: { items: [it], done: {} } })); click({ planex: 'p1' });
+  if (!(T.S().plan.done[T.todayKey()] || []).includes('p1')) throw new Error('odhaczenie');
+  click({ plandel: 'p1' }); if (T.S().plan.items.length) throw new Error('usunięcie');
+  if (!(els.toast || {}).innerHTML.includes('data-undo')) throw new Error('brak Cofnij');
+  click({ undo: '1' }); return T.S().plan.items.length === 1;
+});
+tryc('plan: bez planu podpowiedź, że plan wpisuje się z zaleceń fizjoterapeuty lub podiatry', () => view('mob', PLB()).includes('fizjoterapeuty albo podiatry'));
+tryc('wkładki: przy płaskostopiu odhaczenie dnia i ból stopy raz w tygodniu; podsumowanie 28 dni', () => {
+  view('mob', PLB({ prof: { cond: { flat: true }, pill: '' } })); click({ insole: '1' }); click({ footpain: '3' });
+  const h = view('mob');
+  return T.S().insole.days[T.todayKey()] === true && T.S().insole.pain[T.todayKey()] === 3 && h.includes('1 z 28 dni we wkładkach') && h.includes('data-insole="1" aria-pressed="true"');
+});
+tryc('wkładki: bez płaskostopia w profilu sekcji nie ma', () => !view('mob', PLB()).includes('data-insole'));
+tryc('profil: płaskostopie i po rekonstrukcji ACL do wyboru', () => { const h = view('health', PLB()); return h.includes('data-cond="flat"') && h.includes('data-cond="acl"'); });
+tryc('płaskostopie: w Zdrowiu karta NHS (bez dolegliwości nic nie trzeba, kiedy do lekarza)', () => {
+  const h = planOf(view('health', PLB({ prof: { cond: { flat: true }, pill: '' } })));
+  return h.includes('Płaskostopie') && h.includes('nie powodują dolegliwości') && h.includes('tylko jednej stopy') && h.includes('nhs.uk/conditions/flat-feet');
+});
+tryc('ACL: rutyna mobilności ostrzega, plan od specjalisty jest nad rutyną', () => {
+  const h = view('mob', PLB({ prof: { cond: { acl: true }, pill: '' } }));
+  return h.includes('zapytaj fizjoterapeutę, czy pasują do Twojej fazy') && h.indexOf('Mój plan od specjalisty') < h.indexOf('Biodra i miednica');
+});
+tryc('plan i wkładki w DEF, poza kopią bez danych o zdrowiu', () => JSON.stringify(T.DEF().plan) === '{"items":[],"done":{}}' && JSON.stringify(T.DEF().insole) === '{"days":{},"pain":{}}' && NH_DROP.includes('plan') && NH_DROP.includes('insole'));
+
+// Strażnik (11.11.2026: nowa planHtml nadpisała plan dnia w Posiłkach): bez dwóch funkcji o tej samej nazwie
+tryc('strażnik: każda funkcja w app.js, pet.js i zdarzenia.js ma unikalną nazwę', () => {
+  const src = [code, fs.readFileSync(path.join(root, 'pet.js'), 'utf8'), fs.readFileSync(path.join(root, 'zdarzenia.js'), 'utf8')].join(String.fromCharCode(10));
+  const names = [...src.matchAll(/^\s*function (\w+)\(/gm)].map((m) => m[1]), dup = [...new Set(names.filter((n, i) => names.indexOf(n) !== i))];
+  if (dup.length) throw new Error(dup.join(', '));
+  return names.length > 100;
+});
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
