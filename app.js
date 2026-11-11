@@ -439,7 +439,9 @@ function kChain(){const a=S.krok.ans,L=[];const bar={umiej:'nie wiesz, co i jak 
   return L}
 function kData(){let o=0,u=0;const t={};for(let i=0;i<14;i++){const k=keyOf(new Date(Date.now()-i*864e5));(S.days[k]||[]).forEach(e=>{if(e.ord)o++});(S.urges[k]||[]).forEach(x=>{u++;t[x.trig]=(t[x.trig]||0)+1})}
   const top=Object.entries(t).sort((a,b)=>b[1]-a[1])[0];return o||u?`Z Twoich zapisów z 14 dni: zamówienia ${o}, ochoty ${u}${top&&TRIGN[top[0]]?` (najczęściej: ${TRIGN[top[0]]})`:''}.`:'Brak zapisów z 14 dni, więc łańcuch wynika tylko z odpowiedzi.'}
-function krokCardHtml(){const k=S.krok;if(!k||!k.conf)return changeHtml()+(!S.onb?'':!k?'<p><button class="btn ghost" data-tab="krok">Co mi utrudnia? 2 minuty</button></p>':'<p><button class="btn ghost" data-tab="krok">Dokończ rozpoznanie</button></p>');
+function krokCardHtml(){const k=S.krok;if(!k||!k.conf){const c=changeHtml(),t=!S.onb?'':!k?'Co mi utrudnia? 2 minuty':'Dokończ rozpoznanie',bt='<button class="btn ghost'+(c?' small':'')+'" data-tab="krok">'+t+'</button>';
+  // Mniej ramek: zmiana tygodnia i rozpoznanie w jednym kafelku
+  return !t?c:c?c.replace(/<\/div>$/,'<p class="cardact">'+bt+'</p></div>'):'<p>'+bt+'</p>'}
   if(k.fin)return '<div class="note"><b>Ścieżka gotowania ukończona.</b> Kolejne ścieżki (zamawianie, ochoty) pojawią się w następnym etapie.</div>';
   const K=KROKI[k.step],p=kProg(mondayOf(new Date()));
   return `<div class="note"><b>Twój krok na ten tydzień:</b> ${K.n} (${k.step+1} z 5)${k.easy?', łatwiejsza wersja':''}<br>${K.co}. Postęp: ${p.n} z ${p.cel}${p.zt?`, zapas ${p.z} z ${p.zt}`:''}.${p.ok?' <b>Krok wykonany.</b>':''}${k.jt!=null&&K.jt[k.jt]?`<br>Twój plan: ${K.jt[k.jt]}`:''}</div><p><button class="btn ghost" data-tab="krok">${p.ok?'Następny krok':'Co zrobić w tym kroku'}</button></p>`+changeHtml()}
@@ -1505,8 +1507,8 @@ function renderSet(){
   h+=`<div class="panel"><div class="field"><label for="discreet">Tryb dyskretny: karty o migrenie i antykoncepcji tylko w Zdrowiu</label><input type="checkbox" class="switch" id="discreet" data-k="discreet" ${S.discreet?'checked':''}></div></div>`;
   h+='<h2 id="towarzysz">Towarzysz</h2>'+petPickHtml()+(S.pet?`<div class="panel"><div class="field"><label for="body">Sylwetka z pomiarów na ekranie zwierzaka</label><input type="checkbox" class="switch" id="body" data-k="body" ${S.body?'checked':''}></div></div>`:'');
   h+='<h2 id="tryb">Tryb</h2>'+whyP('tryb')+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie'],['masa','Przyrost masy']],S.mode,'mode','','Tryb')+modePropHtml();
-  h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div></div>
-${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź objawy nóg (lipodemia)</label><input type="checkbox" class="switch" id="lip" data-k="lip" ${S.lip?'checked':''}></div></div>`:''}
+  h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div>
+${S.sex==='K'?`<div class="field"><label for="lip">Śledź objawy nóg (lipodemia)</label><input type="checkbox" class="switch" id="lip" data-k="lip" ${S.lip?'checked':''}></div>`:''}</div>
   <p class="small muted">Korekta liczy spoczynek wzorem Mifflina-St Jeora zamiast stałego 1 kcal na kg na godzinę. Dla kobiet zwykle daje niższe wyniki (wniosek z definicji MET, niesprawdzony pomiarem).</p>
   <div class="note">${wskTxt()} Spoczynkowe zużycie energii ok. ${fmt(rmr())} kcal na dobę.</div>
   ${ekranHtml()}

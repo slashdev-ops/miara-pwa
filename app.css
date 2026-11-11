@@ -374,3 +374,7 @@ button:disabled{opacity:.55;cursor:not-allowed;filter:none;transform:none}
 .stonepet{fill:var(--duck);stroke:var(--ink);stroke-width:1}
 @media (prefers-reduced-motion: no-preference){.stone.now,.stonepet{animation:stonehop .6s ease-out 1}}
 @keyframes stonehop{0%{transform:translateY(-6px)}60%{transform:translateY(1px)}100%{transform:none}}
+
+/* Mniej ramek (11.11.2026): sąsiadujące zwinięte sekcje to jedna lista z jedną ramką */
+details.fold:has(+ details.fold){margin-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-width:0;box-shadow:none}
+details.fold + details.fold{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;box-shadow:none}

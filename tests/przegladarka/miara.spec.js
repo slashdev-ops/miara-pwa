@@ -482,3 +482,24 @@ test.describe('po akcji wszystko na miejscu', () => {
     expect(top).toBeLessThan(await page.evaluate(() => innerHeight * 0.6));
   });
 });
+
+// Mniej ramek: sąsiadujące zwinięte sekcje tworzą jedną listę (jedna ramka, linia między wierszami, bez odstępu i cienia)
+test('mniej ramek: sąsiadujące sekcje zwinięte to jedna lista na każdym ekranie', async ({ page }) => {
+  await open(page);
+  let pairs = 0;
+  for (const tab of MAIN) {
+    await show(page, tab);
+    const bad = await page.evaluate(() => {
+      const out = [];
+      for (const b of document.querySelectorAll('#main details.fold + details.fold')) {
+        const a = b.previousElementSibling, ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(), sa = getComputedStyle(a), sb = getComputedStyle(b);
+        if (Math.abs(rb.top - ra.bottom) > 1 || parseFloat(sb.borderTopLeftRadius) > 0 || parseFloat(sa.borderBottomLeftRadius) > 0 || sb.boxShadow !== 'none')
+          out.push(b.querySelector('summary').textContent.trim().slice(0, 30));
+      }
+      return { out, n: document.querySelectorAll('#main details.fold + details.fold').length };
+    });
+    pairs += bad.n;
+    expect(bad.out, tab).toEqual([]);
+  }
+  expect(pairs).toBeGreaterThan(3);
+});

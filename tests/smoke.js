@@ -1013,6 +1013,15 @@ tryc('układ: Zdrowie z ustawionym profilem zaczyna od planu, profil zwinięty z
   const f = h.indexOf('id="fold_profil"'), ch = h.indexOf('data-cond="hashi"');
   return pl > 0 && pr > pl && f > pr && ch > f && /Hashimoto, Wzdęcia i jelita/.test(h.slice(pr, f));
 });
+// Mniej ramek (11.11.2026): jedno obramowanie na grupę zamiast pudełka na każdy wiersz
+tryc('mniej ramek: przełączniki w Ustawieniach w jednym panelu', () => {
+  const h = view('set', BASE({ sex: 'K' })), k = h.indexOf('for="korekta"'), l = h.indexOf('id="lip"');
+  return k > 0 && l > k && !h.slice(k, l).includes('class="panel"');
+});
+tryc('mniej ramek: „Twoja zmiana na ten tydzień” i „Co mi utrudnia?” w jednym kafelku', () => {
+  const h = view('day', BASE({ krok: null, reviews: { [dk(1)]: { c: 'Herbata o 20:00' } } })), i = h.indexOf('Twoja zmiana na ten tydzień'), j = h.indexOf('data-tab="krok"');
+  return i > 0 && j > i && !h.slice(i, j).includes('</div>');
+});
 tryc('układ: Zdrowie bez profilu zaczyna od wyboru chorób, bez zwinięcia', () => {
   const h = view('health', BASE()); return h.indexOf('id="profil"') < h.indexOf('id="twojplan"') && !h.includes('id="fold_profil"');
 });
