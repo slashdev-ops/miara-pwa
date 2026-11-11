@@ -251,5 +251,20 @@ var PET = (function () {
     return { S, frames: FRAMES.slice() };
   }
 
-  return { state, milestones, next, svg, card, screen, nameOf, badgeList, body, react, flush, demo };
+  // ---------- Ścieżka kamieni: kamień za zaliczony tydzień celu, 7 na jezioro, przeszkody to pogoda (nic nie przepada) ----------
+  function path(n, weather, name) {
+    const lake = n ? Math.floor((n - 1) / 7) + 1 : 1, pos = n ? ((n - 1) % 7) + 1 : 0;
+    const where = pos ? `${name} jest na ${pos}. kamieniu z 7` : `${name} stoi na brzegu`;
+    const W = { wiatr: `${name} odpoczywa na kamieniu: dziś wiatr, droga poczeka.`, mgla: 'Mgła po krótkich nocach: idziemy wolniej, kamienie zostają.' };
+    let g = '';
+    for (let i = 1; i <= 7; i++) {
+      const x = 14 + (i - 1) * 32, y = 44 + (i % 2 ? 0 : -10);
+      g += `<ellipse class="stone${i <= pos ? ' done' : ''}${i === pos ? ' now' : ''}" cx="${x}" cy="${y}" rx="12" ry="6"/>`;
+      if (i === pos) g += `<circle class="stonepet" cx="${x}" cy="${y - 12}" r="6"/>`;
+    }
+    return `<div class="panel stones"><svg viewBox="0 0 224 64" role="img" aria-label="${where}. Jezioro ${lake}.">${weather === 'mgla' ? '<rect class="fog" x="0" y="0" width="224" height="64"/>' : ''}<path class="water" d="M0 54 Q56 46 112 54 T224 54 V64 H0Z"/>${g}</svg>`
+      + `<p><b>Jezioro ${lake}.</b> ${where}.</p><p class="small muted">${W[weather] || 'Następny kamień po zaliczonym tygodniu celu. Przerwa niczego nie zabiera.'}</p></div>`;
+  }
+
+  return { state, milestones, next, path, svg, card, screen, nameOf, badgeList, body, react, flush, demo };
 })();
