@@ -1364,6 +1364,25 @@ tryc('plan od specjalisty przyjmuje każde zalecenie (nie tylko ćwiczenie)', ()
 
 tryc('scenariusz jelita: profil z wzdęciami, 14 dni dziennika, karta w Zdrowiu', () => { const s = T.scenS('jelita'); const d = view('day', s); return !!T.SCEN.jelita && s.prof.cond.gut && Object.keys(s.gut).length >= 14 && d.includes('id="fold_brzuch"') && view('health', { ...T.scenS('jelita'), tab: 'health' }).includes('Środki z badań'); });
 tryc('jelita: olejek miętowy z monografii EMA: dawka, pora, czas, interakcje, przeciwwskazania', () => { const h = planOf(view('health', GUT())); return ['0,2-0,4 ml', '0,6-1,2 ml', '30 minut przed posiłkiem', 'w całości', '3 miesiące', 'leki zobojętniające', 'kamica żółciowa', 'ema.europa.eu'].every((x) => h.includes(x)) && !h.includes('dawka według ulotki'); });
+// Ścieżka kamieni (rada/2026-11-11_zwierzak-droga.md): kamień za zaliczony tydzień celu, przeszkody to pogoda, nic nie przepada
+tryc('kamienie: PET.path rysuje 7 kamieni, opis tekstem, nowe jezioro po 7', () => {
+  const a = sandbox.PET.path(3, '', 'Kluska'), b = sandbox.PET.path(9, '', 'Kluska');
+  return (a.match(/class="stone[ "]/g) || []).length === 7 && a.includes('Kluska jest na 3. kamieniu z 7') && a.includes('Jezioro 1')
+    && b.includes('Jezioro 2') && b.includes('na 2. kamieniu z 7') && a.includes('role="img"');
+});
+tryc('kamienie: kamień przybywa raz za każdy zaliczony tydzień celu i nie znika po przerwie', () => {
+  const m = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((n) => [dk(n), { w: '80' }]));
+  view('pet', BASE({ pet: { kind: 'gaska', name: 'Kluska', since: dk(30) }, cel: { id: 'zapisy', since: dk(7) }, meas: m }));
+  view('pet'); const n1 = (T.S().pet.stones || []).length;
+  view('pet', { meas: {} }); const n2 = (T.S().pet.stones || []).length;
+  return n1 === 1 && n2 === 1 && mainHtml().includes('na 1. kamieniu z 7');
+});
+tryc('kamienie: dzień z bólem to wiatr i odpoczynek, krótkie noce to mgła; bez słów o porażce', () => {
+  const w = sandbox.PET.path(2, 'wiatr', 'Kluska'), f = sandbox.PET.path(2, 'mgla', 'Kluska');
+  return w.includes('odpoczywa na kamieniu') && f.includes('Mgła') && !/przegr|porażk|spad|traci/i.test(w + f);
+});
+tryc('kamienie: skok tylko bez ograniczenia ruchu', () => /prefers-reduced-motion: ?no-preference\)[^@]*\.stone/.test(appCss));
+
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
