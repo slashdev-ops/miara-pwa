@@ -32,7 +32,7 @@ jobs:
   przegladarka:
     # Chromium i WebKit (silnik Safari), tryb jasny i ciemny, iPhone 13 i 320 px: tests/przegladarka/miara.spec.js
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: tests/przegladarka
@@ -45,8 +45,27 @@ jobs:
           cache-dependency-path: tests/przegladarka/package-lock.json
       - name: Zależności testów
         run: npm ci --no-audit --no-fund
+      # Odporność na awarie sieci (11.11.2026: serwery Ubuntu nieosiągalne, krok wisiał do limitu 15 min):
+      # przeglądarki z pamięci podręcznej, biblioteki systemowe z limitem czasu i ponowieniem
+      - name: Pamięć podręczna przeglądarek
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('tests/przegladarka/package-lock.json') }}
       - name: Przeglądarki
-        run: npx playwright install --with-deps chromium webkit
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium webkit
+      # Gdy serwery Ubuntu są nieosiągalne, obraz runnera zwykle ma już potrzebne biblioteki: o wyniku decydują testy
+      - name: Biblioteki systemowe przeglądarek
+        continue-on-error: true
+        timeout-minutes: 13
+        run: |
+          for i in 1 2 3; do
+            timeout 240 npx playwright install-deps chromium webkit && exit 0
+            echo "Próba $i nie powiodła się, ponawiam za 20 s"; sleep 20
+          done
+          exit 1
       - name: Testy w przeglądarce
         run: npx playwright test
       - name: Raport po błędzie
