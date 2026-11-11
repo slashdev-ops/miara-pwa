@@ -1341,7 +1341,7 @@ tryc('jelita: profil ma „Wzdęcia i jelita”; Zdrowie: alarmy NHS, co robić 
   if (!view('health', BASE()).includes('data-cond="gut"')) throw new Error('profil');
   const h = planOf(view('health', GUT()));
   return h.includes('krew w stolcu') && h.includes('112') && h.includes('1,5 l') && h.includes('ponad 10 g dziennie') && h.includes('co najmniej 4 tygodnie')
-    && h.includes('2-3 kiwi') && h.includes('dojelitowe') && h.includes('według ulotki') && h.includes('0,5-1,5 g') && h.includes('po rozmowie z lekarzem')
+    && h.includes('2-3 kiwi') && h.includes('dojelitowe') && h.includes('0,5-1,5 g') && h.includes('po rozmowie z lekarzem')
     && h.includes('pubmed.ncbi.nlm.nih.gov/41081513') && h.includes('nhs.uk/conditions/bloating') && !/wyleczy|na pewno|gwarant/i.test(h);
 });
 tryc('jelita: przy Hashimoto odstęp suplementów od lewotyroksyny, przy Yaz ulotka przy wymiotach i biegunce', () => {
@@ -1363,6 +1363,7 @@ tryc('jelita: pole gut w DEF, poza kopią bez danych o zdrowiu', () => JSON.stri
 tryc('plan od specjalisty przyjmuje każde zalecenie (nie tylko ćwiczenie)', () => view('mob', BASE({ plan: { items: [], done: {} } })).includes('Zalecenie'));
 
 tryc('scenariusz jelita: profil z wzdęciami, 14 dni dziennika, karta w Zdrowiu', () => { const s = T.scenS('jelita'); const d = view('day', s); return !!T.SCEN.jelita && s.prof.cond.gut && Object.keys(s.gut).length >= 14 && d.includes('id="fold_brzuch"') && view('health', { ...T.scenS('jelita'), tab: 'health' }).includes('Środki z badań'); });
+tryc('jelita: olejek miętowy z monografii EMA: dawka, pora, czas, interakcje, przeciwwskazania', () => { const h = planOf(view('health', GUT())); return ['0,2-0,4 ml', '0,6-1,2 ml', '30 minut przed posiłkiem', 'w całości', '3 miesiące', 'leki zobojętniające', 'kamica żółciowa', 'ema.europa.eu'].every((x) => h.includes(x)) && !h.includes('dawka według ulotki'); });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
