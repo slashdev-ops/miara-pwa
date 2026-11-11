@@ -701,7 +701,7 @@ tryc('zamówione: szacunek z przedziałem i białkiem', () => { const h = view('
 tryc('zamówione: zapis dodaje posiłek do dnia z etykietą', () => { view('meals', ORDB({ days: {} })); T.S().days = {}; click({ ordsave: '1' }); const e = lastE(); return e && e.kind === 'm' && e.ord === 1 && e.label.includes('Kurczak po koreańsku, 5 kawałków') && e.k === 740; });
 tryc('zamówione: wybór zostaje zapamiętany', () => { view('meals', ORDB()); click({ orddish: 'sushi' }); click({ ordn: '16' }); return T.S().ord.dish === 'sushi' && T.S().ord.sushi === 16; });
 tryc('zamówione: każde danie ma zdanie dietetyka', () => ['sushi', 'kurczak', 'tofu'].every((d) => /class="why"|class="small muted"/.test(view('meals', ORDB({ dish: d }))) && view('meals', ORDB({ dish: d })).includes('class="ordtip"')));
-tryc('zamówione: szybki wpis prowadzi do Zamówione', () => view('day', BASE()).includes('data-nav="meals#zamowione"'));
+tryc('zamówione: szybki wpis prowadzi do Zamówione', () => view('day', BASE()).includes('data-nav="meals#zamowione#zamowione"'));
 tryc('zamówione: bez nazw lokali', () => !/chingu|kfc|sushi\s*master/i.test(code));
 tryc('sen: chipy 6:00-8:00 ustawiają sen', () => { const k = `meas.${dk(0)}.sleep`, h = view('day', BASE()); if (!['6:00', '6:30', '7:00', '7:30', '8:00'].every((v) => h.includes(`data-setv="${k}" data-v="${v}"`))) return false; click({ setv: k, v: '7:30' }); return T.S().meas[dk(0)].sleep === '7:30'; });
 tryc('sen: chip jak wczoraj z wczorajszą wartością', () => view('day', BASE({ meas: { [dk(1)]: { sleep: '6:13' } } })).includes('jak wczoraj (6 h 13 min)'));
@@ -1236,6 +1236,36 @@ tryc('prostota: instrukcja „Pomiary dnia” w 2 krótkich zdaniach, bez powtó
   const h = view('day', BASE()), i = h.indexOf('<h2>Pomiary dnia</h2>'), p = h.slice(i, h.indexOf('</p>', i));
   return i > 0 && p.includes('Waga rano, przed jedzeniem.') && !p.includes('po toalecie') && !p.includes('Obwody co 2 tygodnie') && !p.includes('tak jak pokazuje zegarek')
     && p.replace(/<[^>]+>/g, ' ').split(/(?<=\.)\s+/).filter((x) => x.trim()).length <= 3;
+});
+
+// Prostota Posiłków (rada/2026-11-11_prostota.md, P2): rzadko używane zwinięte, lista przepisów krótsza
+const openTag = (h, id) => { const i = h.indexOf(`id="${id}"`); return i < 0 ? '' : h.slice(h.lastIndexOf('<', i), h.indexOf('>', i) + 1); };
+tryc('Posiłki: „Zamówione jedzenie” zwinięte; skrót z Mojego dnia je otwiera', () => {
+  const t = openTag(view('meals', BASE()), 'zamowione');
+  if (!t.startsWith('<details') || /\sopen/.test(t)) throw new Error('nie zwinięte: ' + t);
+  const d = view('day', BASE()); if (!d.includes('data-nav="meals#zamowione#zamowione"')) throw new Error('skrót');
+  click({ nav: 'meals#zamowione#zamowione' });
+  return /\sopen/.test(openTag(mainHtml(), 'zamowione'));
+});
+tryc('Posiłki: plan dnia bez zdania „Jedno dotknięcie zapisuje posiłek”', () => !view('meals', BASE()).includes('Jedno dotknięcie zapisuje posiłek'));
+tryc('Posiłki: 6 przepisów widocznych, reszta w „Pokaż pozostałe (N)”, objaśnienie wartości zwinięte', () => {
+  view('meals', BASE({ f: { ...JSON.parse(JSON.stringify(T.DEF().f)), type: 'all' } })); const list = (els.mlist || {}).innerHTML || '';
+  const f = list.indexOf('id="fold_mreszta"'), before = f < 0 ? list : list.slice(0, f);
+  const n = (before.match(/<article class="meal"/g) || []).length, all = (list.match(/<article class="meal"/g) || []).length;
+  if (all <= 6) throw new Error('za mało przepisów do testu: ' + all);
+  return n === 6 && f > 0 && list.includes(`Pokaż pozostałe (${all - 6})`) && /id="fold_mlinfo"/.test(list) && !before.includes('Gramatury produktów suchych');
+});
+
+// Prostota Ustawień (rada/2026-11-11_prostota.md, P2): jedno krótkie objaśnienie na wybór
+const hintsOf = (h) => [...h.matchAll(/<p class="(?:small muted|why)"[^>]*>([\s\S]*?)<\/p>/g)].map((m) => m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+tryc('strażnik: każde objaśnienie w Ustawieniach ma najwyżej 30 słów', () => {
+  const long = hintsOf(view('set', BASE())).map((t) => t.split(/ Źródł[oa]: /)[0]).filter((t) => t.split(' ').length > 30); // źródła są obowiązkowe, nie liczą się
+  if (long.length) throw new Error(long.map((t) => t.split(' ').length + ': ' + t.slice(0, 50)).join(' | '));
+  return true;
+});
+tryc('Ustawienia: bez zdań, które powtarzają przycisk albo są niesprawdzone', () => {
+  const h = view('set', BASE());
+  return !h.includes('Każdy zamkniesz przyciskiem') && !h.includes('Ustawienie zostaje w telefonie') && !h.includes('Zaawansowana ochrona danych') && h.includes('Kraj telefonu: progi');
 });
 
 chain.then(() => {
