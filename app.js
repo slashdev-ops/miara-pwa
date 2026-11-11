@@ -219,7 +219,7 @@ function planHtml(){
   const ids=planIds(),d=day(),cm=carbMult(),por=num(S.f.portion)||1,ms=d.filter(e=>e.kind==='m'),logged=new Set(ms.map(e=>e.id));
   const left=targetKcal()-ms.reduce((a,e)=>a+e.k,0),now=slotNow();
   const rec=ids.map(id=>MEALS.find(m=>m.id===id)).find(m=>m.t===now&&!logged.has(m.id));
-  let h=`<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p><h2 id="plan">Dziś według planu</h2><p class="small muted">${[0,6].includes(new Date().getDay())?'Weekend: jedno większe danie, jest więcej czasu.':'Dzień roboczy: obiad do 20 min.'} ${left>=0?`Zostało ok. ${fmt(left)} kcal na dziś.`:`Cel dnia przekroczony o ok. ${fmt(-left)} kcal.`}</p><div class="panel">`;
+  let h=`<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>`+repeatHtml()+`<h2 id="plan">Dziś według planu</h2><p class="small muted">${[0,6].includes(new Date().getDay())?'Weekend: jedno większe danie, jest więcej czasu.':'Dzień roboczy: obiad do 20 min.'} ${left>=0?`Zostało ok. ${fmt(left)} kcal na dziś.`:`Cel dnia przekroczony o ok. ${fmt(-left)} kcal.`}</p><div class="panel">`;
   const pk=ids.map(id=>macros(MEALS.find(m=>m.id===id),cm,por)),tk=pk.reduce((a,b)=>a+b.k,0),tp=pk.reduce((a,b)=>a+b.p,0),room=targetKcal()-tk;
   const base=planFor(new Date().getDay()),orig=PLAN[new Date().getDay()];
   h+=ids.map((id,i)=>{const m=MEALS.find(x=>x.id===id),x=macros(m,cm,por),done=logged.has(id);return `<div class="entry"><span class="txt"><span class="small muted">${SLOT_T[m.t]}${m.t==='kolacja'&&postTrain()?', po treningu':''}${id!==base[i]?', Twój wybór':base[i]!==orig[i]?', dopasowane do IO':''}${rec&&rec.id===id?', polecane teraz':''}</span><br><button class="linkbtn" data-recipe="${id}">${m.n}</button>${done?'':`<br><button class="linkbtn small" data-swap="${i}" style="color:var(--muted);font-size:13px">zamień na inne</button>`}</span><span class="val">${fmt(x.k)} kcal</span>${done?'<span class="val">✓</span>':`<button class="btn" data-addmeal="${id}">Zjem</button>`}</div>`}).join('');
@@ -1336,7 +1336,9 @@ const TABS=[
   ['set','Ustawienia','<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>']
 ];
 function renderTabs(){const tb=document.getElementById('tabs');if(tb&&tb.style)tb.style.display=S.tab==='intro'?'none':'';
-  document.getElementById('tabs').innerHTML=TABS.map(([k,l,ic])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}" aria-label="${l}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>${l}</button>`).join('');
+  const SV=ic=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic}</svg>`,SH={day:'Dzień',set:'Ustaw.'},left=dayLeft();
+  document.getElementById('tabs').innerHTML=TABS.map(([k,l,ic])=>{const n=k==='day'?left:0;return `<button class="${S.tab===k?'on':''}" data-tab="${k}" aria-label="${l}${n?`, ${n} do zrobienia`:''}">${SV(ic)}<span class="l${SH[k]?' hs':''}">${l}</span>${SH[k]?`<span class="s">${SH[k]}</span>`:''}${n?`<span class="badge" aria-hidden="true">${n}</span>`:''}</button>`
+    +(k==='day'?`<button class="add${SHEET?' on':''}" data-addsheet="1" aria-label="Dodaj wpis" aria-haspopup="dialog" aria-expanded="${SHEET}">${SV('<path d="M12 5v14M5 12h14"/>')}<span class="l">Dodaj</span></button>`:'')}).join('');
   document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{help:'Pomoc',sos:'Ochota na przekąskę',labs:'Moje badania',visit:'Lista na wizytę',intro:'Wprowadzenie',review:'Przegląd tygodnia',krok:'Krok po kroku',import:'Dane ze Skrótu',recipe:'Przepis',knee:'Program kolana',mob:'Mobilność',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
   document.getElementById('who').textContent=new Date().toLocaleDateString('pl-PL',{weekday:'short',day:'numeric',month:'numeric'});
 }
@@ -1583,7 +1585,7 @@ function helpRes(q){const w=fold0(q||'').split(/\s+/).filter(x=>x.length>1),hit=
 function renderHelp(){let h=`<div class="panel" style="padding:4px 16px"><div class="field"><label for="help_q">Szukaj w Pomocy</label><input type="search" id="help_q" style="width:180px;text-align:left" placeholder="np. białko, sen" value="${esc(S.helpQ||'')}"></div></div><div id="helpres">${helpRes(S.helpQ)}</div>`;
   h+=skrotHelpHtml()+'<h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
   document.getElementById('main').innerHTML=h}
-function render(){startSync();renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+function render(){startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():''}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -1598,6 +1600,28 @@ function undoable(msg){UNDO=JSON.stringify(S);toast(msg,{act:'undo',arg:'1',labe
 function setPath(p,v){const a=p.split('.');let o=S;for(let i=0;i<a.length-1;i++)o=o[a[i]];o[a[a.length-1]]=v}
 
 // ---------- Zdarzenia ----------
+// ---------- Szybkie wpisy z każdego ekranu (11.11.2026) ----------
+// A: arkusz „Dodaj wpis” z paska; B: liczba braków z listy Dziś na zakładce; C: powtórz wczoraj; D: skróty ikony (#dodaj-…)
+let SHEET=false,QUICK_PENDING=false,QUICK_ID='';
+function dayLeft(){if(S.once||painAt(todayKey()))return 0;const k=todayKey(),m=(S.meas||{})[k]||{},d=day();
+  return [num(m.w)>0,d.filter(e=>e.kind==='m').length>=3,d.some(e=>e.kind==='t')||num(m.steps)>0].filter(x=>!x).length}
+function yMeals(){return ((S.days||{})[nAgo(1)]||[]).filter(e=>e.kind==='m')}
+function repeatHtml(){const y=yMeals();return y.length&&!day().some(e=>e.kind==='m')?`<p><button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki (${y.length})</button></p>`:''}
+function sheetHtml(){const gut=!!((S.prof||{}).cond||{}).gut,y=yMeals(),it=(a,t,h)=>`<button class="opt" ${a}><span class="txt">${t}</span>${h?`<span class="small muted">${h}</span>`:''}</button>`;
+  const L=[it('data-nav="day#m_w"','Waga',lastMeas('w',todayKey())?'ostatnio '+lastMeas('w',todayKey())+' kg':''),it('data-nav="day#m_sleep"','Sen'),it('data-nav="day#m_steps"','Kroki'),
+    it('data-tab="meals"','Posiłek'),y.length?it('data-repeat="1"',`Powtórz wczorajsze posiłki (${y.length})`):'',it('data-tab="train"','Trening'),
+    painAt(todayKey())?'':it('data-pain="today"','Boli mnie głowa','zapis jednym dotknięciem'),gut?it('data-nav="day#fold_brzuch#brzuch"','Brzuch dziś'):''];
+  return `<button class="sheetbg" data-sheetclose="1" aria-label="Zamknij" tabindex="-1"></button><div class="sheetbox" role="dialog" aria-modal="true" aria-labelledby="sheet_t"><h2 id="sheet_t">Dodaj wpis</h2><div class="panel">${L.join('')}</div><p><button class="btn ghost" data-sheetclose="1">Zamknij</button></p></div>`}
+function sheetFocus(){if(!SHEET||typeof document.querySelector!=='function')return;const f=document.querySelector('#sheet .sheetbox button');if(f&&f.focus)f.focus()}
+function addFocus(){if(typeof document.querySelector!=='function')return;const a=document.querySelector('nav.tabs [data-addsheet]');if(a&&a.focus)a.focus()}
+const QUICK={'#dodaj-waga':['day','m_w'],'#dodaj-posilek':['meals','plan'],'#dodaj-trening':['train','']};
+function quickFromHash(h){const q=QUICK[String(h||'')];if(!q)return false;S.tab=q[0];QUICK_ID=q[1];SHEET=false;
+  try{if(typeof history!=='undefined'&&history.replaceState)history.replaceState(null,'',location.pathname+location.search)}catch(_){}return true}
+function quickFocus(){if(typeof document.querySelector!=='function')return;window.scrollTo(0,0);const el=QUICK_ID&&document.getElementById(QUICK_ID);
+  if(el){if(el.scrollIntoView)el.scrollIntoView({block:'center'});focusEl(el)}else focusEl(document.querySelector('header h1'))}
+document.addEventListener('keydown',e=>{if(!SHEET)return;if(e.key==='Escape'){SHEET=false;render();addFocus();return}
+  if(e.key==='Tab'){const bs=[...document.querySelectorAll('#sheet .sheetbox button')];if(!bs.length)return;const i=bs.indexOf(document.activeElement);
+    if(e.shiftKey&&i<=0){e.preventDefault();bs[bs.length-1].focus()}else if(!e.shiftKey&&i===bs.length-1){e.preventDefault();bs[0].focus()}}});
 // Po akcji (przegląd ekranów 11.11.2026, WCAG 2.4.3): przed przerysowaniem zapamiętaj przycisk, jego miejsce na ekranie
 // i nagłówek sekcji; po przerysowaniu ten sam przycisk wraca pod palec z fokusem. Gdy przycisku nie ma, fokus na nagłówek
 // sekcji; po zmianie ekranu na tytuł ekranu. Celowe przewinięcie (data-goto, data-nav, scrollTo w obsłudze) zostaje.
@@ -1615,6 +1639,8 @@ function actDone(at){if(!document.querySelector)return;
   if(h){if(h.scrollIntoView){const r=h.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)h.scrollIntoView({block:'start'})}focusEl(h)}}
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;const at=actAt(b);
+  if(d.addsheet){SHEET=true;render();sheetFocus();return}
+  if(SHEET){SHEET=false;if(d.sheetclose){render();addFocus();return}}
   if(d.toastclose){toastHide();return}
   if(d.undo){if(UNDO){const tab=S.tab;S=JSON.parse(UNDO);S.tab=tab;UNDO=null;save();render();toast('Przywrócono')}else toastHide();return}
   if(d.preset||d.datasave)S.touched={kg:true,cm:true,age:true,goal:true};
@@ -1822,9 +1848,10 @@ document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.lab
 // usuń dni starsze niż 60
 (function(){const lim=Date.now()-60*864e5;for(const k in S.days){if(new Date(k).getTime()<lim)delete S.days[k]}save()})();
 if(!S.onb){S.tab='intro';S.introStep=0}
-if(typeof location!=='undefined'&&S.onb)impFromHash(location.hash);
-if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('hashchange',()=>{if(S.onb&&impFromHash(location.hash))render()});
+if(typeof location!=='undefined'&&S.onb&&!impFromHash(location.hash)&&quickFromHash(location.hash))QUICK_PENDING=true;
+if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('hashchange',()=>{if(!S.onb)return;if(impFromHash(location.hash))render();else if(quickFromHash(location.hash)){render();quickFocus()}});
 render();
+if(QUICK_PENDING){QUICK_PENDING=false;quickFocus()}
 if(!DEMO)chInit();
 // Automatyczna wysyłka kopii dla rady po starcie (bez blokowania widoku)
 if(typeof window!=='undefined'&&typeof window.addEventListener==='function')setTimeout(()=>{kopiaAuto().then(ok=>{if(ok&&S.tab==='set')render()})},3000);

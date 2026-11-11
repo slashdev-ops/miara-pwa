@@ -25,7 +25,7 @@ const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
 const zdPath = path.join(root, 'zdarzenia.js');
 if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -1040,6 +1040,42 @@ tryc('szybkie wpisy: brzuch „jak wczoraj” kopiuje wzdęcie, stolec i wypró�
 });
 tryc('szybkie wpisy: bez wczorajszego wpisu brzucha nie ma „jak wczoraj”', () => !view('day', MDUE({ prof: { cond: { gut: true }, pill: '' }, gut: {} })).includes('data-gutcopy'));
 tryc('szybkie wpisy: pola pomiarów mają klawisz Dalej', () => { const h = view('day', MDUE()); return /id="m_w"[^>]*enterkeyhint="next"|enterkeyhint="next"[^>]*id="m_w"/.test(h) && /enterkeyhint="next"[^>]*id="m_steps"|id="m_steps"[^>]*enterkeyhint="next"/.test(h); });
+// Dodaj, braki na zakładce, powtórz wczoraj, skróty ikony (11.11.2026)
+const tabsH = () => els.tabs.innerHTML, sheetH = () => (els.sheet || { innerHTML: '' }).innerHTML;
+const NOW0 = (o) => BASE({ meas: { [dk(1)]: { w: '80,2', sleep: '7' } }, days: {}, ...o });
+tryc('dodaj: pasek ma 6 pozycji, „Dodaj” otwiera arkusz zamiast zmiany ekranu', () => {
+  view('day', NOW0()); const t = tabsH();
+  if ((t.match(/<button/g) || []).length !== 6 || !/data-addsheet="1"[^>]*aria-label="Dodaj wpis"/.test(t)) return false;
+  click({ addsheet: '1' }); return T.S().tab === 'day' && /role="dialog"/.test(sheetH()) && sheetH().includes('aria-modal="true"');
+});
+tryc('dodaj: arkusz prowadzi do wagi, snu, kroków, posiłków i treningu, ból głowy zapisuje od razu', () => {
+  view('day', NOW0()); click({ addsheet: '1' }); const h = sheetH();
+  return ['data-nav="day#m_w"', 'data-nav="day#m_sleep"', 'data-nav="day#m_steps"', 'data-tab="meals"', 'data-tab="train"', 'data-pain="today"', 'data-sheetclose="1"'].every((x) => h.includes(x));
+});
+tryc('dodaj: brzuch tylko przy profilu z wzdęciami, „Powtórz wczoraj” tylko gdy wczoraj były posiłki', () => {
+  view('day', NOW0()); click({ addsheet: '1' }); const a = sheetH();
+  view('day', NOW0({ prof: { cond: { gut: true }, pill: '' }, days: { [dk(1)]: [{ kind: 'm', label: 'Owsianka', k: 400, p: 20, f: 10, c: 50 }] } })); click({ addsheet: '1' }); const b = sheetH();
+  return !a.includes('fold_brzuch') && !a.includes('data-repeat') && b.includes('data-nav="day#fold_brzuch#brzuch"') && b.includes('data-repeat="1"');
+});
+tryc('dodaj: wybór z arkusza zamyka arkusz', () => { view('day', NOW0()); click({ addsheet: '1' }); click({ tab: 'meals' }); return !/role="dialog"/.test(sheetH()) && T.S().tab === 'meals'; });
+tryc('braki: zakładka Mój dzień pokazuje, ile z listy Dziś zostało, bez liczby przy 0 i w dzień z bólem', () => {
+  view('day', NOW0()); const a = tabsH();
+  const full = { [dk(0)]: [1, 2, 3].map((i) => ({ kind: 'm', label: 'p' + i, k: 300, p: 20, f: 10, c: 30 })) };
+  view('day', NOW0({ meas: { [dk(0)]: { w: '80', steps: '8000' } }, days: full })); const b = tabsH();
+  view('day', NOW0({ pain: { [dk(0)]: {} } })); const c = tabsH();
+  return /<span class="badge"[^>]*>3<\/span>/.test(a) && /aria-label="Mój dzień, 3 do zrobienia"/.test(a) && !b.includes('class="badge"') && !c.includes('class="badge"');
+});
+tryc('powtórz wczoraj: na górze Posiłków, gdy dziś nic nie zapisano, a wczoraj były posiłki', () => {
+  const y = { [dk(1)]: [{ kind: 'm', label: 'Owsianka', k: 400, p: 20, f: 10, c: 50 }] };
+  const h = view('meals', NOW0({ days: y })), r = h.indexOf('data-repeat="1"'), z = h.indexOf('data-addmeal');
+  const n = view('meals', NOW0({ days: { ...y, [dk(0)]: [{ kind: 'm', label: 'x', k: 1, p: 1, f: 1, c: 1 }] } }));
+  return r > -1 && (z < 0 || r < z) && /Powtórz wczorajsze posiłki \(1\)/.test(h) && !n.slice(0, n.indexOf('Dziś według planu') + 400).includes('data-repeat');
+});
+tryc('skróty ikony: manifest ma 3 skróty, adres #dodaj-… otwiera właściwy ekran', () => {
+  const m = JSON.parse(fs.readFileSync(path.join(root, 'manifest.webmanifest'), 'utf8')), u = (m.shortcuts || []).map((x) => x.url);
+  view('day', NOW0()); const a = T.quickFromHash('#dodaj-trening') && T.S().tab === 'train'; const b = T.quickFromHash('#dodaj-posilek') && T.S().tab === 'meals'; const c = T.quickFromHash('#dodaj-waga') && T.S().tab === 'day';
+  return u.length === 3 && ['./#dodaj-waga', './#dodaj-posilek', './#dodaj-trening'].every((x) => u.includes(x)) && a && b && c && !T.quickFromHash('#cos-innego');
+});
 tryc('układ: Zdrowie bez profilu zaczyna od wyboru chorób, bez zwinięcia', () => {
   const h = view('health', BASE()); return h.indexOf('id="profil"') < h.indexOf('id="twojplan"') && !h.includes('id="fold_profil"');
 });
