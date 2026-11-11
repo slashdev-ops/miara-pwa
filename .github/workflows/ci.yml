@@ -56,7 +56,9 @@ jobs:
       - name: Przeglądarki
         if: steps.pw-cache.outputs.cache-hit != 'true'
         run: npx playwright install chromium webkit
+      # Gdy serwery Ubuntu są nieosiągalne, obraz runnera zwykle ma już potrzebne biblioteki: o wyniku decydują testy
       - name: Biblioteki systemowe przeglądarek
+        continue-on-error: true
         timeout-minutes: 13
         run: |
           for i in 1 2 3; do
