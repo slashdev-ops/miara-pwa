@@ -597,7 +597,7 @@ tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h =
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
 const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord'];
-const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan'];
+const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
   view('day', BASE({ kg: '90', age: '50', sex: 'M', muscle: true, bmiCut: 'nhs', meas: { [dk(0)]: { w: '90', steps: '8000', waist: '100' } }, days: { [dk(0)]: ML(1, 500, 30) }, krok: { step: 1, since: dk(3), ans: { why: 'zmeczenie' } }, knee: { start: dk(3), sessions: [{ d: dk(1), pain: 4 }], morning: {}, days: [2], tmpPain: null, tmpCramp: null } }));
@@ -1334,6 +1334,33 @@ tryc('strażnik: każda funkcja w app.js, pet.js i zdarzenia.js ma unikalną naz
   if (dup.length) throw new Error(dup.join(', '));
   return names.length > 100;
 });
+
+// Brzuch i jelita (decyzja 11.11.2026): działania z badań przed wizytą, dziennik, alarmy, dawki tylko ze źródła
+const GUT = (o) => BASE({ prof: { cond: { gut: true }, pill: '' }, gut: {}, ...o });
+tryc('jelita: profil ma „Wzdęcia i jelita”; Zdrowie: alarmy NHS, co robić teraz, środki z dawką i źródłem', () => {
+  if (!view('health', BASE()).includes('data-cond="gut"')) throw new Error('profil');
+  const h = planOf(view('health', GUT()));
+  return h.includes('krew w stolcu') && h.includes('112') && h.includes('1,5 l') && h.includes('ponad 10 g dziennie') && h.includes('co najmniej 4 tygodnie')
+    && h.includes('2-3 kiwi') && h.includes('dojelitowe') && h.includes('według ulotki') && h.includes('0,5-1,5 g') && h.includes('po rozmowie z lekarzem')
+    && h.includes('pubmed.ncbi.nlm.nih.gov/41081513') && h.includes('nhs.uk/conditions/bloating') && !/wyleczy|na pewno|gwarant/i.test(h);
+});
+tryc('jelita: przy Hashimoto odstęp suplementów od lewotyroksyny, przy Yaz ulotka przy wymiotach i biegunce', () => {
+  const h = planOf(view('health', GUT({ prof: { cond: { gut: true, hashi: true }, pill: 'yaz' } })));
+  return h.includes('lewotyroksyn') && h.includes('wymiot') && h.includes('ulotk');
+});
+tryc('jelita: dziennik w Moim dniu (wzdęcie 0-10, stolec, wypróżnienia), zwinięty; bez profilu go nie ma; ukryty w trybie dyskretnym', () => {
+  const a = view('day', GUT()), b = view('day', BASE()), c = view('day', GUT({ discreet: true }));
+  return a.includes('id="fold_brzuch"') && a.includes('data-gutb="5"') && a.includes('data-gutf="luzny"') && a.includes('data-gutn="0"') && !b.includes('fold_brzuch') && !c.includes('fold_brzuch');
+});
+tryc('jelita: wpis dziennika i podsumowanie 28 dni; lista na wizytę z liczbami i pytaniami o alarmy', () => {
+  view('day', GUT()); click({ gutb: '7' }); click({ gutf: 'twardy' }); click({ gutn: '0' });
+  const g = T.S().gut[T.todayKey()];
+  if (!(g && g.b === 7 && g.f === 'twardy' && g.n === 0)) throw new Error('wpis ' + JSON.stringify(g));
+  const d = view('day'), v = view('visit');
+  return d.includes('1 z 28 dni z wzdęciem 5 lub więcej') && v.includes('Brzuch') && v.includes('krew w stolcu');
+});
+tryc('jelita: pole gut w DEF, poza kopią bez danych o zdrowiu', () => JSON.stringify(T.DEF().gut) === '{}' && NH_DROP.includes('gut'));
+tryc('plan od specjalisty przyjmuje każde zalecenie (nie tylko ćwiczenie)', () => view('mob', BASE({ plan: { items: [], done: {} } })).includes('Zalecenie'));
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
