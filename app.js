@@ -164,10 +164,12 @@ function sleepField(k,m){const has=String(m.sleep||'').trim()!=='',[H,M]=has?hm(
     +`<input type="text" inputmode="numeric" id="m_sleep" data-sl="h" data-day="${k}" value="${H}" placeholder="${pH}" aria-label="Sen, godziny"><span class="unit">h</span>`
     +`<input type="text" inputmode="numeric" id="m_sleepm" data-sl="m" data-day="${k}" value="${has?M:''}" placeholder="${pM}" aria-label="Sen, minuty"><span class="unit">min</span>`
     +`<button class="stp" data-stp="meas.${k}.sleep" data-d="1" aria-label="Sen: więcej o 15 minut">+</button></span></div>`}
-function measHtml(){
+// Szybkie wpisy (11.11.2026): rano, gdy brakuje dzisiejszej wagi albo snu, pomiary są pod listą Dziś
+function measDue(){const m=(S.meas||{})[todayKey()]||{},has=x=>String(m[x]||'').trim()!=='';return !(has('w')&&has('sleep'))}
+function measHtml(part){
   const k=todayKey(),m=S.meas[k]||(S.meas[k]={});
-  const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" placeholder="${ph||lastMeas(key,k)}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`;
-  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, przed jedzeniem. Kroki i sen z zegarka.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+stepsChip(k,m)+sleepField(k,m)+sleepChips(k,m)+'</div><p><button class="btn ghost small" data-imppaste="1">Wklej ze Skrótu</button></p>'+cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). BMR z pomiaru BIA zastępuje wzór przez 90 dni, waga z pomiarów zastępuje wagę z ustawień.</p></details>';
+  const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" enterkeyhint="next" placeholder="${ph||lastMeas(key,k)}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`;
+  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, przed jedzeniem. Kroki i sen z zegarka.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+stepsChip(k,m)+sleepField(k,m)+sleepChips(k,m)+'</div><p><button class="btn ghost small" data-imppaste="1">Wklej ze Skrótu</button></p>';const top=h;h=cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). BMR z pomiaru BIA zastępuje wzór przez 90 dni, waga z pomiarów zastępuje wagę z ustawień.</p></details>';
   const ks=lastKeys(28).reverse(),val=(x,key)=>{const v=num((S.meas[x]||{})[key]);return v>0?v:null};
   const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
   const ws=ks.map(x=>val(x,'w')),w1=avg(ws.slice(-7)),w0=avg(ws.slice(-14,-7)),st=avg(ks.slice(-7).map(x=>val(x,'steps'))),sl=avg(ks.slice(-7).map(x=>val(x,'sleep')));
@@ -181,7 +183,7 @@ function measHtml(){
   const pts=ws.map((v,i)=>v==null?null:[i,v]).filter(Boolean);let svg='',svgCap='';
   if(pts.length>=5){const ys=pts.map(p=>p[1]),mn=Math.min(...ys),mx=Math.max(...ys),r=mx-mn||1;svgCap=`<p class="small muted">Waga z 28 dni: od ${fmt1(mn)} do ${fmt1(mx)} kg.</p>`;svg=`<svg viewBox="0 0 280 60" width="100%" height="60" role="img" aria-label="Waga z 28 dni"><polyline fill="none" stroke="var(--green)" stroke-width="2" points="${pts.map(p=>`${(p[0]/27*270+5).toFixed(1)},${(55-(p[1]-mn)/r*50).toFixed(1)}`).join(' ')}"/></svg>`}
   if(t.length||svg)h+=fold('trendy','Trendy pomiarów',`<div class="note" style="margin:0">${svg}${svgCap}${t.map(x=>`<p>${x}</p>`).join('')}<p class="small muted">Decyduje średnia z tygodnia, nie pojedyncze ważenie.</p></div>`);
-  return h;
+  return part==='top'?top:part==='rest'?h:top+h;
 }
 // Plan dnia według profilu: przy IO danie spoza reguły zamienia się na danie tego samego rodzaju, które ją spełnia,
 // najpierw w tym samym rytmie (obiad do 20 min w dni robocze, od 25 min w weekend), potem najbliższe kalorycznie
@@ -710,9 +712,9 @@ function insoleHtml(){if(!((S.prof||{}).cond||{}).flat)return '';const I=S.insol
 // Dziennik brzucha (profil „Wzdęcia i jelita”): wzdęcie 0-10, stolec w 3 uproszczonych grupach, liczba wypróżnień; ukryty w trybie dyskretnym
 const GUT_F=[['twardy','twardy, grudki'],['uform','uformowany'],['luzny','luźny, wodnisty']];
 function gutSum(){const G=S.gut||{},ks=lastKeys(28).filter(k=>G[k]),hi=ks.filter(k=>G[k].b>=5).length,none=ks.filter(k=>G[k].n===0).length,lz=ks.filter(k=>G[k].f==='luzny').length;return {n:ks.length,hi,none,lz}}
-function gutHtml(){if(!((S.prof||{}).cond||{}).gut||S.discreet)return '';const k=todayKey(),g=(S.gut||{})[k]||{},m=gutSum();
+function gutHtml(){if(!((S.prof||{}).cond||{}).gut||S.discreet)return '';const k=todayKey(),g=(S.gut||{})[k]||{},m=gutSum(),y=(S.gut||{})[nAgo(1)],cp=y&&!Object.keys(g).length&&y.b!=null?`<p class="cardact"><button class="btn ghost small" data-gutcopy="1">Jak wczoraj: wzdęcie ${y.b}${y.f?', '+(GUT_F.find(x=>x[0]===y.f)||[,''])[1]:''}</button></p>`:'';
   const row=(lab,attr,vals,cur)=>`<p style="margin:10px 0 4px">${lab}</p><div class="chips" role="group" aria-label="${lab}">`+vals.map(([v,l])=>{const on=String(cur)===String(v);return `<button class="chip ${on?'inc':''}" data-${attr}="${v}" aria-pressed="${on}"${attr==='gutb'?' style="min-width:38px"':''}>${l}</button>`}).join('')+'</div>';
-  return `<details class="fold" id="fold_brzuch" data-fold="brzuch"${OPEN_F.has('brzuch')?' open':''}><summary>Brzuch dziś${g.b!=null?`: wzdęcie ${g.b}`:''}</summary><div class="panel" style="padding:4px 16px 12px">`
+  return `<details class="fold" id="fold_brzuch" data-fold="brzuch"${OPEN_F.has('brzuch')?' open':''}><summary>Brzuch dziś${g.b!=null?`: wzdęcie ${g.b}`:''}</summary><div class="panel" style="padding:4px 16px 12px">`+cp
     +row('Wzdęcie (0 brak, 10 najgorsze)','gutb',[0,1,2,3,4,5,6,7,8,9,10].map(v=>[v,v]),g.b)+row('Stolec','gutf',GUT_F,g.f)+row('Wypróżnienia dziś','gutn',[[0,'0'],[1,'1'],[2,'2'],[3,'3 lub więcej']],g.n)+row('Stresujący dzień','guts',[[1,'tak'],[0,'nie']],g.s)
     +`<p class="small muted">${m.hi} z 28 dni z wzdęciem 5 lub więcej; dni bez wypróżnienia: ${m.none}; dni z luźnym stolcem: ${m.lz} (${m.n} dni z wpisem). Pokaż to na wizycie.</p></div></details>`}
 function mobWeek(){let n=0;for(let i=0;i<7;i++)n+=((S.days||{})[nAgo(i)]||[]).filter(e=>e.kind==='t'&&e.mob).length;return n}
@@ -1466,7 +1468,8 @@ function renderDay(){
   const R=rmr(),target=targetKcal(),pT=protTarget();
   const bar=(lab,v,max,unit)=>{const pc=Math.min(100,v/max*100);return `<div class="prog"><div class="top"><span>${lab}</span><span>${fmt(v)} / ${fmt(max)} ${unit}</span></div><div class="track"><div class="fill ${v>max*1.05?'over':''}" style="width:${pc}%"></div></div></div>`};
   const sos='<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>';
-  let h=guideHtml()+modePropHtml()+focusHtml()+painHtml()+cardsHtml('day')+stanHtml()+celHtml()+razemHtml()+zdHtml()+krokCardHtml()+reviewPromptHtml()+petCardHtml()+sos+measHtml()+legHtml()+gutHtml()+kneeBannerHtml();
+  const due=measDue();
+  let h=guideHtml()+modePropHtml()+focusHtml()+painHtml()+(due?measHtml('top')+gutHtml():'')+cardsHtml('day')+stanHtml()+celHtml()+razemHtml()+zdHtml()+krokCardHtml()+reviewPromptHtml()+petCardHtml()+sos+(due?measHtml('rest'):measHtml())+legHtml()+(due?'':gutHtml())+kneeBannerHtml();
   let more=modeHtml()+`<h3 class="rh" style="margin:4px 4px 8px">Energia i białko dziś</h3><div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
   more+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
   more+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
@@ -1707,6 +1710,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.plandel){undoable('Usunięto ćwiczenie z planu');S.plan.items=S.plan.items.filter(x=>x.id!==d.plandel)}
   else if(d.insole){S.insole=S.insole||{days:{},pain:{}};const k=todayKey();S.insole.days[k]=!S.insole.days[k]}
   else if(d.footpain!=null){S.insole=S.insole||{days:{},pain:{}};S.insole.pain=S.insole.pain||{};S.insole.pain[todayKey()]=+d.footpain}
+  else if(d.gutcopy){const y=(S.gut||{})[nAgo(1)]||{};S.gut=S.gut||{};S.gut[todayKey()]={b:y.b,f:y.f,n:y.n};OPEN_F.add('brzuch')}
   else if(d.gutb!=null||d.gutf||d.gutn!=null||d.guts!=null){S.gut=S.gut||{};const k=todayKey(),g=S.gut[k]=S.gut[k]||{};if(d.gutb!=null)g.b=+d.gutb;if(d.gutf)g.f=d.gutf;if(d.gutn!=null)g.n=+d.gutn;if(d.guts!=null)g.s=+d.guts}
   else if(d.petkind){if(!S.pet)return;S.pet.kind=d.petkind}
   else if(d.petpick){S.tab='pet';window.scrollTo(0,0)}
@@ -1791,6 +1795,10 @@ let SEL_ID=null,SEL_PTR=0,SEL_HOLD=null;
 document.addEventListener('pointerdown',()=>{SEL_PTR=Date.now();SEL_HOLD=null},true);
 document.addEventListener('beforeinput',()=>{SEL_HOLD=null},true);
 document.addEventListener('selectionchange',()=>{const h=SEL_HOLD;if(!h)return;const el=h.el;if(Date.now()>h.until||document.activeElement!==el){SEL_HOLD=null;return}if(el.selectionStart===el.selectionEnd)h.all()});
+// Klawisz Dalej (Enter) w polu liczby: zapis i fokus na następnym polu liczby na ekranie; w ostatnim zamyka klawiaturę
+document.addEventListener('keydown',e=>{const el=e.target;if(e.key!=='Enter'||!el||el.tagName!=='INPUT'||!/^(decimal|numeric)$/.test(el.getAttribute('inputmode')||''))return;
+  e.preventDefault();const all=[...document.querySelectorAll('#main input[inputmode="decimal"],#main input[inputmode="numeric"]')].filter(x=>x.offsetParent!==null),nx=all[all.indexOf(el)+1],id=nx&&nx.id;
+  el.blur();if(id){const n=document.getElementById(id);if(n){n.focus();if(n.scrollIntoView){const r=n.getBoundingClientRect();if(r.bottom>innerHeight-90)n.scrollIntoView({block:'center'})}}}});
 document.addEventListener('focusin',e=>{const el=e.target,im=el&&el.getAttribute&&el.getAttribute('inputmode');if(!el||(im!=='decimal'&&im!=='numeric')||el.id===SEL_ID)return;SEL_ID=el.id;const all=()=>{try{el.setSelectionRange(0,String(el.value).length)}catch(_){}};all();setTimeout(all,0);if(el.addEventListener&&Date.now()-SEL_PTR<1000){el.addEventListener('click',all,{once:true});SEL_HOLD={el,all,until:Date.now()+500}}});
 document.addEventListener('focusout',()=>{if(!REDRAW)SEL_ID=null});
 document.addEventListener('focusin',e=>{const k=e.target.dataset&&e.target.dataset.k;if(k&&(!EDIT||EDIT.k!==k))EDIT={k,v:k.split('.').reduce((o,x)=>o==null?o:o[x],S)}});

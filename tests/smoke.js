@@ -1022,6 +1022,24 @@ tryc('mniej ramek: „Twoja zmiana na ten tydzień” i „Co mi utrudnia?” w 
   const h = view('day', BASE({ krok: null, reviews: { [dk(1)]: { c: 'Herbata o 20:00' } } })), i = h.indexOf('Twoja zmiana na ten tydzień'), j = h.indexOf('data-tab="krok"');
   return i > 0 && j > i && !h.slice(i, j).includes('</div>');
 });
+// Szybkie wpisy (11.11.2026): rano pomiary pod listą Dziś, brzuch „jak wczoraj”, klawisz Dalej
+const MDUE = (o) => BASE({ meas: { [dk(1)]: { w: '80,2', sleep: '7', steps: '7431' } }, ...o });
+tryc('szybkie wpisy: bez dzisiejszej wagi albo snu Pomiary dnia są pod listą Dziś, nad Stanem dziś; obwody zostają niżej', () => {
+  const h = view('day', MDUE()), d = h.indexOf('<h2>Dziś: '), p = h.indexOf('<h2>Pomiary dnia</h2>'), st = h.indexOf('id="stan"'), ob = h.indexOf('data-fold="obwody"');
+  return d > -1 && p > d && st > p && ob > st;
+});
+tryc('szybkie wpisy: z dzisiejszą wagą i snem Pomiary dnia wracają pod Stan dziś', () => {
+  const h = view('day', MDUE({ meas: { [dk(1)]: { w: '80,2' }, [dk(0)]: { w: '80', sleep: '7' } } }));
+  return h.indexOf('id="stan"') < h.indexOf('<h2>Pomiary dnia</h2>') && h.split('<h2>Pomiary dnia</h2>').length === 2;
+});
+tryc('szybkie wpisy: brzuch „jak wczoraj” kopiuje wzdęcie, stolec i wypróżnienia, bez stresu', () => {
+  const h = view('day', MDUE({ prof: { cond: { gut: true }, pill: '' }, gut: { [dk(1)]: { b: 4, f: 'uform', n: 1, s: 1 } } }));
+  if (!/data-gutcopy="1"[^>]*>Jak wczoraj/.test(h)) return false;
+  click({ gutcopy: '1' }); const g = T.S().gut[dk(0)];
+  return g.b === 4 && g.f === 'uform' && g.n === 1 && g.s === undefined && !mainHtml().includes('data-gutcopy');
+});
+tryc('szybkie wpisy: bez wczorajszego wpisu brzucha nie ma „jak wczoraj”', () => !view('day', MDUE({ prof: { cond: { gut: true }, pill: '' }, gut: {} })).includes('data-gutcopy'));
+tryc('szybkie wpisy: pola pomiarów mają klawisz Dalej', () => { const h = view('day', MDUE()); return /id="m_w"[^>]*enterkeyhint="next"|enterkeyhint="next"[^>]*id="m_w"/.test(h) && /enterkeyhint="next"[^>]*id="m_steps"|id="m_steps"[^>]*enterkeyhint="next"/.test(h); });
 tryc('układ: Zdrowie bez profilu zaczyna od wyboru chorób, bez zwinięcia', () => {
   const h = view('health', BASE()); return h.indexOf('id="profil"') < h.indexOf('id="twojplan"') && !h.includes('id="fold_profil"');
 });

@@ -503,3 +503,16 @@ test('mniej ramek: sąsiadujące sekcje zwinięte to jedna lista na każdym ekra
   }
   expect(pairs).toBeGreaterThan(3);
 });
+
+// Szybkie wpisy: Enter (klawisz Dalej) w polu liczby przenosi do następnego pola; w ostatnim zamyka klawiaturę
+test('szybkie wpisy: Enter w polu wagi przechodzi do kroków, wpis zostaje', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => { S.meas[todayKey()] = {}; S.tab = 'day'; render(); });
+  await page.locator('#m_w').click();
+  await page.keyboard.type('79,5');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(300);
+  const r = await page.evaluate(() => ({ id: document.activeElement.id, w: S.meas[todayKey()].w }));
+  expect(r.id).toBe('m_steps');
+  expect(r.w).toBe('79,5');
+});
