@@ -389,3 +389,77 @@ test.describe('bez sieci', () => {
     await context.setOffline(false);
   });
 });
+
+// Przegląd ekranów 11.11.2026: po akcji na tym samym ekranie przycisk zostaje pod palcem i ma fokus (WCAG 2.4.3);
+// gdy przycisk znika, fokus trafia na nagłówek jego sekcji; po zmianie ekranu na tytuł ekranu
+test.describe('po akcji wszystko na miejscu', () => {
+  const at = (page, sel) => page.evaluate((s) => { const b = document.querySelector(s); b.scrollIntoView({ block: 'center' }); return b.getBoundingClientRect().top; }, sel);
+  test('przycisk na tym samym ekranie zostaje w miejscu i ma fokus', async ({ page }) => {
+    const errors = await open(page);
+    await show(page, 'day');
+    for (const sel of ['button[data-cyc="2"]', 'button[data-swap="1"]']) {
+      if (sel.includes('swap')) await show(page, 'meals');
+      const y0 = await at(page, sel);
+      await page.locator(sel).click();
+      await page.waitForTimeout(300);
+      const r = await page.evaluate((s) => { const b = document.querySelector(s); return { y: b.getBoundingClientRect().top, f: document.activeElement === b }; }, sel);
+      expect(Math.abs(r.y - y0), sel).toBeLessThanOrEqual(2);
+      expect(r.f, sel + ' fokus').toBe(true);
+    }
+    expect(errors).toEqual([]);
+  });
+  test('gdy przycisk znika, fokus trafia na nagłówek jego sekcji, nie na stronę', async ({ page }) => {
+    await open(page);
+    await show(page, 'day');
+    await at(page, 'button[data-pain="today"]');
+    await page.locator('button[data-pain="today"]').click();
+    await page.waitForTimeout(300);
+    const f = await page.evaluate(() => { const a = document.activeElement; return { tag: a.tagName, txt: a.textContent.trim().slice(0, 20), vis: a.getBoundingClientRect().top >= 0 && a.getBoundingClientRect().bottom <= innerHeight }; });
+    expect(f.tag).toMatch(/^H[23]$/);
+    expect(f.vis).toBe(true);
+  });
+  test('po przejściu na inny ekran fokus jest na tytule ekranu, strona na górze', async ({ page }) => {
+    await open(page);
+    await show(page, 'health');
+    await at(page, 'button[data-tab="labs"]');
+    await page.locator('button[data-tab="labs"]').click();
+    await page.waitForTimeout(300);
+    const r = await page.evaluate(() => ({ y: scrollY, f: document.activeElement === document.querySelector('header h1') }));
+    expect(r.y).toBe(0);
+    expect(r.f).toBe(true);
+  });
+  test('Zdrowie: pierwsza wybrana choroba zostaje widoczna pod palcem z fokusem', async ({ page }) => {
+    await open(page);
+    await page.evaluate(() => { S.prof = { cond: {}, pill: '' }; S.tab = 'health'; render(); });
+    const sel = 'button[data-cond="hashi"]', y0 = await at(page, sel);
+    await page.locator(sel).click();
+    await page.waitForTimeout(300);
+    const r = await page.evaluate((s) => { const b = document.querySelector(s), q = b.getBoundingClientRect(); return { y: q.top, h: q.height, f: document.activeElement === b, on: b.getAttribute('aria-pressed') }; }, sel);
+    expect(r.h).toBeGreaterThan(0);
+    expect(Math.abs(r.y - y0)).toBeLessThanOrEqual(2);
+    expect(r.f).toBe(true);
+    expect(r.on).toBe('true');
+  });
+  test('przejście z Pomocy (Pokaż) daje fokus na miejscu docelowym', async ({ page }) => {
+    await open(page);
+    await show(page, 'help');
+    const nav = await page.evaluate(() => [...document.querySelectorAll('#main button[data-nav]')].map((b) => b.dataset.nav).find((n) => !n.startsWith('help') && n.split('#')[1]));
+    await page.locator(`button[data-nav="${nav}"]`).first().click();
+    await page.waitForTimeout(900);
+    const id = await page.evaluate(() => { const a = document.activeElement; return a.id || (a.closest('[id]') || {}).id; });
+    expect(id).toBe(nav.split('#')[1]);
+  });
+  test('kolejny krok na tym samym ekranie (Ochota) daje fokus na nagłówku kroku', async ({ page }) => {
+    await open(page);
+    await show(page, 'sos');
+    await page.locator('button[data-trig="stres"]').click();
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => document.activeElement.tagName)).toMatch(/^H[123]$/);
+  });
+  test('Mój dzień: lista „Dziś” widoczna bez przewijania', async ({ page }) => {
+    await open(page);
+    await show(page, 'day');
+    const top = await page.evaluate(() => [...document.querySelectorAll('#main h2')].find((h) => h.textContent.startsWith('Dziś:')).getBoundingClientRect().top);
+    expect(top).toBeLessThan(await page.evaluate(() => innerHeight * 0.6));
+  });
+});
