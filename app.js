@@ -677,6 +677,37 @@ function renderKnee(){
   document.getElementById('main').innerHTML=h;
 }
 
+// ---------- Rutyna mobilności (decyzja 11.11.2026): opisy z NHS i CSP, częstotliwość z ACSM 2011 i NHS ----------
+// Tekst ćwiczeń to opis własnymi słowami stron źródłowych; dawka tylko tam, gdzie źródło ją podaje
+const MOB=[
+  {id:'m_mied',part:'hip',n:'Pochylenie miednicy',src:'csp',dose:'powoli, bez bólu (źródło nie podaje liczby powtórzeń)',how:'Leżąc na plecach z ugiętymi kolanami napnij dół brzucha i dno miednicy, przechyl miednicę, spłaszczając plecy, i powoli wróć. Potem lekko wygnij plecy w drugą stronę i wróć do środka. Zatrzymaj się na chwilę w pozycji środkowej.'},
+  {id:'m_kol',part:'hip',n:'Kolano do klatki',src:'csp',dose:'powoli, bez bólu (źródło nie podaje liczby powtórzeń)',how:'Leżąc na plecach, stopy na podłodze, przyciągnij jedno kolano do klatki, trzymając dłonie pod udem. Wróć i powtórz tą samą nogą, potem drugą.'},
+  {id:'m_udo',part:'hip',n:'Rozciąganie przodu uda na boku',src:'csp',dose:'łącznie ok. 60 s na nogę (ACSM)',how:'Leżąc na boku, dolna noga ugięta z przodu, złap kostkę górnej nogi i przyciągnij piętę do pośladka, aż poczujesz rozciąganie z przodu uda. Kolano trzymaj nisko; możesz użyć ręcznika na kostce.'},
+  {id:'m_pieta',part:'hip',n:'Wysuwanie pięty',src:'csp',dose:'powoli, bez bólu (źródło nie podaje liczby powtórzeń)',how:'Leżąc na plecach z ugiętymi kolanami napnij dno miednicy i mięśnie brzucha, oddychaj spokojnie i wysuń jedną stopę, aż noga się wyprostuje. Wróć powoli, potem druga noga. Plecy nie zmieniają ułożenia.'},
+  {id:'m_wstan',part:'str',n:'Wstawanie z krzesła',src:'nhsstr',dose:'5 powtórzeń; im wolniej, tym lepiej',how:'Usiądź na brzegu stabilnego krzesła, stopy na szerokość bioder, lekko pochyl się do przodu. Wstań siłą nóg, nie rąk, i powoli usiądź.'},
+  {id:'m_przys',part:'str',n:'Mini przysiad',src:'nhsstr',dose:'5 razy',how:'Trzymając oparcie krzesła, stopy na szerokość bioder, ugnij kolana na tyle, na ile wygodnie, plecy proste. Wstając, napnij pośladki.'},
+  {id:'m_bok',part:'str',n:'Unoszenie nogi w bok',src:'nhsstr',dose:'5 razy każdą nogą',how:'Trzymając oparcie krzesła, unieś prostą nogę w bok, biodra i plecy proste, bez przechylania. Wróć i zmień nogę.'},
+  {id:'m_tyl',part:'str',n:'Wyprost nogi w tył',src:'nhsstr',dose:'do 5 s, 5 razy każdą nogą',how:'Trzymając oparcie krzesła, unieś prostą nogę w tył bez wyginania pleców. Pracuje tył uda i pośladek.'},
+  {id:'m_sklon',part:'flex',n:'Skłon w bok',src:'nhsflex',dose:'2 s, 3 razy na stronę',how:'Stojąc, stopy na szerokość bioder, przesuń jedną rękę w dół wzdłuż boku, na ile wygodnie. Potem druga strona.'},
+  {id:'m_lydka',part:'flex',n:'Rozciąganie łydki',src:'nhsflex',dose:'3 razy na nogę',how:'Dłonie na ścianie, przednia noga ugięta, tylna prosta, obie stopy płasko. Pięta tylnej nogi zostaje na podłodze. Potem druga noga.'},
+  {id:'m_obrot',part:'flex',n:'Obrót szyi',src:'nhsflex',dose:'5 s, 3 razy na stronę',how:'Siedząc prosto, ramiona w dół, powoli obróć głowę w stronę ramienia, na ile wygodnie, zatrzymaj i wróć. Potem druga strona.'},
+  {id:'m_szyja',part:'flex',n:'Rozciąganie szyi',src:'nhsflex',dose:'5 s, 3 razy na stronę',how:'Siedząc prosto, dłonią przytrzymaj przeciwne ramię w dół i powoli przechyl głowę w bok. Potem druga strona.'}];
+const MOB_PART={hip:'Biodra i miednica, leżąc',str:'Siła bioder i pośladków, przy krześle',flex:'Rozciąganie'};
+function mobWeek(){let n=0;for(let i=0;i<7;i++)n+=((S.days||{})[nAgo(i)]||[]).filter(e=>e.kind==='t'&&e.mob).length;return n}
+function renderMob(){
+  const M=S.mob||{done:{}},dn=(M.done||{})[todayKey()]||[],saved=day().some(e=>e.kind==='t'&&e.mob),n=mobWeek();
+  let h='<p><button class="btn ghost" data-tab="train">Wróć</button></p><h2>Rutyna mobilności</h2>';
+  h+=`<p>Co najmniej 2 razy w tygodniu, ok. 10 minut. W tym tygodniu: <b>${n} z 2 sesji w 7 dniach</b>.</p>`+srcHtml(['acsm','nhsflex']);
+  h+='<div class="note warn">Przerwij, gdy ból się nasila, i porozmawiaj z lekarzem. Dzwoń 112, gdy pojawi się drętwienie lub osłabienie obu nóg, utrata czucia w okolicy krocza albo zmiany w oddawaniu moczu lub stolca. Masz ból albo rozpoznanie? Pokaż tę rutynę fizjoterapeucie.</div>'+srcHtml(['nhsback','csp']);
+  h+=fold('mobdow','Przodopochylenie miednicy: co mówią badania','<p class="small">Przegląd badań nie znalazł dowodów, że ćwiczenia zmniejszają nadmierne przodopochylenie miednicy; jakość dowodów była bardzo niska. Ćwiczenia korekcyjne zmieniały kąt lordozy w odcinku lędźwiowym w umiarkowanym stopniu. Ta rutyna jest dla ruchomości i siły.</p>'+srcHtml(['falk','lordoza']));
+  for(const [pk,pt] of Object.entries(MOB_PART)){
+    h+=`<h3 class="rh" style="margin:16px 4px 8px">${pt}</h3><div class="panel">`+MOB.filter(x=>x.part===pk).map(x=>{const on=dn.includes(x.id);return `<button class="opt hab ${on?'on':''}" data-mobex="${x.id}" aria-pressed="${on}"><span class="box">${on?'✓':''}</span><span class="lab"><b>${x.n}</b><span class="small">${x.how}</span><span class="small muted">${x.dose}</span></span></button>`}).join('')+'</div>';
+  }
+  h+=srcHtml(['csp','nhsstr','nhsflex']);
+  h+=saved?'<div class="note">Dzisiejsza sesja zapisana. Liczy się w Moim dniu i u zwierzaka.</div>':'<p><button class="btn" data-mobsave="1">Zapisz sesję</button></p>';
+  document.getElementById('main').innerHTML=h;
+}
+
 // ---------- Mój wpływ: decyzje i zmierzone efekty ----------
 function avgAgo(a,b,key){const v=[];for(let i=a;i<b;i++){const x=num((S.meas[keyOf(new Date(Date.now()-i*864e5))]||{})[key||'w']);if(x>0)v.push(x)}return v.length?v.reduce((s,x)=>s+x,0)/v.length:null}
 function ser(key,n){return lastKeys(n).reverse().map(k=>num((S.meas[k]||{})[key])).filter(v=>v>0)}
@@ -785,7 +816,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},goalWay:'proc',muscle:false,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},swaps:{},cel:null,modeKeep:'',hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 // Wartości startowe (rada/2026-11-09_wartosci-startowe): punkt startowy do ustawiania przyciskami, zależny od płci; to założenie
@@ -1061,6 +1092,13 @@ const SRC={
   gluten:['https://pubmed.ncbi.nlm.nih.gov/37554764/','Piticchio i in. 2023'],
   selen:['https://pubmed.ncbi.nlm.nih.gov/32257959/','ETA 2020'],
   dpp:['https://pubmed.ncbi.nlm.nih.gov/11832527/','DPP 2002'],
+  acsm:['https://pubmed.ncbi.nlm.nih.gov/21694556/','ACSM 2011'],
+  nhsflex:['https://www.nhs.uk/live-well/exercise/strength-and-flexibility-exercises/flexibility-exercises/','NHS: ćwiczenia rozciągające'],
+  nhsstr:['https://www.nhs.uk/live-well/exercise/strength-and-flexibility-exercises/strength-exercises/','NHS: ćwiczenia siłowe'],
+  csp:['https://www.csp.org.uk/conditions/back-pain/video-exercises-back-pain','CSP: ćwiczenia przy bólu pleców'],
+  nhsback:['https://www.nhs.uk/live-well/exercise/exercises-for-back-pain/','NHS: ból pleców'],
+  falk:['https://pubmed.ncbi.nlm.nih.gov/32071772/','Falk Brekke i in. 2020'],
+  lordoza:['https://pmc.ncbi.nlm.nih.gov/articles/PMC9025799/','Metaanaliza ćwiczeń korekcyjnych 2022'],
   iraki:['https://pmc.ncbi.nlm.nih.gov/articles/PMC6680710/','Iraki i in. 2019 (przyrost masy)'],
   issn:['https://pmc.ncbi.nlm.nih.gov/articles/PMC5477153/','ISSN 2017: białko'],
   order:['https://pmc.ncbi.nlm.nih.gov/articles/PMC4876745/','Shukla i in. 2015'],
@@ -1250,7 +1288,7 @@ const TABS=[
 ];
 function renderTabs(){const tb=document.getElementById('tabs');if(tb&&tb.style)tb.style.display=S.tab==='intro'?'none':'';
   document.getElementById('tabs').innerHTML=TABS.map(([k,l,ic])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}" aria-label="${l}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>${l}</button>`).join('');
-  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{help:'Pomoc',sos:'Ochota na przekąskę',labs:'Moje badania',visit:'Lista na wizytę',intro:'Wprowadzenie',review:'Przegląd tygodnia',krok:'Krok po kroku',import:'Dane ze Skrótu',recipe:'Przepis',knee:'Program kolana',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
+  document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{help:'Pomoc',sos:'Ochota na przekąskę',labs:'Moje badania',visit:'Lista na wizytę',intro:'Wprowadzenie',review:'Przegląd tygodnia',krok:'Krok po kroku',import:'Dane ze Skrótu',recipe:'Przepis',knee:'Program kolana',mob:'Mobilność',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
   document.getElementById('who').textContent=new Date().toLocaleDateString('pl-PL',{weekday:'short',day:'numeric',month:'numeric'});
 }
 // Grupa wyboru jednej opcji: nazwa grupy (label) jest obowiązkowa, stan opcji w aria-pressed (test strażnika w smoke.js)
@@ -1314,7 +1352,7 @@ function renderTrain(){
   if(sp.knee)h+=`<div class="note warn">Kolano: ${sp.knee}</div>`;
   if(sp.warn)h+=`<div class="note warn">${sp.warn}</div>`;
   h+=`<p class="small muted">Źródło wartości: ${sp.src}${sp.met?`, MET ${fmt1(sp.met)}`:''}. Wynik jest szacunkiem dla przeciętnej osoby; rzeczywiste spalanie może różnić się o kilkadziesiąt procent.</p>`;
-  h+='<p><button class="btn ghost" data-tab="knee">Program kolana, 12 tygodni</button></p>';
+  h+='<p><button class="btn ghost" data-tab="knee">Program kolana, 12 tygodni</button></p><p><button class="btn ghost" data-tab="mob">Mobilność, ok. 10 min</button></p>';
   document.getElementById('main').innerHTML=h;
 }
 
@@ -1495,7 +1533,7 @@ function helpRes(q){const w=fold0(q||'').split(/\s+/).filter(x=>x.length>1),hit=
 function renderHelp(){let h=`<div class="panel" style="padding:4px 16px"><div class="field"><label for="help_q">Szukaj w Pomocy</label><input type="search" id="help_q" style="width:180px;text-align:left" placeholder="np. białko, sen" value="${esc(S.helpQ||'')}"></div></div><div id="helpres">${helpRes(S.helpQ)}</div>`;
   h+=skrotHelpHtml()+'<h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
   document.getElementById('main').innerHTML=h}
-function render(){startSync();renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+function render(){startSync();renderTabs();({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -1599,6 +1637,8 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
     return}
   else if(d.petprev){PET_PREV=d.petprev;render();return}
   else if(d.petok){if(!PET_PREV)return;S.pet={kind:PET_PREV,name:'',since:todayKey()};PET_PREV='';S.petSeen=[...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])];toast('Witaj, '+(S.pet.kind==='kaczka'?'kaczuszko':'gąsko')+'! Imię nadasz w Ustawieniach.')}
+  else if(d.mobex){S.mob=S.mob||{done:{}};S.mob.done=S.mob.done||{};const k=todayKey(),L=S.mob.done[k]||[];S.mob.done[k]=L.includes(d.mobex)?L.filter(x=>x!==d.mobex):L.concat(d.mobex)}
+  else if(d.mobsave){if(!day().some(e=>e.kind==='t'&&e.mob)){day().push({kind:'t',label:'Mobilność (rutyna)',min:10,gross:0,net:0,mob:1});PET.react('train')}toast('Zapisano sesję mobilności')}
   else if(d.petkind){if(!S.pet)return;S.pet.kind=d.petkind}
   else if(d.petpick){S.tab='pet';window.scrollTo(0,0)}
   else if(d.datasave){const c=dataCheck();if(c.err.length){toast(c.err[0],3200);const el=document.getElementById('f_'+c.first);if(el&&el.focus)el.focus()}else{S.guide=S.guide||{};S.guide.dataOk=true;save();toast('Dane zapisane')}}

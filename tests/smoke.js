@@ -25,7 +25,7 @@ const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
 const zdPath = path.join(root, 'zdarzenia.js');
 if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,CHIPS,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -120,7 +120,7 @@ tryc('pet.react: nawyk pokazuje +punkty', () => { P().react('habit', 10); withPe
 const appCss = fs.readFileSync(path.join(root, "app.css"), "utf8");
 check('app.css: prefers-reduced-motion wyłącza animacje zwierzaka', /prefers-reduced-motion[^{]*\{[^@]*\.pet[^{]*\{[^}]*animation:none/.test(appCss));
 
-const views = ['meals', 'train', 'day', 'health', 'set', 'sos', 'labs', 'intro', 'review', 'recipe', 'knee', 'impact', 'challenge', 'pet', 'krok', 'import'];
+const views = ['meals', 'train', 'day', 'health', 'set', 'sos', 'labs', 'intro', 'review', 'recipe', 'knee', 'mob', 'impact', 'challenge', 'pet', 'krok', 'import'];
 let renderErr = '';
 for (const tab of views) for (const sex of ['K', 'M']) for (const mode of ['redukcja', 'utrzymanie']) {
   const S = T.S(); S.onb = true; S.tab = tab; S.sex = sex; S.mode = mode; S.recipe = 'o1';
@@ -597,7 +597,7 @@ tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h =
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
 const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord'];
-const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep'];
+const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
   view('day', BASE({ kg: '90', age: '50', sex: 'M', muscle: true, bmiCut: 'nhs', meas: { [dk(0)]: { w: '90', steps: '8000', waist: '100' } }, days: { [dk(0)]: ML(1, 500, 30) }, krok: { step: 1, since: dk(3), ans: { why: 'zmeczenie' } }, knee: { start: dk(3), sessions: [{ d: dk(1), pain: 4 }], morning: {}, days: [2], tmpPain: null, tmpCramp: null } }));
@@ -1267,6 +1267,30 @@ tryc('Ustawienia: bez zdań, które powtarzają przycisk albo są niesprawdzone'
   const h = view('set', BASE());
   return !h.includes('Każdy zamkniesz przyciskiem') && !h.includes('Ustawienie zostaje w telefonie') && !h.includes('Zaawansowana ochrona danych') && h.includes('Kraj telefonu: progi');
 });
+
+// Rutyna mobilności (decyzja 11.11.2026; źródła: ACSM 2011, NHS, CSP, Falk Brekke 2020, metaanaliza lordozy 2022)
+const MOBB = (o) => BASE({ mob: { done: {} }, ...o });
+tryc('mobilność: 12 ćwiczeń w 3 częściach, każde z dawką i źródłem z listy źródeł', () => {
+  const M = T.MOB();
+  return M.length === 12 && new Set(M.map((x) => x.part)).size === 3 && M.every((x) => x.id && x.n && x.how && x.dose && T.SRC[x.src]);
+});
+tryc('mobilność: ekran z częstotliwością, bezpieczeństwem (112) i uczciwym opisem dowodów', () => {
+  const h = view('mob', MOBB());
+  return h.includes('Co najmniej 2 razy w tygodniu') && h.includes('112') && h.includes('fizjoterapeucie') && h.includes('pubmed.ncbi.nlm.nih.gov/32071772')
+    && h.includes('PMC9025799') && !/naprawi|skoryguj|wyleczy|gwarant/i.test(h);
+});
+tryc('mobilność: odhaczenie ćwiczenia zapisuje dzień i stan aria-pressed', () => {
+  view('mob', MOBB()); const id = T.MOB()[0].id; click({ mobex: id });
+  const h = view('mob');
+  return T.S().mob.done[T.todayKey()].includes(id) && h.includes(`data-mobex="${id}" aria-pressed="true"`);
+});
+tryc('mobilność: zapis sesji dodaje trening „Mobilność” raz dziennie i liczy sesje w 7 dniach', () => {
+  view('mob', MOBB({ days: {} })); click({ mobsave: '1' }); click({ mobsave: '1' });
+  const t = (T.S().days[T.todayKey()] || []).filter((e) => e.kind === 't' && e.mob);
+  return t.length === 1 && t[0].label.startsWith('Mobilność') && view('mob').includes('1 z 2 sesji w 7 dniach');
+});
+tryc('mobilność: tytuł ekranu w nagłówku', () => { view('mob', MOBB()); return (els.title || {}).textContent === 'Mobilność'; });
+tryc('mobilność: wejście z Treningu, pole w DEF, poza kopią bez danych o zdrowiu', () => view('train', BASE()).includes('data-tab="mob"') && JSON.stringify(T.DEF().mob) === '{"done":{}}' && NH_DROP.includes('mob'));
 
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);

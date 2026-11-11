@@ -9,8 +9,8 @@ const vercel = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'
 const CSP = vercel.headers.flatMap((h) => h.headers).find((h) => h.key === 'Content-Security-Policy').value
   // upgrade-insecure-requests pominięte: WebKit przenosi wtedy lokalne http://127.0.0.1 na https; produkcja działa na https
   .split(';').map((d) => d.trim()).filter((d) => d && d !== 'upgrade-insecure-requests').join('; ');
-const VIEWS = ['meals', 'train', 'day', 'health', 'set', 'sos', 'labs', 'review', 'knee', 'impact', 'challenge', 'pet', 'krok'];
-const MAIN = ['meals', 'train', 'day', 'health', 'set', 'pet'];
+const VIEWS = ['meals', 'train', 'day', 'health', 'set', 'sos', 'labs', 'review', 'knee', 'impact', 'challenge', 'pet', 'krok', 'mob'];
+const MAIN = ['meals', 'train', 'day', 'health', 'set', 'pet', 'mob'];
 
 // Nagłówek CSP jak na Vercelu; błędy strony, konsoli i naruszenia CSP zbierane do sprawdzenia na końcu testu
 async function open(page, hash = '#demo-pokaz') {
@@ -322,7 +322,7 @@ test('każdy stan ma reakcję: dotknięcie, fokus z klawiatury w akcencie, wybra
 test('bez ramki w ramce: wewnątrz kafelka panel, sekcja, notka, żeton i przełącznik bez obramowania i cienia', async ({ page }) => {
   const errors = await open(page);
   const bad = [];
-  for (const v of ['day', 'meals', 'train', 'health', 'set', 'pet']) {
+  for (const v of ['day', 'meals', 'train', 'health', 'set', 'pet', 'mob']) {
     await show(page, v);
     await page.evaluate(() => document.querySelectorAll('details.fold').forEach((d) => { d.open = true; }));
     const found = await page.evaluate(() => {
