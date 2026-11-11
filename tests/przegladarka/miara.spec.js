@@ -516,3 +516,15 @@ test('szybkie wpisy: Enter w polu wagi przechodzi do kroków, wpis zostaje', asy
   expect(r.id).toBe('m_steps');
   expect(r.w).toBe('79,5');
 });
+
+// Szybkie pisanie zaraz po dotknięciu pola: opóźnione zaznaczenie wartości nie może połknąć pierwszego znaku
+test('pole liczby: znak wpisany zaraz po wejściu w pole nie zostaje zaznaczony i nadpisany', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => { S.meas[todayKey()] = {}; S.tab = 'day'; render(); });
+  const r = await page.evaluate(async () => {
+    const el = document.getElementById('m_w'); el.focus(); el.value = '7'; el.setSelectionRange(1, 1); el.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((res) => setTimeout(res, 30));
+    const n = document.getElementById('m_w'); return { v: n.value, a: n.selectionStart, b: n.selectionEnd };
+  });
+  expect(r).toEqual({ v: '7', a: 1, b: 1 });
+});
