@@ -389,3 +389,22 @@ test.describe('bez sieci', () => {
     await context.setOffline(false);
   });
 });
+
+// Dymki (powiadomienia): szerokość dopasowana do ekranu, przycisk w jednym wierszu z tekstem, gdy jest miejsce (od 360 px)
+test('dymek: szerokość z ekranu, przycisk obok tekstu, zamknięcie w pierwszym wierszu', async ({ page }) => {
+  await open(page);
+  for (const js of ["toast('Zapisano')", "toast('Zapisano zamówione',{act:'tab',arg:'day',label:'Mój dzień'})", "undoable('Usunięto posiłek')",
+    "toast('Dzień z bólem: seria się nie przerwie, a cel deficytu dziś odpuszczamy',{act:'tab',arg:'day',label:'Mój dzień'})"]) {
+    await page.evaluate(js);
+    await page.waitForTimeout(250);
+    const r = await page.evaluate(() => {
+      const t = document.getElementById('toast'), q = (e) => e && e.getBoundingClientRect(), m = q(t.querySelector('.tmsg')), b = q(t.querySelector('button.btn')), x = q(t.querySelector('.tclose')), w = q(t);
+      return { vw: innerWidth, tw: w.width, tl: w.left, m: m && { top: m.top, bottom: m.bottom }, b: b && { top: b.top, bottom: b.bottom, right: b.right }, x: { top: x.top, bottom: x.bottom }, mTop: m.top };
+    });
+    expect(Math.abs(r.tw - Math.min(520, r.vw - 32)), js).toBeLessThanOrEqual(1);
+    expect(r.tl, js).toBeGreaterThanOrEqual(15);
+    expect(r.x.top, js + ' zamknięcie').toBeLessThan(r.m.bottom);
+    if (r.b && r.vw >= 360) expect(r.b.top, js + ' przycisk w wierszu tekstu').toBeLessThan(r.m.bottom);
+    if (r.b) expect(r.b.right, js).toBeLessThanOrEqual(r.tl + r.tw);
+  }
+});
