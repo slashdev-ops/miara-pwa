@@ -202,9 +202,9 @@ tryc('guide: kroki zaliczają się z danych', () => {
 });
 tryc('guide: panel na górze dnia, przycisk ochoty pod listą „Dziś”', () => { const h = view('day', NEWU()); return h.includes('class="guide') && h.indexOf('Pierwsze kroki') < h.indexOf('Dziś:') && h.indexOf('Dziś:') < h.indexOf('Mam ochotę coś przekąsić'); });
 // Rada 07.11.2026 (nowy układ): przycisk ochoty ma stałe miejsce pod zwierzakiem; na górze jest Stan dziś
-tryc('guide: po ukończeniu panel znika, na górze Stan dziś, przycisk ochoty raz, pod Dziś', () => {
+tryc('guide: po ukończeniu panel znika, na górze Dziś, Stan dziś pod nim, przycisk ochoty raz, pod Dziś', () => {
   const h = view('day', { ...NEWU(), pet: { ...PETA }, guide: { hidden: false, dataOk: true, seenPet: true }, meas: { [today()]: { w: '82', steps: '6000' } }, days: { [today()]: [{ kind: 'm', label: 'x', k: 400, p: 30, f: 10, c: 40 }] } });
-  return !h.includes('Pierwsze kroki') && h.indexOf('Stan dziś') < h.indexOf('Dziś:') && h.indexOf('Dziś:') < h.indexOf('Mam ochotę coś przekąsić') && h.split('Mam ochotę coś przekąsić').length === 2;
+  return !h.includes('Pierwsze kroki') && h.indexOf('Dziś:') < h.indexOf('Stan dziś') && h.indexOf('Dziś:') < h.indexOf('Mam ochotę coś przekąsić') && h.split('Mam ochotę coś przekąsić').length === 2;
 });
 tryc('guide: ukryty panel się nie pokazuje', () => !view('day', { ...NEWU(), guide: { hidden: true, dataOk: false, seenPet: false } }).includes('Pierwsze kroki'));
 tryc('guide: Zapisz w Ustawieniach zalicza dane, ekran zwierzaka zalicza poznanie', () => { view('set', { ...NEWU(), kg: '82', cm: '170', age: '40', goal: '74', mode: 'redukcja' }); click({ datasave: '1' }); const a = T.S().guide.dataOk; view('pet', { pet: { ...PETA } }); return a && T.S().guide.seenPet; });
@@ -506,9 +506,9 @@ tryc('stan: w dniu z bólem jedzenie bez celu deficytu', () => stan(view('day', 
 tryc('stan: sen ostatniej nocy i średnia z liczbą nocy', () => { const h = stan(view('day', BASE({ meas: { [dk(0)]: { sleep: '6,5' }, [dk(1)]: { sleep: '7,5' } } }))); return h.includes('6 h 30 min') && h.includes('średnia 7 h z 2 nocy'); });
 tryc('stan: ruch z krokami i treningiem', () => { const h = stan(view('day', BASE({ meas: { [dk(0)]: { steps: '8123' } }, days: { [dk(0)]: [{ kind: 't', label: 'x', min: 40, gross: 300, net: 200 }] } }))); return /8\s?123 kroków/.test(h) && h.includes('trening 40 min'); });
 tryc('stan: ból i cykl tylko przy danych', () => { const h = stan(view('day', BASE({ pain: { [dk(0)]: { aura: true } }, meas: { [dk(0)]: { cyc: 'P' } } }))); return h.includes('Ból i cykl') && h.includes('dzień z bólem, aura') && h.includes('dni bez hormonów'); });
-tryc('układ: Stan dziś na górze, karty pod nim, potem Dziś, zwierzak niżej; Więcej zwinięte', () => {
+tryc('układ: Dziś na górze, karty pod nim, potem Stan dziś, zwierzak niżej; Więcej zwinięte', () => {
   const h = view('day', BASE({ pain: { [dk(0)]: {} }, meas: { [dk(0)]: { cyc: 'P' } } })), i = (x) => h.indexOf(x);
-  return i('class="stan') > -1 && i('class="stan') < i('data-card=') && i('data-card=') < i('<h2>Dziś') && i('<h2>Dziś') < i('class="petcard') && /<details class="fold" id="fold_wiecej" data-fold="wiecej">/.test(h) && h.indexOf('data-fold="prognoza"') > i('data-fold="wiecej"');
+  return i('<h2>Dziś') > -1 && i('<h2>Dziś') < i('data-card=') && i('data-card=') < i('class="stan') && i('class="stan') < i('class="petcard') && /<details class="fold" id="fold_wiecej" data-fold="wiecej">/.test(h) && h.indexOf('data-fold="prognoza"') > i('data-fold="wiecej"');
 });
 
 tryc('układ Treningu: główne zadanie na górze, program kolana niżej jako przycisk konturowy', () => { const h = view('train', BASE()), k = h.indexOf('data-tab="knee"'); return k > h.indexOf('data-addtrain') && h.indexOf('data-addwatch') < h.indexOf('data-addtrain') && /<button class="btn ghost" data-tab="knee"/.test(h); });
@@ -700,6 +700,7 @@ tryc('zamówione: tofu duża porcja ×1,3 (USDA)', () => { view('meals', ORDB({ 
 tryc('zamówione: szacunek z przedziałem i białkiem', () => { const h = view('meals', ORDB()); return /ok\. 740 kcal \(518-962\)/.test(h) && h.includes('białko 33 g'); });
 tryc('zamówione: zapis dodaje posiłek do dnia z etykietą', () => { view('meals', ORDB({ days: {} })); T.S().days = {}; click({ ordsave: '1' }); const e = lastE(); return e && e.kind === 'm' && e.ord === 1 && e.label.includes('Kurczak po koreańsku, 5 kawałków') && e.k === 740; });
 tryc('zamówione: wybór zostaje zapamiętany', () => { view('meals', ORDB()); click({ orddish: 'sushi' }); click({ ordn: '16' }); return T.S().ord.dish === 'sushi' && T.S().ord.sushi === 16; });
+tryc('zamówione: zapamiętany wybór widać jako etykietę, bez zapisu jej nie ma', () => { const a = view('meals', ORDB()); const b = view('meals', BASE({ ord: undefined })); return a.includes('Zapamiętane z ostatniego razu:') && !b.includes('Zapamiętane z ostatniego razu'); });
 tryc('zamówione: każde danie ma zdanie dietetyka', () => ['sushi', 'kurczak', 'tofu'].every((d) => /class="why"|class="small muted"/.test(view('meals', ORDB({ dish: d }))) && view('meals', ORDB({ dish: d })).includes('class="ordtip"')));
 tryc('zamówione: szybki wpis prowadzi do Zamówione', () => view('day', BASE()).includes('data-nav="meals#zamowione#zamowione"'));
 tryc('zamówione: bez nazw lokali', () => !/chingu|kfc|sushi\s*master/i.test(code));
@@ -898,9 +899,18 @@ tryc('zdarzenia: 3 dni ze wzdęciem 5+ w 7 dniach to „Więcej dni ze wzdęciem
 tryc('zdarzenia: przy brzuchu „w tym czasie” liczy krótkie noce i dni z ochotą ze stresu, bez słów o przyczynie', () => {
   const s = ZS({ gut: GZ([[0, 6], [1, 5], [2, 7]]), meas: MS([[0, { sleep: '5' }], [3, { sleep: '5,5' }], [4, { sleep: '7' }]]), urges: { [zk(1)]: [{ trig: 'stres' }, { trig: 'stres' }], [zk(5)]: [{ trig: 'nuda' }] } });
   const e = evId(s, 'brzuch_dni')[0], all = e.t + e.x + e.z + e.w;
-  return e.w.startsWith('w tym czasie') && e.w.includes('2 krótkie noce') && e.w.includes('1 dzień z ochotą ze stresu')
+  return e.w.startsWith('w tym czasie') && e.w.includes('2 krótkie noce') && e.w.includes('1 dzień ze stresem')
     && e.act && e.act.row === 28 && e.act.url === 'https://pubmed.ncbi.nlm.nih.gov/35716771/' && e.act.sila === 'umiarkowane'
     && /związek, nie przyczyna/.test(e.x) && !/z powodu|przez (sen|stres)|powoduj|wywołuj/i.test(all);
+});
+tryc('zdarzenia: stresujący dzień z dziennika brzucha liczy się razem z ochotą ze stresu, ten sam dzień raz', () => {
+  const g = GZ([[0, 6], [1, 5], [2, 7]]); g[zk(3)] = { b: 2, s: 1 }; g[zk(1)].s = 1;
+  const e = evId(ZS({ gut: g, urges: { [zk(1)]: [{ trig: 'stres' }] } }), 'brzuch_dni')[0];
+  return e.w.includes('2 dni ze stresem');
+});
+tryc('brzuch: przełącznik „Stresujący dzień” zapisuje tak i nie, z aria-pressed', () => {
+  view('day', BASE({ prof: { cond: { gut: true }, pill: '' } })); click({ guts: '1' }); const on = T.S().gut[dk(0)].s === 1 && /data-guts="1" aria-pressed="true"/.test(mainHtml());
+  click({ guts: '0' }); return on && T.S().gut[dk(0)].s === 0 && mainHtml().includes('aria-label="Stresujący dzień"');
 });
 tryc('zdarzenia: inne zdarzenia nie dostają snu i stresu w „w tym czasie”', () => {
   const e = evId(ZS({ meas: MS([[0, { sleep: '5' }], [1, { sleep: '5' }]]) }), 'krotki_sen')[0];
@@ -993,6 +1003,28 @@ tryc('cel: sygnały „najpierw lekarz”: aura z estrogenem, co najmniej 10 dni
 // Etap 1 w aplikacji: Mój dzień
 const secZd = (h) => { const i = h.indexOf('id="zdarzenia"'); return i < 0 ? '' : h.slice(i, h.indexOf('</section>', i)); };
 const secCel = (h) => { const i = h.indexOf('id="cel"'); return i < 0 ? '' : h.slice(i, h.indexOf('</section>', i)); };
+// Układ (przegląd ekranów 11.11.2026): najpierw to, co zrobić dziś, potem podsumowanie
+tryc('układ: Mój dzień zaczyna od listy „Dziś” i bólu głowy, Stan dziś pod nimi', () => {
+  const h = view('day', BASE()), f = h.indexOf('<h2>Dziś: '), p = h.indexOf('data-pain="today"'), st = h.indexOf('id="stan"');
+  return f > -1 && p > f && st > p;
+});
+tryc('układ: Zdrowie z ustawionym profilem zaczyna od planu, profil zwinięty z listą wybranych', () => {
+  const h = view('health', BASE({ prof: { cond: { hashi: true, gut: true }, pill: '' } })), pl = h.indexOf('id="twojplan"'), pr = h.indexOf('id="profil"');
+  const f = h.indexOf('id="fold_profil"'), ch = h.indexOf('data-cond="hashi"');
+  return pl > 0 && pr > pl && f > pr && ch > f && /Hashimoto, Wzdęcia i jelita/.test(h.slice(pr, f));
+});
+// Mniej ramek (11.11.2026): jedno obramowanie na grupę zamiast pudełka na każdy wiersz
+tryc('mniej ramek: przełączniki w Ustawieniach w jednym panelu', () => {
+  const h = view('set', BASE({ sex: 'K' })), k = h.indexOf('for="korekta"'), l = h.indexOf('id="lip"');
+  return k > 0 && l > k && !h.slice(k, l).includes('class="panel"');
+});
+tryc('mniej ramek: „Twoja zmiana na ten tydzień” i „Co mi utrudnia?” w jednym kafelku', () => {
+  const h = view('day', BASE({ krok: null, reviews: { [dk(1)]: { c: 'Herbata o 20:00' } } })), i = h.indexOf('Twoja zmiana na ten tydzień'), j = h.indexOf('data-tab="krok"');
+  return i > 0 && j > i && !h.slice(i, j).includes('</div>');
+});
+tryc('układ: Zdrowie bez profilu zaczyna od wyboru chorób, bez zwinięcia', () => {
+  const h = view('health', BASE()); return h.indexOf('id="profil"') < h.indexOf('id="twojplan"') && !h.includes('id="fold_profil"');
+});
 tryc('Mój dzień: „Co się wydarzyło” pod Stanem dziś, pusty stan z podpowiedzią', () => {
   const h = view('day', BASE()); const z = secZd(h);
   return h.indexOf('id="stan"') < h.indexOf('id="zdarzenia"') && z.includes('Co się wydarzyło') && z.includes('pojawią się');

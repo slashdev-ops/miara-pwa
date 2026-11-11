@@ -208,7 +208,7 @@ function ordCalc(){const o=S.ord||{},dk=ordDish(),d=ORD[dk],q=num(ordQty()),per=
 function ordLabel(){const o=S.ord||{},dk=ordDish(),d=ORD[dk],q=ordQty(),ad=ORD_ADD.filter(([id])=>(o.add||{})[id]).map(x=>x[3]);
   return `${d.n}, ${dk==='tofu'?d.opts.find(x=>x[0]===q)[1]:d.lab(q)}${dk==='sushi'&&o.alt?', nigiri':''}${ad.length?', z '+ad.join(', '):''}`}
 function orderHtml(){const o=S.ord||{},dk=ordDish(),d=ORD[dk],q=String(ordQty()),t=ordCalc();
-  return `<details class="fold" id="zamowione" data-fold="zamowione"${OPEN_F.has('zamowione')?' open':''}><summary>Zamówione jedzenie</summary><div style="padding:0 16px">`+whyP('zamowione')+'<div class="panel" style="padding:12px 16px">'+seg(Object.entries(ORD).map(([k,v])=>[k,v.n]),dk,'orddish','scroll')
+  return `<details class="fold" id="zamowione" data-fold="zamowione"${OPEN_F.has('zamowione')?' open':''}><summary>Zamówione jedzenie</summary><div style="padding:0 16px">`+whyP('zamowione')+(o.dish?`<p class="small muted">Zapamiętane z ostatniego razu: ${esc(ordLabel())}.</p>`:'')+'<div class="panel" style="padding:12px 16px">'+seg(Object.entries(ORD).map(([k,v])=>[k,v.n]),dk,'orddish','scroll')
     +'<div class="chips">'+d.opts.map(x=>{const [v,l]=Array.isArray(x)?x:[String(x),d.lab(x)];return `<button class="chip${v===q?' inc':''}" data-ordn="${v}" aria-pressed="${v===q}">${l}</button>`}).join('')+'</div>'
     +(d.alt?`<div class="chips"><button class="chip${o.alt?' inc':''}" data-ordalt="1" aria-pressed="${!!o.alt}">${d.alt.lab}</button></div>`:'')
     +'<p class="small" style="margin:8px 0 4px">Dodatki</p><div class="chips">'+ORD_ADD.map(([id,n])=>`<button class="chip${(o.add||{})[id]?' inc':''}" data-ordadd="${id}" aria-pressed="${!!(o.add||{})[id]}">${n}</button>`).join('')+'</div>'
@@ -289,7 +289,7 @@ const SUPP=[
 ];
 function protCost(){return PROT.map(([id,n,pp])=>{const r=S.prices[id]||{},p=num(r.p),g=num(r.g);return {id,n,pp,c:p>0&&g>0?p/(g*pp/100)*20:null}})}
 function renderHealth(){
-  let h=profHtml()+healthPlanHtml()+fold('tygodnie','12 tygodni: czego się spodziewać',weeksHtml())+'<p><button class="btn" data-tab="labs">Moje badania</button></p><div class="note"><b>Co realne.</b> Przy chorobach przewlekłych, np. tarczycy, celem jest dobra kontrola wyników i objawów, nie wyleczenie. Insulinooporność często wyraźnie się poprawia przy spadku masy ciała, ruchu i śnie. Niedobory wyrównuje się według wyników badań.</div>';
+  let h=(profSet()?healthPlanHtml()+profHtml():profHtml()+healthPlanHtml())+fold('tygodnie','12 tygodni: czego się spodziewać',weeksHtml())+'<p><button class="btn" data-tab="labs">Moje badania</button></p><div class="note"><b>Co realne.</b> Przy chorobach przewlekłych, np. tarczycy, celem jest dobra kontrola wyników i objawów, nie wyleczenie. Insulinooporność często wyraźnie się poprawia przy spadku masy ciała, ruchu i śnie. Niedobory wyrównuje się według wyników badań.</div>';
   h+=cardsHtml('health')+visitHtml();
   const box=(title,items)=>`<details class="fold"><summary>${title}</summary><div class="panel">`+items.map(([a,b])=>`<div class="entry"><span class="txt"><b>${a}.</b> ${b}</span></div>`).join('')+'</div></details>';
   h+=box('Woda, uda i pośladki',[
@@ -439,7 +439,9 @@ function kChain(){const a=S.krok.ans,L=[];const bar={umiej:'nie wiesz, co i jak 
   return L}
 function kData(){let o=0,u=0;const t={};for(let i=0;i<14;i++){const k=keyOf(new Date(Date.now()-i*864e5));(S.days[k]||[]).forEach(e=>{if(e.ord)o++});(S.urges[k]||[]).forEach(x=>{u++;t[x.trig]=(t[x.trig]||0)+1})}
   const top=Object.entries(t).sort((a,b)=>b[1]-a[1])[0];return o||u?`Z Twoich zapisów z 14 dni: zamówienia ${o}, ochoty ${u}${top&&TRIGN[top[0]]?` (najczęściej: ${TRIGN[top[0]]})`:''}.`:'Brak zapisów z 14 dni, więc łańcuch wynika tylko z odpowiedzi.'}
-function krokCardHtml(){const k=S.krok;if(!k||!k.conf)return changeHtml()+(!S.onb?'':!k?'<p><button class="btn ghost" data-tab="krok">Co mi utrudnia? 2 minuty</button></p>':'<p><button class="btn ghost" data-tab="krok">Dokończ rozpoznanie</button></p>');
+function krokCardHtml(){const k=S.krok;if(!k||!k.conf){const c=changeHtml(),t=!S.onb?'':!k?'Co mi utrudnia? 2 minuty':'Dokończ rozpoznanie',bt='<button class="btn ghost'+(c?' small':'')+'" data-tab="krok">'+t+'</button>';
+  // Mniej ramek: zmiana tygodnia i rozpoznanie w jednym kafelku
+  return !t?c:c?c.replace(/<\/div>$/,'<p class="cardact">'+bt+'</p></div>'):'<p>'+bt+'</p>'}
   if(k.fin)return '<div class="note"><b>Ścieżka gotowania ukończona.</b> Kolejne ścieżki (zamawianie, ochoty) pojawią się w następnym etapie.</div>';
   const K=KROKI[k.step],p=kProg(mondayOf(new Date()));
   return `<div class="note"><b>Twój krok na ten tydzień:</b> ${K.n} (${k.step+1} z 5)${k.easy?', łatwiejsza wersja':''}<br>${K.co}. Postęp: ${p.n} z ${p.cel}${p.zt?`, zapas ${p.z} z ${p.zt}`:''}.${p.ok?' <b>Krok wykonany.</b>':''}${k.jt!=null&&K.jt[k.jt]?`<br>Twój plan: ${K.jt[k.jt]}`:''}</div><p><button class="btn ghost" data-tab="krok">${p.ok?'Następny krok':'Co zrobić w tym kroku'}</button></p>`+changeHtml()}
@@ -711,7 +713,7 @@ function gutSum(){const G=S.gut||{},ks=lastKeys(28).filter(k=>G[k]),hi=ks.filter
 function gutHtml(){if(!((S.prof||{}).cond||{}).gut||S.discreet)return '';const k=todayKey(),g=(S.gut||{})[k]||{},m=gutSum();
   const row=(lab,attr,vals,cur)=>`<p style="margin:10px 0 4px">${lab}</p><div class="chips" role="group" aria-label="${lab}">`+vals.map(([v,l])=>{const on=String(cur)===String(v);return `<button class="chip ${on?'inc':''}" data-${attr}="${v}" aria-pressed="${on}"${attr==='gutb'?' style="min-width:38px"':''}>${l}</button>`}).join('')+'</div>';
   return `<details class="fold" id="fold_brzuch" data-fold="brzuch"${OPEN_F.has('brzuch')?' open':''}><summary>Brzuch dziś${g.b!=null?`: wzdęcie ${g.b}`:''}</summary><div class="panel" style="padding:4px 16px 12px">`
-    +row('Wzdęcie (0 brak, 10 najgorsze)','gutb',[0,1,2,3,4,5,6,7,8,9,10].map(v=>[v,v]),g.b)+row('Stolec','gutf',GUT_F,g.f)+row('Wypróżnienia dziś','gutn',[[0,'0'],[1,'1'],[2,'2'],[3,'3 lub więcej']],g.n)
+    +row('Wzdęcie (0 brak, 10 najgorsze)','gutb',[0,1,2,3,4,5,6,7,8,9,10].map(v=>[v,v]),g.b)+row('Stolec','gutf',GUT_F,g.f)+row('Wypróżnienia dziś','gutn',[[0,'0'],[1,'1'],[2,'2'],[3,'3 lub więcej']],g.n)+row('Stresujący dzień','guts',[[1,'tak'],[0,'nie']],g.s)
     +`<p class="small muted">${m.hi} z 28 dni z wzdęciem 5 lub więcej; dni bez wypróżnienia: ${m.none}; dni z luźnym stolcem: ${m.lz} (${m.n} dni z wpisem). Pokaż to na wizycie.</p></div></details>`}
 function mobWeek(){let n=0;for(let i=0;i<7;i++)n+=((S.days||{})[nAgo(i)]||[]).filter(e=>e.kind==='t'&&e.mob).length;return n}
 function renderMob(){
@@ -1210,7 +1212,11 @@ function planActs(){const c=(S.prof||{}).cond||{},P=pillOf(),pn=P[1].split(' (')
   if(est)a(16,'Tabletki z estrogenem: ryzyko zakrzepicy',(P[3]==='b'?'Ok. 9-12 na 10 000 kobiet rocznie przy tabletkach z drospirenonem, gestodenem albo dezogestrelem; 5-7 przy lewonorgestrelu; ok. 2 bez tabletek (EMA 2013).':P[3]==='a'?'Ok. 5-7 na 10 000 kobiet rocznie przy tabletkach z lewonorgestrelem; ok. 2 bez tabletek (EMA 2013).':'Dla tego składu komunikat EMA nie podaje osobnej liczby; przy lewonorgestrelu 5-7, a bez tabletek ok. 2 na 10 000 kobiet rocznie (EMA 2013).')+' Pilnie do lekarza przy silnym bólu albo obrzęku nogi, nagłej duszności, szybkim oddechu albo kaszlu, bólu w klatce piersiowej, osłabieniu albo drętwieniu twarzy, ręki lub nogi.','m','ema');
   if(P[0])a(17,'Waga a tabletki','Przegląd Cochrane: dowody nie wystarczają, by ocenić wpływ tabletek na masę ciała, ale dużego efektu nie widać.','m','cochr');
   return A.sort((x,y)=>x.pri-y.pri)}
-function profHtml(){const p=S.prof||{},c=p.cond||{};return '<h2 id="profil">Mój profil zdrowia</h2>'+whyP('profil')+'<div class="chips">'+CONDS.map(([id,n])=>`<button class="chip${c[id]?' inc':''}" data-cond="${id}" aria-pressed="${!!c[id]}">${n}</button>`).join('')
+function profSet(){const p=S.prof||{};return Object.values(p.cond||{}).some(Boolean)||!!p.pill}
+function profHtml(){const p=S.prof||{},c=p.cond||{},body=profBody();if(!profSet())return '<h2 id="profil">Mój profil zdrowia</h2>'+whyP('profil')+body;
+  const names=CONDS.filter(([id])=>c[id]).map(x=>x[1]).concat(p.pill?[(PILLS.find(x=>x[0]===p.pill)||[,''])[1]]:[]).filter(Boolean);
+  return '<h2 id="profil">Mój profil zdrowia</h2><p class="small">'+esc(names.join(', '))+'</p>'+fold('profil','Zmień profil',body)}
+function profBody(){const p=S.prof||{},c=p.cond||{};return '<div class="chips">'+CONDS.map(([id,n])=>`<button class="chip${c[id]?' inc':''}" data-cond="${id}" aria-pressed="${!!c[id]}">${n}</button>`).join('')
   +`</div><div class="panel"><div class="field"><label for="pill">Tabletki antykoncepcyjne</label><select id="pill" data-k="prof.pill">${PILLS.map(([v,n])=>`<option value="${v}"${v===(p.pill||'')?' selected':''}>${n}</option>`).join('')}</select></div></div>`}
 function healthPlanHtml(){const A=planActs();if(!A.length)return '<section class="plan" id="twojplan"><h2>Twój plan</h2><p class="small muted">Zaznacz wyżej choroby i tabletki, a tu pojawią się działania dla Ciebie.</p></section>';
   return '<section class="plan" id="twojplan"><h2>Twój plan</h2>'+A.map((x,i)=>`<div class="act${i===0?' first':''}">${i===0?'<p class="tag">Najpierw</p>':''}<h3>${x.t}</h3><p>${x.why}</p><span class="ev">${EV[x.ev]}</span>${srcHtml(x.src)}</div>`).join('')+'</section>'}
@@ -1460,7 +1466,7 @@ function renderDay(){
   const R=rmr(),target=targetKcal(),pT=protTarget();
   const bar=(lab,v,max,unit)=>{const pc=Math.min(100,v/max*100);return `<div class="prog"><div class="top"><span>${lab}</span><span>${fmt(v)} / ${fmt(max)} ${unit}</span></div><div class="track"><div class="fill ${v>max*1.05?'over':''}" style="width:${pc}%"></div></div></div>`};
   const sos='<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>';
-  let h=guideHtml()+modePropHtml()+stanHtml()+celHtml()+razemHtml()+zdHtml()+cardsHtml('day')+krokCardHtml()+focusHtml()+painHtml()+reviewPromptHtml()+petCardHtml()+sos+measHtml()+legHtml()+gutHtml()+kneeBannerHtml();
+  let h=guideHtml()+modePropHtml()+focusHtml()+painHtml()+cardsHtml('day')+stanHtml()+celHtml()+razemHtml()+zdHtml()+krokCardHtml()+reviewPromptHtml()+petCardHtml()+sos+measHtml()+legHtml()+gutHtml()+kneeBannerHtml();
   let more=modeHtml()+`<h3 class="rh" style="margin:4px 4px 8px">Energia i białko dziś</h3><div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
   more+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
   more+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
@@ -1501,8 +1507,8 @@ function renderSet(){
   h+=`<div class="panel"><div class="field"><label for="discreet">Tryb dyskretny: karty o migrenie i antykoncepcji tylko w Zdrowiu</label><input type="checkbox" class="switch" id="discreet" data-k="discreet" ${S.discreet?'checked':''}></div></div>`;
   h+='<h2 id="towarzysz">Towarzysz</h2>'+petPickHtml()+(S.pet?`<div class="panel"><div class="field"><label for="body">Sylwetka z pomiarów na ekranie zwierzaka</label><input type="checkbox" class="switch" id="body" data-k="body" ${S.body?'checked':''}></div></div>`:'');
   h+='<h2 id="tryb">Tryb</h2>'+whyP('tryb')+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie'],['masa','Przyrost masy']],S.mode,'mode','','Tryb')+modePropHtml();
-  h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div></div>
-${S.sex==='K'?`<div class="panel"><div class="field"><label for="lip">Śledź objawy nóg (lipodemia)</label><input type="checkbox" class="switch" id="lip" data-k="lip" ${S.lip?'checked':''}></div></div>`:''}
+  h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div>
+${S.sex==='K'?`<div class="field"><label for="lip">Śledź objawy nóg (lipodemia)</label><input type="checkbox" class="switch" id="lip" data-k="lip" ${S.lip?'checked':''}></div>`:''}</div>
   <p class="small muted">Korekta liczy spoczynek wzorem Mifflina-St Jeora zamiast stałego 1 kcal na kg na godzinę. Dla kobiet zwykle daje niższe wyniki (wniosek z definicji MET, niesprawdzony pomiarem).</p>
   <div class="note">${wskTxt()} Spoczynkowe zużycie energii ok. ${fmt(rmr())} kcal na dobę.</div>
   ${ekranHtml()}
@@ -1589,14 +1595,29 @@ function undoable(msg){UNDO=JSON.stringify(S);toast(msg,{act:'undo',arg:'1',labe
 function setPath(p,v){const a=p.split('.');let o=S;for(let i=0;i<a.length-1;i++)o=o[a[i]];o[a[a.length-1]]=v}
 
 // ---------- Zdarzenia ----------
+// Po akcji (przegląd ekranów 11.11.2026, WCAG 2.4.3): przed przerysowaniem zapamiętaj przycisk, jego miejsce na ekranie
+// i nagłówek sekcji; po przerysowaniu ten sam przycisk wraca pod palec z fokusem. Gdy przycisku nie ma, fokus na nagłówek
+// sekcji; po zmianie ekranu na tytuł ekranu. Celowe przewinięcie (data-goto, data-nav, scrollTo w obsłudze) zostaje.
+function btnSel(b){const a=[...(b.attributes||[])].filter(x=>/^data-/.test(x.name)).map(x=>`[${x.name}="${String(x.value).replace(/["\\]/g,'\\$&')}"]`).join('');return a?'button'+a:null}
+function headOf(el){const m=document.getElementById('main');if(!m||!m.querySelectorAll||!el.compareDocumentPosition)return '';let t='';
+  for(const h of m.querySelectorAll('h2,h3'))if(h.compareDocumentPosition(el)&4)t=h.textContent;return t}
+function actAt(b){return {tab:S.tab,sel:btnSel(b),y:b.getBoundingClientRect?b.getBoundingClientRect().top:null,sy:window.scrollY,head:headOf(b),own:!!(b.dataset.goto||b.dataset.nav)}}
+function focusEl(el){if(!el||!el.focus)return;if(!/^(BUTTON|INPUT|SELECT|TEXTAREA|A|SUMMARY)$/.test(el.tagName))el.setAttribute('tabindex','-1');el.focus({preventScroll:true})}
+function actDone(at){if(!document.querySelector)return;
+  if(S.tab!==at.tab){window.scrollTo(0,0);focusEl(document.querySelector('header h1'));return}
+  if(at.own||window.scrollY!==at.sy)return;
+  const b=at.sel&&document.querySelector(at.sel);
+  if(b&&b.getBoundingClientRect&&at.y!=null){window.scrollBy(0,b.getBoundingClientRect().top-at.y);focusEl(b);return}
+  const hs=typeof document.querySelectorAll==='function'?[...(document.querySelectorAll('#main h2,#main h3')||[])]:[],h=(at.head&&hs.find(x=>x.textContent===at.head))||hs[0];
+  if(h){if(h.scrollIntoView){const r=h.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)h.scrollIntoView({block:'start'})}focusEl(h)}}
 document.addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  const b=e.target.closest('button');if(!b)return;const d=b.dataset;const at=actAt(b);
   if(d.toastclose){toastHide();return}
   if(d.undo){if(UNDO){const tab=S.tab;S=JSON.parse(UNDO);S.tab=tab;UNDO=null;save();render();toast('Przywrócono')}else toastHide();return}
   if(d.preset||d.datasave)S.touched={kg:true,cm:true,age:true,goal:true};
   if(b.parentNode&&b.parentNode.id==='toast')toastHide();
   if(d.nav){const [tab,id,fd]=d.nav.split('#');S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
-    if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.classList){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2400)}}else window.scrollTo(0,0);return}
+    if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});focusEl(el);if(el.classList){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2400)}}else window.scrollTo(0,0);return}
   if(d.stp){if(STP_SKIP){STP_SKIP=false;return}if(!stpApply(d.stp,+d.d,1))return;save();stpDone(d.stp,d.d);return}
   if(d.cook){const m=MEALS.find(x=>x.id===d.cook),k=todayKey(),base=planFor(new Date().getDay()),i=m?base.findIndex(id=>MEALS.find(x=>x.id===id).t===m.t):-1;if(i<0)return;
     S.swaps=S.swaps||{};S.swaps[k]=S.swaps[k]||{};if(base[i]===m.id)delete S.swaps[k][i];else S.swaps[k][i]=m.id;save();render();
@@ -1686,7 +1707,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.plandel){undoable('Usunięto ćwiczenie z planu');S.plan.items=S.plan.items.filter(x=>x.id!==d.plandel)}
   else if(d.insole){S.insole=S.insole||{days:{},pain:{}};const k=todayKey();S.insole.days[k]=!S.insole.days[k]}
   else if(d.footpain!=null){S.insole=S.insole||{days:{},pain:{}};S.insole.pain=S.insole.pain||{};S.insole.pain[todayKey()]=+d.footpain}
-  else if(d.gutb!=null||d.gutf||d.gutn!=null){S.gut=S.gut||{};const k=todayKey(),g=S.gut[k]=S.gut[k]||{};if(d.gutb!=null)g.b=+d.gutb;if(d.gutf)g.f=d.gutf;if(d.gutn!=null)g.n=+d.gutn}
+  else if(d.gutb!=null||d.gutf||d.gutn!=null||d.guts!=null){S.gut=S.gut||{};const k=todayKey(),g=S.gut[k]=S.gut[k]||{};if(d.gutb!=null)g.b=+d.gutb;if(d.gutf)g.f=d.gutf;if(d.gutn!=null)g.n=+d.gutn;if(d.guts!=null)g.s=+d.guts}
   else if(d.petkind){if(!S.pet)return;S.pet.kind=d.petkind}
   else if(d.petpick){S.tab='pet';window.scrollTo(0,0)}
   else if(d.datasave){const c=dataCheck();if(c.err.length){toast(c.err[0],3200);const el=document.getElementById('f_'+c.first);if(el&&el.focus)el.focus()}else{S.guide=S.guide||{};S.guide.dataOk=true;save();toast('Dane zapisane')}}
@@ -1715,13 +1736,13 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.ordsave){const t=ordCalc();day().push({kind:'m',id:'zam_'+ordDish(),label:ordLabel()+' (zamówione)',k:Math.round(t.k),p:Math.round(t.p),f:Math.round(t.f),c:Math.round(t.c),ord:1});PET.react('meal');save();render();toast(guideToast('Zapisano zamówione'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
   else if(d.forme){S.f.forme=!forMe()}
   else if(d.ftag){S.f.tags=S.f.tags||{};S.f.tags[d.ftag]=!S.f.tags[d.ftag]}
-  else if(d.cond){S.prof=S.prof||{cond:{},pill:''};S.prof.cond=S.prof.cond||{};S.prof.cond[d.cond]=!S.prof.cond[d.cond];if(d.cond==='lip'&&S.prof.cond.lip)S.lip=true}
+  else if(d.cond){OPEN_F.add('profil');S.prof=S.prof||{cond:{},pill:''};S.prof.cond=S.prof.cond||{};S.prof.cond[d.cond]=!S.prof.cond[d.cond];if(d.cond==='lip'&&S.prof.cond.lip)S.lip=true}
   else if(d.demoexit){location.hash='';location.reload();return}
   else if(d.scen){location.hash='#demo-'+d.scen;location.reload();return}
   else if(d.sex){S.sex=d.sex}
   else if(d.reset){undoable('Przywrócono ustawienia domyślne');const days=S.days;S=clone(DEF);S.days=days;S.tab='set'}
   else return;
-  save();render();
+  save();render();actDone(at);
 });
 // Przytrzymanie − i +: krok od razu, po 0,3 s powtarzanie co 0,08 s, po 8 krokach co 0,04 s, po 30 krokach krokiem ×5
 // (15 kroków w ok. 1,2 s, np. 1,5 kg wagi albo 7500 kroków);

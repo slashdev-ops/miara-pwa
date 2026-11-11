@@ -142,10 +142,13 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;backgroun
 nav.tabs button{flex:1;border:0;background:transparent;padding:8px 2px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;min-height:56px}
 nav.tabs button.on{color:var(--green);font-weight:600}
 nav.tabs svg{width:24px;height:24px}
-.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 8px 8px 16px;border-radius:var(--r-s);font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:7;width:max-content;max-width:calc(100% - 32px);display:flex;align-items:center;gap:8px}
+.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 8px 8px 16px;border-radius:var(--r-s);font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:7;width:min(520px,calc(100% - 32px));box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px}
 .toast.show{opacity:1;pointer-events:auto}
-.toast{flex-wrap:wrap}
-.toast .tmsg{flex:1 1 calc(100% - 60px)}
+/* Dymek: tekst zawija się w pierwszej kolumnie, przycisk akcji i zamknięcie obok; poniżej 360 px przycisk pod tekstem */
+.toast .tmsg{grid-column:1;grid-row:1;min-width:0}
+.toast .btn.small{grid-column:2;grid-row:1;white-space:nowrap}
+.toast .tclose{grid-column:3;grid-row:1}
+@media (max-width:359px){.toast{grid-template-columns:minmax(0,1fr) auto}.toast .tclose{grid-column:2}.toast .btn.small{grid-column:1;grid-row:2;justify-self:start}}
 .toast .btn.small{background:var(--bg);color:var(--ink)}
 .tclose{border:0;background:transparent;color:inherit;font-size:20px;min-width:44px;min-height:44px;border-radius:var(--r-s)}
 .hright{display:flex;align-items:center;gap:12px}
@@ -371,3 +374,7 @@ button:disabled{opacity:.55;cursor:not-allowed;filter:none;transform:none}
 .stonepet{fill:var(--duck);stroke:var(--ink);stroke-width:1}
 @media (prefers-reduced-motion: no-preference){.stone.now,.stonepet{animation:stonehop .6s ease-out 1}}
 @keyframes stonehop{0%{transform:translateY(-6px)}60%{transform:translateY(1px)}100%{transform:none}}
+
+/* Mniej ramek (11.11.2026): sąsiadujące zwinięte sekcje to jedna lista z jedną ramką */
+details.fold:has(+ details.fold){margin-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-width:0;box-shadow:none}
+details.fold + details.fold{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;box-shadow:none}
