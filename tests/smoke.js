@@ -700,6 +700,7 @@ tryc('zamówione: tofu duża porcja ×1,3 (USDA)', () => { view('meals', ORDB({ 
 tryc('zamówione: szacunek z przedziałem i białkiem', () => { const h = view('meals', ORDB()); return /ok\. 740 kcal \(518-962\)/.test(h) && h.includes('białko 33 g'); });
 tryc('zamówione: zapis dodaje posiłek do dnia z etykietą', () => { view('meals', ORDB({ days: {} })); T.S().days = {}; click({ ordsave: '1' }); const e = lastE(); return e && e.kind === 'm' && e.ord === 1 && e.label.includes('Kurczak po koreańsku, 5 kawałków') && e.k === 740; });
 tryc('zamówione: wybór zostaje zapamiętany', () => { view('meals', ORDB()); click({ orddish: 'sushi' }); click({ ordn: '16' }); return T.S().ord.dish === 'sushi' && T.S().ord.sushi === 16; });
+tryc('zamówione: zapamiętany wybór widać jako etykietę, bez zapisu jej nie ma', () => { const a = view('meals', ORDB()); const b = view('meals', BASE({ ord: undefined })); return a.includes('Zapamiętane z ostatniego razu:') && !b.includes('Zapamiętane z ostatniego razu'); });
 tryc('zamówione: każde danie ma zdanie dietetyka', () => ['sushi', 'kurczak', 'tofu'].every((d) => /class="why"|class="small muted"/.test(view('meals', ORDB({ dish: d }))) && view('meals', ORDB({ dish: d })).includes('class="ordtip"')));
 tryc('zamówione: szybki wpis prowadzi do Zamówione', () => view('day', BASE()).includes('data-nav="meals#zamowione#zamowione"'));
 tryc('zamówione: bez nazw lokali', () => !/chingu|kfc|sushi\s*master/i.test(code));
@@ -898,9 +899,18 @@ tryc('zdarzenia: 3 dni ze wzdęciem 5+ w 7 dniach to „Więcej dni ze wzdęciem
 tryc('zdarzenia: przy brzuchu „w tym czasie” liczy krótkie noce i dni z ochotą ze stresu, bez słów o przyczynie', () => {
   const s = ZS({ gut: GZ([[0, 6], [1, 5], [2, 7]]), meas: MS([[0, { sleep: '5' }], [3, { sleep: '5,5' }], [4, { sleep: '7' }]]), urges: { [zk(1)]: [{ trig: 'stres' }, { trig: 'stres' }], [zk(5)]: [{ trig: 'nuda' }] } });
   const e = evId(s, 'brzuch_dni')[0], all = e.t + e.x + e.z + e.w;
-  return e.w.startsWith('w tym czasie') && e.w.includes('2 krótkie noce') && e.w.includes('1 dzień z ochotą ze stresu')
+  return e.w.startsWith('w tym czasie') && e.w.includes('2 krótkie noce') && e.w.includes('1 dzień ze stresem')
     && e.act && e.act.row === 28 && e.act.url === 'https://pubmed.ncbi.nlm.nih.gov/35716771/' && e.act.sila === 'umiarkowane'
     && /związek, nie przyczyna/.test(e.x) && !/z powodu|przez (sen|stres)|powoduj|wywołuj/i.test(all);
+});
+tryc('zdarzenia: stresujący dzień z dziennika brzucha liczy się razem z ochotą ze stresu, ten sam dzień raz', () => {
+  const g = GZ([[0, 6], [1, 5], [2, 7]]); g[zk(3)] = { b: 2, s: 1 }; g[zk(1)].s = 1;
+  const e = evId(ZS({ gut: g, urges: { [zk(1)]: [{ trig: 'stres' }] } }), 'brzuch_dni')[0];
+  return e.w.includes('2 dni ze stresem');
+});
+tryc('brzuch: przełącznik „Stresujący dzień” zapisuje tak i nie, z aria-pressed', () => {
+  view('day', BASE({ prof: { cond: { gut: true }, pill: '' } })); click({ guts: '1' }); const on = T.S().gut[dk(0)].s === 1 && /data-guts="1" aria-pressed="true"/.test(mainHtml());
+  click({ guts: '0' }); return on && T.S().gut[dk(0)].s === 0 && mainHtml().includes('aria-label="Stresujący dzień"');
 });
 tryc('zdarzenia: inne zdarzenia nie dostają snu i stresu w „w tym czasie”', () => {
   const e = evId(ZS({ meas: MS([[0, { sleep: '5' }], [1, { sleep: '5' }]]) }), 'krotki_sen')[0];
