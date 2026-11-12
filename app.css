@@ -391,3 +391,12 @@ nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;he
 .sheetbox .opt{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;min-height:52px;padding:12px 16px;border:0;background:transparent;color:var(--ink);font:inherit;text-align:left}
 .sheetbox .opt + .opt{border-top:1px solid var(--line)}
 
+/* Plan dnia z makro i błonnikiem bez otwierania przepisu (13.11.2026) */
+.entry.prow{display:block}
+.prow .ptop{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.prow .pname{display:block;text-align:left;margin:2px 0 8px}
+.prow .pbot{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.prow .pbot .btn,.prow .pbot .val{flex:none}
+.pmac{font-size:15px;color:var(--muted);line-height:1.4}
+.mnum .b{color:var(--ink)}
+
