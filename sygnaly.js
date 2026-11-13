@@ -49,6 +49,8 @@ var SYG = (function () {
     return !isNaN(v) && !isNaN(lo) && v < lo ? `Ferrytyna ${l.val} poniżej ${l.lo}` : null;
   };
 
+  const ALARM = [['krew', 'krew w stolcu lub czarny stolec'], ['wymkrew', 'wymioty krwią lub jak fusy od kawy'], ['bol', 'nagły silny ból brzucha lub w klatce']];
+
   // on(S, k, c) zwraca linię „Dane” (tekst z liczbami) albo null, gdy reguła nie jest aktywna
   const RULES = [
     {
@@ -56,7 +58,7 @@ var SYG = (function () {
       t: 'Objaw alarmowy dziś',
       x: 'To pilne: zadzwoń 112 albo jedź na SOR.',
       co: ['Zadzwoń 112 albo jedź na SOR.', 'Nie czekaj na wizytę planową.'],
-      on: (S, k, c) => (['krew', 'wymkrew', 'bol'].some((x) => c.aToday.includes(x)) ? 'Dziś: krew w stolcu lub wymiotach albo nagły silny ból' : null),
+      on: (S, k, c) => { const l = ALARM.filter((x) => c.aToday.includes(x[0])).map((x) => x[1]); return l.length ? 'Dziś: ' + l.join(', ') : null; },
     },
     {
       id: 'pilne', lvl: 'wkrotce', row: 32, rm: false, src: ['nhsindig'],

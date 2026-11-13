@@ -1670,6 +1670,19 @@ tryc('sygnały: wyjątek w SYG.fix nie rusza stanu (syFix)', () => {
 });
 tryc('sygnały: etykieta pewności reguły Miary bez numeru, wytyczna bez zmian', () => { const h = view('day', GUT({ gut: HPG(), sygSeen: {} })), g = view('health', GUT({ gut: { [dk(0)]: { a: ['polyk'] } } }));return SYGB(h).includes('reguła Miary') && !/reguła Miary \(/.test(h) && g.includes('z wytycznej'); });
 tryc('sygnały: dni z pustym u:[] nie liczą się jako dni z wpisem', () => { const s = YS({ gut: gd(16, (i) => (i < 8 ? { u: ['piecze'] } : { u: [] })) }), ids = Y().ocen(s, D0).map((x) => x.id); return !ids.includes('hp_test') && ids.includes('zapisuj'); });
+tryc('sygnały: alarm Dane tylko z zaznaczonych objawów', () => {
+  const a = Y().ocen(YS({ gut: { [D0]: { a: ['krew'] } } }), D0).find((x) => x.id === 'alarm');
+  const b = Y().ocen(YS({ gut: { [D0]: { a: ['bol', 'krew'] } } }), D0).find((x) => x.id === 'alarm');
+  return !!a && a.d === 'Dziś: krew w stolcu lub czarny stolec' && !!b && b.d.includes('krew w stolcu lub czarny stolec') && b.d.includes('nagły silny ból brzucha lub w klatce') && !b.d.includes('wymiot');
+});
+tryc('sygnały dymek: hp_test bez powtórzonego zdania, sam_zoladek bez pustego Działania', () => {
+  const g = {}; for (let i = 0; i < 16; i++) g[dk(i)] = { u: ['piecze'] };
+  const b = SYGB(view('day', GUT({ gut: g, sygSeen: {}, labs: [] })));
+  const g2 = {}; for (let i = 0; i < 3; i++) g2[dk(i)] = { u: ['piecze'] };
+  const b2 = SYGB(view('day', GUT({ gut: g2, sygSeen: {}, labs: [] })));
+  const z = view('health', GUT({ tab: 'health', gut: g }));
+  return b.split('Ustal z lekarzem przerwę').length === 2 && !b.includes('Działanie:') && b2.includes('Śpij z uniesioną głową') && b2.split('Śpij z uniesioną głową').length === 2 && !b2.includes('Działanie:') && z.split('Ustal z lekarzem przerwę').length >= 3;
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

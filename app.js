@@ -480,10 +480,11 @@ function krokRevHtml(mk,end){const k=S.krok;if(!k||!k.conf||k.fin||k.since>end)r
 // Zwierzak podsumowuje tydzień jednym zdaniem z danych; bez ocen i kar (punkt 3)
 // Sygnały brzucha (sygnaly.js): jeden sygnał na ekranie; alarm 112 także bez zwierzaka (zwykła karta note warn)
 const sygEm=t=>esc(t).replace(/\*([^*]+)\*/g,'<i>$1</i>'),sygPew=x=>x.rm?'reguła Miary':'z wytycznej';
+function sygCoHtml(x){const L=x.co.filter(c=>!x.x.includes(String(c).trim().replace(/\.$/,'')));return L.length?`<p><b>Działanie:</b></p><ul>${L.map(c=>`<li>${sygEm(c)}</li>`).join('')}</ul>`:''}
 function sygHtml(){if(typeof SYG==='undefined')return '';const x=SYG.visible(S,todayKey())[0];if(!x)return '';const al=x.lvl==='112',pet=!!S.pet;
   if(al){const body=`<p><b>${pet?esc(PET.nameOf(S.pet))+':':esc(x.t)}</b> ${sygEm(x.x)}</p><p><b>Dane:</b> ${sygEm(x.d)}</p><p class="cardact"><a class="btn" href="tel:112">Zadzwoń 112</a> albo jedź na SOR</p>`;
     return pet?`<div class="petsay syg alert" role="alert">${PET.svg(S.pet.kind,'chick','alert',null)}<div>${body}</div></div>`:`<div class="note warn" role="alert">${body}</div>`}
-  const body=`<p><b>${pet?esc(PET.nameOf(S.pet))+':':esc(x.t)}</b> ${sygEm(x.x)}</p><p><b>Dane:</b> ${sygEm(x.d)}</p><p><b>Pewność:</b> ${sygPew(x)}</p><p><b>Działanie:</b></p><ul>${x.co.map(c=>`<li>${sygEm(c)}</li>`).join('')}</ul>`
+  const body=`<p><b>${pet?esc(PET.nameOf(S.pet))+':':esc(x.t)}</b> ${sygEm(x.x)}</p><p><b>Dane:</b> ${sygEm(x.d)}</p><p><b>Pewność:</b> ${sygPew(x)}</p>${sygCoHtml(x)}`
     +`<p class="cardact"><button class="btn ghost small" data-sygsrc="${esc(x.id)}">Źródło i szczegóły</button> <button class="btn ghost small" data-sygwiz="${esc(x.id)}">Dodaj do listy na wizytę</button> <button class="btn ghost small" data-sygseen="${esc(x.id)}">Przeczytane</button></p>`;
   return pet?`<div class="petsay syg">${PET.svg(S.pet.kind,'chick','ok',null)}<div>${body}</div></div>`:`<div class="note">${body}</div>`}
 const HPS=[['zlecone','zlecił badanie'],['potw','<i>H. pylori</i> potwierdzone'],['leczone','po leczeniu'],['wykl','wykluczone'],['nic','nic nie zlecił']];
