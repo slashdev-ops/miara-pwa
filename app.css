@@ -219,6 +219,8 @@ details.fold .panel,details.fold .meal{margin:0;border-radius:0;box-shadow:none}
 .pet .eyes{transform-box:fill-box;transform-origin:center;animation:petblink 4s infinite}
 .pet-sleep .figure{animation-duration:5s}
 .pet-sad .figure{animation:none;transform:rotate(-4deg)}
+.pet-alert .figure{animation:none}
+.pet-alert .eyes{animation:none}
 .pet-celebrate .figure{animation:pethop .6s ease-in-out 3}
 .pet.react-meal .figure{animation:petpeck .35s ease-in-out 4}
 .pet.react-train .figure{animation:pethop .45s ease-in-out 3}
@@ -323,6 +325,9 @@ table.weeks td:nth-child(3):not(:empty){padding-top:4px;color:var(--muted)}
 .petsay{display:flex;gap:12px;align-items:center;margin:12px 0;padding:8px 12px;background:var(--surface);border-radius:var(--r)}
 .petsay svg{width:56px;height:56px;flex:none}
 .petsay p{margin:0}
+.petsay.syg{align-items:flex-start}.petsay.syg p,.petsay.syg ul{margin:0 0 6px}.petsay .btn{white-space:normal}
+.petsay.alert{border:2px solid var(--warn-ink)}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
 .zdsec{padding:4px 16px 12px}
 .zdsec h2{margin:12px 0 8px;padding-left:0}
 .zdsec h2::before{display:none}

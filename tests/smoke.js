@@ -25,6 +25,8 @@ const petPath = path.join(root, 'pet.js');
 if (fs.existsSync(petPath)) vm.runInContext(fs.readFileSync(petPath, 'utf8'), sandbox);
 const zdPath = path.join(root, 'zdarzenia.js');
 if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
+const sygPath = path.join(root, 'sygnaly.js');
+if (fs.existsSync(sygPath)) vm.runInContext(fs.readFileSync(sygPath, 'utf8'), sandbox);
 vm.runInContext(code + '\n;globalThis.__T={S:()=>S,CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false};', sandbox);
 const T = sandbox.__T;
 
@@ -119,6 +121,8 @@ tryc('pet.react: reakcja starsza niż 10 min przepada', () => { P().react('train
 tryc('pet.react: nawyk pokazuje +punkty', () => { P().react('habit', 10); withPet(true, () => P().flush()); return fx.fx.some((h) => h.includes('+10')); });
 const appCss = fs.readFileSync(path.join(root, "app.css"), "utf8");
 check('app.css: prefers-reduced-motion wyłącza animacje zwierzaka', /prefers-reduced-motion[^{]*\{[^@]*\.pet[^{]*\{[^}]*animation:none/.test(appCss));
+tryc('pet.svg: nastrój alert ma klasę pet-alert i etykietę „uwaga”', () => { const v = P().svg('gaska', 'chick', 'alert', null); return v.includes('pet-alert') && /aria-label="[^"]*uwaga/.test(v); });
+check('app.css: nastrój alert bez animacji (figura i oczy)', appCss.includes('.pet-alert .figure{animation:none') && appCss.includes('.pet-alert .eyes{animation:none'));
 
 const views = ['meals', 'train', 'day', 'health', 'set', 'sos', 'labs', 'intro', 'review', 'recipe', 'knee', 'mob', 'impact', 'challenge', 'pet', 'krok', 'import'];
 let renderErr = '';
@@ -597,7 +601,7 @@ tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h =
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
 const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord'];
-const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut'];
+const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
   view('day', BASE({ kg: '90', age: '50', sex: 'M', muscle: true, bmiCut: 'nhs', meas: { [dk(0)]: { w: '90', steps: '8000', waist: '100' } }, days: { [dk(0)]: ML(1, 500, 30) }, krok: { step: 1, since: dk(3), ans: { why: 'zmeczenie' } }, knee: { start: dk(3), sessions: [{ d: dk(1), pain: 4 }], morning: {}, days: [2], tmpPain: null, tmpCramp: null } }));
@@ -1518,6 +1522,167 @@ tryc('błonnik: źródła w spisie (Frida, CoFID, EFSA, UE 1924/2006)', () => ['
 // Zgłoszenie 13.11.2026: jak w CV, słabo widoczne kropki · zamienione na kreskę |, znaczniki w wierszu z czasem
 tryc('separatory: ekran Posiłki bez kropek środkowych, makro w planie rozdzielone kreską', () => { const h = view('meals', BASE()); return !h.includes('·') && /kcal \| B\u00a0\d+\u00a0g \| T\u00a0\d+\u00a0g \| W\u00a0\d+\u00a0g \| Bł\u00a0/.test(h); });
 tryc('separatory: znaczniki przepisu w wierszu z czasem, po kresce', () => { view('meals', BASE()); return /<div class="meta">[^<]*\d+ min[^<]*<span class="msep"><span aria-hidden="true"> \| <\/span><span class="sr">, <\/span><\/span><span class="mtag"/.test(els.mlist.innerHTML) && !els.mlist.innerHTML.includes('class="mtags"'); });
+// Sygnały brzucha (sygnaly.js, docs/specs/2026-11-13-sygnaly-brzuch-design.md): moduł liczy z podanego stanu i dnia k.
+const Y = () => sandbox.SYG;
+const YS = (o) => ({ gut: {}, labs: [], prof: { cond: { gut: true } }, discreet: false, wizyta: { hp: 'brak' }, sygSeen: {}, ...o });
+const gd = (n, f) => { const g = {}; for (let i = 0; i < n; i++) g[Y().back(D0, i)] = f(i); return g; };
+tryc('sygnaly: moduł ma ocen, LVL, back', () => !!Y() && typeof Y().ocen === 'function' && Y().LVL.join() === '112,wkrotce,badanie,sam' && Y().back('2026-03-01', 1) === '2026-02-28');
+tryc('sygnaly: bez cond.gut pusta lista', () => Y().ocen(YS({ prof: { cond: {} }, gut: { [D0]: { a: ['krew'] } } }), D0).length === 0);
+tryc('sygnaly: krew dziś = alarm 112 pierwszy', () => { const r = Y().ocen(YS({ gut: { [D0]: { a: ['krew'], u: ['piecze'] } } }), D0); return r[0].id === 'alarm' && r[0].lvl === '112'; });
+tryc('sygnaly: krew wczoraj, dziś nic = bez alarmu', () => !Y().ocen(YS({ gut: { [Y().back(D0, 1)]: { a: ['krew'] } } }), D0).some((x) => x.id === 'alarm'));
+tryc('sygnaly: wymkrew i bol też alarm', () => ['wymkrew', 'bol'].every((a) => Y().ocen(YS({ gut: { [D0]: { a: [a] } } }), D0)[0].id === 'alarm'));
+tryc('sygnaly: polyk 6 dni temu = pilne, 7 dni temu nie', () => Y().ocen(YS({ gut: { [Y().back(D0, 6)]: { a: ['polyk'] } } }), D0).some((x) => x.id === 'pilne') && !Y().ocen(YS({ gut: { [Y().back(D0, 7)]: { a: ['polyk'] } } }), D0).some((x) => x.id === 'pilne'));
+tryc('sygnaly: objaw z żołądka i g45 = gastro45 (wkrotce)', () => { const r = Y().ocen(YS({ prof: { cond: { gut: true }, g45: true }, gut: { [D0]: { u: ['pelnosc'] } } }), D0); return r.some((x) => x.id === 'gastro45' && x.lvl === 'wkrotce'); });
+tryc('sygnaly: tryb dyskretny ukrywa wszystko poza dzisiejszym alarmem', () => { const s = YS({ discreet: true, prof: { cond: { gut: true }, g45: true }, gut: { [D0]: { a: ['krew'], u: ['piecze'] } } }); return Y().ocen(s, D0).map((x) => x.id).join() === 'alarm'; });
+tryc('sygnaly: stary wpis bez u i a nie psuje', () => Y().ocen(YS({ gut: gd(28, () => ({ b: 2, f: 'uform', n: 1 })) }), D0).length === 0);
+check('index.html: sygnaly.js po zdarzenia.js', /zdarzenia\.js[\s\S]*sygnaly\.js[\s\S]*app\.js/.test(html));
+check('sw.js: sygnaly.js', swSrc.includes("'./sygnaly.js'"));
+
+const hpU = (n, extra) => YS({ gut: gd(16, (i) => (i < n ? { u: ['piecze'], b: 1 } : { b: 1 })), ...extra });
+tryc('sygnaly: 8 dni z żołądkiem z 28 przy 16 wpisach = hp_test', () => Y().ocen(hpU(8), D0).some((x) => x.id === 'hp_test' && x.rm));
+tryc('sygnaly: 7 dni = bez hp_test', () => !Y().ocen(hpU(7), D0).some((x) => x.id === 'hp_test'));
+tryc('sygnaly: 13 dni z wpisem = bez hp_test, jest zapisuj', () => { const s = YS({ gut: gd(13, () => ({ u: ['piecze'] })) }); const r = Y().ocen(s, D0).map((x) => x.id); return !r.includes('hp_test') && r.includes('zapisuj'); });
+tryc('sygnaly: g45 zamienia hp_test na gastro45', () => { const r = Y().ocen(hpU(8, { prof: { cond: { gut: true }, g45: true } }), D0).map((x) => x.id); return !r.includes('hp_test') && r.includes('gastro45'); });
+tryc('sygnaly: hp wykl wycisza hp_*, nie celiakia', () => { const s = YS({ wizyta: { hp: 'wykl' }, prof: { cond: { gut: true }, nlpz: true, rodzRak: true }, gut: gd(16, () => ({ u: ['piecze'], b: 6 })) }); const r = Y().ocen(s, D0).map((x) => x.id); return !r.some((i) => i.startsWith('hp_')) && r.includes('celiakia'); });
+tryc('sygnaly: nlpz i objaw = hp_nlpz; rodzRak = hp_rodz', () => { const r = Y().ocen(YS({ prof: { cond: { gut: true }, nlpz: true, rodzRak: true }, gut: { [D0]: { u: ['zgaga'] } } }), D0).map((x) => x.id); return r.includes('hp_nlpz') && r.includes('hp_rodz'); });
+tryc('sygnaly: celiakia przy 8 dniach wzdęcia 5+ lub luźnego', () => Y().ocen(YS({ gut: gd(16, (i) => (i < 4 ? { b: 5 } : i < 8 ? { f: 'luzny' } : { b: 1 })) }), D0).some((x) => x.id === 'celiakia'));
+tryc('sygnaly: Hashimoto i 1 dzień wzdęcia 5+ = celiakia', () => Y().ocen(YS({ prof: { cond: { gut: true, hashi: true } }, gut: { [D0]: { b: 7 } } }), D0).some((x) => x.id === 'celiakia'));
+tryc('sygnaly: ferrytyna 12,5 poniżej lo 15 i objaw = zelazo; bez lo nie', () => { const g = { [D0]: { b: 6 } }; const a = Y().ocen(YS({ gut: g, labs: [{ test: 'ferr', date: D0, val: '12,5', lo: '15' }] }), D0).some((x) => x.id === 'zelazo'); const b = Y().ocen(YS({ gut: g, labs: [{ test: 'ferr', date: D0, val: '5' }] }), D0).some((x) => x.id === 'zelazo'); return a && !b; });
+tryc('sygnaly: ferrytyna: liczy się ostatni wynik po dacie', () => !Y().ocen(YS({ gut: { [D0]: { b: 6 } }, labs: [{ test: 'ferr', date: '2026-01-01', val: '5', lo: '15' }, { test: 'ferr', date: '2026-10-01', val: '40', lo: '15' }] }), D0).some((x) => x.id === 'zelazo'));
+tryc('sygnaly: hp leczone = hp_kontrola', () => Y().ocen(YS({ wizyta: { hp: 'leczone' } }), D0).some((x) => x.id === 'hp_kontrola'));
+tryc('sygnaly: objaw z żołądka w 7 dniach = sam_zoladek (sam)', () => Y().ocen(YS({ gut: { [Y().back(D0, 3)]: { u: ['piecze'] } } }), D0).some((x) => x.id === 'sam_zoladek' && x.lvl === 'sam'));
+tryc('sygnaly: Przeczytane ukrywa na 14 dni, alarmu nie', () => { const s = YS({ sygSeen: { sam_zoladek: Y().back(D0, 13), alarm: D0 }, gut: { [D0]: { u: ['piecze'], a: ['krew'] } } }); const v = Y().visible(s, D0).map((x) => x.id); s.sygSeen.sam_zoladek = Y().back(D0, 14); const w = Y().visible(s, D0).map((x) => x.id); return !v.includes('sam_zoladek') && v.includes('alarm') && w.includes('sam_zoladek'); });
+tryc('sygnaly: fix odrzuca nieznane wartości i uzupełnia braki', () => { const s = Y().fix({ gut: { [D0]: { u: ['piecze', 'x'], a: 'krew' } }, wizyta: { hp: 'zle' }, prof: { g45: 'tak' } }); return s.gut[D0].u.join() === 'piecze' && Array.isArray(s.gut[D0].a) && s.gut[D0].a.length === 0 && s.wizyta.hp === 'brak' && s.prof.g45 === false && typeof s.sygSeen === 'object' && Array.isArray(s.wizList); });
+tryc('sygnaly: teksty bez odstaw, masz, dysbioza', () => { const all = [YS({ prof: { cond: { gut: true, hashi: true }, nlpz: true, rodzRak: true }, gut: gd(16, () => ({ u: ['piecze'], b: 6, a: ['krew', 'polyk'] })), labs: [{ test: 'ferr', date: D0, val: '5', lo: '15' }] }), YS({ prof: { cond: { gut: true }, g45: true }, wizyta: { hp: 'leczone' }, gut: gd(13, () => ({ u: ['piecze'] })) })].flatMap((s) => Y().ocen(s, D0)); return all.length >= 10 && all.every((x) => !/odstaw|\bmasz\b|dysbioz/i.test([x.t, x.x, x.d, ...x.co].join(' '))); });
+
+tryc('sygnaly: niemożliwa data w sygSeen nie wycisza', () => { const s = YS({ sygSeen: { sam_zoladek: '2026-99-99' }, gut: { [D0]: { u: ['piecze'] } } }); const v = Y().visible(s, D0).some((x) => x.id === 'sam_zoladek'); Y().fix(s); return v && !('sam_zoladek' in s.sygSeen); });
+tryc('sygnały wejście: chipy Z żołądka i Objawy alarmowe w dzienniku, przełączanie wielokrotne, brak w trybie dyskretnym', () => {
+  const a = view('day', GUT()), c = view('day', GUT({ discreet: true }));
+  if (!(a.includes('data-gutu="piecze"') && a.includes('data-gutu="pelnosc"') && a.includes('data-gutu="zgaga"') && a.includes('data-guta="krew"') && a.includes('data-guta="wymioty"') && a.includes('Z żołądka') && a.includes('Objawy alarmowe') && a.includes('krew w stolcu lub czarny stolec'))) throw new Error('brak chipów');
+  if (c.includes('data-guta') || c.includes('data-gutu')) throw new Error('dyskretny');
+  click({ guta: 'krew' }); click({ guta: 'bol' }); const g = T.S().gut[T.todayKey()];
+  if (JSON.stringify(g.a) !== '["krew","bol"]') throw new Error('a ' + JSON.stringify(g.a));
+  const d = view('day', { discreet: false }); if (!d.includes('data-guta="krew" aria-pressed="true"')) throw new Error('aria');
+  click({ guta: 'krew' }); click({ guta: 'bol' }); click({ gutu: 'zgaga' }); click({ gutu: 'zgaga' });
+  const h = T.S().gut[T.todayKey()]; return h.a.length === 0 && h.u.length === 0;
+});
+tryc('sygnały wejście: przełączniki profilu g45, nlpz, rodzRak tylko przy cond.gut; klik przełącza boolean', () => {
+  const a = view('health', GUT({ tab: 'health' })), b = view('health', BASE({ tab: 'health' }));
+  if (!(a.includes('data-gprof="g45"') && a.includes('data-gprof="nlpz"') && a.includes('data-gprof="rodzRak"') && a.includes('45 lat lub więcej'))) throw new Error('brak');
+  if (b.includes('data-gprof')) throw new Error('bez gut');
+  click({ gprof: 'nlpz' }); const on = T.S().prof.nlpz === true; click({ gprof: 'nlpz' }); return on && !T.S().prof.nlpz;
+});
+tryc('sygnały wejście: DEF ma wizyta, sygSeen, wizList', () => { const D = T.DEF(); return D.wizyta && D.wizyta.hp === 'brak' && JSON.stringify(D.sygSeen) === '{}' && JSON.stringify(D.wizList) === '[]'; });
+tryc('sygnały wejście: wynik ferrytyny z dolną granicą zapisuje lo, bez granicy brak lo', () => {
+  view('labs', BASE({ labs: [], labSel: 'ferr' }));
+  els.l_val = { value: '9,5' }; els.l_date = { value: '2026-11-10' }; els.l_unit = { value: 'ng/ml' }; els.l_fast = { checked: false }; els.l_lo = { value: '15' };
+  click({ labsave: '1' }); const x = T.S().labs[0];
+  els.l_lo = { value: '' }; click({ labsave: '1' }); const y = T.S().labs[1];
+  return x.lo === '15' && x.val === '9.5' && y && !('lo' in y);
+});
+tryc('sygnały wejście: formularz wyniku ma pole l_lo', () => view('labs', BASE()).includes('id="l_lo"'));
+// Sygnały brzucha, zadanie 6: dymek zwierzaka, alarm 112, karta zastępcza, karta w Zdrowiu, „Co ustalił lekarz?”
+const HPG = () => { const g = {}; for (let i = 0; i < 16; i++) g[dk(i)] = i < 8 ? { u: ['piecze'] } : { b: 1 }; return g; };
+const SYGB = (h) => (h.match(/<div class="petsay[^]*?<\/div><\/div>/) || [''])[0];
+tryc('sygnały dymek: alarm dziś ze zwierzakiem ma role=alert, tel:112, pet-alert, bez Przeczytane', () => {
+  const h = view('day', GUT({ gut: { [dk(0)]: { a: ['krew'] } } }));
+  return h.includes('role="alert"') && h.includes('href="tel:112"') && h.includes('pet-alert') && h.includes('albo jedź na SOR') && !h.includes('data-sygseen') && !h.includes('data-sygwiz');
+});
+tryc('sygnały dymek: alarm bez zwierzaka = note warn z tel:112, bez maskotki', () => {
+  const h = view('day', GUT({ pet: null, gut: { [dk(0)]: { a: ['krew'] } } }));
+  return /<div class="note warn" role="alert">[^]*href="tel:112"/.test(h) && !h.includes('pet-alert') && !h.includes('class="petsay');
+});
+tryc('sygnały dymek: hp_test ma Dane, reguła Miary, przyciski; jeden dymek na ekranie', () => {
+  const h = view('day', GUT({ gut: HPG() })), b = SYGB(h);
+  return b.includes('Dane') && b.includes('reguła Miary') && b.includes('data-sygwiz="hp_test"') && b.includes('data-sygseen="hp_test"') && b.includes('data-sygsrc="hp_test"') && b.includes('pet-ok') && h.split('class="petsay').length === 2;
+});
+tryc('sygnały dymek: Przeczytane ukrywa dymek, Dodaj do listy bez duplikatów', () => {
+  view('day', GUT({ gut: HPG(), wizList: [] }));
+  click({ sygwiz: 'hp_test' }); click({ sygwiz: 'hp_test' });
+  if (JSON.stringify(T.S().wizList) !== '["hp_test"]') throw new Error('wizList ' + JSON.stringify(T.S().wizList));
+  click({ sygseen: 'hp_test' });
+  return T.S().sygSeen.hp_test === T.todayKey() && !mainHtml().includes('data-sygseen="hp_test"');
+});
+tryc('sygnały dymek: Źródło i szczegóły przechodzi do Zdrowia', () => { view('day', GUT({ gut: HPG() })); click({ sygsrc: 'hp_test' }); return T.S().tab === 'health' && mainHtml().includes('id="syg_hp_test"'); });
+tryc('sygnały dymek: imię zwierzaka escapowane', () => {
+  const b = SYGB(view('day', GUT({ pet: { ...PETA, name: '<i>Z</i>' }, gut: HPG() })));
+  return b.includes('<b>&lt;i&gt;Z&lt;/i&gt;:</b>') && !b.includes('<i>Z</i>');
+});
+tryc('sygnały Zdrowie: karta sygnałów z kotwicą, mikrobiom, Co ustalił lekarz', () => {
+  const h = view('health', GUT({ tab: 'health', gut: HPG() }));
+  return h.includes('id="syg_hp_test"') && h.includes('id="syg_sam_zoladek"') && h.includes('Sygnały z Twoich wpisów') && h.includes('Testy mikrobiomu') && h.includes('Co ustalił lekarz?') && h.includes('data-hp="wykl"') && h.includes('pubmed.ncbi.nlm.nih.gov/39647502') && h.includes('termedia.pl');
+});
+tryc('sygnały Zdrowie: bez sygnałów komunikat; bez cond.gut brak karty', () => view('health', GUT({ tab: 'health', gut: {} })).includes('Brak sygnałów z ostatnich 28 dni.') && !view('health', BASE({ tab: 'health' })).includes('Co ustalił lekarz?'));
+tryc('sygnały Zdrowie: klik data-hp ustawia wizyta, ponowny resetuje', () => {
+  view('health', GUT({ tab: 'health', gut: HPG(), wizyta: { hp: 'brak' } }));
+  click({ hp: 'wykl' }); const w = T.S().wizyta;
+  if (!(w.hp === 'wykl' && w.d === T.todayKey() && mainHtml().includes('data-hp="wykl" aria-pressed="true"'))) throw new Error('wykl');
+  click({ hp: 'wykl' }); return T.S().wizyta.hp === 'brak';
+});
+tryc('sygnały: „jak wczoraj” nie kopiuje objawów alarmowych', () => {
+  view('day', MDUE({ prof: { cond: { gut: true }, pill: '' }, gut: { [dk(1)]: { b: 5, a: ['krew'] } } }));
+  click({ gutcopy: '1' }); const g = T.S().gut[dk(0)];
+  return g && !('a' in g) && !sandbox.SYG.ocen(T.S(), T.todayKey()).some((x) => x.id === 'alarm') && !mainHtml().includes('tel:112');
+});
+const NODUE = (o) => GUT({ meas: { [dk(1)]: { w: '80,2' }, [dk(0)]: { w: '80', sleep: '7' } }, ...o });
+tryc('sygnaly: dymek tuż przed Brzuch dziś także bez pomiarów na górze', () => {
+  const h = view('day', NODUE({ gut: { [dk(0)]: { a: ['krew'] } } }));
+  if (h.includes('<h2>Pomiary dnia</h2>') && h.indexOf('<h2>Pomiary dnia</h2>') < h.indexOf('id="stan"')) throw new Error('due');
+  return /<div class="petsay[^]*?<\/div><\/div>\s*<details class="fold" id="fold_brzuch"/.test(h) && h.split('class="petsay').length === 2;
+});
+tryc('sygnaly: alarm w trybie dyskretnym na początku Mojego dnia', () => {
+  const h = view('day', NODUE({ discreet: true, gut: { [dk(0)]: { a: ['krew'] } } }));
+  return h.includes('role="alert"') && h.includes('href="tel:112"') && !h.includes('id="fold_brzuch"') && h.split('class="petsay').length === 2 && h.indexOf('class="petsay') < h.indexOf('id="stan"');
+});
+// Sygnały brzucha, zadanie 7: lista na wizytę
+const FD = (k) => k.slice(8, 10) + '.' + k.slice(5, 7) + '.' + k.slice(0, 4);
+const VG = (o) => { const g = HPG(); g[dk(3)] = { ...g[dk(3)], a: ['krew', 'polyk'] }; return GUT({ prof: { cond: { gut: true }, pill: '', nlpz: true }, gut: g, wizList: ['sam_zoladek'], ...o }); };
+const VTXT = (h) => h.replace(/<[^>]+>/g, '\n');
+tryc('lista na wizytę: sygnały brzucha, data alarmu, pytania, nlpz', () => {
+  const t = VTXT(view('visit', VG()));
+  return t.includes('Objawy alarmowe: ' + FD(dk(3)) + ' (krew w stolcu lub czarny stolec, trudność z połykaniem)') && t.includes('Do omówienia: ') && t.includes('Biorę regularnie ibuprofen lub aspirynę.') && t.includes('Do omówienia: Co możesz zrobić sam przy żołądku') && !/dysbioz/i.test(t) && !t.includes('Rak żołądka');
+});
+tryc('lista na wizytę: Do omówienia z hp_test i bez duplikatów', () => {
+  const t = VTXT(view('visit', VG({ wizList: ['hp_test', 'sam_zoladek', 'sam_zoladek'] }))), L = t.split('\n').filter((x) => x.startsWith('Do omówienia:'));
+  return L.length >= 2 && new Set(L).size === L.length && L.filter((x) => x.includes('Co możesz zrobić sam')).length === 1;
+});
+tryc('lista na wizytę: id z wizList bez aktywnego sygnału pomijane', () => !VTXT(view('visit', VG({ wizList: ['zelazo'] }))).includes('Niski wynik ferrytyny'));
+tryc('lista na wizytę: bez cond.gut brak sygnałów brzucha', () => { const t = VTXT(view('visit', BASE({ prof: { cond: {}, pill: '', nlpz: true }, gut: HPG(), wizList: ['sam_zoladek'] }))); return !t.includes('Do omówienia') && !t.includes('Biorę regularnie') && !t.includes('Objawy alarmowe'); });
+tryc('lista na wizytę: rodzRak i ferrytyna poniżej zakresu z datą', () => {
+  const t = VTXT(view('visit', VG({ prof: { cond: { gut: true }, pill: '', rodzRak: true }, labs: [{ id: 'f1', test: 'ferr', date: dk(2), val: '5', lo: '15' }] })));
+  return t.includes('Rak żołądka u rodzica, rodzeństwa lub dziecka.') && t.includes('Ferrytyna poniżej zakresu z wydruku (' + FD(dk(2)) + ').') && !t.includes('Biorę regularnie');
+});
+tryc('lista na wizytę: ekran escapuje linie', () => { const h = view('visit', VG()); return !/<script|<img/.test(h) && T.esc('<b>') === '&lt;b&gt;'; });
+check('wyniki: notatki bez wiedzy ogólnej i niesprawdzonych', T.LABS.every(l => !/wiedza ogólna|niesprawdzone/i.test(l.note || '')) && T.LABS.every(l => !l.note || !l.src || T.SRC[l.src]));
+// Poprawki po przeglądzie końcowym (13.11.2026)
+tryc('sygnały: tryb dyskretny, karta w Zdrowiu pokazuje pilne, dymek w Mój dzień tylko alarm', () => {
+  const o = { discreet: true, gut: { [dk(0)]: { a: ['polyk'] } } };
+  const hz = view('health', GUT(o)), hd = view('day', GUT(o));
+  return hz.includes('id="syg_pilne"') && !hd.includes('Trudność z połykaniem') && !hd.includes('class="petsay syg"');
+});
+tryc('sygnały: tryb dyskretny, lista na wizytę ma „Do omówienia” dla pilne', () => VTXT(view('visit', GUT({ discreet: true, gut: { [dk(0)]: { a: ['polyk'] } } }))).includes('Do omówienia: Trudność z połykaniem lub częste wymioty'));
+tryc('sygnały: ocen z all:true ignoruje discreet, bez all nadal tylko alarm', () => { const s = YS({ discreet: true, gut: { [D0]: { a: ['polyk'] } } }); return Y().ocen(s, D0).length === 0 && Y().ocen(s, D0, { all: true }).some((x) => x.id === 'pilne') && Y().visible(s, D0, { all: true }).some((x) => x.id === 'pilne'); });
+tryc('sygnały: hp_test co[0] dosłownie jak x', () => { const s = YS({ gut: gd(16, () => ({ u: ['piecze'] })) }), h = Y().ocen(s, D0).find((x) => x.id === 'hp_test'); return !!h && h.co[0] === h.x; });
+tryc('sygnały: wyjątek w SYG.fix nie rusza stanu (syFix)', () => {
+  const orig = sandbox.SYG.fix; let r = false;
+  try { sandbox.SYG.fix = () => { throw new Error('x'); }; const s = { a: 1 }; r = vm.runInContext('syFix', sandbox)(s) === s; } finally { sandbox.SYG.fix = orig; }
+  return r;
+});
+tryc('sygnały: etykieta pewności reguły Miary bez numeru, wytyczna bez zmian', () => { const h = view('day', GUT({ gut: HPG(), sygSeen: {} })), g = view('health', GUT({ gut: { [dk(0)]: { a: ['polyk'] } } }));return SYGB(h).includes('reguła Miary') && !/reguła Miary \(/.test(h) && g.includes('z wytycznej'); });
+tryc('sygnały: dni z pustym u:[] nie liczą się jako dni z wpisem', () => { const s = YS({ gut: gd(16, (i) => (i < 8 ? { u: ['piecze'] } : { u: [] })) }), ids = Y().ocen(s, D0).map((x) => x.id); return !ids.includes('hp_test') && ids.includes('zapisuj'); });
+tryc('sygnały: alarm Dane tylko z zaznaczonych objawów', () => {
+  const a = Y().ocen(YS({ gut: { [D0]: { a: ['krew'] } } }), D0).find((x) => x.id === 'alarm');
+  const b = Y().ocen(YS({ gut: { [D0]: { a: ['bol', 'krew'] } } }), D0).find((x) => x.id === 'alarm');
+  return !!a && a.d === 'Dziś: krew w stolcu lub czarny stolec' && !!b && b.d.includes('krew w stolcu lub czarny stolec') && b.d.includes('nagły silny ból brzucha lub w klatce') && !b.d.includes('wymiot');
+});
+tryc('sygnały dymek: hp_test bez powtórzonego zdania, sam_zoladek bez pustego Działania', () => {
+  const g = {}; for (let i = 0; i < 16; i++) g[dk(i)] = { u: ['piecze'] };
+  const b = SYGB(view('day', GUT({ gut: g, sygSeen: {}, labs: [] })));
+  const g2 = {}; for (let i = 0; i < 3; i++) g2[dk(i)] = { u: ['piecze'] };
+  const b2 = SYGB(view('day', GUT({ gut: g2, sygSeen: {}, labs: [] })));
+  const z = view('health', GUT({ tab: 'health', gut: g }));
+  return b.split('Ustal z lekarzem przerwę').length === 2 && !b.includes('Działanie:') && b2.includes('Śpij z uniesioną głową') && b2.split('Śpij z uniesioną głową').length === 2 && !b2.includes('Działanie:') && z.split('Ustal z lekarzem przerwę').length >= 3;
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
