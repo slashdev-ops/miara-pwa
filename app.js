@@ -293,7 +293,7 @@ const SUPP=[
 ];
 function protCost(){return PROT.map(([id,n,pp])=>{const r=S.prices[id]||{},p=num(r.p),g=num(r.g);return {id,n,pp,c:p>0&&g>0?p/(g*pp/100)*20:null}})}
 function renderHealth(){
-  let h=(profSet()?healthPlanHtml()+profHtml():profHtml()+healthPlanHtml())+fold('tygodnie','12 tygodni: czego się spodziewać',weeksHtml())+'<p><button class="btn" data-tab="labs">Moje badania</button></p><div class="note"><b>Co realne.</b> Przy chorobach przewlekłych, np. tarczycy, celem jest dobra kontrola wyników i objawów, nie wyleczenie. Insulinooporność często wyraźnie się poprawia przy spadku masy ciała, ruchu i śnie. Niedobory wyrównuje się według wyników badań.</div>';
+  let h=(profSet()?healthPlanHtml()+sygCardHtml()+profHtml():profHtml()+healthPlanHtml()+sygCardHtml())+fold('tygodnie','12 tygodni: czego się spodziewać',weeksHtml())+'<p><button class="btn" data-tab="labs">Moje badania</button></p><div class="note"><b>Co realne.</b> Przy chorobach przewlekłych, np. tarczycy, celem jest dobra kontrola wyników i objawów, nie wyleczenie. Insulinooporność często wyraźnie się poprawia przy spadku masy ciała, ruchu i śnie. Niedobory wyrównuje się według wyników badań.</div>';
   h+=cardsHtml('health')+visitHtml();
   const box=(title,items)=>`<details class="fold"><summary>${title}</summary><div class="panel">`+items.map(([a,b])=>`<div class="entry"><span class="txt"><b>${a}.</b> ${b}</span></div>`).join('')+'</div></details>';
   h+=box('Woda, uda i pośladki',[
@@ -324,10 +324,10 @@ function renderHealth(){
 
 // ---------- Badania: wyniki z laboratorium, normy wyłącznie z wydruku ----------
 const LABS=[
-  {id:'tsh',n:'TSH',u:'µIU/ml',thy:1,note:'Antykoncepcja z estrogenem zmienia głównie białka wiążące hormony tarczycy; wyniki interpretuje lekarz z tą informacją (wiedza ogólna).'},
+  {id:'tsh',n:'TSH',u:'µIU/ml',thy:1},
   {id:'ft4',n:'fT4',u:'ng/dl',thy:1,note:'Jednostka zależy od laboratorium (ng/dl albo pmol/l); przepisz ją z wydruku.'},
   {id:'ft3',n:'fT3',u:'pg/ml',thy:1,note:'Jednostka zależy od laboratorium (pg/ml albo pmol/l); przepisz ją z wydruku.'},
-  {id:'atpo',n:'Anty-TPO',u:'IU/ml',thy:1,note:'Przeciwciała służą głównie potwierdzeniu Hashimoto; ich zmiana nie zawsze zmienia leczenie (wiedza ogólna).'},
+  {id:'atpo',n:'Anty-TPO',u:'IU/ml',thy:1},
   {id:'glu',n:'Glukoza na czczo',u:'mg/dl',note:'HOMA-IR policzy się sam, gdy wpiszesz glukozę i insulinę z tej samej daty.'},
   {id:'ins',n:'Insulina na czczo',u:'µIU/ml',note:'HOMA-IR policzy się sam, gdy wpiszesz glukozę i insulinę z tej samej daty.'},
   {id:'hba1c',n:'HbA1c',u:'%'},
@@ -339,8 +339,8 @@ const LABS=[
   {id:'ldl',n:'LDL',u:'mg/dl'},
   {id:'hdl',n:'HDL',u:'mg/dl'},
   {id:'tg',n:'Trójglicerydy',u:'mg/dl'},
-  {id:'kreat',n:'Kreatynina',u:'mg/dl',note:'Kreatyna może podnosić kreatyninę we krwi (wiedza ogólna, niesprawdzone); zaznacz, jeśli ją przyjmujesz.'},
-  {id:'testo',n:'Testosteron (M, przy objawach)',u:'ng/dl',note:'U mężczyzn przy objawach, zwykle rano (wiedza ogólna).'}
+  {id:'kreat',n:'Kreatynina',u:'mg/dl'},
+  {id:'testo',n:'Testosteron (M, przy objawach)',u:'ng/dl',note:'Badanie służy głównie ocenie objawów niskiego testosteronu; krew pobiera się zwykle rano, między 7 a 10.',src:'medtesto'}
 ];
 const LABN=Object.fromEntries(LABS.map(x=>[x.id,x]));
 function fmtDate(d){return d?d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(0,4):''}
@@ -357,13 +357,14 @@ function renderLabs(){
   h+=`<div class="field"><label for="l_date">Data pobrania</label><input type="date" id="l_date" value="${todayKey()}" style="${inp}"></div>`;
   h+='<div class="field"><label for="l_val">Wynik</label><input type="text" inputmode="decimal" id="l_val"><span class="unit"></span></div>';
   h+=`<div class="field"><label for="l_unit">Jednostka z wydruku</label><input type="text" id="l_unit" value="${esc(L.u)}"><span class="unit"></span></div>`;
+  h+='<div class="field"><label for="l_lo">Dolna granica normy z wydruku (opcjonalnie)</label><input type="text" inputmode="decimal" id="l_lo"><span class="unit"></span></div>';
   h+='<div class="field"><label for="l_fast">Na czczo</label><input type="checkbox" class="switch" id="l_fast"></div>';
   if(L.thy)h+='<div class="field"><label for="l_bio">Biotyna odstawiona co najmniej 2-3 dni</label><input type="checkbox" class="switch" id="l_bio"></div>';
   if(S.sex==='K')h+='<div class="field"><label for="l_cyc">Tydzień cyklu lub przerwa w tabletkach</label><input type="text" id="l_cyc" placeholder="np. 2"><span class="unit"></span></div>';
   if(sel==='kreat')h+='<div class="field"><label for="l_cr">Przyjmuję kreatynę</label><input type="checkbox" class="switch" id="l_cr"></div>';
   h+='</div><p><button class="btn" data-labsave="1">Zapisz wynik</button></p>';
   h+=L.tg?`<p class="small"><b>Zakres docelowy:</b> ${tgTxt(L.tg)}. Źródło: ${L.tg.src}.</p>`:'<p class="small muted">Dla tego badania nie ma jednego zakresu docelowego: wynik zależy od metody laboratorium. Aplikacja pokaże trend, ocenę zostaw lekarzowi.</p>';
-  if(L.note)h+=`<p class="small muted">${L.note}</p>`;
+  if(L.note)h+=`<p class="small muted">${L.note}</p>`+srcHtml(L.src);
   const tested=LABS.filter(x=>S.labs.some(e=>e.test===x.id));
   if(tested.length)h+='<h2>Wyniki</h2>'+tested.map(x=>{const es=S.labs.filter(e=>e.test===x.id).sort((a,b)=>b.date.localeCompare(a.date));return `<article class="meal"><div class="mhead"><div class="name">${x.n}</div></div><div class="mdet" style="border-top:0">`+es.map((e,i)=>{const st=labStatus(e),prev=es.at(i+1),d=prev?num(e.val)-num(prev.val):null,norm='',ctx=[e.fast?'na czczo':'',x.thy&&e.bio===false?'biotyna nieodstawiona':'',e.cyc?`tydzień cyklu ${esc(e.cyc)}`:'',e.cr?'przy kreatynie':''].filter(Boolean).join(', ');return `<div class="entry" style="padding:8px 0"><span class="txt">${fmtDate(e.date)}: <b>${esc(e.val)} ${esc(e.unit)}</b>${d!=null?` <span class="small muted">(${d>0?'+':''}${fmt1(d)} od poprzedniego)</span>`:''}<br><span class="small" style="color:${st.w?'var(--clay)':'var(--muted)'}">${st.t}${norm}${ctx?'; '+ctx:''}</span></span><button class="del" data-labdel="${e.id}" aria-label="Usuń wynik">×</button></div>`}).join('')+'</div></article>'}).join('');
   const hr=homaRows();
@@ -477,6 +478,18 @@ function krokRevHtml(mk,end){const k=S.krok;if(!k||!k.conf||k.fin||k.since>end)r
   if(act<4&&!p.ok)return `<h2>Twój krok: ${K.n}</h2><div class="note">Krok trwa od ${fmtDate(k.since)}, za krótko na ocenę: oceni go następny przegląd. Postęp liczy się dalej w tym tygodniu.</div>`;
   return `<h2>Twój krok: ${K.n}</h2><div class="note">${p.ok?'<b>Krok wykonany</b>':'Krok jeszcze nie wyszedł'}: ${p.n} z ${p.cel}${p.zt?`, zapas ${p.z} z ${p.zt}`:''}.${p.ok?'':' To informacja, nie ocena.'}</div>`+(p.ok?'<p><button class="btn" data-kroknext="1">Następny krok</button></p>':'<div class="navrow"><button class="btn ghost" data-krokrep="1">Powtórz krok</button><button class="btn ghost" data-krokeasy="1">Łatwiejsza wersja</button><button class="btn ghost" data-krokdiag="1">Inna przeszkoda</button></div>')}
 // Zwierzak podsumowuje tydzień jednym zdaniem z danych; bez ocen i kar (punkt 3)
+// Sygnały brzucha (sygnaly.js): jeden sygnał na ekranie; alarm 112 także bez zwierzaka (zwykła karta note warn)
+const sygEm=t=>esc(t).replace(/\*([^*]+)\*/g,'<i>$1</i>'),sygPew=x=>x.rm?'reguła Miary':'z wytycznej';
+function sygHtml(){if(typeof SYG==='undefined')return '';const x=SYG.visible(S,todayKey())[0];if(!x)return '';const al=x.lvl==='112',pet=!!S.pet;
+  if(al){const body=`<p><b>${pet?esc(PET.nameOf(S.pet))+':':esc(x.t)}</b> ${sygEm(x.x)}</p><p><b>Dane:</b> ${sygEm(x.d)}</p><p class="cardact"><a class="btn" href="tel:112">Zadzwoń 112</a> albo jedź na SOR</p>`;
+    return pet?`<div class="petsay syg alert" role="alert">${PET.svg(S.pet.kind,'chick','alert',null)}<div>${body}</div></div>`:`<div class="note warn" role="alert">${body}</div>`}
+  const body=`<p><b>${pet?esc(PET.nameOf(S.pet))+':':esc(x.t)}</b> ${sygEm(x.x)}</p><p><b>Dane:</b> ${sygEm(x.d)}</p><p><b>Pewność:</b> ${sygPew(x)}</p><p><b>Działanie:</b></p><ul>${x.co.map(c=>`<li>${sygEm(c)}</li>`).join('')}</ul>`
+    +`<p class="cardact"><button class="btn ghost small" data-sygsrc="${esc(x.id)}">Źródło i szczegóły</button> <button class="btn ghost small" data-sygwiz="${esc(x.id)}">Dodaj do listy na wizytę</button> <button class="btn ghost small" data-sygseen="${esc(x.id)}">Przeczytane</button></p>`;
+  return pet?`<div class="petsay syg">${PET.svg(S.pet.kind,'chick','ok',null)}<div>${body}</div></div>`:`<div class="note">${body}</div>`}
+const HPS=[['zlecone','zlecił badanie'],['potw','<i>H. pylori</i> potwierdzone'],['leczone','po leczeniu'],['wykl','wykluczone'],['nic','nic nie zlecił']];
+function sygCardHtml(){if(!((S.prof||{}).cond||{}).gut||typeof SYG==='undefined')return '';const L=SYG.ocen(S,todayKey(),{all:true}),hp=(S.wizyta||{}).hp||'brak';
+  return '<section class="plan" id="sygnaly"><h2>Sygnały z Twoich wpisów</h2>'+(L.length?L.map(x=>`<div class="act" id="syg_${esc(x.id)}" tabindex="-1"><h3>${esc(x.t)}</h3><p>${sygEm(x.x)}</p><p class="small"><b>Dane:</b> ${sygEm(x.d)}</p><ul>${x.co.map(c=>`<li>${sygEm(c)}</li>`).join('')}</ul><span class="ev">${sygPew(x)}</span>${srcHtml(x.src)}</div>`).join(''):'<p class="small muted">Brak sygnałów z ostatnich 28 dni.</p>')
+    +'<h3>Co ustalił lekarz?</h3><div class="chips" role="group" aria-label="Co ustalił lekarz?">'+HPS.map(([v,n])=>`<button class="chip${hp===v?' inc':''}" data-hp="${v}" aria-pressed="${hp===v}">${n}</button>`).join('')+'</div></section>'}
 function petSay(ks){if(!S.pet)return '';const n=ks.filter(k=>(S.days[k]||[]).length||Object.values(S.meas[k]||{}).some(v=>num(v)>0)).length;
   const t=n===0?'Jestem tu. Jeden wpis w nowym tygodniu i znów rosnę.':n===7?'Wszystkie 7 dni z wpisami: to był nasz wspólny tydzień.':n>=4?`${n} dni z wpisami: rosnę razem z Tobą.`:`${n} ${n===1?'dzień':'dni'} z wpisami: każdy taki dzień to dla mnie krok do przodu.`;
   return `<div class="petsay">${PET.svg(S.pet.kind,'chick','happy',null)}<p><b>${esc(PET.nameOf(S.pet))}:</b> ${t}</p></div>`}
@@ -714,10 +727,12 @@ function insoleHtml(){if(!((S.prof||{}).cond||{}).flat)return '';const I=S.insol
 // Dziennik brzucha (profil „Wzdęcia i jelita”): wzdęcie 0-10, stolec w 3 uproszczonych grupach, liczba wypróżnień; ukryty w trybie dyskretnym
 const GUT_F=[['twardy','twardy, grudki'],['uform','uformowany'],['luzny','luźny, wodnisty']];
 function gutSum(){const G=S.gut||{},ks=lastKeys(28).filter(k=>G[k]),hi=ks.filter(k=>G[k].b>=5).length,none=ks.filter(k=>G[k].n===0).length,lz=ks.filter(k=>G[k].f==='luzny').length;return {n:ks.length,hi,none,lz}}
+const GUT_U=[['piecze','pieczenie lub ból w nadbrzuszu'],['pelnosc','pełność po jedzeniu'],['zgaga','zgaga']],GUT_A=[['krew','krew w stolcu lub czarny stolec'],['wymkrew','wymioty krwią lub jak fusy od kawy'],['bol','nagły silny ból brzucha lub w klatce'],['polyk','trudność z połykaniem'],['wymioty','częste wymioty']];
 function gutHtml(){if(!((S.prof||{}).cond||{}).gut||S.discreet)return '';const k=todayKey(),g=(S.gut||{})[k]||{},m=gutSum(),y=(S.gut||{})[nAgo(1)],cp=y&&!Object.keys(g).length&&y.b!=null?`<p class="cardact"><button class="btn ghost small" data-gutcopy="1">Jak wczoraj: wzdęcie ${y.b}${y.f?', '+(GUT_F.find(x=>x[0]===y.f)||[,''])[1]:''}</button></p>`:'';
   const row=(lab,attr,vals,cur)=>`<p style="margin:10px 0 4px">${lab}</p><div class="chips" role="group" aria-label="${lab}">`+vals.map(([v,l])=>{const on=String(cur)===String(v);return `<button class="chip ${on?'inc':''}" data-${attr}="${v}" aria-pressed="${on}"${attr==='gutb'?' style="min-width:38px"':''}>${l}</button>`}).join('')+'</div>';
+  const multi=(lab,attr,vals,cur)=>`<p style="margin:10px 0 4px">${lab}</p><div class="chips" role="group" aria-label="${lab}">`+vals.map(([v,l])=>{const on=(cur||[]).includes(v);return `<button class="chip ${on?'inc':''}" data-${attr}="${v}" aria-pressed="${on}">${l}</button>`}).join('')+'</div>';
   return `<details class="fold" id="fold_brzuch" data-fold="brzuch"${OPEN_F.has('brzuch')?' open':''}><summary>Brzuch dziś${g.b!=null?`: wzdęcie ${g.b}`:''}</summary><div class="panel" style="padding:4px 16px 12px">`+cp
-    +row('Wzdęcie (0 brak, 10 najgorsze)','gutb',[0,1,2,3,4,5,6,7,8,9,10].map(v=>[v,v]),g.b)+row('Stolec','gutf',GUT_F,g.f)+row('Wypróżnienia dziś','gutn',[[0,'0'],[1,'1'],[2,'2'],[3,'3 lub więcej']],g.n)+row('Stresujący dzień','guts',[[1,'tak'],[0,'nie']],g.s)
+    +row('Wzdęcie (0 brak, 10 najgorsze)','gutb',[0,1,2,3,4,5,6,7,8,9,10].map(v=>[v,v]),g.b)+row('Stolec','gutf',GUT_F,g.f)+row('Wypróżnienia dziś','gutn',[[0,'0'],[1,'1'],[2,'2'],[3,'3 lub więcej']],g.n)+row('Stresujący dzień','guts',[[1,'tak'],[0,'nie']],g.s)+multi('Z żołądka','gutu',GUT_U,g.u)+multi('Objawy alarmowe','guta',GUT_A,g.a)
     +`<p class="small muted">${m.hi} z 28 dni z wzdęciem 5 lub więcej; dni bez wypróżnienia: ${m.none}; dni z luźnym stolcem: ${m.lz} (${m.n} dni z wpisem). Pokaż to na wizycie.</p></div></details>`}
 function mobWeek(){let n=0;for(let i=0;i<7;i++)n+=((S.days||{})[nAgo(i)]||[]).filter(e=>e.kind==='t'&&e.mob).length;return n}
 function renderMob(){
@@ -840,7 +855,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
-const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},goalWay:'proc',muscle:false,bmiCut:'auto',korekta:true,tab:'meals',
+const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],goalWay:'proc',muscle:false,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
@@ -884,7 +899,8 @@ function bmiSetHtml(){const a=bmiCutFor(typeof navigator!=='undefined'&&navigato
 function goalHint(){return S.mode!=='redukcja'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny albo wybierz niżej.</p>'}
 function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
 function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,STEP.goal)}
-function load(){try{const r=localStorage.getItem(LS);if(r)return merge(clone(DEF),fixTouched(JSON.parse(r)));}catch(e){}return clone(DEF)}
+function syFix(s){try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
+function load(){try{const r=localStorage.getItem(LS);if(r)return syFix(merge(clone(DEF),fixTouched(JSON.parse(r))));}catch(e){}return clone(DEF)}
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
 // ---------- Scenariusze do sprawdzania: dane przykładowe pod #demo-<nazwa>, nic się nie zapisuje ----------
@@ -1134,7 +1150,14 @@ const SRC={
   csp:['https://www.csp.org.uk/conditions/back-pain/video-exercises-back-pain','CSP: ćwiczenia przy bólu pleców'],
   nhsback:['https://www.nhs.uk/live-well/exercise/exercises-for-back-pain/','NHS: ból pleców'],
   nhsflat:['https://www.nhs.uk/conditions/flat-feet/','NHS: płaskostopie'],
+  medtesto:['https://medlineplus.gov/lab-tests/testosterone-levels-test/','MedlinePlus: badanie testosteronu'],
   nhsbloat:['https://www.nhs.uk/conditions/bloating/','NHS: wzdęcia'],
+  ptge23:['https://www.termedia.pl/Diagnostic-and-therapeutic-recommendations-on-Helicobacter-pylori-infection-Recommendations-of-the-Working-Group-of-the-Polish-Society-of-Gastroenterology,41,51623,1,1.html','PTG-E 2023: H. pylori'],
+  nhsgastritis:['https://www.nhs.uk/conditions/gastritis/','NHS: zapalenie żołądka'],
+  nhsindig:['https://www.nhs.uk/conditions/indigestion/','NHS: niestrawność'],
+  nhsulcer:['https://www.nhs.uk/conditions/stomach-ulcer/','NHS: wrzód żołądka'],
+  nhscoeliac:['https://www.nhs.uk/conditions/coeliac-disease/diagnosis/','NHS: celiakia, diagnoza'],
+  porcari25:['https://pubmed.ncbi.nlm.nih.gov/39647502/','Porcari i in. 2025'],
   nhsibs:['https://www.nhs.uk/conditions/irritable-bowel-syndrome-ibs/treatment/','NHS: IBS, dieta i leki'],
   bda25:['https://pubmed.ncbi.nlm.nih.gov/41081513/','BDA 2025: zaparcia'],
   acg21:['https://pubmed.ncbi.nlm.nih.gov/33315591/','ACG 2021: IBS'],
@@ -1223,7 +1246,8 @@ function planActs(){const c=(S.prof||{}).cond||{},P=pillOf(),pn=P[1].split(' (')
   if(c.acl)a(22,'Po rekonstrukcji ACL: plan od fizjoterapeuty','Wytyczne Aspetar 2023: ćwiczenia są podstawą rehabilitacji, ale brakuje dowodów na dawkę i na kryteria przejścia do kolejnej fazy, więc o progresji decyduje fizjoterapeuta. Wpisz jego zalecenia w Trening, Mobilność, Mój plan od specjalisty.','m','aspetar');
   if(c.gut){a(1.5,'Brzuch: kiedy do lekarza','Do lekarza: wzdęcia regularnie albo mimo zmiany jedzenia, z niezamierzoną utratą wagi albo krew w stolcu. Pilnie: wzdęcie z wymiotami, biegunką lub zaparciem, z bólem brzucha albo gorączką, guz w brzuchu, brak moczu, stolca lub gazów. 112: nagły silny ból brzucha, wymioty krwią albo jak fusy od kawy, duszność.','m','nhsbloat');
     a(13.5,'Brzuch i stolec: co robić już teraz','Przed wizytą i po niej: ok. 1,5 l płynów dziennie, mniejsze i częstsze posiłki, bez dużego posiłku późnym wieczorem, najwyżej 3 kawy lub herbaty i 3 porcje owoców po 80 g dziennie, bez słodzika sorbitolu i dużej ilości napojów gazowanych. Przy zaparciu błonnik rozpuszczalny: owies, siemię lniane do 1 łyżki dziennie. Przy IBS lekarz może zaproponować krótką próbę diety low FODMAP z dietetykiem i terapię ukierunkowaną na jelita.','m',['nhsbloat','nhsibs','acg21']);
-    a(14.5,'Środki z badań: forma, ilość, czas','Błonnik w suplemencie (np. babka płesznik, proszek rozpuszczony w wodzie): ponad 10 g dziennie przez co najmniej 4 tygodnie, z dodatkowym piciem; może nasilić gazy. Probiotyk: wybrana marka według producenta, co najmniej 4 tygodnie, potem ocena. Kiwi: 2-3 kiwi dziennie przez co najmniej 4 tygodnie. Olejek miętowy przy IBS (monografia EMA): kapsułki dojelitowe 0,2-0,4 ml, 2-3 razy dziennie (0,6-1,2 ml na dobę), 30 minut przed posiłkiem, połknięte w całości; do ustąpienia objawów, zwykle tydzień lub dwa, najwyżej 3 miesiące. Nie razem z jedzeniem; leki zobojętniające przyjmuj osobno, a leków zmniejszających kwas żołądkowy unikaj (kapsułka może się rozpuścić za wcześnie). Nie przy chorobach wątroby, kamica żółciowa i inne choroby dróg żółciowych to przeciwwskazanie. Częsty skutek uboczny to zgaga. Tlenek magnezu: 0,5-1,5 g dziennie przez co najmniej 4 tygodnie, zwiększany co tydzień, tylko po rozmowie z lekarzem (to środek przeczyszczający).'+(c.hashi?' Przy lewotyroksynie: w małym badaniu babka przyjęta razem z lekiem nie zmieniła istotnie wchłaniania, ale suplementy i magnez trzymaj z dala od leku; odstęp ustal z lekarzem.':'')+(est?` Wymioty albo silna biegunka mogą osłabić działanie tabletki ${pn}: sprawdź w ulotce, co wtedy robić, albo zapytaj farmaceutę.`:''),'m',c.hashi?['bda25','nhsibs','mint','emamint','lt4fib']:['bda25','nhsibs','mint','emamint'])}
+    a(14.5,'Środki z badań: forma, ilość, czas','Błonnik w suplemencie (np. babka płesznik, proszek rozpuszczony w wodzie): ponad 10 g dziennie przez co najmniej 4 tygodnie, z dodatkowym piciem; może nasilić gazy. Probiotyk: wybrana marka według producenta, co najmniej 4 tygodnie, potem ocena. Kiwi: 2-3 kiwi dziennie przez co najmniej 4 tygodnie. Olejek miętowy przy IBS (monografia EMA): kapsułki dojelitowe 0,2-0,4 ml, 2-3 razy dziennie (0,6-1,2 ml na dobę), 30 minut przed posiłkiem, połknięte w całości; do ustąpienia objawów, zwykle tydzień lub dwa, najwyżej 3 miesiące. Nie razem z jedzeniem; leki zobojętniające przyjmuj osobno, a leków zmniejszających kwas żołądkowy unikaj (kapsułka może się rozpuścić za wcześnie). Nie przy chorobach wątroby, kamica żółciowa i inne choroby dróg żółciowych to przeciwwskazanie. Częsty skutek uboczny to zgaga. Tlenek magnezu: 0,5-1,5 g dziennie przez co najmniej 4 tygodnie, zwiększany co tydzień, tylko po rozmowie z lekarzem (to środek przeczyszczający).'+(c.hashi?' Przy lewotyroksynie: w małym badaniu babka przyjęta razem z lekiem nie zmieniła istotnie wchłaniania, ale suplementy i magnez trzymaj z dala od leku; odstęp ustal z lekarzem.':'')+(est?` Wymioty albo silna biegunka mogą osłabić działanie tabletki ${pn}: sprawdź w ulotce, co wtedy robić, albo zapytaj farmaceutę.`:''),'m',c.hashi?['bda25','nhsibs','mint','emamint','lt4fib']:['bda25','nhsibs','mint','emamint']);
+    a(14.7,'Testy mikrobiomu','Testy mikrobiomu kupowane samodzielnie nie mają udowodnionej wartości klinicznej.','u',['porcari25'])}
   if(est)a(16,'Tabletki z estrogenem: ryzyko zakrzepicy',(P[3]==='b'?'Ok. 9-12 na 10 000 kobiet rocznie przy tabletkach z drospirenonem, gestodenem albo dezogestrelem; 5-7 przy lewonorgestrelu; ok. 2 bez tabletek (EMA 2013).':P[3]==='a'?'Ok. 5-7 na 10 000 kobiet rocznie przy tabletkach z lewonorgestrelem; ok. 2 bez tabletek (EMA 2013).':'Dla tego składu komunikat EMA nie podaje osobnej liczby; przy lewonorgestrelu 5-7, a bez tabletek ok. 2 na 10 000 kobiet rocznie (EMA 2013).')+' Pilnie do lekarza przy silnym bólu albo obrzęku nogi, nagłej duszności, szybkim oddechu albo kaszlu, bólu w klatce piersiowej, osłabieniu albo drętwieniu twarzy, ręki lub nogi.','m','ema');
   if(P[0])a(17,'Waga a tabletki','Przegląd Cochrane: dowody nie wystarczają, by ocenić wpływ tabletek na masę ciała, ale dużego efektu nie widać.','m','cochr');
   return A.sort((x,y)=>x.pri-y.pri)}
@@ -1231,8 +1255,9 @@ function profSet(){const p=S.prof||{};return Object.values(p.cond||{}).some(Bool
 function profHtml(){const p=S.prof||{},c=p.cond||{},body=profBody();if(!profSet())return '<h2 id="profil">Mój profil zdrowia</h2>'+whyP('profil')+body;
   const names=CONDS.filter(([id])=>c[id]).map(x=>x[1]).concat(p.pill?[(PILLS.find(x=>x[0]===p.pill)||[,''])[1]]:[]).filter(Boolean);
   return '<h2 id="profil">Mój profil zdrowia</h2><p class="small">'+esc(names.join(', '))+'</p>'+fold('profil','Zmień profil',body)}
+const GPROF=[['g45','45 lat lub więcej'],['nlpz','regularnie biorę ibuprofen lub aspirynę'],['rodzRak','rak żołądka u rodzica, rodzeństwa lub dziecka']];
 function profBody(){const p=S.prof||{},c=p.cond||{};return '<div class="chips">'+CONDS.map(([id,n])=>`<button class="chip${c[id]?' inc':''}" data-cond="${id}" aria-pressed="${!!c[id]}">${n}</button>`).join('')
-  +`</div><div class="panel"><div class="field"><label for="pill">Tabletki antykoncepcyjne</label><select id="pill" data-k="prof.pill">${PILLS.map(([v,n])=>`<option value="${v}"${v===(p.pill||'')?' selected':''}>${n}</option>`).join('')}</select></div></div>`}
+  +'</div>'+(c.gut?'<div class="chips" role="group" aria-label="Brzuch: dodatkowe pytania">'+GPROF.map(([id,n])=>`<button class="chip${p[id]?' inc':''}" data-gprof="${id}" aria-pressed="${!!p[id]}">${n}</button>`).join('')+'</div>':'')+`<div class="panel"><div class="field"><label for="pill">Tabletki antykoncepcyjne</label><select id="pill" data-k="prof.pill">${PILLS.map(([v,n])=>`<option value="${v}"${v===(p.pill||'')?' selected':''}>${n}</option>`).join('')}</select></div></div>`}
 function healthPlanHtml(){const A=planActs();if(!A.length)return '<section class="plan" id="twojplan"><h2>Twój plan</h2><p class="small muted">Zaznacz wyżej choroby i tabletki, a tu pojawią się działania dla Ciebie.</p></section>';
   return '<section class="plan" id="twojplan"><h2>Twój plan</h2>'+A.map((x,i)=>`<div class="act${i===0?' first':''}">${i===0?'<p class="tag">Najpierw</p>':''}<h3>${x.t}</h3><p>${x.why}</p><span class="ev">${EV[x.ev]}</span>${srcHtml(x.src)}</div>`).join('')+'</section>'}
 // 12 tygodni: waga w przedziale z deficytu planu (±25%), kamienie milowe z badań; wyniki badań, ból i samopoczucie tylko z wpisów
@@ -1335,10 +1360,16 @@ function visitLines(){const ks=Array.from({length:90},(_,i)=>nAgo(i)),P=S.pain||
     pl.length>=5&&ot.length>=5?`Ból w dniach bez hormonów: ${pl.filter(k=>P[k]).length} z ${pl.length}; w pozostałych zaznaczonych dniach: ${ot.filter(k=>P[k]).length} z ${ot.length}.`:'Cykl: za mało zaznaczonych dni do porównania (potrzeba po 5).',
     sl.length?`Sen: średnio ${fmtSleep(sl.reduce((s,x)=>s+x,0)/sl.length)} z ${sl.length} nocy.`:'Sen: brak danych.',
     w.n?`Waga: średnia ${fmt1(w.avg)} kg z ${w.n} ważeń w ostatnich 7 dniach.`:'Waga: brak ważeń w ostatnich 7 dniach.'];
-  if(((S.prof||{}).cond||{}).gut){const g=gutSum();L.push(`Brzuch (28 dni, ${g.n} dni z wpisem): wzdęcie 5 lub więcej w ${g.hi} dniach; dni bez wypróżnienia: ${g.none}; dni z luźnym stolcem: ${g.lz}.`);L.push('Powiedz lekarzowi, jeśli było: krew w stolcu, niezamierzona utrata wagi, wymioty, gorączka albo guz w brzuchu.')}
+  if(((S.prof||{}).cond||{}).gut){const g=gutSum();L.push(`Brzuch (28 dni, ${g.n} dni z wpisem): wzdęcie 5 lub więcej w ${g.hi} dniach; dni bez wypróżnienia: ${g.none}; dni z luźnym stolcem: ${g.lz}.`);L.push('Powiedz lekarzowi, jeśli było: krew w stolcu, niezamierzona utrata wagi, wymioty, gorączka albo guz w brzuchu.');gutVisitLines(L)}
   if(a)L.push('Do zapytania: czy przy migrenie z aurą mogę dalej brać tabletki antykoncepcyjne z estrogenem i jaka metoda będzie bezpieczna?');
   return L}
-function renderVisit(){const v=S.visit||{};document.getElementById('main').innerHTML=`<h2>Lista na wizytę${v.who?': '+esc(v.who):''}${v.date?', '+fmtDate(v.date):''}</h2><div class="panel card">`+visitLines().map(x=>`<p>${x}</p>`).join('')
+function gutVisitLines(L){const G=S.gut||{},al=Array.from({length:28},(_,i)=>nAgo(i)).filter(k=>G[k]&&Array.isArray(G[k].a)&&G[k].a.length);
+  if(al.length)L.push('Objawy alarmowe: '+al.map(k=>fmtDate(k)+' ('+G[k].a.map(id=>(GUT_A.find(x=>x[0]===id)||[0,id])[1]).join(', ')+')').join('; ')+'.');
+  if(typeof SYG==='undefined')return;const all=SYG.ocen(S,todayKey(),{all:true}),seen=new Set(),q=x=>{if(x&&!seen.has(x.id)){seen.add(x.id);L.push('Do omówienia: '+x.t)}};
+  all.filter(x=>x.lvl==='wkrotce'||x.lvl==='badanie').forEach(q);(Array.isArray(S.wizList)?S.wizList:[]).forEach(id=>q(all.find(x=>x.id===id)));
+  const pr=S.prof||{};if(pr.nlpz)L.push('Biorę regularnie ibuprofen lub aspirynę.');if(pr.rodzRak)L.push('Rak żołądka u rodzica, rodzeństwa lub dziecka.');
+  if(all.some(x=>x.id==='zelazo')){const f=(S.labs||[]).filter(x=>x&&x.test==='ferr').sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).pop();L.push('Ferrytyna poniżej zakresu z wydruku'+(f&&f.date?' ('+fmtDate(f.date)+')':'')+'.')}}
+function renderVisit(){const v=S.visit||{};document.getElementById('main').innerHTML=`<h2>Lista na wizytę${v.who?': '+esc(v.who):''}${v.date?', '+fmtDate(v.date):''}</h2><div class="panel card">`+visitLines().map(x=>`<p>${esc(x)}</p>`).join('')
   +'<p class="small muted">Liczby z dziennika bólu, cyklu i pomiarów w tym telefonie. Pokaż je lekarzowi albo skopiuj.</p></div><p class="cardact"><button class="btn" data-visitcopy="1">Kopiuj listę</button><button class="btn ghost" data-tab="health">Wróć do Zdrowia</button></p>'}
 // ---------- Widoki ----------
 const TABS=[
@@ -1484,7 +1515,8 @@ function renderDay(){
   const bar=(lab,v,max,unit)=>{const pc=Math.min(100,v/max*100);return `<div class="prog"><div class="top"><span>${lab}</span><span>${fmt(v)} / ${fmt(max)} ${unit}</span></div><div class="track"><div class="fill ${v>max*1.05?'over':''}" style="width:${pc}%"></div></div></div>`};
   const sos='<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>';
   const due=measDue();
-  let h=guideHtml()+modePropHtml()+focusHtml()+painHtml()+(due?measHtml('top')+gutHtml():'')+cardsHtml('day')+stanHtml()+celHtml()+razemHtml()+zdHtml()+krokCardHtml()+reviewPromptHtml()+petCardHtml()+sos+(due?measHtml('rest'):measHtml())+legHtml()+(due?'':gutHtml())+kneeBannerHtml();
+  const gh=gutHtml(),sy=sygHtml(),gb=gh?sy+gh:'';
+  let h=(gh?'':sy)+guideHtml()+modePropHtml()+focusHtml()+painHtml()+(due?measHtml('top')+gb:'')+cardsHtml('day')+stanHtml()+celHtml()+razemHtml()+zdHtml()+krokCardHtml()+reviewPromptHtml()+petCardHtml()+sos+(due?measHtml('rest'):measHtml())+legHtml()+(due?'':gb)+kneeBannerHtml();
   let more=modeHtml()+`<h3 class="rh" style="margin:4px 4px 8px">Energia i białko dziś</h3><div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
   more+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
   more+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
@@ -1645,20 +1677,21 @@ function actAt(b){return {tab:S.tab,sel:btnSel(b),y:b.getBoundingClientRect?b.ge
 function focusEl(el){if(!el||!el.focus)return;if(!/^(BUTTON|INPUT|SELECT|TEXTAREA|A|SUMMARY)$/.test(el.tagName))el.setAttribute('tabindex','-1');el.focus({preventScroll:true})}
 function actDone(at){if(!document.querySelector)return;
   if(S.tab!==at.tab){window.scrollTo(0,0);focusEl(document.querySelector('header h1'));return}
+  if(at.rev&&typeof SYG!=='undefined'){const x=SYG.visible(S,todayKey())[0],l=x&&x.lvl==='112'&&document.querySelector('[role="alert"] a[href="tel:112"]'),al=l&&l.closest('[role="alert"]');if(al&&al.scrollIntoView){al.scrollIntoView({block:'center',behavior:'auto'});focusEl(l);return}}
   if(at.own||window.scrollY!==at.sy)return;
   const b=at.sel&&document.querySelector(at.sel);
   if(b&&b.getBoundingClientRect&&at.y!=null){window.scrollBy(0,b.getBoundingClientRect().top-at.y);focusEl(b);return}
   const hs=typeof document.querySelectorAll==='function'?[...(document.querySelectorAll('#main h2,#main h3')||[])]:[],h=(at.head&&hs.find(x=>x.textContent===at.head))||hs[0];
   if(h){if(h.scrollIntoView){const r=h.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)h.scrollIntoView({block:'start'})}focusEl(h)}}
 document.addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b)return;const d=b.dataset;const at=actAt(b);
+  const b=e.target.closest('button');if(!b)return;const d=b.dataset;const at=actAt(b);if(d.guta&&['krew','wymkrew','bol'].includes(d.guta)&&!(((S.gut||{})[todayKey()]||{}).a||[]).includes(d.guta))at.rev=1;
   if(d.addsheet){SHEET=true;render();sheetFocus();return}
   if(SHEET){SHEET=false;if(d.sheetclose){render();addFocus();return}}
   if(d.toastclose){toastHide();return}
   if(d.undo){if(UNDO){const tab=S.tab;S=JSON.parse(UNDO);S.tab=tab;UNDO=null;save();render();toast('Przywrócono')}else toastHide();return}
   if(d.preset||d.datasave)S.touched={kg:true,cm:true,age:true,goal:true};
   if(b.parentNode&&b.parentNode.id==='toast')toastHide();
-  if(d.nav){const [tab,id,fd]=d.nav.split('#');S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
+  if(d.nav||d.sygsrc){const [tab,id,fd]=(d.nav||'health#syg_'+d.sygsrc).split('#');S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
     if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});focusEl(el);if(el.classList){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2400)}}else window.scrollTo(0,0);return}
   if(d.stp){if(STP_SKIP){STP_SKIP=false;return}if(!stpApply(d.stp,+d.d,1))return;save();stpDone(d.stp,d.d);return}
   if(d.cook){const m=MEALS.find(x=>x.id===d.cook),k=todayKey(),base=planFor(new Date().getDay()),i=m?base.findIndex(id=>MEALS.find(x=>x.id===id).t===m.t):-1;if(i<0)return;
@@ -1715,7 +1748,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.cyc){const k=todayKey();S.meas[k]=S.meas[k]||{};S.meas[k].cyc=S.meas[k].cyc===d.cyc?'':d.cyc}
   else if(d.bkexp){bkExport();return}
   else if(d.bkpaste){const o=bkParse(document.getElementById('bk_text').value.trim());if(!o){BK_PENDING=null;toast('To nie jest kopia tej aplikacji');return}BK_PENDING=o}
-  else if(d.bkapply){if(!BK_PENDING)return;if(BK_PENDING.noHealth)BK_NH_KEEP.forEach(k=>{if(!(k in BK_PENDING.data))return;const v=clone(BK_PENDING.data[k]);S[k]=v&&typeof v==='object'&&!Array.isArray(v)?merge(clone(DEF[k]||{}),v):v});else S=merge(clone(DEF),fixTouched(BK_PENDING.data));S.onb=true;S.tab='set';BK_PENDING=null;undoable('Wczytano kopię')}
+  else if(d.bkapply){if(!BK_PENDING)return;if(BK_PENDING.noHealth)BK_NH_KEEP.forEach(k=>{if(!(k in BK_PENDING.data))return;const v=clone(BK_PENDING.data[k]);S[k]=v&&typeof v==='object'&&!Array.isArray(v)?merge(clone(DEF[k]||{}),v):v});else S=merge(clone(DEF),fixTouched(BK_PENDING.data));S=syFix(S);S.onb=true;S.tab='set';BK_PENDING=null;undoable('Wczytano kopię')}
   else if(d.bkcancel){BK_PENDING=null}
   else if(d.chmode){S.chMode=d.chmode}
   else if(d.wi){const [a,b]=d.wi.split(':');S.wi=S.wi||{snack:0,steps:0,train:0};S.wi[a]=+b}
@@ -1728,7 +1761,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.swap!=null){const i=+d.swap,k=todayKey(),orig=planFor(new Date().getDay())[i],cur=planIds()[i],t=MEALS.find(m=>m.id===orig).t,bk=macros(MEALS.find(m=>m.id===orig),1,1).k,c=MEALS.filter(m=>m.t===t).sort((a,b)=>(a.id===orig?-1:b.id===orig?1:0)||Math.abs(macros(a,1,1).k-bk)-Math.abs(macros(b,1,1).k-bk)||a.id.localeCompare(b.id)).map(m=>m.id),nx=c[(c.indexOf(cur)+1)%c.length];S.swaps=S.swaps||{};S.swaps[k]=S.swaps[k]||{};if(nx===orig)delete S.swaps[k][i];else S.swaps[k][i]=nx}
   else if(d.shop){const t='Lista zakupów na tydzień\n'+shopLines().join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano listę'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
   else if(d.recipe){if(S.tab!=='recipe')S.recipeBack=S.tab;S.recipe=d.recipe;S.tab='recipe';window.scrollTo(0,0)}
-  else if(d.labsave){const g=id=>document.getElementById(id),v=g('l_val').value.trim(),dt=g('l_date').value;if(!v||!isFinite(parseFloat(v.replace(',','.')))){toast('Wpisz wynik liczbowo');return}if(!dt){toast('Wpisz datę');return}S.labs.push({id:Date.now().toString(36),test:LABN[S.labSel]?S.labSel:'tsh',date:dt,val:v.replace(',','.'),unit:g('l_unit').value.trim(),fast:g('l_fast').checked,bio:g('l_bio')?g('l_bio').checked:undefined,cyc:g('l_cyc')?g('l_cyc').value.trim():'',cr:g('l_cr')?g('l_cr').checked:false});toast('Zapisano wynik')}
+  else if(d.labsave){const g=id=>document.getElementById(id),v=g('l_val').value.trim(),dt=g('l_date').value,lo0=g('l_lo')?g('l_lo').value.trim().replace(',','.'):'',lo=lo0&&isFinite(parseFloat(lo0))?lo0:'';if(!v||!isFinite(parseFloat(v.replace(',','.')))){toast('Wpisz wynik liczbowo');return}if(!dt){toast('Wpisz datę');return}S.labs.push({id:Date.now().toString(36),test:LABN[S.labSel]?S.labSel:'tsh',date:dt,val:v.replace(',','.'),...(lo?{lo}:{}),unit:g('l_unit').value.trim(),fast:g('l_fast').checked,bio:g('l_bio')?g('l_bio').checked:undefined,cyc:g('l_cyc')?g('l_cyc').value.trim():'',cr:g('l_cr')?g('l_cr').checked:false});toast('Zapisano wynik')}
   else if(d.labdel){undoable('Usunięto wynik badania');S.labs=S.labs.filter(e=>e.id!==d.labdel)}
   else if(d.labcopy){const t=LABS.map(x=>{const es=S.labs.filter(e=>e.test===x.id).sort((a,b)=>a.date.localeCompare(b.date));return es.length?x.n+': '+es.map(e=>fmtDate(e.date)+' '+e.val+' '+e.unit).join('; '):''}).filter(Boolean).join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
   else if(d.quick){const n=document.getElementById('q_n').value.trim(),k=num(document.getElementById('q_k').value);if(k<=0){toast('Wpisz liczbę kalorii');return}day().push({kind:'m',label:n||'Szybki wpis',k,p:0,f:0,c:0})}
@@ -1750,6 +1783,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.insole){S.insole=S.insole||{days:{},pain:{}};const k=todayKey();S.insole.days[k]=!S.insole.days[k]}
   else if(d.footpain!=null){S.insole=S.insole||{days:{},pain:{}};S.insole.pain=S.insole.pain||{};S.insole.pain[todayKey()]=+d.footpain}
   else if(d.gutcopy){const y=(S.gut||{})[nAgo(1)]||{};S.gut=S.gut||{};S.gut[todayKey()]={b:y.b,f:y.f,n:y.n};OPEN_F.add('brzuch')}
+  else if(d.gutu||d.guta){S.gut=S.gut||{};const k=todayKey(),g=S.gut[k]=S.gut[k]||{},f=d.gutu?'u':'a',v=d.gutu||d.guta;g[f]=Array.isArray(g[f])?g[f]:[];g[f]=g[f].includes(v)?g[f].filter(x=>x!==v):[...g[f],v]}
   else if(d.gutb!=null||d.gutf||d.gutn!=null||d.guts!=null){S.gut=S.gut||{};const k=todayKey(),g=S.gut[k]=S.gut[k]||{};if(d.gutb!=null)g.b=+d.gutb;if(d.gutf)g.f=d.gutf;if(d.gutn!=null)g.n=+d.gutn;if(d.guts!=null)g.s=+d.guts}
   else if(d.petkind){if(!S.pet)return;S.pet.kind=d.petkind}
   else if(d.petpick){S.tab='pet';window.scrollTo(0,0)}
@@ -1779,6 +1813,10 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.ordsave){const t=ordCalc();day().push({kind:'m',id:'zam_'+ordDish(),label:ordLabel()+' (zamówione)',k:Math.round(t.k),p:Math.round(t.p),f:Math.round(t.f),c:Math.round(t.c),ord:1});PET.react('meal');save();render();toast(guideToast('Zapisano zamówione'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
   else if(d.forme){S.f.forme=!forMe()}
   else if(d.ftag){S.f.tags=S.f.tags||{};S.f.tags[d.ftag]=!S.f.tags[d.ftag]}
+  else if(d.sygseen){S.sygSeen=S.sygSeen||{};S.sygSeen[d.sygseen]=todayKey()}
+  else if(d.sygwiz){S.wizList=Array.isArray(S.wizList)?S.wizList:[];if(!S.wizList.includes(d.sygwiz))S.wizList.push(d.sygwiz);toast('Dodano do listy na wizytę')}
+  else if(d.hp){S.wizyta=(S.wizyta||{}).hp===d.hp?{hp:'brak'}:{hp:d.hp,d:todayKey()}}
+  else if(d.gprof){S.prof=S.prof||{cond:{},pill:''};S.prof[d.gprof]=!S.prof[d.gprof]}
   else if(d.cond){OPEN_F.add('profil');S.prof=S.prof||{cond:{},pill:''};S.prof.cond=S.prof.cond||{};S.prof.cond[d.cond]=!S.prof.cond[d.cond];if(d.cond==='lip'&&S.prof.cond.lip)S.lip=true}
   else if(d.demoexit){location.hash='';location.reload();return}
   else if(d.scen){location.hash='#demo-'+d.scen;location.reload();return}

@@ -76,7 +76,7 @@ var PET = (function () {
 
   // ---------- Rysunek: SVG 120×120, kolory z CSS (klasy), animacje w app.css ----------
   const SCALE = { chick: 0.7, young: 0.85, adult: 1 };
-  const MOOD_PL = { celebrate: 'świętuje', sleep: 'śpi', sad: 'tęskni', hungry: 'czeka na wpis', tired: 'zmęczona', happy: 'szczęśliwa', ok: 'zadowolona' };
+  const MOOD_PL = { celebrate: 'świętuje', sleep: 'śpi', sad: 'tęskni', hungry: 'czeka na wpis', tired: 'zmęczona', happy: 'szczęśliwa', ok: 'zadowolona', alert: 'uwaga' };
   const KIND_PL = { gaska: 'Gąska', kaczka: 'Kaczuszka' };
 
   function eyes(x, y, mood) {
