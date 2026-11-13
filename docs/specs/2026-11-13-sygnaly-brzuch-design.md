@@ -41,8 +41,9 @@ schorzenia z profilu (sekcja 9).
 - Kształt sygnału zgodny z `ZD.signals` (`zdarzenia.js:172`): `{ id, t, x, row }` plus `lvl` (`'112' | 'wkrotce' |
   'badanie' | 'sam'`), `d` (linia „Dane” z liczbami), `co` (lista kroków), `src` (klucze `SRC`), `rm` (true dla reguły Miary).
 - Sygnały migreny zostają w `ZD.signals` bez zmian (sekcja 9: przeniesienie później).
-- Zwraca pustą listę, gdy profil nie ma `cond.gut` albo włączony jest tryb dyskretny (`S.discreet`), z jednym
-  wyjątkiem: alarm z dzisiejszego wpisu (sekcja 4).
+- Zwraca pustą listę, gdy profil nie ma `cond.gut`. Tryb dyskretny (`S.discreet`) ogranicza tylko dymek w „Mój
+  dzień” do alarmu z dzisiejszego wpisu (sekcja 4); karta w Zdrowiu i lista na wizytę pokazują wszystkie sygnały,
+  bo ustawienie przenosi karty do Zdrowia, a nie je ukrywa (decyzja z 13.11.2026).
 
 ## 2. Dane
 
@@ -61,6 +62,8 @@ schorzenia z profilu (sekcja 9).
 - Wszystkie nowe pola trafiają do kopii (eksport i import); import starej kopii bez tych pól działa (wartości
   domyślne). Nieznane wartości z importu są odrzucane (tylko wartości z list powyżej).
 - Wiek osoby nie jest zapisywany, tylko przełącznik `g45`.
+- Formularz wyniku badania: opcjonalne pole „Dolna granica normy z wydruku (opcjonalnie)” zapisywane jako `lo`
+  (przecinek zamieniany na kropkę, puste pole pomijane). Bez niego reguła `zelazo` nie ma danych (decyzja z 13.11.2026).
 
 ## 3. Reguły
 
@@ -85,6 +88,8 @@ najmniej 1 dniu z `u`, wzdęciem 5+ albo `luzny`; tekst „Zapisuj dalej: po 14 
 - `hp` = `zlecone`, `potw`, `wykl` albo `nic` wycisza tylko reguły `hp_*` (poza `hp_kontrola` przy `leczone`).
   Nie wpływa na `alarm`, `pilne`, `gastro45`, `celiakia`, `zelazo`.
 - `zelazo` bez wyniku z `lo` się nie włącza (brak własnego progu Miary).
+- Tytuły `t` i kroki `co` to tekst interfejsu bez twierdzeń klinicznych (np. „Nie czekaj na wizytę planową.”); każda
+  treść kliniczna pochodzi z kolumny „Tekst i kroki” powyżej. Etykieta pewności: „z wytycznej” albo „reguła Miary”.
 - Karta informacyjna w Zdrowiu (bez reguły): „Testy mikrobiomu kupowane samodzielnie nie mają udowodnionej wartości
   klinicznej.” Źródło: Porcari 2025.
 
