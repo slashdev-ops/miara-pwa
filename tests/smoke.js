@@ -1515,6 +1515,9 @@ tryc('błonnik: Stan dziś pokazuje błonnik dnia z 25 g', () => { const h = vie
 tryc('błonnik: wpis bez danych o błonniku daje „co najmniej”', () => { const h = view('day', BASE({ days: { [dk(0)]: [{ kind: 'm', label: 'a', k: 500, p: 30, f: 10, c: 50, fib: 12 }, { kind: 'm', label: 'Szybki wpis', k: 200, p: 0, f: 0, c: 0 }] } })); return /błonnik co najmniej 12 g z 25 g/.test(h); });
 tryc('błonnik: źródła w spisie (Frida, CoFID, EFSA, UE 1924/2006)', () => ['frida', 'cofid', 'efsaFib', 'eu1924'].every((k) => T.SRC[k] && /^https:\/\//.test(T.SRC[k][0])));
 
+// Zgłoszenie 13.11.2026: jak w CV, słabo widoczne kropki · zamienione na kreskę |, znaczniki w wierszu z czasem
+tryc('separatory: ekran Posiłki bez kropek środkowych, makro w planie rozdzielone kreską', () => { const h = view('meals', BASE()); return !h.includes('·') && /kcal \| B\u00a0\d+\u00a0g \| T\u00a0\d+\u00a0g \| W\u00a0\d+\u00a0g \| Bł\u00a0/.test(h); });
+tryc('separatory: znaczniki przepisu w wierszu z czasem, po kresce', () => { view('meals', BASE()); return /<div class="meta">[^<]*\d+ min[^<]*<span class="msep"><span aria-hidden="true"> \| <\/span><span class="sr">, <\/span><\/span><span class="mtag"/.test(els.mlist.innerHTML) && !els.mlist.innerHTML.includes('class="mtags"'); });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

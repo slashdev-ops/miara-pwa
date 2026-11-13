@@ -1029,7 +1029,7 @@ function macros(m,cm,por){
 }
 // Makro jednym wierszem: skróty widoczne, pełne słowa dla czytnika ekranu
 function fibG(x){return `${fmt(x.fib)}${x.fibNA?'+':''} g`}
-function macLine(x){return `<span class="pmac"><span aria-hidden="true">${fmt(x.k)}\u00a0kcal · B\u00a0${fmt(x.p)}\u00a0g · T\u00a0${fmt(x.f)}\u00a0g · W\u00a0${fmt(x.c)}\u00a0g · Bł\u00a0${fibG(x).replace(' ','\u00a0')}</span><span class="sr">${fmt(x.k)} kcal, białko ${fmt(x.p)} g, tłuszcz ${fmt(x.f)} g, węglowodany ${fmt(x.c)} g, błonnik ${x.fibNA?'co najmniej ':''}${fmt(x.fib)} g</span></span>`}
+function macLine(x){return `<span class="pmac"><span aria-hidden="true">${fmt(x.k)}\u00a0kcal | B\u00a0${fmt(x.p)}\u00a0g | T\u00a0${fmt(x.f)}\u00a0g | W\u00a0${fmt(x.c)}\u00a0g | Bł\u00a0${fibG(x).replace(' ','\u00a0')}</span><span class="sr">${fmt(x.k)} kcal, białko ${fmt(x.p)} g, tłuszcz ${fmt(x.f)} g, węglowodany ${fmt(x.c)} g, błonnik ${x.fibNA?'co najmniej ':''}${fmt(x.fib)} g</span></span>`}
 const FIBE=x=>({fib:x.fib,...(x.fibNA?{fibNA:1}:{})});
 const CHIPS=[...new Set(Object.values(ING).map(i=>i.chip).filter(Boolean))];
 function chipsOf(m){return new Set(m.ing.map(x=>ING[x[0]].chip).filter(Boolean))}
@@ -1044,7 +1044,7 @@ function mealTags(m,x){const t=[];if(m.sw)t.push(['Słodkie','danie na słodko, 
   if(ioFit(m,x))t.push(['Przy IO',m.t==='przekaska'?'do 20 g węglowodanów z białkiem albo tłuszczem':'co najmniej 20 g białka i do 50 g węglowodanów']);
   const fr=x.k>0?x.fib/x.k*100:0;if(fr>=3)t.push(['Dużo błonnika','co najmniej 3 g błonnika na 100 kcal (próg UE dla wysokiej zawartości)']);else if(fr>=1.5)t.push(['Źródło błonnika','co najmniej 1,5 g błonnika na 100 kcal (próg UE dla źródła błonnika)']);
   if(((S.prof||{}).cond||{}).hashi&&m.ing.some(i=>i[0]==='tofu'))t.push(['Soja: odstęp od leku','soja może zmniejszać wchłanianie lewotyroksyny (opisy przypadków, wytyczne ATA)']);return t}
-function tagsHtml(m,x){const t=mealTags(m,x);return t.length?'<span class="mtags">'+t.map(([l,w])=>`<span class="mtag" title="${w}">${l}</span>`).join('')+'</span>':''}
+function tagsHtml(m,x){return mealTags(m,x).map(([l,w])=>`<span class="msep"><span aria-hidden="true"> | </span><span class="sr">, </span></span><span class="mtag" title="${w}">${l}</span>`).join('')}
 function filtered(){
   const cm=carbMult(),por=num(S.f.portion)||1;
   const inc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===1),exc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===-1);
@@ -1386,7 +1386,7 @@ function renderMealList(){
   if(!L.length){el.innerHTML='<div class="note">Żaden posiłek nie spełnia tych warunków. Poluzuj limit kalorii lub białka albo odznacz produkt wykluczony.</div>';return}
   el.innerHTML=`<h2>${L.length} ${L.length===1?'propozycja':(L.length%10>=2&&L.length%10<=4&&(L.length%100<10||L.length%100>=20)?'propozycje':'propozycji')}</h2>`+L.map(({m,x},i)=>{
     const tot=x.p*4+x.f*9+x.c*4||1,isOpen=open.has(m.id);
-    return (i===6?`<details class="fold" id="fold_mreszta" data-fold="mreszta"${OPEN_F.has('mreszta')?' open':''}><summary>Pokaż pozostałe (${L.length-6})</summary>`:'')+`<article class="meal"><button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div><div class="meta">${S.f.type==='all'?TN[m.t]+', ':''}${m.min} min${m.prep?', z gotowania na zapas':''}</div>${tagsHtml(m,x)}<div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Składniki i przygotowanie</div></button>
+    return (i===6?`<details class="fold" id="fold_mreszta" data-fold="mreszta"${OPEN_F.has('mreszta')?' open':''}><summary>Pokaż pozostałe (${L.length-6})</summary>`:'')+`<article class="meal"><button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div><div class="meta">${S.f.type==='all'?TN[m.t]+', ':''}${m.min} min${m.prep?', z gotowania na zapas':''}${tagsHtml(m,x)}</div><div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Składniki i przygotowanie</div></button>
       <div class="mnum"><span><b>${fmt(x.k)}</b> kcal</span><span class="p">B ${fmt(x.p)} g</span><span class="f">T ${fmt(x.f)} g</span><span class="c">W ${fmt(x.c)} g</span><span class="b">Bł ${fibG(x)}</span></div>
       <div class="bar" aria-hidden="true"><i style="width:${x.p*4/tot*100}%;background:var(--p)"></i><i style="width:${x.f*9/tot*100}%;background:var(--f)"></i><i style="width:${x.c*4/tot*100}%;background:var(--c)"></i></div>
       ${isOpen?`<div class="mdet"><ul>${x.items.map(i=>`<li><span>${i.n}</span><span>${fmt(Math.round(i.g/5)*5)} g</span></li>`).join('')}</ul><p class="small">${m.how}</p><p class="small muted">${leftTxt(x.k)} ${fmt(x.k)} kcal to ok. ${fmt(x.k/walkPerMin())} min spaceru.</p><p><button class="btn" data-addmeal="${m.id}">Dodaj do dnia</button> <button class="btn ghost" data-copy="${m.id}">Kopiuj składniki do Fitatu</button></p></div>`:''}
