@@ -52,8 +52,9 @@ test('karta przepisu: czas i znaczniki w jednym wierszu, bez osobnego wiersza zn
   await page.evaluate(() => { S.tab = 'meals'; S.f.type = 'obiad'; render(); });
   const r = await page.evaluate(() => [...document.querySelectorAll('#mlist article.meal')].slice(0, 6).map((a) => {
     const m = a.querySelector('.meta'), t = m.querySelector('.mtag');
-    return { tag: !!t, sameLine: !t || Math.abs(t.getBoundingClientRect().top - m.getBoundingClientRect().top) < 20, h: a.getBoundingClientRect().height };
+    return { tag: !!t, sameLine: !t || Math.abs(t.getBoundingClientRect().top - m.getBoundingClientRect().top) < 20 };
   }));
   expect(r.some((x) => x.tag)).toBe(true);
-  for (const x of r) { expect(x.sameLine).toBe(true); expect(x.h).toBeLessThan(190); }
+  for (const x of r) expect(x.sameLine).toBe(true);
+  expect(await page.locator('#mlist .mtags').count()).toBe(0);
 });
