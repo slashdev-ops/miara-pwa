@@ -1499,6 +1499,22 @@ tryc('kamienie: dzień z bólem to wiatr i odpoczynek, krótkie noce to mgła; b
 });
 tryc('kamienie: skok tylko bez ograniczenia ruchu', () => /prefers-reduced-motion: ?no-preference\)[^@]*\.stone/.test(appCss));
 
+// Zgłoszenie 13.11.2026: makro i błonnik bez wchodzenia w posiłek; dane europejskie (Frida 6.1, CoFID), progi z rozporządzenia UE 1924/2006
+const FIBF = () => { const S = T.S(); S.f.carb = '1'; S.f.portion = 1; };
+tryc('błonnik: każdy składnik ma wartość z tabeli poza mieszanką warzyw', () => Object.entries(T.ING).every(([k, i]) => k === 'warzywa' ? i.fib === undefined : typeof i.fib === 'number' && i.fib >= 0));
+tryc('błonnik: wartości z Fridy i CoFID (płatki, soczewica, siemię, hummus)', () => T.ING.platki.fib === 10.3 && T.ING.soczewica.fib === 18.5 && T.ING.siemie.fib === 30.4 && T.ING.hummus.fib === 4.9 && T.ING.kurczak_piers.fib === 0);
+tryc('błonnik: macros liczy błonnik i zaznacza brak danych składnika', () => { const a = T.macros(M('o4'), 1, 1), b = T.macros(M('o1'), 1, 1); return Math.abs(a.fib - (200 * 1.4 + 200 * 3) / 100) < 0.01 && a.fibNA === false && b.fibNA === true && b.fib > 0; });
+tryc('błonnik: plan dnia pokazuje makro i błonnik przy każdym posiłku', () => { FIBF(); const h = view('meals', BASE()); const n = (h.match(/class="pmac"/g) || []).length; return n === T.planIds().length && /class="pmac"[^]*?B\s\d+\sg[^]*?T\s\d+\sg[^]*?W\s\d+\sg[^]*?Bł\s\d+\+?\sg/.test(h); });
+tryc('błonnik: makro w planie czytane pełnymi słowami', () => { FIBF(); const h = view('meals', BASE()); return /class="pmac"><span aria-hidden="true">[^<]*Bł[^<]*<\/span><span class="sr">[^<]*białko \d+ g, tłuszcz \d+ g, węglowodany \d+ g, błonnik (co najmniej )?\d+ g<\/span>/.test(h); });
+tryc('błonnik: podsumowanie planu z błonnikiem i odniesieniem 25 g', () => { FIBF(); const h = view('meals', BASE()); return /Plan dnia: [^<]*błonnika[^<]*25 g/.test(h); });
+tryc('błonnik: lista przepisów ma błonnik w wierszu makro', () => { FIBF(); view('meals', BASE()); return /class="mnum"[^]*?class="b"[^>]*>Bł \d+\+? g/.test(els.mlist.innerHTML); });
+tryc('błonnik: oznaczenia z progów UE na 100 kcal', () => T.MEALS.filter((m) => m.t).every((m) => { const x = T.macros(m, 1, 1), t = T.mealTags(m, x).map((y) => y[0]), r = x.fib / x.k * 100; return (r >= 3) === t.includes('Dużo błonnika') && (r >= 1.5 && r < 3) === t.includes('Źródło błonnika'); }) && T.MEALS.some((m) => T.mealTags(m, T.macros(m, 1, 1)).some((y) => /błonnika/.test(y[0]))));
+tryc('błonnik: lista zakupów i zamówione jedzenie pod listą przepisów', () => { FIBF(); const h = view('meals', BASE()); const a = h.indexOf('id="mlist"'); return a > 0 && h.indexOf('id="zakupy"') > a && h.indexOf('id="zamowione"') > a && h.indexOf('Albo wybierz sam') < a; });
+tryc('błonnik: dodany posiłek zapisuje błonnik', () => { FIBF(); view('meals', BASE()); click({ addmeal: 'o4' }); const d = T.S().days[dk(0)] || [], e = d[d.length - 1]; return e && Math.abs(e.fib - 8.8) < 0.01 && !e.fibNA; });
+tryc('błonnik: Stan dziś pokazuje błonnik dnia z 25 g', () => { const h = view('day', BASE({ days: { [dk(0)]: [{ kind: 'm', label: 'a', k: 500, p: 30, f: 10, c: 50, fib: 12 }] } })); return /błonnik 12 g z 25 g/.test(h); });
+tryc('błonnik: wpis bez danych o błonniku daje „co najmniej”', () => { const h = view('day', BASE({ days: { [dk(0)]: [{ kind: 'm', label: 'a', k: 500, p: 30, f: 10, c: 50, fib: 12 }, { kind: 'm', label: 'Szybki wpis', k: 200, p: 0, f: 0, c: 0 }] } })); return /błonnik co najmniej 12 g z 25 g/.test(h); });
+tryc('błonnik: źródła w spisie (Frida, CoFID, EFSA, UE 1924/2006)', () => ['frida', 'cofid', 'efsaFib', 'eu1924'].every((k) => T.SRC[k] && /^https:\/\//.test(T.SRC[k][0])));
+
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
