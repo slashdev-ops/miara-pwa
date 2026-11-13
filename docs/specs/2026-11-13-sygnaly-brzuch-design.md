@@ -25,7 +25,7 @@ schorzenia z profilu (sekcja 9).
 
 - Każdy tekst reguły pochodzi ze źródła otwartego 13.11.2026 (sekcja 8) i ma wiersz w `rada/mapa_powiazan.md` ze
   statusem „Sprawdzone: tak”. Treść bez źródła nie trafia do aplikacji.
-- Zwierzak nie stawia diagnozy. Nazwa choroby pojawia się tylko jako badanie do sprawdzenia („zapytaj o badanie w
+- Zwierzak nie rozpoznaje chorób. Nazwa choroby pojawia się tylko jako badanie do sprawdzenia („zapytaj o badanie w
   kierunku celiakii”) albo jako stan wpisany przez osobę po wizycie („*H. pylori* potwierdzone przez lekarza”).
 - Leki tylko jako „powiedz lekarzowi” albo „ustal z lekarzem”. Nigdy „odstaw”.
 - Progi, których nie podaje wytyczna, mają w treści znacznik „reguła Miary”.
