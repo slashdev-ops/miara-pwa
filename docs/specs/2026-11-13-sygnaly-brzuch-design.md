@@ -39,7 +39,7 @@ schorzenia z profilu (sekcja 9).
 - `SYG.ocen(S, k)`: zwraca listę aktywnych sygnałów dla dnia `k`, posortowaną po poziomie (najpierw najważniejszy),
   przy równym poziomie w kolejności tabeli z sekcji 3.
 - Kształt sygnału zgodny z `ZD.signals` (`zdarzenia.js:172`): `{ id, t, x, row }` plus `lvl` (`'112' | 'wkrotce' |
-  'badanie' | 'sam'`), `co` (lista kroków), `src` (klucze `SRC`), `rm` (true dla reguły Miary).
+  'badanie' | 'sam'`), `d` (linia „Dane” z liczbami), `co` (lista kroków), `src` (klucze `SRC`), `rm` (true dla reguły Miary).
 - Sygnały migreny zostają w `ZD.signals` bez zmian (sekcja 9: przeniesienie później).
 - Zwraca pustą listę, gdy profil nie ma `cond.gut` albo włączony jest tryb dyskretny (`S.discreet`), z jednym
   wyjątkiem: alarm z dzisiejszego wpisu (sekcja 4).
@@ -66,7 +66,8 @@ schorzenia z profilu (sekcja 9).
 
 „Objawy z żołądka” = dzień z niepustym `u`. „Próg” (reguła Miary) = co najmniej 8 takich dni w 28 dniach kończących
 się dniem `k` przy co najmniej 14 dniach z wpisem w dzienniku brzucha. Poniżej 14 dni z wpisem reguły progowe się
-nie włączają, a dymek prosi o dalsze zapisywanie.
+nie włączają, a dymek prosi o dalsze zapisywanie (sygnał `zapisuj`, poziom `sam`, reguła Miary, wiersz 28: przy co
+najmniej 1 dniu z `u`, wzdęciem 5+ albo `luzny`; tekst „Zapisuj dalej: po 14 dniach z wpisem powiem więcej.”).
 
 | id | Poziom | Warunek | Tekst i kroki | Źródło |
 | --- | --- | --- | --- | --- |
@@ -115,7 +116,7 @@ nie włączają, a dymek prosi o dalsze zapisywanie.
 
 - Notatki wyników „wiedza ogólna, niesprawdzone” w `LABS` (kreatynina, testosteron, Anty-TPO): źródło otwarte w
   sesji albo usunięcie notatki.
-- `rada/mapa_powiazan.md`: wiersze 31-40 (po jednym na regułę z sekcji 3 i kartę mikrobiomu), przed kodem.
+- `rada/mapa_powiazan.md`: wiersze 31-41 (po jednym na regułę z sekcji 3 i kartę mikrobiomu), przed kodem.
 - `rada/2026-11-08_zrodla.md`: cytaty z sekcji 8.
 
 ## 7. Testy
