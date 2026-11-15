@@ -186,6 +186,8 @@ details.fold>summary::-webkit-details-marker{display:none}
 details.fold>summary::after{content:'+';color:var(--muted);font-size:20px}
 details.fold[open]>summary::after{content:'\2212'}
 details.fold .panel,details.fold .meal{margin:0;border-radius:0;box-shadow:none}
+/* Przyciski w ramce bez własnego odstępu: 16 px od krawędzi jak tekst (15.11.2026); wiersze listy zostają od krawędzi do krawędzi */
+.panel:not([style*="padding"])>p:has(>.btn),details.fold>p:has(>.btn){padding-left:16px;padding-right:16px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}.pet,.pet *{animation:none!important}}
 
 /* Zwierzak (pet.js): kolory z motywu, animacje wyłączane przy prefers-reduced-motion */
@@ -402,6 +404,10 @@ nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;he
 .prow .pname{display:block;text-align:left;margin:2px 0 8px}
 .prow .pbot{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .prow .pbot .btn,.prow .pbot .val{flex:none}
+/* Zjem: krótkie podświetlenie wiersza po zapisie (ok. 1 s); przy ograniczonym ruchu bez animacji */
+.prow.ate{animation:ateflash 1s ease-out 1}
+@keyframes ateflash{from{background:var(--surface2)}to{background:transparent}}
+@media (prefers-reduced-motion:reduce){.prow.ate{animation:none}}
 .pmac{font-size:15px;color:var(--muted);line-height:1.4}
 .mnum .b{color:var(--ink)}
 
