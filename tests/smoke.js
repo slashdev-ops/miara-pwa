@@ -27,7 +27,7 @@ const zdPath = path.join(root, 'zdarzenia.js');
 if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
 const sygPath = path.join(root, 'sygnaly.js');
 if (fs.existsSync(sygPath)) vm.runInContext(fs.readFileSync(sygPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -1585,10 +1585,12 @@ tryc('sygnały wejście: formularz wyniku ma pole l_lo', () => view('labs', BASE
 const HPG = () => { const g = {}; for (let i = 0; i < 16; i++) g[dk(i)] = i < 8 ? { u: ['piecze'] } : { b: 1 }; return g; };
 const SYGB = (h) => (h.match(/<div class="petsay[^]*?<\/div><\/div>/) || [''])[0];
 tryc('sygnały dymek: alarm dziś ze zwierzakiem ma role=alert, tel:112, pet-alert, bez Przeczytane', () => {
+  T.setSygAl('');
   const h = view('day', GUT({ gut: { [dk(0)]: { a: ['krew'] } } }));
   return h.includes('role="alert"') && h.includes('href="tel:112"') && h.includes('pet-alert') && h.includes('albo jedź na SOR') && !h.includes('data-sygseen') && !h.includes('data-sygwiz');
 });
 tryc('sygnały dymek: alarm bez zwierzaka = note warn z tel:112, bez maskotki', () => {
+  T.setSygAl('');
   const h = view('day', GUT({ pet: null, gut: { [dk(0)]: { a: ['krew'] } } }));
   return /<div class="note warn" role="alert">[^]*href="tel:112"/.test(h) && !h.includes('pet-alert') && !h.includes('class="petsay');
 });
@@ -1596,9 +1598,9 @@ tryc('sygnały dymek: hp_test ma Dane, reguła Miary, przyciski; jeden dymek na 
   const h = view('day', GUT({ gut: HPG() })), b = SYGB(h);
   return b.includes('Dane') && b.includes('reguła Miary') && b.includes('data-sygwiz="hp_test"') && b.includes('data-sygseen="hp_test"') && b.includes('data-sygsrc="hp_test"') && b.includes('pet-ok') && h.split('class="petsay').length === 2;
 });
-tryc('sygnały dymek: Przeczytane ukrywa dymek, Dodaj do listy bez duplikatów', () => {
+tryc('sygnały dymek: Przeczytane ukrywa dymek, Dodaj do listy bez duplikatów (przełącznik)', () => {
   view('day', GUT({ gut: HPG(), wizList: [] }));
-  click({ sygwiz: 'hp_test' }); click({ sygwiz: 'hp_test' });
+  click({ sygwiz: 'hp_test' }); click({ sygwiz: 'hp_test' }); click({ sygwiz: 'hp_test' });
   if (JSON.stringify(T.S().wizList) !== '["hp_test"]') throw new Error('wizList ' + JSON.stringify(T.S().wizList));
   click({ sygseen: 'hp_test' });
   return T.S().sygSeen.hp_test === T.todayKey() && !mainHtml().includes('data-sygseen="hp_test"');
@@ -1631,6 +1633,7 @@ tryc('sygnaly: dymek tuż przed Brzuch dziś także bez pomiarów na górze', ()
   return /<div class="petsay[^]*?<\/div><\/div>\s*<details class="fold" id="fold_brzuch"/.test(h) && h.split('class="petsay').length === 2;
 });
 tryc('sygnaly: alarm w trybie dyskretnym na początku Mojego dnia', () => {
+  T.setSygAl('');
   const h = view('day', NODUE({ discreet: true, gut: { [dk(0)]: { a: ['krew'] } } }));
   return h.includes('role="alert"') && h.includes('href="tel:112"') && !h.includes('id="fold_brzuch"') && h.split('class="petsay').length === 2 && h.indexOf('class="petsay') < h.indexOf('id="stan"');
 });
@@ -1682,6 +1685,75 @@ tryc('sygnały dymek: hp_test bez powtórzonego zdania, sam_zoladek bez pustego 
   const b2 = SYGB(view('day', GUT({ gut: g2, sygSeen: {}, labs: [] })));
   const z = view('health', GUT({ tab: 'health', gut: g }));
   return b.split('Ustal z lekarzem przerwę').length === 2 && !b.includes('Działanie:') && b2.includes('Śpij z uniesioną głową') && b2.split('Śpij z uniesioną głową').length === 2 && !b2.includes('Działanie:') && z.split('Ustal z lekarzem przerwę').length >= 3;
+});
+// Zjem ze stanem (15.11.2026): po dotknięciu „Zjem” wiersz od razu pokazuje „✓ Zjedzone”; drugie dotknięcie usuwa wpis z „Cofnij”
+const EATEN = (h, id) => h.includes(`data-uneat="${id}" aria-pressed="true"`) && h.includes('✓ Zjedzone');
+const MCOUNT = (id) => (T.S().days[dk(0)] || []).filter((e) => e.kind === 'm' && e.id === id).length;
+tryc('Zjem: po kliknięciu plan od razu pokazuje „✓ Zjedzone” z aria-pressed', () => {
+  view('meals', BASE({ days: {} })); const id = T.planIds()[0];
+  click({ addmeal: id });
+  return MCOUNT(id) === 1 && EATEN(mainHtml(), id) && !mainHtml().includes(`data-addmeal="${id}"`) && toastHtml().includes('Dodano do dnia');
+});
+tryc('Zjem: „✓ Zjedzone” usuwa ostatni wpis tego dania z „Cofnij”, Cofnij przywraca', () => {
+  const id = T.planIds()[0], e = (k) => ({ kind: 'm', id, label: 'x', k, p: 0, f: 0, c: 0 });
+  view('meals', BASE({ days: { [dk(0)]: [e(100), { kind: 'm', label: 'inne', k: 50, p: 0, f: 0, c: 0 }, e(200)] } }));
+  click({ uneat: id });
+  const d = T.S().days[dk(0)];
+  if (!(d.length === 2 && d[0].k === 100 && d[1].label === 'inne')) throw new Error('wpisy ' + JSON.stringify(d.map((x) => x.k)));
+  if (!toastHtml().includes('Usunięto z dnia') || !toastHtml().includes('data-undo')) throw new Error('brak Cofnij');
+  click({ uneat: id });
+  if (MCOUNT(id) !== 0 || !mainHtml().includes(`data-addmeal="${id}"`)) throw new Error('drugi');
+  click({ undo: '1' });
+  return MCOUNT(id) === 1;
+});
+tryc('Zjem: przepis i lista dań pokazują „✓ Zjedzone”, gdy danie jest w dzisiejszych wpisach', () => {
+  const id = 'o1', e = { kind: 'm', id, label: 'x', k: 100, p: 0, f: 0, c: 0 };
+  const r0 = view('recipe', BASE({ recipe: id, days: {} })), r1 = view('recipe', BASE({ recipe: id, days: { [dk(0)]: [e] } }));
+  if (!(r0.includes(`data-addmeal="${id}"`) && EATEN(r1, id) && !r1.includes(`data-addmeal="${id}"`))) throw new Error('przepis');
+  view('meals', BASE({ days: {} })); const mid = T.filtered()[0].m.id; click({ toggle: mid });
+  click({ addmeal: mid });
+  click({ toggle: mid }); click({ toggle: mid });
+  return EATEN(els.mlist.innerHTML, mid);
+});
+// Rada P2 (15.11.2026): alarm ogłaszany raz dziennie; kolejne przerysowania tego dnia jako region „Pilne”
+tryc('alarm: pierwsze wyświetlenie dnia role=alert, kolejne role=region aria-label=Pilne (ze zwierzakiem)', () => {
+  T.setSygAl(''); const o = { gut: { [dk(0)]: { a: ['krew'] } } };
+  const a = view('day', GUT(o)), b = view('day', GUT(o));
+  return /<div class="petsay syg alert"[^>]*role="alert"/.test(a) && /<div class="petsay syg alert"[^>]*role="region" aria-label="Pilne"/.test(b) && !b.includes('role="alert"') && b.includes('href="tel:112"');
+});
+tryc('alarm: bez zwierzaka note warn także ogłaszana raz, potem region Pilne', () => {
+  T.setSygAl(''); const o = { pet: null, gut: { [dk(0)]: { a: ['krew'] } } };
+  const a = view('day', GUT(o)), b = view('day', GUT(o));
+  return /<div class="note warn"[^>]*role="alert"/.test(a) && /<div class="note warn"[^>]*role="region" aria-label="Pilne"/.test(b) && !b.includes('role="alert"') && b.includes('href="tel:112"');
+});
+// Rada P2 (15.11.2026): lista na wizytę jako przełącznik w dymku i w Zdrowiu; czyszczenie pytań po wizycie z „Cofnij”
+const WIZON = (h, id) => h.includes(`data-sygwiz="${id}" aria-pressed="true">✓ Na liście na wizytę<`);
+const WIZOFF = (h, id) => h.includes(`data-sygwiz="${id}" aria-pressed="false">Dodaj do listy na wizytę<`);
+tryc('lista na wizytę: dymek przełącza dodanie i usunięcie, aria-pressed', () => {
+  const h0 = SYGB(view('day', GUT({ gut: HPG(), wizList: [], sygSeen: {} })));
+  if (!WIZOFF(h0, 'hp_test')) throw new Error('start');
+  click({ sygwiz: 'hp_test' });
+  if (JSON.stringify(T.S().wizList) !== '["hp_test"]' || !WIZON(SYGB(mainHtml()), 'hp_test')) throw new Error('dodanie');
+  click({ sygwiz: 'hp_test' });
+  return JSON.stringify(T.S().wizList) === '[]' && WIZOFF(SYGB(mainHtml()), 'hp_test');
+});
+tryc('lista na wizytę: karta w Zdrowiu ma przełącznik dla badanie i sam, nie dla alarmu', () => {
+  const g = HPG(); g[dk(0)] = { ...g[dk(0)], a: ['krew'] };
+  const h0 = view('health', GUT({ tab: 'health', gut: g, wizList: [] }));
+  if (!(WIZOFF(h0, 'hp_test') && WIZOFF(h0, 'sam_zoladek') && !h0.includes('data-sygwiz="alarm"'))) throw new Error('start');
+  click({ sygwiz: 'sam_zoladek' });
+  if (!WIZON(mainHtml(), 'sam_zoladek') || JSON.stringify(T.S().wizList) !== '["sam_zoladek"]') throw new Error('dodanie');
+  click({ sygwiz: 'sam_zoladek' });
+  return WIZOFF(mainHtml(), 'sam_zoladek') && T.S().wizList.length === 0;
+});
+tryc('lista na wizytę: „Wyczyść pytania po wizycie” tylko z pytaniami, czyści z „Cofnij”', () => {
+  if (view('visit', VG({ wizList: [] })).includes('data-wizclear')) throw new Error('pusta lista z przyciskiem');
+  const h = view('visit', VG({ wizList: ['hp_test', 'sam_zoladek'] }));
+  if (!h.includes('data-wizclear="1"') || !h.includes('Wyczyść pytania po wizycie')) throw new Error('brak przycisku');
+  click({ wizclear: '1' });
+  if (T.S().wizList.length !== 0 || mainHtml().includes('data-wizclear') || !toastHtml().includes('data-undo')) throw new Error('czyszczenie');
+  click({ undo: '1' });
+  return JSON.stringify(T.S().wizList) === '["hp_test","sam_zoladek"]';
 });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);

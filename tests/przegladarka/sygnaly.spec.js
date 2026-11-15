@@ -85,3 +85,45 @@ test('alarm 112 aktywny: zaznaczenie zgagi nie przesuwa strony do alarmu', async
   await expect(page.locator('a[href="tel:112"]').first()).not.toBeFocused();
   expect(errors).toEqual([]);
 });
+
+test('alarm 112: ogłaszany raz, po kolejnym przerysowaniu region „Pilne” bez role=alert', async ({ page }) => {
+  const errors = await open(page);
+  await page.evaluate(() => { S.tab = 'day'; S.prof.cond.gut = true; S.discreet = false; S.gut = {}; OPEN_F.add('brzuch'); render(); });
+  await page.locator('[data-guta="krew"]').first().click();
+  await expect(page.locator('[role="alert"] a[href="tel:112"]').first()).toBeVisible();
+  const chip = page.locator('[data-gutu="zgaga"]').first();
+  await chip.scrollIntoViewIfNeeded();
+  await chip.click();
+  await expect(page.locator('[role="region"][aria-label="Pilne"] a[href="tel:112"]').first()).toBeVisible();
+  await expect(page.locator('#main [role="alert"]')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('lista na wizytę: przełącznik w dymku i w Zdrowiu (aria-pressed), czyszczenie z „Cofnij”', async ({ page }) => {
+  const errors = await open(page);
+  await page.evaluate(() => {
+    S.tab = 'day'; S.prof.cond.gut = true; S.discreet = false; S.gut = {}; S.sygSeen = {}; S.wizList = []; OPEN_F.add('brzuch');
+    for (let i = 0; i < 16; i++) S.gut[nAgo(i)] = { u: ['piecze'] };
+    render();
+  });
+  const wb = page.locator('.petsay [data-sygwiz="hp_test"]');
+  await expect(wb).toHaveAttribute('aria-pressed', 'false');
+  await wb.click();
+  await expect(wb).toHaveAttribute('aria-pressed', 'true');
+  await expect(wb).toHaveText('✓ Na liście na wizytę');
+  await wb.click();
+  await expect(wb).toHaveAttribute('aria-pressed', 'false');
+  await page.evaluate(() => { S.tab = 'health'; render(); });
+  const hb = page.locator('#syg_hp_test [data-sygwiz="hp_test"]');
+  await hb.scrollIntoViewIfNeeded();
+  await hb.click();
+  await expect(hb).toHaveAttribute('aria-pressed', 'true');
+  expect((await hb.boundingBox()).height).toBeGreaterThanOrEqual(44);
+  await page.evaluate(() => { S.tab = 'visit'; render(); });
+  await page.locator('[data-wizclear]').click();
+  await expect(page.locator('[data-wizclear]')).toHaveCount(0);
+  expect(await page.evaluate(() => S.wizList.length)).toBe(0);
+  await page.locator('#toast [data-undo]').click();
+  expect(await page.evaluate(() => S.wizList.join())).toBe('hp_test');
+  expect(errors).toEqual([]);
+});

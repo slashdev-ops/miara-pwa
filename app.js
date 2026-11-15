@@ -217,6 +217,10 @@ function orderHtml(){const o=S.ord||{},dk=ordDish(),d=ORD[dk],q=String(ordQty())
     +(d.alt?`<div class="chips"><button class="chip${o.alt?' inc':''}" data-ordalt="1" aria-pressed="${!!o.alt}">${d.alt.lab}</button></div>`:'')
     +'<p class="small" style="margin:8px 0 4px">Dodatki</p><div class="chips">'+ORD_ADD.map(([id,n])=>`<button class="chip${(o.add||{})[id]?' inc':''}" data-ordadd="${id}" aria-pressed="${!!(o.add||{})[id]}">${n}</button>`).join('')+'</div>'
     +`<p><b>ok. ${fmt(t.k)} kcal (${fmt(t.k*0.7)}-${fmt(t.k*1.3)})</b>, białko ${fmt(t.p)} g</p><p class="ordtip">${d.tip}</p>${srcHtml([dk==='sushi'&&o.alt?d.alt.ref:d.ref,...ORD_ADD.filter(([id])=>(o.add||{})[id]).map(x=>x[4])])}<p><button class="btn" data-ordsave="1">Zapisz zamówione</button></p></div></div></details>`}
+// Zjem ze stanem (15.11.2026): danie w dzisiejszych wpisach pokazuje „✓ Zjedzone”; dotknięcie usuwa ostatni wpis z „Cofnij”
+let ATE_FLASH='';
+const mealEaten=id=>day().some(e=>e.kind==='m'&&e.id===id);
+function eatBtn(id,lab,cls){return mealEaten(id)?`<button class="btn ghost eaten" data-uneat="${esc(id)}" aria-pressed="true">✓ Zjedzone</button>`:`<button class="btn${cls||''}" data-addmeal="${esc(id)}">${lab}</button>`}
 function planHtml(){
   const ids=planIds(),d=day(),cm=carbMult(),por=num(S.f.portion)||1,ms=d.filter(e=>e.kind==='m'),logged=new Set(ms.map(e=>e.id));
   const left=targetKcal()-ms.reduce((a,e)=>a+e.k,0),now=slotNow();
@@ -224,7 +228,7 @@ function planHtml(){
   let h=`<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>`+repeatHtml()+`<h2 id="plan">Dziś według planu</h2><p class="small muted">${[0,6].includes(new Date().getDay())?'Weekend: jedno większe danie, jest więcej czasu.':'Dzień roboczy: obiad do 20 min.'} ${left>=0?`Zostało ok. ${fmt(left)} kcal na dziś.`:`Cel dnia przekroczony o ok. ${fmt(-left)} kcal.`}</p><div class="panel">`;
   const pk=ids.map(id=>macros(MEALS.find(m=>m.id===id),cm,por)),tk=pk.reduce((a,b)=>a+b.k,0),tp=pk.reduce((a,b)=>a+b.p,0),tf=pk.reduce((a,b)=>a+b.fib,0),tfNA=pk.some(b=>b.fibNA),room=targetKcal()-tk;
   const base=planFor(new Date().getDay()),orig=PLAN[new Date().getDay()];
-  h+=ids.map((id,i)=>{const m=MEALS.find(x=>x.id===id),x=macros(m,cm,por),done=logged.has(id);return `<div class="entry prow"><div class="ptop"><span class="small muted">${SLOT_T[m.t]}${m.t==='kolacja'&&postTrain()?', po treningu':''}${id!==base[i]?', Twój wybór':base[i]!==orig[i]?', dopasowane do IO':''}${rec&&rec.id===id?', polecane teraz':''}</span>${done?'':`<button class="linkbtn small" data-swap="${i}" style="color:var(--muted);font-size:13px">zamień na inne</button>`}</div><button class="linkbtn pname" data-recipe="${id}">${m.n}</button><div class="pbot">${macLine(x)}${done?'<span class="val" aria-label="zjedzone">✓</span>':`<button class="btn" data-addmeal="${id}">Zjem</button>`}</div></div>`}).join('');
+  h+=ids.map((id,i)=>{const m=MEALS.find(x=>x.id===id),x=macros(m,cm,por),done=logged.has(id);return `<div class="entry prow${ATE_FLASH===id?' ate':''}"><div class="ptop"><span class="small muted">${SLOT_T[m.t]}${m.t==='kolacja'&&postTrain()?', po treningu':''}${id!==base[i]?', Twój wybór':base[i]!==orig[i]?', dopasowane do IO':''}${rec&&rec.id===id?', polecane teraz':''}</span>${done?'':`<button class="linkbtn small" data-swap="${i}" style="color:var(--muted);font-size:13px">zamień na inne</button>`}</div><button class="linkbtn pname" data-recipe="${id}">${m.n}</button><div class="pbot">${macLine(x)}${eatBtn(id,'Zjem')}</div></div>`}).join('');
   h+=`<p class="small muted" style="padding:0 16px 12px">Plan dnia: ${fmt(tk)} kcal, ${fmt(tp)} g białka i ${tfNA?'co najmniej ':''}${fmt(tf)} g błonnika (EFSA: 25 g dziennie) przy celu ${fmt(targetKcal())} kcal.${room>=50?` Zostaje ok. ${fmt(room)} kcal na dodatek albo większą porcję.`:''}</p>`;
   return h+'</div>';
 }
@@ -481,15 +485,21 @@ function krokRevHtml(mk,end){const k=S.krok;if(!k||!k.conf||k.fin||k.since>end)r
 // Sygnały brzucha (sygnaly.js): jeden sygnał na ekranie; alarm 112 także bez zwierzaka (zwykła karta note warn)
 const sygEm=t=>esc(t).replace(/\*([^*]+)\*/g,'<i>$1</i>'),sygPew=x=>x.rm?'reguła Miary':'z wytycznej';
 function sygCoHtml(x){const L=x.co.filter(c=>!x.x.includes(String(c).trim().replace(/\.$/,'')));return L.length?`<p><b>Działanie:</b></p><ul>${L.map(c=>`<li>${sygEm(c)}</li>`).join('')}</ul>`:''}
+// Alarm ogłaszany raz (rada P2, 15.11.2026): render() podmienia #main, więc role="alert" tylko przy pierwszym wyświetleniu w danym dniu
+// w tej sesji strony; potem ten sam wygląd jako region „Pilne”, żeby czytnik ekranu nie powtarzał go po każdym dotknięciu
+let SYG_AL='';
+// Lista na wizytę jako przełącznik (rada P2, 15.11.2026): drugie dotknięcie zdejmuje sygnał z listy
+function wizBtn(id){const on=Array.isArray(S.wizList)&&S.wizList.includes(id);return `<button class="btn ghost small" data-sygwiz="${esc(id)}" aria-pressed="${on}">${on?'✓ Na liście na wizytę':'Dodaj do listy na wizytę'}</button>`}
 function sygHtml(){if(typeof SYG==='undefined')return '';const x=SYG.visible(S,todayKey())[0];if(!x)return '';const al=x.lvl==='112',pet=!!S.pet;
   if(al){const body=`<p><b>${pet?esc(PET.nameOf(S.pet))+':':esc(x.t)}</b> ${sygEm(x.x)}</p><p><b>Dane:</b> ${sygEm(x.d)}</p><p class="cardact"><a class="btn" href="tel:112">Zadzwoń 112</a> albo jedź na SOR</p>`;
-    return pet?`<div class="petsay syg alert" role="alert">${PET.svg(S.pet.kind,'chick','alert',null)}<div>${body}</div></div>`:`<div class="note warn" role="alert">${body}</div>`}
+    const role=SYG_AL!==todayKey()?'role="alert"':'role="region" aria-label="Pilne"';SYG_AL=todayKey();
+    return pet?`<div class="petsay syg alert" ${role}>${PET.svg(S.pet.kind,'chick','alert',null)}<div>${body}</div></div>`:`<div class="note warn" ${role}>${body}</div>`}
   const body=`<p><b>${pet?esc(PET.nameOf(S.pet))+':':esc(x.t)}</b> ${sygEm(x.x)}</p><p><b>Dane:</b> ${sygEm(x.d)}</p><p><b>Pewność:</b> ${sygPew(x)}</p>${sygCoHtml(x)}`
-    +`<p class="cardact"><button class="btn ghost small" data-sygsrc="${esc(x.id)}">Źródło i szczegóły</button> <button class="btn ghost small" data-sygwiz="${esc(x.id)}">Dodaj do listy na wizytę</button> <button class="btn ghost small" data-sygseen="${esc(x.id)}">Przeczytane</button></p>`;
+    +`<p class="cardact"><button class="btn ghost small" data-sygsrc="${esc(x.id)}">Źródło i szczegóły</button> ${wizBtn(x.id)} <button class="btn ghost small" data-sygseen="${esc(x.id)}">Przeczytane</button></p>`;
   return pet?`<div class="petsay syg">${PET.svg(S.pet.kind,'chick','ok',null)}<div>${body}</div></div>`:`<div class="note">${body}</div>`}
 const HPS=[['zlecone','zlecił badanie'],['potw','<i>H. pylori</i> potwierdzone'],['leczone','po leczeniu'],['wykl','wykluczone'],['nic','nic nie zlecił']];
 function sygCardHtml(){if(!((S.prof||{}).cond||{}).gut||typeof SYG==='undefined')return '';const L=SYG.ocen(S,todayKey(),{all:true}),hp=(S.wizyta||{}).hp||'brak';
-  return '<section class="plan" id="sygnaly"><h2>Sygnały z Twoich wpisów</h2>'+(L.length?L.map(x=>`<div class="act" id="syg_${esc(x.id)}" tabindex="-1"><h3>${esc(x.t)}</h3><p>${sygEm(x.x)}</p><p class="small"><b>Dane:</b> ${sygEm(x.d)}</p><ul>${x.co.map(c=>`<li>${sygEm(c)}</li>`).join('')}</ul><span class="ev">${sygPew(x)}</span>${srcHtml(x.src)}</div>`).join(''):'<p class="small muted">Brak sygnałów z ostatnich 28 dni.</p>')
+  return '<section class="plan" id="sygnaly"><h2>Sygnały z Twoich wpisów</h2>'+(L.length?L.map(x=>`<div class="act" id="syg_${esc(x.id)}" tabindex="-1"><h3>${esc(x.t)}</h3><p>${sygEm(x.x)}</p><p class="small"><b>Dane:</b> ${sygEm(x.d)}</p><ul>${x.co.map(c=>`<li>${sygEm(c)}</li>`).join('')}</ul>${['wkrotce','badanie','sam'].includes(x.lvl)?`<p class="cardact">${wizBtn(x.id)}</p>`:''}<span class="ev">${sygPew(x)}</span>${srcHtml(x.src)}</div>`).join(''):'<p class="small muted">Brak sygnałów z ostatnich 28 dni.</p>')
     +'<h3>Co ustalił lekarz?</h3><div class="chips" role="group" aria-label="Co ustalił lekarz?">'+HPS.map(([v,n])=>`<button class="chip${hp===v?' inc':''}" data-hp="${v}" aria-pressed="${hp===v}">${n}</button>`).join('')+'</div></section>'}
 function petSay(ks){if(!S.pet)return '';const n=ks.filter(k=>(S.days[k]||[]).length||Object.values(S.meas[k]||{}).some(v=>num(v)>0)).length;
   const t=n===0?'Jestem tu. Jeden wpis w nowym tygodniu i znów rosnę.':n===7?'Wszystkie 7 dni z wpisami: to był nasz wspólny tydzień.':n>=4?`${n} dni z wpisami: rosnę razem z Tobą.`:`${n} ${n===1?'dzień':'dni'} z wpisami: każdy taki dzień to dla mnie krok do przodu.`;
@@ -667,7 +677,7 @@ function renderRecipe(){
   if(cm!==1||por!==1)h+=`<p class="small muted">Porcja przeliczona: węglowodany ×${fmt1(cm)}, wielkość ×${fmt1(por)}.</p>`;
   h+='<h3 class="rh">Przygotowanie</h3><ol class="steps">'+steps.map(s=>`<li>${s}</li>`).join('')+'</ol>';
   h+=tipsHtml(m,x);
-  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz w odstępie od leku, bo może zmniejszać jego wchłanianie (opisy przypadków, wytyczne ATA 2014).</p>':''}${planIds().includes(m.id)?'<p class="small muted">W planie na dziś. Wieczorem „Według planu” zapisze to danie.</p>':`<p><button class="btn" data-cook="${m.id}">Gotuję to dziś</button></p>`}<p><button class="btn${planIds().includes(m.id)?'':' ghost'}" data-addmeal="${m.id}">Zjem, zapisz</button></p><p><button class="btn ghost" data-copy="${m.id}">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
+  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz w odstępie od leku, bo może zmniejszać jego wchłanianie (opisy przypadków, wytyczne ATA 2014).</p>':''}${planIds().includes(m.id)?'<p class="small muted">W planie na dziś. Wieczorem „Według planu” zapisze to danie.</p>':`<p><button class="btn" data-cook="${m.id}">Gotuję to dziś</button></p>`}<p>${eatBtn(m.id,'Zjem, zapisz',planIds().includes(m.id)?'':' ghost')}</p><p><button class="btn ghost" data-copy="${m.id}">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
   document.getElementById('main').innerHTML=h;
 }
 
@@ -1371,7 +1381,7 @@ function gutVisitLines(L){const G=S.gut||{},al=Array.from({length:28},(_,i)=>nAg
   const pr=S.prof||{};if(pr.nlpz)L.push('Biorę regularnie ibuprofen lub aspirynę.');if(pr.rodzRak)L.push('Rak żołądka u rodzica, rodzeństwa lub dziecka.');
   if(all.some(x=>x.id==='zelazo')){const f=(S.labs||[]).filter(x=>x&&x.test==='ferr').sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).pop();L.push('Ferrytyna poniżej zakresu z wydruku'+(f&&f.date?' ('+fmtDate(f.date)+')':'')+'.')}}
 function renderVisit(){const v=S.visit||{};document.getElementById('main').innerHTML=`<h2>Lista na wizytę${v.who?': '+esc(v.who):''}${v.date?', '+fmtDate(v.date):''}</h2><div class="panel card">`+visitLines().map(x=>`<p>${esc(x)}</p>`).join('')
-  +'<p class="small muted">Liczby z dziennika bólu, cyklu i pomiarów w tym telefonie. Pokaż je lekarzowi albo skopiuj.</p></div><p class="cardact"><button class="btn" data-visitcopy="1">Kopiuj listę</button><button class="btn ghost" data-tab="health">Wróć do Zdrowia</button></p>'}
+  +'<p class="small muted">Liczby z dziennika bólu, cyklu i pomiarów w tym telefonie. Pokaż je lekarzowi albo skopiuj.</p></div><p class="cardact"><button class="btn" data-visitcopy="1">Kopiuj listę</button><button class="btn ghost" data-tab="health">Wróć do Zdrowia</button>'+(Array.isArray(S.wizList)&&S.wizList.length?'<button class="btn ghost" data-wizclear="1">Wyczyść pytania po wizycie</button>':'')+'</p>'}
 // ---------- Widoki ----------
 const TABS=[
   ['meals','Posiłki','<path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5"/>'],
@@ -1421,7 +1431,7 @@ function renderMealList(){
     return (i===6?`<details class="fold" id="fold_mreszta" data-fold="mreszta"${OPEN_F.has('mreszta')?' open':''}><summary>Pokaż pozostałe (${L.length-6})</summary>`:'')+`<article class="meal"><button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div><div class="meta">${S.f.type==='all'?TN[m.t]+', ':''}${m.min} min${m.prep?', z gotowania na zapas':''}${tagsHtml(m,x)}</div><div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Składniki i przygotowanie</div></button>
       <div class="mnum"><span><b>${fmt(x.k)}</b> kcal</span><span class="p">B ${fmt(x.p)} g</span><span class="f">T ${fmt(x.f)} g</span><span class="c">W ${fmt(x.c)} g</span><span class="b">Bł ${fibG(x)}</span></div>
       <div class="bar" aria-hidden="true"><i style="width:${x.p*4/tot*100}%;background:var(--p)"></i><i style="width:${x.f*9/tot*100}%;background:var(--f)"></i><i style="width:${x.c*4/tot*100}%;background:var(--c)"></i></div>
-      ${isOpen?`<div class="mdet"><ul>${x.items.map(i=>`<li><span>${i.n}</span><span>${fmt(Math.round(i.g/5)*5)} g</span></li>`).join('')}</ul><p class="small">${m.how}</p><p class="small muted">${leftTxt(x.k)} ${fmt(x.k)} kcal to ok. ${fmt(x.k/walkPerMin())} min spaceru.</p><p><button class="btn" data-addmeal="${m.id}">Dodaj do dnia</button> <button class="btn ghost" data-copy="${m.id}">Kopiuj składniki do Fitatu</button></p></div>`:''}
+      ${isOpen?`<div class="mdet"><ul>${x.items.map(i=>`<li><span>${i.n}</span><span>${fmt(Math.round(i.g/5)*5)} g</span></li>`).join('')}</ul><p class="small">${m.how}</p><p class="small muted">${leftTxt(x.k)} ${fmt(x.k)} kcal to ok. ${fmt(x.k/walkPerMin())} min spaceru.</p><p>${eatBtn(m.id,'Dodaj do dnia')} <button class="btn ghost" data-copy="${m.id}">Kopiuj składniki do Fitatu</button></p></div>`:''}
     </article>`}).join('')+(L.length>6?'</details>':'')+fold('mlinfo','Skąd te wartości','<p class="small muted">Wartości odżywcze orientacyjne, z typowych tabel składu. Gramatury produktów suchych (kasza, ryż, makaron, soczewica) przed ugotowaniem. Kasza i ryż z mikrofali: 1 część na 2 części wody, duża miska pod przykryciem, ok. 12-20 min na średniej mocy z mieszaniem; czas zależy od mikrofali, więc przy pierwszym razie sprawdź miękkość.</p>'+'<p class="small muted">Błonnik (Bł) z duńskiej bazy składu żywności Frida 6.1, hummus z brytyjskiej CoFID; polskie tabele składu nie są dostępne jako otwarte dane. Mrożona mieszanka warzyw nie ma wartości błonnika w żadnej z tych tabel, dlatego przy daniach z nią jest znak +: błonnika jest co najmniej tyle. Oznaczenia „Źródło błonnika” (od 1,5 g na 100 kcal) i „Dużo błonnika” (od 3 g na 100 kcal) to progi z rozporządzenia UE, tu liczone na porcję.</p>'+'<p class="small muted">Błonnik rozpuszczalny (owies, strączki, siemię) spowalnia opróżnianie żołądka i zmniejsza skok cukru po posiłku; pokazało to badanie na 40 osobach po jednym posiłku. EFSA uznaje 25 g błonnika dziennie za ilość wystarczającą dla prawidłowej pracy jelit, a w metaanalizach największe zmniejszenie ryzyka chorób serca i cukrzycy typu 2 wiązało się z 25-29 g dziennie.</p>'+srcHtml(['frida','cofid','eu1924','fibGE','efsaFib','reynolds']));
 }
 
@@ -1678,7 +1688,7 @@ function actAt(b){return {tab:S.tab,sel:btnSel(b),y:b.getBoundingClientRect?b.ge
 function focusEl(el){if(!el||!el.focus)return;if(!/^(BUTTON|INPUT|SELECT|TEXTAREA|A|SUMMARY)$/.test(el.tagName))el.setAttribute('tabindex','-1');el.focus({preventScroll:true})}
 function actDone(at){if(!document.querySelector)return;
   if(S.tab!==at.tab){window.scrollTo(0,0);focusEl(document.querySelector('header h1'));return}
-  if(at.rev&&typeof SYG!=='undefined'){const x=SYG.visible(S,todayKey())[0],l=x&&x.lvl==='112'&&document.querySelector('[role="alert"] a[href="tel:112"]'),al=l&&l.closest('[role="alert"]');if(al&&al.scrollIntoView){al.scrollIntoView({block:'center',behavior:'auto'});focusEl(l);return}}
+  if(at.rev&&typeof SYG!=='undefined'){const x=SYG.visible(S,todayKey())[0],l=x&&x.lvl==='112'&&document.querySelector('#main a[href="tel:112"]'),al=l&&l.closest('.petsay.syg,.note.warn');if(al&&al.scrollIntoView){al.scrollIntoView({block:'center',behavior:'auto'});focusEl(l);return}}
   if(at.own||window.scrollY!==at.sy)return;
   const b=at.sel&&document.querySelector(at.sel);
   if(b&&b.getBoundingClientRect&&at.y!=null){window.scrollBy(0,b.getBoundingClientRect().top-at.y);focusEl(b);return}
@@ -1708,7 +1718,8 @@ document.addEventListener('click',e=>{
   else if(d.carb){S.f.carb=d.carb}
   else if(d.sort){S.f.sort=d.sort}
   else if(d.toggle){open.has(d.toggle)?open.delete(d.toggle):open.add(d.toggle);renderMealList();return}
-  else if(d.addmeal){const m=MEALS.find(x=>x.id===d.addmeal),x=macros(m,carbMult(),num(S.f.portion)||1);day().push({kind:'m',id:m.id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c,...FIBE(x)});PET.react('meal');save();toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
+  else if(d.addmeal){const m=MEALS.find(x=>x.id===d.addmeal),x=macros(m,carbMult(),num(S.f.portion)||1);day().push({kind:'m',id:m.id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c,...FIBE(x)});PET.react('meal');save();ATE_FLASH=m.id;at.sel=`button[data-uneat="${m.id}"]`;try{render()}finally{ATE_FLASH=''}actDone(at);toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
+  else if(d.uneat){const a=day(),i=a.map(e=>e.kind==='m'&&e.id===d.uneat).lastIndexOf(true);if(i<0)return;undoable('Usunięto z dnia');a.splice(i,1);at.sel=`button[data-addmeal="${d.uneat}"]`}
   else if(d.cat){S.tr.cat=d.cat}
   else if(d.opt){S.tr.opt[S.tr.cat]=d.opt}
   else if(d.bmode){S.tr.bMode=d.bmode;if(d.bmode==='bieg'&&num(S.tr.speed)<8)S.tr.speed='8';if(d.bmode==='marsz'&&num(S.tr.speed)>6.5)S.tr.speed='5'}
@@ -1815,7 +1826,8 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.forme){S.f.forme=!forMe()}
   else if(d.ftag){S.f.tags=S.f.tags||{};S.f.tags[d.ftag]=!S.f.tags[d.ftag]}
   else if(d.sygseen){S.sygSeen=S.sygSeen||{};S.sygSeen[d.sygseen]=todayKey()}
-  else if(d.sygwiz){S.wizList=Array.isArray(S.wizList)?S.wizList:[];if(!S.wizList.includes(d.sygwiz))S.wizList.push(d.sygwiz);toast('Dodano do listy na wizytę')}
+  else if(d.sygwiz){S.wizList=Array.isArray(S.wizList)?S.wizList:[];const on=S.wizList.includes(d.sygwiz);S.wizList=on?S.wizList.filter(x=>x!==d.sygwiz):S.wizList.concat(d.sygwiz);toast(on?'Usunięto z listy na wizytę':'Dodano do listy na wizytę')}
+  else if(d.wizclear){undoable('Wyczyszczono pytania na wizytę');S.wizList=[]}
   else if(d.hp){S.wizyta=(S.wizyta||{}).hp===d.hp?{hp:'brak'}:{hp:d.hp,d:todayKey()}}
   else if(d.gprof){S.prof=S.prof||{cond:{},pill:''};S.prof[d.gprof]=!S.prof[d.gprof]}
   else if(d.cond){OPEN_F.add('profil');S.prof=S.prof||{cond:{},pill:''};S.prof.cond=S.prof.cond||{};S.prof.cond[d.cond]=!S.prof.cond[d.cond];if(d.cond==='lip'&&S.prof.cond.lip)S.lip=true}
