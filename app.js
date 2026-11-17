@@ -281,20 +281,125 @@ function renderSos(){
 
 // ---------- Zdrowie: suplementy, badania, białko za złotówkę ----------
 const PROT=[['twarog','Twaróg półtłusty',18],['jajka','Jajka (10 szt. to ok. 600 g)',12.5],['skyr','Skyr naturalny',11],['kurczak','Pierś z kurczaka',23],['soczewica','Soczewica czerwona (sucha)',24],['tunczyk','Tuńczyk w sosie własnym (masa po odsączeniu)',25],['tofu','Tofu naturalne',12],['wpc','Odżywka białkowa WPC (sprawdź etykietę)',75]];
+// Suplementy (brief 17.11.2026): pora, odstępy i górne dawki tylko z cytatów otwartych 15-17.11.2026 (NHS, MedlinePlus, ChPL z rejestru
+// leków, EFSA, NCCIH, ISSN, Quest Diagnostics). Pozycje po substancji, bez nazw handlowych. Gdy źródła brak: SUPP_BRAK.
+// pora: rano (Rano na czczo), posilek (Z posiłkiem), miedzy (Między posiłkami), brak (Pora bez zalecenia), tylko według słów źródła.
+const SUPP_BRAK='Brak sprawdzonego źródła: zapytaj farmaceutę.',SUPP_LEK='Ustal z lekarzem lub farmaceutą.';
+const SUPP_AK='Przy lekach przeciwzakrzepowych (np. warfaryna) powiedz lekarzowi: ';
 const SUPP=[
-  {n:'Witamina D3',v:'Warto',d:'Według polskich wytycznych z 2023 r. 1000-2000 j.m. dziennie, gdy brakuje słońca; przy nadwadze często dawka podwójna. Najlepiej dobrać po badaniu 25(OH)D.',e:'Wytyczne krajowe.',w:'Z posiłkiem zawierającym tłuszcz.'},
-  {n:'Kreatyna (monohydrat)',v:'Warto przy treningu siłowym',d:'3-5 g dziennie, codziennie, o dowolnej porze.',e:'Mocne: stanowisko ISSN, także dla kobiet.',w:'Może podnieść kreatyninę w badaniu krwi; powiedz o niej lekarzowi (wiedza ogólna, niesprawdzone).'},
-  {n:'Odżywka białkowa',v:'Wygoda, nie konieczność',d:'Porcja 20-30 g białka, gdy z jedzenia brakuje do celu dnia.',e:'Białko z jedzenia działa tak samo; odżywka to wygodne źródło.',w:'Opłacalność sprawdzisz w kalkulatorze poniżej.'},
-  {n:'Magnez',v:'Po badaniu lub z zalecenia lekarza',d:'Dawkę przy niedoborze ustala lekarz. Zapotrzebowanie kobiety to 310-320 mg dziennie łącznie z dietą.',e:'Bez potwierdzonego niedoboru korzyść niepewna (wniosek).',w:'Antykoncepcja hormonalna może obniżać magnez. Odstęp 4 h od lewotyroksyny, jeśli ją przyjmujesz.'},
-  {n:'Selen',v:'Do rozmowy z lekarzem',d:'W badaniach 80-400 µg dziennie przez 2-12 miesięcy.',e:'Umiarkowane: obniża TSH u osób bez lewotyroksyny i przeciwciała anty-TPO; nie ma go w wytycznych.',w:'Nadmiar selenu szkodzi; nie łączyć kilku preparatów z selenem (wiedza ogólna).'},
-  {n:'Żelazo',v:'Tylko przy niskiej ferrytynie',d:'Dawkę ustala lekarz po badaniu.',e:'Bez niedoboru brak korzyści (wiedza ogólna).',w:'Odstęp 4 h od lewotyroksyny.'},
-  {n:'Błonnik (babka płesznik, psyllium)',v:'Rozważ, jeśli warzyw i kasz jest mało',d:'Zacznij od 1 łyźeczki z dużą szklanką wody, zwiększaj powoli.',e:'Umiarkowane dla sytości i glikemii (wiedza ogólna, niesprawdzone).',w:'Odstęp 2-4 h od leków i suplementów.'},
-  {n:'Beta-alanina',v:'Niski priorytet',d:'4-6 g dziennie przez co najmniej 4 tygodnie.',e:'Umiarkowane, ale tylko dla wysiłków trwających 1-4 min (ISSN).',w:'Mrowienie skóry jest nieszkodliwe. Przy 2-3 treningach w tygodniu korzyść mała (wniosek).'},
-  {n:'Cytrulina',v:'Najniższy priorytet',d:'W badaniach 6-8 g ok. godzinę przed treningiem.',e:'Słabe: efekt mały i niespójny.',w:'Pieniądze lepiej wydać na białko z jedzenia (wniosek).'},
-  {n:'Probiotyki, enzymy trawienne',v:'Bez zalecenia nie',d:'Tylko przy konkretnych dolegliwościach, po rozmowie z lekarzem.',e:'Słabe i rozproszone dla ogólnego trawienia (wiedza ogólna).',w:'Na trawienie najpierw: błonnik stopniowo, woda, regularne posiłki.'},
-  {n:'Biotyna (też w preparatach na włosy)',v:'Uwaga przed badaniami',d:'Odstaw 2-3 dni przed badaniem tarczycy.',e:'Zaburza wyniki TSH i fT4 w części testów (wiedza ogólna, niesprawdzone).',w:'Sprawdź skład multiwitamin.'},
-  {n:'Jod w tabletkach',v:'Nie bez lekarza',d:'Przy Hashimoto bez zalecenia nie suplementować.',e:'Wiedza ogólna, niesprawdzone.',w:'Sól jodowana i ryby zwykle wystarczają.'}
+  {id:'witd',n:'Witamina D3',v:'Warto',typ:'suplement',pora:'posilek',d:'Według polskich wytycznych z 2023 r. 1000-2000 j.m. dziennie, gdy brakuje słońca; przy nadwadze często dawka podwójna. Najlepiej dobrać po badaniu 25(OH)D.',e:'Wytyczne krajowe.',
+    kiedy:'Z największym posiłkiem: w małym badaniu (17 osób) poziom 25(OH)D wzrósł wtedy o około 50%. NHS: każdy powinien rozważyć codzienną witaminę D jesienią i zimą.',nie:SUPP_BRAK,src:['s_vitd','s_nhsD']},
+  {id:'kreatyna',n:'Kreatyna (monohydrat)',v:'Warto przy treningu siłowym',typ:'suplement',pora:'brak',d:'3-5 g dziennie, codziennie.',e:'Mocne: stanowisko ISSN, także dla kobiet.',
+    kiedy:'Według doniesień (ISSN) kreatyna z węglowodanami albo z węglowodanami i białkiem częściej zwiększa jej zatrzymanie w mięśniach. W jednym opisanym badaniu lepsze wyniki dało branie tuż przed treningiem i po nim niż rano i wieczorem, ale podawano ją razem z węglowodanami i białkiem.',nie:SUPP_BRAK,src:['s_issnKre','s_issnTim']},
+  {id:'bialko',n:'Odżywka białkowa',v:'Wygoda, nie konieczność',typ:'suplement',pora:'brak',d:'Porcja 20-30 g białka, gdy z jedzenia brakuje do celu dnia.',e:'Białko z jedzenia działa tak samo; odżywka to wygodne źródło.',w:'Opłacalność sprawdzisz w kalkulatorze poniżej.',
+    kiedy:'ISSN: porcja około 0,25 g białka na kg masy ciała albo 20-40 g, najlepiej rozłożona równo co 3-4 godziny w ciągu dnia. Kazeina przed snem (30-40 g) zwiększa nocną syntezę białek mięśniowych.',nie:SUPP_BRAK,src:['s_issnProt']},
+  {id:'magnez',n:'Magnez',v:'Po badaniu lub z zalecenia lekarza',typ:'suplement',pora:'posilek',d:'Dawkę przy niedoborze ustala lekarz. Zapotrzebowanie kobiety to 310-320 mg dziennie łącznie z dietą.',e:'Bez potwierdzonego niedoboru korzyść niepewna (wniosek).',
+    kiedy:'ChPL produktu z magnezem i witaminą B6: w 2 lub 3 dawkach podzielonych, podczas posiłków.',
+    nie:'Soli wapnia i fosforanów nie zaleca się brać razem z magnezem, bo hamują jego wchłanianie (ChPL). Doustne tetracykliny: magnez co najmniej 3 godziny po nich; chinolony co najmniej 2 godziny przed magnezem albo 6 godzin po nim (ChPL).',
+    ul:'NHS: do 400 mg dziennie z suplementów raczej nie szkodzi; ponad 400 mg przez krótki czas może dać biegunkę. EFSA: 250 mg dziennie z suplementów (łatwo rozpuszczalne sole).',src:['s_chplMg','s_nhsOth','s_efsa']},
+  {id:'selen',n:'Selen',v:'Do rozmowy z lekarzem',typ:'suplement',pora:'brak',d:'W badaniach 80-400 µg dziennie przez 2-12 miesięcy.',e:'Umiarkowane: obniża TSH u osób bez lewotyroksyny i przeciwciała anty-TPO; nie ma go w wytycznych.',
+    w:'NHS: jeśli jesz mięso, ryby lub orzechy, zwykle dostajesz z codziennej diety cały potrzebny selen.',kiedy:SUPP_BRAK,nie:SUPP_BRAK,src:['s_nhsOth']},
+  {id:'zelazo',n:'Żelazo',v:'Tylko przy niskiej ferrytynie',typ:'suplement',pora:'miedzy',d:'Dawkę ustala lekarz po badaniu.',
+    kiedy:'NHS: siarczan żelaza działa najlepiej na czczo; jeśli możesz, 30 minut przed jedzeniem albo 2 godziny po nim. Jeśli podrażnia żołądek, możesz brać go z jedzeniem lub po nim. Witamina C prawdopodobnie zwiększa wchłanianie żelaza; lekarz lub farmaceuta może zalecić branie go z sokiem pomarańczowym albo witaminą C.',
+    nie:'Nie bierz go z herbatą, kawą, jajkami ani nabiałem, bo zmniejszają wchłanianie żelaza: zostaw 2 godziny przerwy (NHS). Z lewotyroksyną: co najmniej 4 godziny przed nią albo po niej (MedlinePlus, siarczan żelaza); ChPL: lewotyroksyna co najmniej 2 godziny przed żelazem. Odstęp ustal z lekarzem. Związki wapnia mogą zmniejszać wchłanianie produktów z żelazem (ChPL).',
+    src:['s_nhsFe','s_medlt4','s_chplLt4','s_chplCa']},
+  {id:'blonnik',n:'Błonnik (łuska babki jajowatej, ispaghula)',v:'Rozważ, jeśli warzyw i kasz jest mało',typ:'suplement',pora:'posilek',d:'Zacznij od 1 łyżeczki z dużą szklanką wody, zwiększaj powoli.',
+    kiedy:'Strona NHS o preparacie z łuski babki jajowatej: najlepiej po posiłku lub przekąsce, wieczorną porcję co najmniej godzinę przed snem, do szklanki co najmniej 150 ml zimnej wody.',
+    nie:'Strona NHS o preparacie z łuski babki jajowatej: inny lek lub suplement weź ponad godzinę przed nim albo po nim, bo preparat może zmieniać wchłanianie leków, witamin i suplementów. Druga strona NHS o tym preparacie podaje co najmniej 30 minut od innych leków.',
+    src:['s_nhsIspT','s_nhsIspW']},
+  {id:'betaalanina',n:'Beta-alanina',v:'Niski priorytet',typ:'suplement',pora:'posilek',d:'4-6 g dziennie przez co najmniej 4 tygodnie.',e:'Umiarkowane, ale tylko dla wysiłków trwających 1-4 min (ISSN).',
+    kiedy:'Z posiłkiem w czasie ładowania: tak skuteczniej podnosi poziom karnozyny w mięśniach (ISSN).',nie:SUPP_BRAK,src:['s_issnBa']},
+  {id:'cytrulina',n:'Cytrulina',v:'Najniższy priorytet',typ:'suplement',pora:'brak',e:'Słabe: efekt mały i niespójny.',w:'Pieniądze lepiej wydać na białko z jedzenia (wniosek).',
+    kiedy:'W jednym badaniu (12 osób) przyjmowano ją godzinę przed treningiem; to protokół badania, nie zalecenie.',nie:SUPP_BRAK,src:['s_cytr']},
+  {id:'probiotyki',n:'Probiotyki, enzymy trawienne',v:'Bez zalecenia nie',typ:'suplement',pora:'brak',d:'Tylko przy konkretnych dolegliwościach, po rozmowie z lekarzem.',e:'NCCIH: czas stosowania i najlepsze dawki są niepewne.',w:'Na trawienie najpierw: błonnik stopniowo, woda, regularne posiłki. NCCIH: w analizie z 2017 r. dotyczącej zakażeń C. difficile branie probiotyków razem z antybiotykami wydawało się bezpieczne.',
+    kiedy:SUPP_BRAK,nie:SUPP_BRAK,src:['s_nccihProb']},
+  {id:'biotyna',n:'Biotyna (też w preparatach na włosy)',v:'Uwaga przed badaniami',typ:'suplement',pora:'brak',w:'Sprawdź skład multiwitamin.',
+    kiedy:'Przed badaniem krwi, według laboratorium Quest Diagnostics: przy zwykłych dawkach krew pobiera się co najmniej 8 godzin po ostatniej dawce biotyny, przy bardzo dużych dawkach co najmniej 72 godziny po niej.',nie:SUPP_BRAK,
+    ul:'NHS: do 0,9 mg dziennie z suplementów raczej nie szkodzi.',src:['s_quest','s_nhsB']},
+  {id:'jod',n:'Jod w tabletkach',v:'Zapytaj lekarza lub farmaceutę',typ:'suplement',pora:'posilek',    kiedy:'ChPL jodku potasu: po posiłku, z połową szklanki wody.',nie:SUPP_BRAK,ul:'NHS: do 0,5 mg dziennie z suplementów raczej nie szkodzi. EFSA: 600 µg dziennie u dorosłych.',src:['s_chplJod','s_nhsJod','s_efsa']},
+  {id:'omega3',n:'Kwasy omega-3',typ:'suplement',pora:'posilek',
+    kiedy:'ChPL leku z kwasami omega-3: kapsułki można brać z jedzeniem, żeby uniknąć dolegliwości żołądkowych.',nie:SUPP_BRAK,
+    w:SUPP_AK+'według ChPL leku z omega-3 przy takim połączeniu i przy odstawieniu trzeba kontrolować czas protrombinowy. Olej z wątroby ryb ma też dużo witaminy A (NHS).',
+    ul:'EFSA: za mało danych, by ustalić górną dawkę (DHA, EPA, DPA).',src:['s_chplOm3','s_nhsA','s_efsa']},
+  {id:'wapn',n:'Wapń',typ:'suplement',pora:'posilek',kiedy:'ChPL węglanu wapnia: podczas posiłku.',
+    nie:'Związki wapnia mogą zmniejszać wchłanianie produktów z żelazem (ChPL). Tetracykliny i związki fluoru: odstęp około 2 godzin (ChPL). Z lewotyroksyną: co najmniej 4 godziny przed nią albo po niej (MedlinePlus, węglan wapnia); ChPL: lewotyroksyna co najmniej 2 godziny przed solami wapnia. Odstęp ustal z lekarzem.',
+    ul:'EFSA: 2500 mg dziennie u dorosłych. NHS: ponad 1500 mg dziennie może powodować ból brzucha i biegunkę.',src:['s_chplCa','s_medlt4','s_chplLt4','s_nhsCa','s_efsa']},
+  {id:'witc',n:'Witamina C',typ:'suplement',pora:'brak',kiedy:SUPP_BRAK,nie:SUPP_BRAK,
+    w:'NHS: witamina C prawdopodobnie zwiększa wchłanianie żelaza. '+SUPP_AK+'ChPL warfaryny wymienia witaminę C wśród środków, które zmniejszają jej działanie.',
+    ul:'NHS: mniej niż 1000 mg dziennie z suplementów raczej nie szkodzi. EFSA: za mało danych, by ustalić górną dawkę.',src:['s_chplWarf','s_nhsFe','s_nhsC','s_efsa']},
+  {id:'b12',n:'Witamina B12',typ:'suplement',pora:'rano',kiedy:'ChPL witaminy B12: połykać w całości, popijając wodą, najlepiej rano, na czczo.',
+    nie:'Wchłanianie witaminy B12 mogą pogorszyć m.in. inhibitory pompy protonowej (np. omeprazol), antagoniści receptora H2, kolchicyna, cholestyramina, niektóre leki przeciwpadaczkowe, sole potasu, metylodopa i alkohol. Stężenie B12 może być niższe przy doustnej antykoncepcji i metforminie (ChPL).',
+    ul:'NHS: do 2 mg dziennie z suplementów raczej nie szkodzi. EFSA: nie opisano określonych działań niepożądanych.',src:['s_chplB12','s_nhsB','s_efsa']},
+  {id:'glicyna',n:'Glicyna',typ:'suplement',pora:'brak',kiedy:SUPP_BRAK,nie:SUPP_BRAK,src:[]},
+  {id:'cynk',n:'Cynk',typ:'suplement',pora:'posilek',kiedy:'ChPL cynku: po posiłku, popijając wodą.',
+    nie:'ChPL cynku: nie brać z tetracyklinami, kwasem acetylosalicylowym, ibuprofenem, indometacyną, tiazydowymi lekami moczopędnymi, glikokortykosteroidami ani związkami wapnia. Związki wapnia, żelaza, miedzi i dieta mleczna zmniejszają wchłanianie cynku. Długie stosowanie może prowadzić do niedoboru miedzi.',
+    ul:'NHS: nie więcej niż 25 mg dziennie z suplementów, chyba że lekarz zaleci inaczej; duże dawki zmniejszają wchłanianie miedzi. EFSA: 25 mg dziennie.',src:['s_chplZn','s_nhsOth','s_efsa']},
+  {id:'krzem',n:'Krzem',typ:'suplement',pora:'brak',kiedy:SUPP_BRAK,nie:SUPP_BRAK,ul:'EFSA: za mało danych, by ustalić górną dawkę.',src:['s_efsa']},
+  {id:'bor',n:'Bor',typ:'suplement',pora:'brak',kiedy:SUPP_BRAK,nie:SUPP_BRAK,ul:'EFSA: 10 mg dziennie u dorosłych.',src:['s_efsa']},
+  {id:'kolagen',n:'Kolagen',typ:'suplement',pora:'brak',kiedy:SUPP_BRAK,nie:SUPP_BRAK,src:[]},
+  {id:'k2',n:'Witamina K2 (MK-7)',typ:'suplement',pora:'brak',kiedy:SUPP_BRAK,nie:SUPP_BRAK,
+    w:SUPP_AK+'według ChPL warfaryny duża ilość witaminy K ogranicza jej działanie, a suplementy diety trzeba wtedy stosować ostrożnie.',
+    ul:'NHS: do 1 mg witaminy K dziennie z suplementów raczej nie szkodzi. EFSA: za mało danych, by ustalić górną dawkę.',src:['s_chplWarf','s_nhsK','s_efsa']},
+  {id:'witae',n:'Witaminy A i E',typ:'suplement',pora:'brak',kiedy:SUPP_BRAK,
+    nie:'Preparaty żelaza osłabiają działanie witaminy E: zachowaj kilkugodzinny odstęp (ChPL). Nie bierz innych leków z witaminą A, bo grozi nadmiar witaminy A; w czasie przyjmowania nie pij alkoholu (ChPL).',
+    w:SUPP_AK+'witaminy A i E nasilają działanie doustnych leków przeciwzakrzepowych z grupy kumaryny (ChPL).',
+    ul:'Witamina A: NHS: łącznie z diety i suplementów nie więcej niż 1,5 mg (1500 µg); EFSA: 3000 µg dziennie u dorosłych. Witamina E: NHS: do 540 mg (800 j.m.) dziennie z suplementów raczej nie szkodzi; EFSA: 300 mg dziennie.',src:['s_chplAE','s_nhsA','s_nhsE','s_efsa']},
+  {id:'glukozamina',n:'Glukozamina z chondroityną (i MSM)',typ:'suplement',pora:'brak',
+    kiedy:'Dla leku z samym siarczanem chondroityny ChPL podaje: przed posiłkiem, w trakcie lub po nim; jeśli inny lek podrażnił wcześniej żołądek, po posiłku.',nie:SUPP_BRAK,
+    w:SUPP_AK+'glukozamina i siarczan chondroityny mogą zwiększać wskaźnik INR (ChPL warfaryny), a NCCIH wiąże je z większym ryzykiem krwawienia. Glukozamina może u części osób podnosić poziom cukru we krwi (NCCIH).',
+    src:['s_chplChon','s_chplWarf','s_nccihGlu']},
+  {id:'kasztanowiec',n:'Wyciąg z kasztanowca z ruszczykiem (i bromelainą)',typ:'suplement',pora:'brak',kiedy:SUPP_BRAK,nie:SUPP_BRAK,src:[]},
+  {id:'osseina',n:'Kompleks osseina-hydroksyapatyt',typ:'lek',pora:'brak',kiedy:'ChPL: tabletki połykać, popijając niewielką ilością wody; pory ani związku z posiłkiem ChPL nie podaje. '+SUPP_LEK,
+    nie:'ChPL: produkty z żelazem i cynkiem, lewotyroksyna, tetracykliny, bisfosfoniany i chinolony: odstęp co najmniej 2 godzin. Z witaminą D: ChPL zaleca ścisłe sprawdzanie stężenia wapnia w surowicy i w moczu. '+SUPP_LEK,src:['s_chplOss']},
+  {id:'ppi',n:'Inhibitor pompy protonowej (np. pantoprazol)',typ:'lek',pora:'rano',kiedy:'ChPL pantoprazolu: 1 godzinę przed posiłkiem, połknąć w całości, popić wodą. NHS: zwykle raz dziennie, z samego rana. '+SUPP_LEK,
+    nie:'ChPL: może zmniejszać wchłanianie witaminy B12. Przy stosowaniu co najmniej 3 miesiące rzadko opisywano ciężki niedobór magnezu; NHS: po ponad 3 miesiącach poziom magnezu we krwi może spaść. Może zmniejszać wchłanianie lewotyroksyny (ChPL lewotyroksyny). '+SUPP_LEK,
+    src:['s_chplPanto','s_nhsPanto','s_nhsPantoQ','s_chplLt4']},
+  {id:'lewotyroksyna',n:'Lewotyroksyna',typ:'lek',pora:'rano',kiedy:'MedlinePlus: zwykle raz dziennie, na czczo, 30 minut do godziny przed śniadaniem. ChPL: rano, na czczo, pół godziny przed śniadaniem, z niewielką ilością płynu. '+SUPP_LEK,
+    nie:'Wapń (węglan wapnia) i żelazo (siarczan żelaza): co najmniej 4 godziny przed lewotyroksyną albo po niej (MedlinePlus); ChPL: lewotyroksyna co najmniej 2 godziny przed żelazem i solami wapnia. Odstęp ustal z lekarzem. Niektóre pokarmy i napoje, zwłaszcza z soją, orzechami włoskimi i błonnikiem, mogą wpływać na działanie lewotyroksyny (MedlinePlus). '+SUPP_LEK,
+    src:['s_medlt4','s_chplLt4']}
 ];
+// Pary do planu: tylko te, które podaje źródło. 'kawa' to pozycja pomocnicza (kawa, herbata, nabiał), nie do wyboru; '*' to dowolna inna wybrana pozycja.
+const SUPP_PSEUDO=['kawa'];
+const SUPP_PARY=[
+  {a:'lewotyroksyna',b:'wapn',txt:'Lewotyroksyna i wapń: MedlinePlus podaje co najmniej 4 godziny przed lewotyroksyną albo po niej (węglan wapnia); ChPL: lewotyroksyna co najmniej 2 godziny przed solami wapnia. Odstęp ustal z lekarzem.',src:['s_medlt4','s_chplLt4']},
+  {a:'lewotyroksyna',b:'zelazo',txt:'Lewotyroksyna i żelazo: MedlinePlus podaje co najmniej 4 godziny przed lewotyroksyną albo po niej (siarczan żelaza); ChPL: lewotyroksyna co najmniej 2 godziny przed żelazem. Odstęp ustal z lekarzem.',src:['s_medlt4','s_chplLt4']},
+  {a:'osseina',b:'lewotyroksyna',txt:'Kompleks osseina-hydroksyapatyt i lewotyroksyna: według ChPL odstęp co najmniej 2 godzin. '+SUPP_LEK,src:['s_chplOss']},
+  {a:'osseina',b:'zelazo',txt:'Kompleks osseina-hydroksyapatyt i żelazo: według ChPL odstęp co najmniej 2 godzin. '+SUPP_LEK,src:['s_chplOss']},
+  {a:'osseina',b:'cynk',txt:'Kompleks osseina-hydroksyapatyt i cynk: według ChPL odstęp co najmniej 2 godzin. '+SUPP_LEK,src:['s_chplOss']},
+  {a:'ppi',b:'b12',txt:'Inhibitor pompy protonowej może zmniejszać wchłanianie witaminy B12 (ChPL). '+SUPP_LEK,src:['s_chplPanto','s_chplB12']},
+  {a:'ppi',b:'magnez',txt:'Przy inhibitorze pompy protonowej branym ponad 3 miesiące poziom magnezu we krwi może spaść (NHS). '+SUPP_LEK,src:['s_nhsPantoQ','s_chplPanto']},
+  {a:'witae',b:'zelazo',txt:'Witaminy A i E oraz żelazo: żelazo osłabia działanie witaminy E, zachowaj kilkugodzinny odstęp (ChPL).',src:['s_chplAE']},
+  {a:'zelazo',b:'wapn',txt:'Żelazo i wapń: związki wapnia mogą zmniejszać wchłanianie produktów z żelazem (ChPL węglanu wapnia).',src:['s_chplCa']},
+  {a:'cynk',b:'wapn',txt:'Cynk i wapń: związki wapnia zmniejszają wchłanianie cynku, a ChPL cynku odradza branie ich razem.',src:['s_chplZn']},
+  {a:'cynk',b:'zelazo',txt:'Cynk i żelazo: związki żelaza zmniejszają wchłanianie cynku (ChPL cynku).',src:['s_chplZn']},
+  {a:'magnez',b:'wapn',txt:'Magnez i wapń: ChPL produktu z magnezem nie zaleca brania ich razem, bo sole wapnia hamują wchłanianie magnezu.',src:['s_chplMg']},
+  {a:'ppi',b:'lewotyroksyna',txt:'Inhibitor pompy protonowej i lewotyroksyna: jednoczesne stosowanie może zmniejszyć wchłanianie hormonów tarczycy, bo inhibitor zwiększa pH soku żołądkowego (ChPL lewotyroksyny). '+SUPP_LEK,src:['s_chplLt4']},
+  {a:'blonnik',b:'*',txt:'Błonnik (łuska babki jajowatej): inne leki i suplementy weź ponad godzinę przed nim albo po nim (NHS).',src:['s_nhsIspT']},
+  {a:'zelazo',b:'kawa',txt:'Żelaza nie bierz z herbatą, kawą, jajkami ani nabiałem, bo zmniejszają jego wchłanianie: zostaw 2 godziny przerwy (NHS).',src:['s_nhsFe']}
+];
+const SUPP_PORA=[['rano','Rano na czczo'],['posilek','Z posiłkiem'],['miedzy','Między posiłkami'],['brak','Pora bez zalecenia']];
+const suppIds=()=>SUPP.map(s=>s.id);
+// Po wczytaniu i imporcie kopii: tylko znane id, bez powtórzeń
+function suppFix(s){if(s&&typeof s==='object'){const ids=suppIds();s.suppTake=(Array.isArray(s.suppTake)?s.suppTake:[]).filter((x,i,a)=>typeof x==='string'&&ids.includes(x)&&a.indexOf(x)===i)}return s}
+const suppOn=id=>Array.isArray(S.suppTake)&&S.suppTake.includes(id);
+function suppCard(s){const on=suppOn(s.id),row=(l,t)=>t?`<p class="small"><b>${l}:</b> ${esc(t)}</p>`:'';
+  return `<article class="meal" id="supp_${esc(s.id)}"><div class="mhead"><div class="name">${esc(s.n)}</div><div class="meta">${esc(s.v||(s.typ==='lek'?'Lek':'Suplement'))}</div></div><div class="mdet" style="border-top:0">`
+    +row('Dawka',s.d)+row('Dowody',s.e)+row('Kiedy',s.kiedy)+row('Nie łącz z',s.nie)+row('Górna dawka dzienna',s.ul)+row('Uwaga',s.w)+srcHtml(s.src)
+    +`<p><button class="btn ghost small" data-supp="${esc(s.id)}" aria-pressed="${on}" aria-label="Biorę: ${esc(s.n)}">${on?'<span aria-hidden="true">✓ </span>':''}Biorę</button></p></div></article>`}
+// Mój plan suplementów: grupy pory dnia, pod grupą najwyżej jedna uwaga (pierwsza pasująca para), reszta w zwinięciu; bez serii i liczenia pominięć
+function suppPlanHtml(){const take=(Array.isArray(S.suppTake)?S.suppTake:[]).filter(id=>SUPP.some(s=>s.id===id));if(!take.length)return '';
+  const hit=(x,y)=>take.includes(x)&&(take.includes(y)||SUPP_PSEUDO.includes(y)||(y==='*'&&take.some(i=>i!==x))),pairs=SUPP_PARY.filter(p=>hit(p.a,p.b)||hit(p.b,p.a));
+  const line=p=>esc(p.txt)+srcHtml(p.src);
+  let h='<div class="panel" id="suppplan" style="padding:4px 16px 12px"><h3 style="margin-top:12px">Mój plan suplementów</h3><p class="small muted">Odstępy tylko z podanych źródeł. Zmiany w lekach ustal z lekarzem lub farmaceutą.</p>';
+  // Każda para raz: pod grupą tej z dwóch pozycji, która w planie jest wcześniej (kolejność grup SUPP_PORA)
+  const ord=id=>{const s=SUPP.find(x=>x.id===id);return s&&take.includes(id)?SUPP_PORA.findIndex(([k])=>k===s.pora):99},gOf=p=>Math.min(ord(p.a),ord(p.b));
+  SUPP_PORA.forEach(([k,t],gi)=>{const its=SUPP.filter(s=>take.includes(s.id)&&s.pora===k);if(!its.length)return;
+    const ps=pairs.filter(p=>gOf(p)===gi);
+    h+=`<section class="sgrp"><h4 style="margin:12px 0 4px">${t}</h4><p class="small">${its.map(s=>esc(s.n)).join(', ')}</p>`;
+    if(ps.length)h+=`<div class="note">${line(ps[0])}</div>`;
+    if(ps.length>1)h+=fold('suppall_'+k,`Pokaż wszystkie odstępy (${ps.length-1})`,ps.slice(1).map(p=>`<p class="small sp">${line(p)}</p>`).join(''));
+    h+='</section>'});
+  return h+'</div><!--/suppplan-->'}
 function protCost(){return PROT.map(([id,n,pp])=>{const r=S.prices[id]||{},p=num(r.p),g=num(r.g);return {id,n,pp,c:p>0&&g>0?p/(g*pp/100)*20:null}})}
 function renderHealth(){
   let h=(profSet()?healthPlanHtml()+sygCardHtml()+profHtml():profHtml()+healthPlanHtml()+sygCardHtml())+fold('tygodnie','12 tygodni: czego się spodziewać',weeksHtml())+'<p><button class="btn" data-tab="labs">Moje badania</button></p><div class="note"><b>Co realne.</b> Przy chorobach przewlekłych, np. tarczycy, celem jest dobra kontrola wyników i objawów, nie wyleczenie. Insulinooporność często wyraźnie się poprawia przy spadku masy ciała, ruchu i śnie. Niedobory wyrównuje się według wyników badań.</div>';
@@ -318,7 +423,7 @@ function renderHealth(){
     ['Siłownia i rower','Przy ćwiczeniach bez ruchu nadgarstka zegarek myli się bardziej. Na spinningu wiarygodniejsza jest moc z monitora roweru.']
   ]);
   h+='<h2>Start w 3 krokach</h2><div class="panel"><div class="entry"><span class="txt"><b>1. Badania i lekarz.</b> Zakres ustal z lekarzem, np. TSH, fT4, fT3, anty-TPO, glukoza i insulina na czczo, HbA1c, 25(OH)D, ferrytyna, magnez, wapń.</span></div><div class="entry"><span class="txt"><b>2. Witamina D3</b> według wytycznych. Pozostałe suplementy dopiero po wynikach.</span></div><div class="entry"><span class="txt"><b>3. Białko z jedzenia</b> według planu. Kreatyna 3-5 g dziennie, jeśli trenujesz siłowo.</span></div></div>';
-  h+='<details class="fold"><summary>Suplementy ('+SUPP.length+')</summary>'+SUPP.map(s=>`<article class="meal"><div class="mhead"><div class="name">${s.n}</div><div class="meta">${s.v}</div></div><div class="mdet" style="border-top:0"><p class="small"><b>Dawka:</b> ${s.d}</p><p class="small"><b>Dowody:</b> ${s.e}</p><p class="small"><b>Uwaga:</b> ${s.w}</p></div></article>`).join('')+'</details>';
+  h+=fold('suple','Suplementy ('+SUPP.length+')',suppPlanHtml()+SUPP.map(suppCard).join(''));
   h+='<h2 id="bialko">Białko za złotówkę</h2>'+whyP('bialko')+'<p class="small muted">Wpisz cenę z półki lub paragonu i wagę opakowania. Wynik to koszt 20 g białka. Ceny zapisują się w telefonie.</p><div class="panel">'+protCost().map(r=>`<div class="field" style="flex-wrap:wrap"><label style="flex:1 1 100%">${r.n}</label><input type="text" inputmode="decimal" data-k="prices.${r.id}.p" value="${esc(S.prices[r.id].p)}" placeholder="cena" aria-label="Cena: ${r.n}"><span class="unit">zł</span><input type="text" inputmode="numeric" data-k="prices.${r.id}.g" value="${esc(S.prices[r.id].g)}" aria-label="Waga opakowania: ${r.n}"><span class="unit">g</span></div>`).join('')+'</div>';
   const ranked=protCost().filter(r=>r.c!=null).sort((a,b)=>a.c-b.c);
   if(ranked.length)h+='<h2>Ranking</h2><div class="panel">'+ranked.map((r,i)=>`<div class="entry"><span class="txt">${i+1}. ${r.n}</span><span class="val">${r.c.toFixed(2).replace('.',',')} zł za 20 g</span></div>`).join('')+'</div>';
@@ -866,7 +971,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
-const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],goalWay:'proc',muscle:false,bmiCut:'auto',korekta:true,tab:'meals',
+const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
@@ -910,7 +1015,7 @@ function bmiSetHtml(){const a=bmiCutFor(typeof navigator!=='undefined'&&navigato
 function goalHint(){return S.mode!=='redukcja'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny albo wybierz niżej.</p>'}
 function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
 function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,STEP.goal)}
-function syFix(s){try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
+function syFix(s){s=suppFix(s);try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
 function load(){try{const r=localStorage.getItem(LS);if(r)return syFix(merge(clone(DEF),fixTouched(JSON.parse(r))));}catch(e){}return clone(DEF)}
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
@@ -1135,6 +1240,45 @@ function auraDays(){return Object.entries(S.pain||{}).filter(([k,p])=>p&&p.aura&
 function urges3(){return [0,1,2].reduce((a,i)=>a+((S.urges||{})[nAgo(i)]||[]).length,0)}
 // ---------- Źródła sprawdzone 08.11.2026 (rada/2026-11-08_zrodla.md): link otwarty w sesji, wartość zgodna z cytatem ----------
 const SRC={
+  // Suplementy (brief 17.11.2026): strony otwarte 15-17.11.2026; podpisy ogólne, bez nazw handlowych
+  s_medlt4:['https://medlineplus.gov/druginfo/meds/a682461.html','MedlinePlus: lewotyroksyna'],
+  s_chplLt4:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/12231/characteristic','ChPL (lewotyroksyna, rejestr leków)'],
+  s_vitd:['https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:20200983%20AND%20SRC:MED&resultType=core&format=json','Badanie: witamina D z największym posiłkiem (PMID 20200983)'],
+  s_nhsD:['https://www.nhs.uk/conditions/vitamins-and-minerals/vitamin-d/','NHS: witamina D'],
+  s_issnKre:['https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5469049/fullTextXML','Stanowisko ISSN: kreatyna (2017)'],
+  s_issnTim:['https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5596471/fullTextXML','Stanowisko ISSN: pora przyjmowania składników'],
+  s_issnProt:['https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5477153/fullTextXML','Stanowisko ISSN: białko'],
+  s_issnBa:['https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4501114/fullTextXML','Stanowisko ISSN: beta-alanina (2015)'],
+  s_cytr:['https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:41900522%20AND%20SRC:MED&resultType=core&format=json','Badanie: cytrulina przed treningiem (PMID 41900522)'],
+  s_nhsOth:['https://www.nhs.uk/conditions/vitamins-and-minerals/others/','NHS: inne witaminy i minerały'],
+  s_nhsFe:['https://www.nhs.uk/medicines/ferrous-sulfate/how-and-when-to-take-ferrous-sulfate/','NHS: siarczan żelaza'],
+  // Wyjątek od zasady bez nazw handlowych (decyzja 17.11.2026): jedyne działające źródło NHS o łusce babki jajowatej; nazwa jest tylko w adresie i nie dotyczy listy preparatów właściciela
+  s_nhsIspT:['https://www.nhs.uk/medicines/fybogel-ispaghula-husk/taking-fybogel-with-other-medicines-and-herbal-supplements','NHS: łuska babki jajowatej i inne leki'],
+  s_nhsIspW:['https://www.nhs.uk/medicines/fybogel-ispaghula-husk/how-and-when-to-take-fybogel','NHS: łuska babki jajowatej, jak i kiedy'],
+  s_nccihProb:['https://www.nccih.nih.gov/health/probiotics-usefulness-and-safety','NCCIH: probiotyki'],
+  s_quest:['https://www.questdiagnostics.com/healthcare-professionals/clinical-education-center/faq/faq202','Laboratorium Quest Diagnostics: biotyna a badania'],
+  s_nhsB:['https://www.nhs.uk/conditions/vitamins-and-minerals/vitamin-b/','NHS: witaminy z grupy B'],
+  s_chplPanto:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/21581/characteristic','ChPL (pantoprazol, rejestr leków)'],
+  s_nhsPanto:['https://www.nhs.uk/medicines/pantoprazole/how-and-when-to-take-pantoprazole/','NHS: pantoprazol, jak i kiedy'],
+  s_nhsPantoQ:['https://www.nhs.uk/medicines/pantoprazole/common-questions-about-pantoprazole/','NHS: pantoprazol, częste pytania'],
+  s_chplOss:['https://leki.pl/chpl/100050035','ChPL (kompleks osseina-hydroksyapatyt)'],
+  s_chplChon:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/32872/characteristic','ChPL (siarczan chondroityny, rejestr leków)'],
+  s_chplWarf:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/16431/characteristic','ChPL (warfaryna, rejestr leków)'],
+  s_nccihGlu:['https://www.nccih.nih.gov/health/glucosamine-and-chondroitin-for-osteoarthritis-what-you-need-to-know','NCCIH: glukozamina i chondroityna'],
+  s_chplCa:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/11651/characteristic','ChPL (węglan wapnia, rejestr leków)'],
+  s_nhsCa:['https://www.nhs.uk/conditions/vitamins-and-minerals/calcium/','NHS: wapń'],
+  s_efsa:['https://www.efsa.europa.eu/sites/default/files/assets/UL_Summary_tables.pdf','EFSA: górne poziomy spożycia (2025)'],
+  s_chplMg:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/8784/characteristic','ChPL (magnez z witaminą B6, rejestr leków)'],
+  s_chplZn:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/7433/characteristic','ChPL (cynk, rejestr leków)'],
+  s_chplB12:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/48472/characteristic','ChPL (witamina B12, rejestr leków)'],
+  s_chplJod:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/3257/characteristic','ChPL (jodek potasu, rejestr leków)'],
+  s_nhsJod:['https://www.nhs.uk/conditions/vitamins-and-minerals/iodine/','NHS: jod'],
+  s_chplOm3:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/16261/characteristic','ChPL (kwasy omega-3, rejestr leków)'],
+  s_chplAE:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/9852/characteristic','ChPL (witaminy A i E, rejestr leków)'],
+  s_nhsA:['https://www.nhs.uk/conditions/vitamins-and-minerals/vitamin-a/','NHS: witamina A'],
+  s_nhsE:['https://www.nhs.uk/conditions/vitamins-and-minerals/vitamin-e/','NHS: witamina E'],
+  s_nhsC:['https://www.nhs.uk/conditions/vitamins-and-minerals/vitamin-c/','NHS: witamina C'],
+  s_nhsK:['https://www.nhs.uk/conditions/vitamins-and-minerals/vitamin-k/','NHS: witamina K'],
   who6:['https://iris.who.int/server/api/core/bitstreams/9f048e30-0d14-4187-b167-9c24b9102092/content','WHO MEC, wyd. 6 (2025)'],
   ukmec:['https://www.cosrh.org/Common/Uploaded%20files/documents/UKMEC_2025.pdf','UKMEC 2025'],
   ema:['https://www.ema.europa.eu/en/news/benefits-combined-hormonal-contraceptives-chcs-continue-outweigh-risks-chmp-endorses-prac-recommendation','EMA 2013'],
@@ -1827,6 +1971,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.ftag){S.f.tags=S.f.tags||{};S.f.tags[d.ftag]=!S.f.tags[d.ftag]}
   else if(d.sygseen){S.sygSeen=S.sygSeen||{};S.sygSeen[d.sygseen]=todayKey()}
   else if(d.sygwiz){S.wizList=Array.isArray(S.wizList)?S.wizList:[];const on=S.wizList.includes(d.sygwiz);S.wizList=on?S.wizList.filter(x=>x!==d.sygwiz):S.wizList.concat(d.sygwiz);toast(on?'Usunięto z listy na wizytę':'Dodano do listy na wizytę')}
+  else if(d.supp){if(!suppIds().includes(d.supp))return;S.suppTake=Array.isArray(S.suppTake)?S.suppTake:[];const on=S.suppTake.includes(d.supp);S.suppTake=on?S.suppTake.filter(x=>x!==d.supp):S.suppTake.concat(d.supp);OPEN_F.add('suple');toast(on?'Usunięto z planu suplementów':'Dodano do planu suplementów')}
   else if(d.wizclear){undoable('Wyczyszczono pytania na wizytę');S.wizList=[]}
   else if(d.hp){S.wizyta=(S.wizyta||{}).hp===d.hp?{hp:'brak'}:{hp:d.hp,d:todayKey()}}
   else if(d.gprof){S.prof=S.prof||{cond:{},pill:''};S.prof[d.gprof]=!S.prof[d.gprof]}
