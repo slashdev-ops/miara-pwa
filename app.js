@@ -163,8 +163,8 @@ function stepsChip(k,m){const l=lastMeasK('steps',k);if(String(m.steps||'').trim
   return `<div class="chips quick"><button class="chip" data-setv="meas.${k}.steps" data-v="${v}">${l[0]===nAgo(1)?'jak wczoraj':'jak ostatnio'} (${fmt(num(v))})</button></div>`}
 function sleepField(k,m){const has=String(m.sleep||'').trim()!=='',[H,M]=has?hm(num(m.sleep)):['',''],ls=lastMeas('sleep',k),[pH,pM]=ls?hm(num(ls)):[7,0];
   return `<div class="field sleep"><label for="m_sleep">Sen</label><span class="num"><button class="stp" data-stp="meas.${k}.sleep" data-d="-1" aria-label="Sen: mniej o 15 minut">−</button>`
-    +`<input type="text" inputmode="numeric" id="m_sleep" data-sl="h" data-day="${k}" value="${H}" placeholder="${pH}" aria-label="Sen, godziny"><span class="unit">h</span>`
-    +`<input type="text" inputmode="numeric" id="m_sleepm" data-sl="m" data-day="${k}" value="${has?M:''}" placeholder="${pM}" aria-label="Sen, minuty"><span class="unit">min</span>`
+    +`<input type="text" inputmode="numeric" enterkeyhint="next" id="m_sleep" data-sl="h" data-day="${k}" value="${H}" placeholder="${pH}" aria-label="Sen, godziny"><span class="unit">h</span>`
+    +`<input type="text" inputmode="numeric" enterkeyhint="next" id="m_sleepm" data-sl="m" data-day="${k}" value="${has?M:''}" placeholder="${pM}" aria-label="Sen, minuty"><span class="unit">min</span>`
     +`<button class="stp" data-stp="meas.${k}.sleep" data-d="1" aria-label="Sen: więcej o 15 minut">+</button></span></div>`}
 // Szybkie wpisy (11.11.2026): rano, gdy brakuje dzisiejszej wagi albo snu, pomiary są pod listą Dziś
 function measDue(){const m=(S.meas||{})[todayKey()]||{},has=x=>String(m[x]||'').trim()!=='';return !(has('w')&&has('sleep'))}
@@ -273,7 +273,7 @@ function renderSos(){
     const left=Math.max(0,Math.ceil((sosEnd-Date.now())/1000));
     h+=sosEnd?`<section class="readout"><h3>Przerwa przed decyzją</h3><div class="big" id="sosclock" style="font-size:44px;font-weight:700;text-align:center">${mmss(left)}</div></section>`:'<p><button class="btn" data-sosstart="1">Start 10 minut przerwy</button></p>';
     h+='<h2>Po przerwie</h2><div class="panel"><button class="opt" data-sosout="minela"><span>Ochota minęła</span></button><button class="opt" data-sosout="plan"><span>Zjem planowaną przekąskę</span></button><button class="opt" data-sosout="inne"><span>Zjem coś innego</span></button></div>';
-    if(st==='inne')h+=`<div class="panel"><div class="field"><label for="s_n">Co</label><input type="text" id="s_n" style="width:170px;text-align:left" placeholder="np. ciastka"></div><div class="field"><label for="s_k">Ile, w przybliżeniu</label><input type="text" inputmode="numeric" id="s_k" placeholder="0"><span class="unit">kcal</span></div>${kcalChips('s_k')}</div><p><button class="btn" data-sossave="1">Zapisz</button></p><p class="small muted">Zapis jest ważniejszy niż sam wybór. Dla skali: 100 kcal to ok. ${fmt(100/walkPerMin())} min spaceru, ${(()=>{const l=targetKcal()-eatenToday();return l>=0?`a dziś zostało ok. ${fmt(l)} kcal.`:`a cel dnia jest już przekroczony o ok. ${fmt(-l)} kcal; zapis i tak się liczy.`})()}</p>`;
+    if(st==='inne')h+=`<div class="panel"><div class="field"><label for="s_n">Co</label><input type="text" id="s_n" style="width:170px;text-align:left" placeholder="np. ciastka"></div><div class="field"><label for="s_k">Ile, w przybliżeniu</label><input type="text" inputmode="numeric" enterkeyhint="done" id="s_k" placeholder="0"><span class="unit">kcal</span></div>${kcalChips('s_k')}</div><p><button class="btn" data-sossave="1">Zapisz</button></p><p class="small muted">Zapis jest ważniejszy niż sam wybór. Dla skali: 100 kcal to ok. ${fmt(100/walkPerMin())} min spaceru, ${(()=>{const l=targetKcal()-eatenToday();return l>=0?`a dziś zostało ok. ${fmt(l)} kcal.`:`a cel dnia jest już przekroczony o ok. ${fmt(-l)} kcal; zapis i tak się liczy.`})()}</p>`;
   }
   h+='<h2 id="ochoty">Twoje ochoty</h2>'+whyP('ochoty')+'<div class="note">'+urgeStats()+'</div>';
   document.getElementById('main').innerHTML=h;
@@ -319,7 +319,7 @@ function renderHealth(){
   ]);
   h+='<h2>Start w 3 krokach</h2><div class="panel"><div class="entry"><span class="txt"><b>1. Badania i lekarz.</b> Zakres ustal z lekarzem, np. TSH, fT4, fT3, anty-TPO, glukoza i insulina na czczo, HbA1c, 25(OH)D, ferrytyna, magnez, wapń.</span></div><div class="entry"><span class="txt"><b>2. Witamina D3</b> według wytycznych. Pozostałe suplementy dopiero po wynikach.</span></div><div class="entry"><span class="txt"><b>3. Białko z jedzenia</b> według planu. Kreatyna 3-5 g dziennie, jeśli trenujesz siłowo.</span></div></div>';
   h+='<details class="fold"><summary>Suplementy ('+SUPP.length+')</summary>'+SUPP.map(s=>`<article class="meal"><div class="mhead"><div class="name">${s.n}</div><div class="meta">${s.v}</div></div><div class="mdet" style="border-top:0"><p class="small"><b>Dawka:</b> ${s.d}</p><p class="small"><b>Dowody:</b> ${s.e}</p><p class="small"><b>Uwaga:</b> ${s.w}</p></div></article>`).join('')+'</details>';
-  h+='<h2 id="bialko">Białko za złotówkę</h2>'+whyP('bialko')+'<p class="small muted">Wpisz cenę z półki lub paragonu i wagę opakowania. Wynik to koszt 20 g białka. Ceny zapisują się w telefonie.</p><div class="panel">'+protCost().map(r=>`<div class="field" style="flex-wrap:wrap"><label style="flex:1 1 100%">${r.n}</label><input type="text" inputmode="decimal" data-k="prices.${r.id}.p" value="${esc(S.prices[r.id].p)}" placeholder="cena" aria-label="Cena: ${r.n}"><span class="unit">zł</span><input type="text" inputmode="numeric" data-k="prices.${r.id}.g" value="${esc(S.prices[r.id].g)}" aria-label="Waga opakowania: ${r.n}"><span class="unit">g</span></div>`).join('')+'</div>';
+  h+='<h2 id="bialko">Białko za złotówkę</h2>'+whyP('bialko')+'<p class="small muted">Wpisz cenę z półki lub paragonu i wagę opakowania. Wynik to koszt 20 g białka. Ceny zapisują się w telefonie.</p><div class="panel">'+protCost().map(r=>`<div class="field" style="flex-wrap:wrap"><label style="flex:1 1 100%">${r.n}</label><input type="text" inputmode="decimal" enterkeyhint="next" id="f_prices.${r.id}.p" data-k="prices.${r.id}.p" value="${esc(S.prices[r.id].p)}" placeholder="cena" aria-label="Cena: ${r.n}"><span class="unit">zł</span><input type="text" inputmode="numeric" enterkeyhint="next" id="f_prices.${r.id}.g" data-k="prices.${r.id}.g" value="${esc(S.prices[r.id].g)}" aria-label="Waga opakowania: ${r.n}"><span class="unit">g</span></div>`).join('')+'</div>';
   const ranked=protCost().filter(r=>r.c!=null).sort((a,b)=>a.c-b.c);
   if(ranked.length)h+='<h2>Ranking</h2><div class="panel">'+ranked.map((r,i)=>`<div class="entry"><span class="txt">${i+1}. ${r.n}</span><span class="val">${r.c.toFixed(2).replace('.',',')} zł za 20 g</span></div>`).join('')+'</div>';
   h+='<h2>Źródła</h2><ol class="src"><li><a href="https://pubmed.ncbi.nlm.nih.gov/36771403/" target="_blank" rel="noopener">Wytyczne witaminy D w Polsce, aktualizacja 2023</a></li><li><a href="https://pubmed.ncbi.nlm.nih.gov/37221858/" target="_blank" rel="noopener">Stanowisko ISSN: żywienie kobiet aktywnych fizycznie (kreatyna)</a></li><li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4501114/" target="_blank" rel="noopener">Stanowisko ISSN: beta-alanina</a></li><li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10951571" target="_blank" rel="noopener">Metaanaliza: selen w Hashimoto (Thyroid 2024)</a></li></ol><p class="small muted">Aplikacja nie zastępuje lekarza. Suplementy omawiaj z lekarzem, zwłaszcza przy zmianie leków.</p>';
@@ -359,9 +359,9 @@ function renderLabs(){
   h+='<h2>Dodaj wynik</h2><div class="panel">';
   h+=`<div class="field"><label for="l_test">Badanie</label><select id="l_test" data-labsel="1" style="${inp};max-width:210px">${LABS.map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${x.n}</option>`).join('')}</select></div>`;
   h+=`<div class="field"><label for="l_date">Data pobrania</label><input type="date" id="l_date" value="${todayKey()}" style="${inp}"></div>`;
-  h+='<div class="field"><label for="l_val">Wynik</label><input type="text" inputmode="decimal" id="l_val"><span class="unit"></span></div>';
+  h+='<div class="field"><label for="l_val">Wynik</label><input type="text" inputmode="decimal" enterkeyhint="next" id="l_val"><span class="unit"></span></div>';
   h+=`<div class="field"><label for="l_unit">Jednostka z wydruku</label><input type="text" id="l_unit" value="${esc(L.u)}"><span class="unit"></span></div>`;
-  h+='<div class="field"><label for="l_lo">Dolna granica normy z wydruku (opcjonalnie)</label><input type="text" inputmode="decimal" id="l_lo"><span class="unit"></span></div>';
+  h+='<div class="field"><label for="l_lo">Dolna granica normy z wydruku (opcjonalnie)</label><input type="text" inputmode="decimal" enterkeyhint="next" id="l_lo"><span class="unit"></span></div>';
   h+='<div class="field"><label for="l_fast">Na czczo</label><input type="checkbox" class="switch" id="l_fast"></div>';
   if(L.thy)h+='<div class="field"><label for="l_bio">Biotyna odstawiona co najmniej 2-3 dni</label><input type="checkbox" class="switch" id="l_bio"></div>';
   if(S.sex==='K')h+='<div class="field"><label for="l_cyc">Tydzień cyklu lub przerwa w tabletkach</label><input type="text" id="l_cyc" placeholder="np. 2"><span class="unit"></span></div>';
@@ -677,7 +677,7 @@ function renderRecipe(){
   if(cm!==1||por!==1)h+=`<p class="small muted">Porcja przeliczona: węglowodany ×${fmt1(cm)}, wielkość ×${fmt1(por)}.</p>`;
   h+='<h3 class="rh">Przygotowanie</h3><ol class="steps">'+steps.map(s=>`<li>${s}</li>`).join('')+'</ol>';
   h+=tipsHtml(m,x);
-  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz w odstępie od leku, bo może zmniejszać jego wchłanianie (opisy przypadków, wytyczne ATA 2014).</p>':''}${planIds().includes(m.id)?'<p class="small muted">W planie na dziś. Wieczorem „Według planu” zapisze to danie.</p>':`<p><button class="btn" data-cook="${m.id}">Gotuję to dziś</button></p>`}<p>${eatBtn(m.id,'Zjem, zapisz',planIds().includes(m.id)?'':' ghost')}</p><p><button class="btn ghost" data-copy="${m.id}">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
+  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz w odstępie od leku, bo może zmniejszać jego wchłanianie (opisy przypadków, wytyczne ATA 2014).</p>':''}${planIds().includes(m.id)?(mealEaten(m.id)?'':'<p class="small muted">W planie na dziś. Wieczorem „Według planu” zapisze to danie.</p>'):`<p><button class="btn" data-cook="${m.id}">Gotuję to dziś</button></p>`}<p>${eatBtn(m.id,'Zjem, zapisz',planIds().includes(m.id)?'':' ghost')}</p><p><button class="btn ghost" data-copy="${m.id}">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
   document.getElementById('main').innerHTML=h;
 }
 
@@ -866,7 +866,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
-const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],goalWay:'proc',muscle:false,bmiCut:'auto',korekta:true,tab:'meals',
+const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
@@ -906,12 +906,31 @@ function goalWayHtml(){if(S.mode!=='redukcja')return '';const w=S.goalWay||'proc
     h+=`<p class="small muted">Najniższa śmiertelność w badaniach przy BMI 20-25; dolna część normy (18,5-20) wiązała się z wyższą. Najniżej: BMI 22 w wieku 35-49 lat, 23 w wieku 50-69, 24 w wieku 70-89.${bmiOf(S.kg)<up?' Twoje BMI już jest w tym zakresie.':' Przy dużej różnicy zacznij od 5-10% mniej.'}</p>`+srcHtml(['bmimort','whoob'].concat(n?['nhsob']:[]));return h}
   const c=num(S.cm)||165,lw=lastWaist();
   return h+`<div class="note">Cel: talia poniżej ${fmt(c/2)} cm (połowa wzrostu).${lw?` Ostatni pomiar: ${fmt1(lw)} cm, talia do wzrostu ${fmt2(lw/c)}.`:' Zmierz talię w Pomiarach dnia, w obwodach.'} Waga docelowa jest tu opcjonalna: postęp pokaże talia.</div>`+srcHtml('nhsob')}
-function bmiSetHtml(){const a=bmiCutFor(typeof navigator!=='undefined'&&navigator.language);return '<p style="margin:12px 4px 4px"><b>Progi BMI</b></p>'+seg([['auto','Kraj telefonu'],['who','WHO'],['nhs','NHS']],S.bmiCut||'auto','bmicut','','Progi BMI')+`<p class="small muted">WHO: nadwaga od BMI 25, otyłość od 30. NHS: od 23 i 27,5 dla osób pochodzenia azjatyckiego, bliskowschodniego, afrykańskiego i afrykańsko-karaibskiego. Kraj telefonu: progi ${a==='nhs'?'NHS':'WHO'}.</p>`+`<div class="panel"><div class="field"><label for="muscle">Mam dużo mięśni (trenuję siłowo)</label><input type="checkbox" class="switch" id="muscle" data-k="muscle" ${S.muscle?'checked':''}></div></div>`}
+function bmiSetHtml(){const a=bmiCutFor(typeof navigator!=='undefined'&&navigator.language);return '<p style="margin:12px 4px 4px"><b>Progi BMI</b></p>'+seg([['auto','Kraj telefonu'],['who','WHO'],['nhs','NHS']],S.bmiCut||'auto','bmicut','','Progi BMI')+`<p class="small muted">WHO: nadwaga od BMI 25, otyłość od 30. NHS: od 23 i 27,5 dla osób pochodzenia azjatyckiego, bliskowschodniego, afrykańskiego i afrykańsko-karaibskiego. Kraj telefonu: progi ${a==='nhs'?'NHS':'WHO'}.</p>`+muscleHtml()}
+// Dużo mięśni z danych (15.11.2026): FFMI = ostatnia FFM / wzrost w m do kwadratu wobec mediany 18-34 lat z Schutz 2002 (PMID 12080449, abstrakt):
+// 18,9 kg/m² u mężczyzn, 15,4 u kobiet. Tabela centyli niedostępna, więc tylko mediana. Reguła Miary: powyżej mediany = włączone.
+function muscleRec(){const ffm=lastM('ffm'),cm=num(S.cm);if(!(ffm>0)||!(cm>0)||isStart('cm'))return null;const ffmi=ffm/Math.pow(cm/100,2),med=S.sex==='M'?18.9:15.4;return {ffmi,med,above:ffmi>med}}
+// Automat (S.muscleAuto, domyślnie włączony): „Dużo mięśni” idzie za zaleceniem; ręczna zmiana przełącznika go wyłącza.
+// Działa tylko przy zmianie zalecenia względem ostatnio zastosowanego (S.muscleAutoLast): −/+ wokół mediany nie powtarza komunikatu
+// i nie nadpisuje sposobu celu wybranego ręcznie. Zwraca komunikat ('' bez zmiany); import i kopia dokładają go do własnego komunikatu.
+function muscleSync(){const r=muscleRec();if(S.muscleAuto===false||!r||S.muscleAutoLast===r.above)return '';S.muscleAutoLast=r.above;if(!!S.muscle===r.above)return '';S.muscle=r.above;
+  if(r.above){S.goalWay='talia';return 'Masa beztłuszczowa powyżej mediany: włączono „Dużo mięśni”, cel liczony z talii. Zmienisz to w Ustawieniach.'}
+  return 'Masa beztłuszczowa poniżej mediany: wyłączono „Dużo mięśni”. Sposób liczenia celu sprawdź w Ustawieniach.'}
+function muscleToast(){const m=muscleSync();if(m)toast(m);return !!m}
+// Stare dane bez muscleAuto: zapisane „włączone” to wybór ręczny, „wyłączone” albo brak to automat (przegląd 17.11.2026)
+function muscleFix(raw,s){if(raw&&typeof raw==='object'&&!('muscleAuto' in raw))s.muscleAuto=!s.muscle;return s}
+function muscleHtml(){const r=muscleRec(),on=!!S.muscle,a=num(S.age);
+  let h=`<div class="panel"><div class="field"><label for="muscle">Dużo mięśni: oceniaj cel talią, nie samym BMI</label><input type="checkbox" class="switch" id="muscle" data-k="muscle" ${on?'checked':''}></div><div style="padding:0 16px 12px">`;
+  if(!r)return h+(lastM('ffm')>0&&isStart('cm')?'<p class="small muted">Brak wzrostu. Wpisz wzrost w Ustawieniach, a Miara podpowie ustawienie.</p>':'<p class="small muted">Brak pomiaru masy beztłuszczowej (FFM). Wpisz FFM z wagi składu ciała w Mój dzień, Skład ciała, a Miara podpowie ustawienie.</p>')+'</div></div>';
+  const f=fmt1(r.ffmi)===fmt1(r.med)?fmt2:fmt1;
+  h+=`<p class="small muted">Twoje FFMI: ${f(r.ffmi)} kg/m² (masa beztłuszczowa na m² wzrostu). Mediana w badaniu dla ${S.sex==='M'?'mężczyzn':'kobiet'} 18-34 lat: ${f(r.med)}. Masz ${r.above?'więcej':'mniej'} niż połowa badanych, więc zalecamy: ${r.above?'włączone':'wyłączone'}. Reguła Miary: powyżej mediany = włączone.${a&&!isStart('age')&&(a<18||a>34)?' Mediana dotyczy wieku 18-34 lat; w badaniu u mężczyzn nie zmieniała się z wiekiem, u kobiet lekko rosła.':''}</p>`;
+  if(on!==r.above)h+='<p><button class="btn ghost small" data-musclerec="1">Ustaw zalecane</button></p>';
+  return h+srcHtml(['schutz'])+'</div></div>'}
 function goalHint(){return S.mode!=='redukcja'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny albo wybierz niżej.</p>'}
 function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
 function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,STEP.goal)}
 function syFix(s){try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
-function load(){try{const r=localStorage.getItem(LS);if(r)return syFix(merge(clone(DEF),fixTouched(JSON.parse(r))));}catch(e){}return clone(DEF)}
+function load(){try{const r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(muscleFix(o,merge(clone(DEF),fixTouched(o))))}}catch(e){}return clone(DEF)}
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
 // ---------- Scenariusze do sprawdzania: dane przykładowe pod #demo-<nazwa>, nic się nie zapisuje ----------
@@ -957,7 +976,7 @@ function stpShow(k){if(/\.sleep$/.test(k)){const [H,M]=hm(num(stpVal(k))),a=docu
 // Po zmianie: przerysowanie, fokus na tym samym przycisku (WCAG 2.4.3), nowa wartość dla czytnika ekranu (4.1.3)
 // Przycisk zostaje w tym samym miejscu ekranu, nawet gdy nad nim pojawi się nowa karta (bez przesunięcia pod palcem)
 function stpDone(k,d){const v=num(stpVal(k)),sel=`[data-stp="${k}"][data-d="${d}"]`,o=document.querySelector(sel),y0=o&&o.getBoundingClientRect?o.getBoundingClientRect().top:null;
-  if(/^meas\.[^.]+\.w$/.test(k))PET.react('weigh');if(/^meas\.[^.]+\.sleep$/.test(k)&&v>=7)PET.react('sleepok');render();
+  if(/^meas\.[^.]+\.w$/.test(k))PET.react('weigh');if(/^meas\.[^.]+\.sleep$/.test(k)&&v>=7)PET.react('sleepok');if(/^(meas\.[^.]+\.ffm|cm)$/.test(k)&&muscleToast())save();render();
   const b=document.querySelector(sel);if(b&&y0!=null&&b.getBoundingClientRect)window.scrollBy(0,b.getBoundingClientRect().top-y0);if(b&&b.focus)b.focus({preventScroll:true});
   const sr=document.getElementById('sr'),fl=b&&b.closest&&b.closest('.field'),lab=fl&&fl.querySelector('label');if(sr)sr.textContent=(lab?lab.textContent+': ':'')+(/\.sleep$/.test(k)?fmtSleep(v):String(stpVal(k)))}
 // Błąd widoczny od razu pod polem i powiązany z nim (WCAG 3.3.1, 3.3.3)
@@ -1402,7 +1421,7 @@ function seg(items,cur,attr,cls,label){return `<div class="seg ${cls||''}" role=
 function optList(list,cur,attr){return '<div class="panel">'+list.map(o=>`<button class="opt ${o.id===cur?'on':''}" data-${attr}="${o.id}"><span class="dot"></span><span>${o.n}</span>${o.met?`<span class="met">MET ${fmt1(o.met)}</span>`:''}</button>`).join('')+'</div>'}
 // Przyciski − i + przy polu liczbowym: wpis bez klawiatury; klawiatura zostaje dla chętnych
 function stpWrap(label,key,inp){const f=key.split('.').pop();return STEP[f]?`<span class="num"><button class="stp" data-stp="${key}" data-d="-1" aria-label="${label}: mniej">−</button>${inp}<button class="stp" data-stp="${key}" data-d="1" aria-label="${label}: więcej">+</button></span>`:inp}
-function field(label,key,val,unit,mode){return `<div class="field"><label for="f_${key}">${label}${START_K.includes(key)&&isStart(key)?'<small class="hint">wartość startowa</small>':''}</label>${stpWrap(label,key,`<input type="text" inputmode="${mode||'decimal'}" id="f_${key}" data-k="${key}" value="${esc(val)}">`)}<span class="unit">${unit}</span></div>`}
+function field(label,key,val,unit,mode){return `<div class="field"><label for="f_${key}">${label}${START_K.includes(key)&&isStart(key)?'<small class="hint">wartość startowa</small>':''}</label>${stpWrap(label,key,`<input type="text" inputmode="${mode||'decimal'}" enterkeyhint="next" id="f_${key}" data-k="${key}" value="${esc(val)}">`)}<span class="unit">${unit}</span></div>`}
 
 function renderMeals(){
   const cm=carbMult(),n=trainNet();
@@ -1454,7 +1473,7 @@ function renderTrain(){
   const sp=spec(),m=Math.max(0,num(t.min)),km=kcal(sp,m);
   h+=`<section class="readout"><h3>${sp.label}</h3><div class="trio">`+[30,45,60].map(mm=>{const k=kcal(sp,mm);return `<div class="cell"><div class="min">${mm} min</div><div class="big">${fmt(k.gross)}</div><div class="sub">netto ${fmt(k.net)}</div></div>`}).join('')+
     `</div><p class="unit">kcal brutto przy ${fmt1(kg())} kg${S.korekta?', z korektą na spoczynkowe zużycie energii':''}. Netto to część ponad spoczynek.</p>
-    <div class="custom"><input type="text" inputmode="numeric" data-k="tr.min" value="${t.min}" aria-label="Czas w minutach"><span>min</span><span class="res">${fmt(km.gross)} kcal, netto ${fmt(km.net)}</span><button class="btn" data-addtrain="1">Dodaj do dnia</button></div></section>`;
+    <div class="custom"><input type="text" inputmode="numeric" enterkeyhint="next" id="f_tr.min" data-k="tr.min" value="${t.min}" aria-label="Czas w minutach"><span>min</span><span class="res">${fmt(km.gross)} kcal, netto ${fmt(km.net)}</span><button class="btn" data-addtrain="1">Dodaj do dnia</button></div></section>`;
   if(sp.knee)h+=`<div class="note warn">Kolano: ${sp.knee}</div>`;
   if(sp.warn)h+=`<div class="note warn">${sp.warn}</div>`;
   h+=`<p class="small muted">Źródło wartości: ${sp.src}${sp.met?`, MET ${fmt1(sp.met)}`:''}. Wynik jest szacunkiem dla przeciętnej osoby; rzeczywiste spalanie może różnić się o kilkadziesiąt procent.</p>`;
@@ -1534,7 +1553,7 @@ function renderDay(){
   more+=relHtml();
   h+='<details class="fold" data-fold="zapisane"'+(OPEN_F.has('zapisane')?' open':'')+'><summary>Zapisane dziś: posiłki '+ml.length+', treningi '+tr.length+'</summary>'+(tr.length?'<h3 class="rh" style="margin:4px 16px 8px">Treningi</h3><div class="panel">'+tr.map(e=>`<div class="entry"><span class="txt">${e.label}, ${fmt(e.min)} min</span><span class="val">${fmt(e.gross)} kcal</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join('')+'</div>':'<p style="margin:4px 16px"><button class="btn ghost small" data-tab="train">Przejdź do Treningu</button></p>');
   h+='<h3 class="rh" style="margin:12px 16px 8px">Posiłki</h3><div class="panel">'+(ml.length?ml.map(e=>`<div class="entry"><span class="txt">${e.label}</span><span class="val">${fmt(e.k)} kcal, B ${fmt(e.p)} g</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join(''):'<div class="empty">Brak posiłków. <button class="btn ghost small" data-tab="meals">Przejdź do Posiłków</button></div>')+'</div></details>';
-  h+=`<details class="fold" data-fold="szybki"${OPEN_F.has('szybki')?' open':''}><summary>Szybki wpis albo powtórz wczoraj</summary><div class="panel"><div class="field"><label for="q_n">Co</label><input type="text" id="q_n" style="width:170px;text-align:left" placeholder="np. kawa z mlekiem"></div><div class="field"><label for="q_k">Ile</label><input type="text" inputmode="numeric" id="q_k" placeholder="0"><span class="unit">kcal</span></div>${kcalChips('q_k')}</div><p><button class="btn" data-quick="1">Zapisz</button> <button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki</button><button class="btn ghost" data-nav="meals#zamowione#zamowione">Zamówione jedzenie</button></p><p class="small muted">Wpis przybliżony wystarczy. W badaniach z wynikiem redukcji wiązała się częstość zapisywania, nie jego dokładność.</p></details>`;
+  h+=`<details class="fold" data-fold="szybki"${OPEN_F.has('szybki')?' open':''}><summary>Szybki wpis albo powtórz wczoraj</summary><div class="panel"><div class="field"><label for="q_n">Co</label><input type="text" id="q_n" style="width:170px;text-align:left" placeholder="np. kawa z mlekiem"></div><div class="field"><label for="q_k">Ile</label><input type="text" inputmode="numeric" enterkeyhint="done" id="q_k" placeholder="0"><span class="unit">kcal</span></div>${kcalChips('q_k')}</div><p><button class="btn" data-quick="1">Zapisz</button> <button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki</button><button class="btn ghost" data-nav="meals#zamowione#zamowione">Zamówione jedzenie</button></p><p class="small muted">Wpis przybliżony wystarczy. W badaniach z wynikiem redukcji wiązała się częstość zapisywania, nie jego dokładność.</p></details>`;
   more+='<div class="navrow"><button class="btn ghost" data-tab="impact">Mój wpływ</button><button class="btn ghost" data-tab="challenge">Wspólne wyzwanie</button><button class="btn ghost" data-tab="review">Przegląd tygodnia</button></div>';
   if(d.length)more+='<p><button class="btn ghost" data-clear="1">Wyczyść dzień</button></p>';
   more+=`<details class="fold" data-fold="cel"${OPEN_F.has('cel')?' open':''}><summary>Jak liczony jest cel</summary><div class="note small" style="margin:0 12px 12px">${S.mode==='masa'?'Przyrost masy: cel to zapotrzebowanie plus ok. 10%, '+(measuredTdee()?'zapotrzebowanie zmierzone z jedzenia i trendu wagi.':'na razie zapotrzebowanie ze wzoru (spoczynkowe zużycie × 1,3 plus treningi netto).'):S.mode==='utrzymanie'?'Tryb utrzymania: cel to zapotrzebowanie bez deficytu, '+(measuredTdee()?'zmierzone z jedzenia i trendu wagi.':'na razie ze wzoru (spoczynkowe zużycie × 1,3 plus treningi netto).'):measuredTdee()?'Jak liczony jest cel: zmierzone zapotrzebowanie (jedzenie i trend wagi) minus 20%.':`Jak liczony jest cel: na start szacunek, czyli spoczynkowe zużycie energii ${fmt(R)} kcal (wzór Mifflina-St Jeora) × 1,3 dla pracy siedzącej, plus treningi netto, minus 20%. Po 2-4 tygodniach ważenia i zapisywania aplikacja przejdzie na zapotrzebowanie zmierzone.`} Nigdy poniżej spoczynkowego zużycia. Białko: 1,4 g na kg wagi docelowej. Mnożnik 1,3 i deficyt 20% to założenia planu, nie pomiar. Zapisuj na bieżąco, najlepiej zaraz po każdym posiłku.</div></details>`;
@@ -1745,8 +1764,9 @@ document.addEventListener('click',e=>{
   else if(d.cel){const g=ZD.goalOf(d.cel);if(!g)return;S.cel={id:g.id,since:todayKey()};toast('Twój cel: '+g.t)}
 else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')}
   else if(d.krokeasy){kStart(S.krok.step);S.krok.easy=true;toast('Łatwiejsza wersja kroku od tego tygodnia')}
-  else if(d.impsave){const I=S.imp;if(I){const m=S.meas[I.date]=S.meas[I.date]||{};Object.entries(I.vals).forEach(([f,v])=>{m[f]=f==='sleep'?sleepFmt(num(v)):v})}S.imp=null;S.tab='day';toast('Zapisano dane ze Skrótu')}
+  else if(d.impsave){const I=S.imp;if(I){const m=S.meas[I.date]=S.meas[I.date]||{};Object.entries(I.vals).forEach(([f,v])=>{m[f]=f==='sleep'?sleepFmt(num(v)):v})}S.imp=null;S.tab='day';const mm=muscleSync();toast('Zapisano dane ze Skrótu'+(mm?'. '+mm:''))}
   else if(d.impskip){S.imp=null;S.tab='day'}
+  else if(d.musclerec){S.muscleAuto=true;S.muscleAutoLast=null;muscleToast()}
   else if(d.imppaste){if(typeof navigator!=='undefined'&&navigator.clipboard&&navigator.clipboard.readText)navigator.clipboard.readText().then(t=>{S.imp=parseImport(t);S.tab='import';save();render()},()=>toast('Nie udało się odczytać schowka. Zezwól na wklejenie albo użyj adresu ze Skrótu.'));else toast('Ta przeglądarka nie pozwala odczytać schowka.');return}
   else if(d.goalway){S.goalWay=d.goalway}
   else if(d.bmicut){S.bmiCut=d.bmicut}
@@ -1760,7 +1780,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.cyc){const k=todayKey();S.meas[k]=S.meas[k]||{};S.meas[k].cyc=S.meas[k].cyc===d.cyc?'':d.cyc}
   else if(d.bkexp){bkExport();return}
   else if(d.bkpaste){const o=bkParse(document.getElementById('bk_text').value.trim());if(!o){BK_PENDING=null;toast('To nie jest kopia tej aplikacji');return}BK_PENDING=o}
-  else if(d.bkapply){if(!BK_PENDING)return;if(BK_PENDING.noHealth)BK_NH_KEEP.forEach(k=>{if(!(k in BK_PENDING.data))return;const v=clone(BK_PENDING.data[k]);S[k]=v&&typeof v==='object'&&!Array.isArray(v)?merge(clone(DEF[k]||{}),v):v});else S=merge(clone(DEF),fixTouched(BK_PENDING.data));S=syFix(S);S.onb=true;S.tab='set';BK_PENDING=null;undoable('Wczytano kopię')}
+  else if(d.bkapply){if(!BK_PENDING)return;if(BK_PENDING.noHealth)BK_NH_KEEP.forEach(k=>{if(!(k in BK_PENDING.data))return;const v=clone(BK_PENDING.data[k]);S[k]=v&&typeof v==='object'&&!Array.isArray(v)?merge(clone(DEF[k]||{}),v):v});else S=muscleFix(BK_PENDING.data,merge(clone(DEF),fixTouched(BK_PENDING.data)));S=syFix(S);S.onb=true;S.tab='set';BK_PENDING=null;const mm=muscleSync();undoable('Wczytano kopię'+(mm?'. '+mm:''))}
   else if(d.bkcancel){BK_PENDING=null}
   else if(d.chmode){S.chMode=d.chmode}
   else if(d.wi){const [a,b]=d.wi.split(':');S.wi=S.wi||{snack:0,steps:0,train:0};S.wi[a]=+b}
@@ -1833,7 +1853,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.cond){OPEN_F.add('profil');S.prof=S.prof||{cond:{},pill:''};S.prof.cond=S.prof.cond||{};S.prof.cond[d.cond]=!S.prof.cond[d.cond];if(d.cond==='lip'&&S.prof.cond.lip)S.lip=true}
   else if(d.demoexit){location.hash='';location.reload();return}
   else if(d.scen){location.hash='#demo-'+d.scen;location.reload();return}
-  else if(d.sex){S.sex=d.sex}
+  else if(d.sex){S.sex=d.sex;muscleToast()}
   else if(d.reset){undoable('Przywrócono ustawienia domyślne');const days=S.days;S=clone(DEF);S.days=days;S.tab='set'}
   else return;
   save();render();actDone(at);
@@ -1867,13 +1887,23 @@ document.addEventListener('input',e=>{
     S.meas[k]=S.meas[k]||{};S.meas[k].sleep=hs===''&&ms===''?'':`${+hs||0}:${String(+ms||0).padStart(2,'0')}`;save();return}
   const k=el.dataset.k;if(!k)return;
   if(START_K.includes(k))(S.touched=S.touched||{})[k]=true;
-  if(el.type==='checkbox'){setPath(k,el.checked);if(k==='muscle'&&el.checked)S.goalWay='talia';if(k==='body'&&el.checked)toast('Sylwetka pokazuje trend 4 tygodni. Pojedyncze pomiary się wahają.');save();render();return}
+  if(el.type==='checkbox'){setPath(k,el.checked);if(k==='muscle'){S.muscleAuto=false;if(el.checked)S.goalWay='talia'}if(k==='body'&&el.checked)toast('Sylwetka pokazuje trend 4 tygodni. Pojedyncze pomiary się wahają.');save();render();return}
   let v=el.value;const im=el.getAttribute('inputmode');
   if(im==='decimal'||im==='numeric'){const c=checkNum(k,v);el.classList.toggle('bad',!!c.err);el.setAttribute('aria-invalid',c.err?'true':'false');el.title=c.err||'';fieldErr(el,c.err||'');if(c.err)return}
   setPath(k,v);save();
-  const pos=el.selectionStart;REDRAW=true;try{render()}finally{REDRAW=false}
+  const pos=el.selectionStart;REDRAW=true;try{renderKeep(el)}finally{REDRAW=false}
   const n=document.querySelector(`[data-k="${k}"]`);if(n){n.focus({preventScroll:true});try{n.setSelectionRange(pos,pos)}catch(_){}}
 });
+// Kotwica przewijania (15.11.2026): treść nad polem (np. „Co się dzieje” po wadze, panel „Dziś”) zmienia wysokość po przerysowaniu,
+// więc pole wraca w to samo miejsce okna. Kotwica: pole edytowane; po wyjściu z pola nowo aktywne pole, inaczej pole opuszczone.
+function anchorOf(el){if(!el||!el.getBoundingClientRect)return null;return {id:el.id||'',k:(el.dataset&&el.dataset.k)||'',top:el.getBoundingClientRect().top}}
+function anchorFind(a){if(!a)return null;return (a.id&&document.getElementById(a.id))||(a.k&&document.querySelector(`[data-k="${a.k}"]`))||null}
+// Fokus: element aktywny w chwili przerysowania (pole albo przycisk) dostaje fokus z powrotem w nowej wersji (po id, data-k albo btnSel z actAt).
+function renderKeep(el){const act=typeof document!=='undefined'&&document.activeElement,fo=act&&act!==document.body&&act.getBoundingClientRect?{id:act.id||'',k:(act.dataset&&act.dataset.k)||'',sel:act.tagName==='BUTTON'?btnSel(act):null}:null,a=anchorOf(el);
+  const r0=REDRAW;REDRAW=true;try{render()}finally{REDRAW=r0}
+  const n=anchorFind(a);if(n&&typeof window!=='undefined'&&window.scrollBy){const d=n.getBoundingClientRect().top-a.top;if(Math.abs(d)>1)window.scrollBy(0,d)}
+  if(fo){const m=anchorFind(fo)||(fo.sel&&document.querySelector(fo.sel));if(m&&m!==document.activeElement&&m.focus)m.focus({preventScroll:true})}}
+function fieldNow(el){const a=document.activeElement;return a&&a!==el&&a.matches&&a.matches('input,textarea,select')?a:el}
 // Wartość sprzed edycji pola: render() po każdym znaku odtwarza pole i ponownie wywołuje focusin, więc zapis tylko przy zmianie pola
 let EDIT=null,REDRAW=false;
 // Wejście w pole liczbowe zaznacza całą wartość: wpis zastępuje, wyjście bez wpisu zostawia (rada/2026-11-09_pole-po-dotknieciu; WCAG 3.2.1, 3.3.7).
@@ -1885,10 +1915,14 @@ let SEL_ID=null,SEL_PTR=0,SEL_HOLD=null;
 document.addEventListener('pointerdown',()=>{SEL_PTR=Date.now();SEL_HOLD=null},true);
 document.addEventListener('beforeinput',()=>{SEL_HOLD=null},true);
 document.addEventListener('selectionchange',()=>{const h=SEL_HOLD;if(!h)return;const el=h.el;if(Date.now()>h.until||document.activeElement!==el){SEL_HOLD=null;return}if(el.selectionStart===el.selectionEnd)h.all()});
-// Klawisz Dalej (Enter) w polu liczby: zapis i fokus na następnym polu liczby na ekranie; w ostatnim zamyka klawiaturę
+// Klawisz Dalej (Enter) w polu liczby: zapis i fokus na następnym widocznym polu liczby na ekranie (w #main albo w otwartym arkuszu),
+// także bez id; w ostatnim zamyka klawiaturę
+function numScope(el){const sc=el.closest&&el.closest('#sheet')?'#sheet':'#main';return [...document.querySelectorAll(`${sc} input[inputmode="decimal"],${sc} input[inputmode="numeric"]`)].filter(x=>x.offsetParent!==null)}
 document.addEventListener('keydown',e=>{const el=e.target;if(e.key!=='Enter'||!el||el.tagName!=='INPUT'||!/^(decimal|numeric)$/.test(el.getAttribute('inputmode')||''))return;
-  e.preventDefault();const all=[...document.querySelectorAll('#main input[inputmode="decimal"],#main input[inputmode="numeric"]')].filter(x=>x.offsetParent!==null),nx=all[all.indexOf(el)+1],id=nx&&nx.id;
-  el.blur();if(id){const n=document.getElementById(id);if(n){n.focus();if(n.scrollIntoView){const r=n.getBoundingClientRect();if(r.bottom>innerHeight-90)n.scrollIntoView({block:'center'})}}}});
+  e.preventDefault();const all=numScope(el),i=all.indexOf(el),n=i>=0?all[i+1]:null;
+  el.blur();if(n&&n.isConnected){n.focus();if(n.scrollIntoView){const r=n.getBoundingClientRect();if(r.bottom>innerHeight-90)n.scrollIntoView({block:'center'})}}});
+// Klawisz na klawiaturze: „Dalej” w polu liczby, „Gotowe” w ostatnim widocznym polu liczby na ekranie (zgodnie z działaniem Enter powyżej)
+document.addEventListener('focusin',e=>{const el=e.target,im=el&&el.getAttribute&&el.getAttribute('inputmode');if(REDRAW||(im!=='decimal'&&im!=='numeric'))return;const all=numScope(el);if(all.indexOf(el)<0)return;el.setAttribute('enterkeyhint',all[all.length-1]===el?'done':'next')});
 // Zaznaczenie wartości po wejściu w pole; opóźnione powtórzenia tylko, gdy nic jeszcze nie wpisano (szybkie pisanie nie traci pierwszego znaku)
 document.addEventListener('focusin',e=>{const el=e.target,im=el&&el.getAttribute&&el.getAttribute('inputmode');if(!el||(im!=='decimal'&&im!=='numeric')||el.id===SEL_ID)return;SEL_ID=el.id;const v0=String(el.value),all=()=>{if(String(el.value)!==v0)return;try{el.setSelectionRange(0,String(el.value).length)}catch(_){}};all();setTimeout(all,0);if(el.addEventListener&&Date.now()-SEL_PTR<1000){el.addEventListener('click',all,{once:true});SEL_HOLD={el,all,until:Date.now()+500}}});
 document.addEventListener('focusout',()=>{if(!REDRAW)SEL_ID=null});
@@ -1898,8 +1932,8 @@ document.addEventListener('focusin',e=>{const k=e.target.dataset&&e.target.datas
 document.addEventListener('focusout',e=>{const el=e.target,k=el.dataset&&el.dataset.k,im=el.getAttribute&&el.getAttribute('inputmode');if(REDRAW||!k||(im!=='decimal'&&im!=='numeric'))return;
   if(el.classList.contains('bad')){const v=EDIT&&EDIT.k===k&&EDIT.v!=null?EDIT.v:'';setPath(k,v);el.value=v;el.classList.remove('bad');el.setAttribute('aria-invalid','false');toast((el.title||'Popraw wartość')+'. Zostaje poprzednia wartość.')}
   else{const c=checkNum(k,el.value);if(c.s!==el.value){setPath(k,c.s);el.value=c.s}
-    if(/^meas\.[^.]+\.w$/.test(k)&&num(c.s)>0)PET.react('weigh');if(/^meas\.[^.]+\.sleep$/.test(k)&&num(c.s)>=7)PET.react('sleepok')}
-  EDIT=null;save();setTimeout(()=>{const a=document.activeElement;if(!(a&&a.dataset&&(a.dataset.k||a.dataset.sl)))render()},0)});
+    if(/^meas\.[^.]+\.w$/.test(k)&&num(c.s)>0)PET.react('weigh');if(/^meas\.[^.]+\.sleep$/.test(k)&&num(c.s)>=7)PET.react('sleepok');if(/^(meas\.[^.]+\.ffm|cm)$/.test(k))muscleToast()}
+  EDIT=null;save();setTimeout(()=>{const a=document.activeElement;if(!(a&&a.dataset&&(a.dataset.k||a.dataset.sl)))renderKeep(fieldNow(el))},0)});
 // Wyjście z pól snu: błędny wpis wraca do zapisanej wartości, przerysowanie dopiero poza polami
 // Wartość snu sprzed edycji pary pól: po błędnym wpisie wraca ona, a nie cyfra wpisana po drodze
 let SLEDIT=null;
@@ -1907,11 +1941,12 @@ document.addEventListener('focusin',e=>{const el=e.target;if(el.dataset&&el.data
 document.addEventListener('focusout',e=>{const el=e.target;if(REDRAW||!el.dataset||!el.dataset.sl)return;
   if(el.classList.contains('bad')){if(SLEDIT){S.meas[SLEDIT.k]=S.meas[SLEDIT.k]||{};S.meas[SLEDIT.k].sleep=SLEDIT.v;save()}toast((el.title||'Popraw wartość')+'. Zostaje poprzednia wartość.')}
   else if(num((S.meas[el.dataset.day]||{}).sleep)>=7)PET.react('sleepok');
-  setTimeout(()=>{const a=document.activeElement;if(!(a&&a.dataset&&a.dataset.sl))SLEDIT=null;if(!(a&&a.dataset&&(a.dataset.k||a.dataset.sl)))render()},0)});
+  setTimeout(()=>{const a=document.activeElement;if(!(a&&a.dataset&&a.dataset.sl))SLEDIT=null;if(!(a&&a.dataset&&(a.dataset.k||a.dataset.sl)))renderKeep(fieldNow(el))},0)});
 document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.labsel){S.labSel=e.target.value;save();render()}});
 // usuń dni starsze niż 60
 (function(){const lim=Date.now()-60*864e5;for(const k in S.days){if(new Date(k).getTime()<lim)delete S.days[k]}save()})();
 if(!S.onb){S.tab='intro';S.introStep=0}
+if(S.onb&&muscleToast())save();
 if(typeof location!=='undefined'&&S.onb&&!impFromHash(location.hash)&&quickFromHash(location.hash))QUICK_PENDING=true;
 if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('hashchange',()=>{if(!S.onb)return;if(impFromHash(location.hash))render();else if(quickFromHash(location.hash)){render();quickFocus()}});
 render();
