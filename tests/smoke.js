@@ -27,7 +27,7 @@ const zdPath = path.join(root, 'zdarzenia.js');
 if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
 const sygPath = path.join(root, 'sygnaly.js');
 if (fs.existsSync(sygPath)) vm.runInContext(fs.readFileSync(sygPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false,SUPP:typeof SUPP=="undefined"?[]:SUPP,SUPP_PARY:typeof SUPP_PARY=="undefined"?[]:SUPP_PARY};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -602,7 +602,7 @@ tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h =
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
 const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord'];
-const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'muscleAuto', 'muscleAutoLast', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut'];
+const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'muscleAuto', 'muscleAutoLast', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'suppTake', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
   view('day', BASE({ kg: '90', age: '50', sex: 'M', muscle: true, bmiCut: 'nhs', meas: { [dk(0)]: { w: '90', steps: '8000', waist: '100' } }, days: { [dk(0)]: ML(1, 500, 30) }, krok: { step: 1, since: dk(3), ans: { why: 'zmeczenie' } }, knee: { start: dk(3), sessions: [{ d: dk(1), pain: 4 }], morning: {}, days: [2], tmpPain: null, tmpCramp: null } }));
@@ -1782,6 +1782,116 @@ tryc('lista na wizytę: „Wyczyść pytania po wizycie” tylko z pytaniami, cz
   click({ undo: '1' });
   return JSON.stringify(T.S().wizList) === '["hp_test","sam_zoladek"]';
 });
+// Suplementy: pora, odstępy, górne dawki ze źródeł, „Biorę” i „Mój plan suplementów” (brief 17.11.2026)
+const BRAK = 'Brak sprawdzonego źródła: zapytaj farmaceutę.';
+// Lista marek jest poza repozytorium (prywatne/marki.json; w wersji publicznej pilnuje jej hook pre-push). Brak pliku: test sprawdza pustą listę.
+const BRANDS = (() => { try { return JSON.parse(fs.readFileSync(path.join(root, '..', 'prywatne', 'marki.json'), 'utf8')); } catch (_) { return []; } })();
+const SP = () => T.SUPP;
+const SID = (id) => SP().find((s) => s.id === id);
+const STXT = (s) => [s.n, s.v, s.d, s.e, s.w, s.kiedy, s.nie, s.ul].filter(Boolean).join(' ');
+const SUPV = (take, o) => view('health', BASE({ suppTake: take, ...(o || {}) }));
+const PLAN_OF = (h) => { const i = h.indexOf('id="suppplan"'); if (i < 0) return ''; const j = h.indexOf('<!--/suppplan-->', i); return h.slice(i, j < 0 ? undefined : j); };
+const PAIR = (a, b) => T.SUPP_PARY.find((p) => (p.a === a && p.b === b) || (p.a === b && p.b === a));
+tryc('suplementy: każdy ma id (unikalne), kiedy, nie, typ i źródło albo „Brak sprawdzonego źródła”', () => {
+  const S0 = SP(); if (S0.length < 25) throw new Error('za mało pozycji: ' + S0.length);
+  const ids = S0.map((s) => s.id), dup = ids.filter((x, i) => ids.indexOf(x) !== i);
+  if (dup.length) throw new Error('powtórzone id: ' + dup.join());
+  const bad = S0.filter((s) => !(s.id && /^[a-z0-9_]+$/.test(s.id) && s.kiedy && s.nie && ['suplement', 'lek'].includes(s.typ)
+    && (Array.isArray(s.src) && s.src.length ? s.src.every((k) => T.SRC[k]) : s.kiedy === BRAK && s.nie === BRAK)));
+  if (bad.length) throw new Error(bad.map((s) => s.id || s.n).join(', '));
+  return true;
+});
+tryc('suplementy: pozycje z drugiej listy po substancji', () => {
+  const need = ['omega3', 'wapn', 'witc', 'b12', 'glicyna', 'cynk', 'krzem', 'bor', 'kolagen', 'k2', 'witae', 'glukozamina', 'kasztanowiec', 'osseina', 'ppi', 'lewotyroksyna', 'magnez', 'jod', 'zelazo', 'witd'];
+  const miss = need.filter((id) => !SID(id)); if (miss.length) throw new Error(miss.join());
+  return ['osseina', 'ppi', 'lewotyroksyna'].every((id) => SID(id).typ === 'lek') && ['omega3', 'wapn', 'cynk', 'glukozamina', 'kasztanowiec'].every((id) => SID(id).typ === 'suplement');
+});
+tryc('suplementy: leki tylko ze zdaniem z ChPL i „Ustal z lekarzem lub farmaceutą.” w Kiedy i na końcu Nie łącz z', () => SP().filter((s) => s.typ === 'lek').every((s) => s.kiedy.includes('Ustal z lekarzem lub farmaceutą.') && s.nie.endsWith('Ustal z lekarzem lub farmaceutą.')));
+tryc('suplementy: bez nazw handlowych w całym app.js (także w adresach) i w widoku', () => {
+  const c = code.toLowerCase(), h = SUPV(SP().map((s) => s.id)).toLowerCase();
+  const hit = BRANDS.filter((b) => c.includes(b) || h.includes(b)); if (hit.length) throw new Error(hit.join());
+  return true;
+});
+tryc('suplementy: bez zdań bez źródła przy jodzie i beta-alaninie', () => { const t = SP().map(STXT).join(' ') + code; return !t.includes('Przy Hashimoto bez zalecenia nie suplementować') && !t.includes('Sól jodowana i ryby zwykle wystarczają') && !t.includes('Mrowienie skóry jest nieszkodliwe'); });
+tryc('suplementy: wyciąg z kasztanowca bez źródła po usunięciu linku z marką', () => { const s = SID('kasztanowiec'); return s.kiedy === BRAK && s.nie === BRAK && !s.src.length; });
+tryc('suplementy: odstęp raz w planie (żelazo i wapń w różnych grupach)', () => {
+  if (SID('zelazo').pora === SID('wapn').pora) throw new Error('ta sama grupa');
+  const p = PAIR('zelazo', 'wapn'), h = PLAN_OF(SUPV(['zelazo', 'wapn'])), n = h.split(T.esc(p.txt)).length - 1;
+  if (n !== 1) throw new Error('wystąpień ' + n);
+  return true;
+});
+tryc('suplementy: „Pokaż wszystkie odstępy (N)” liczy tylko niewidoczne, każdy odstęp raz', () => {
+  const take = ['zelazo', 'wapn', 'cynk', 'magnez', 'lewotyroksyna', 'osseina', 'witae', 'ppi', 'b12'], h = PLAN_OF(SUPV(take));
+  const has = (x) => take.includes(x) || x === 'kawa', all = T.SUPP_PARY.filter((p) => has(p.a) && has(p.b) && (take.includes(p.a) || take.includes(p.b)));
+  const twice = all.filter((p) => h.split(T.esc(p.txt)).length - 1 !== 1); if (twice.length) throw new Error('nie raz: ' + twice.map((p) => p.a + '-' + p.b).join());
+  const groups = h.split('<section class="sgrp"').slice(1);
+  return groups.every((g) => { const m = g.match(/Pokaż wszystkie odstępy \((\d+)\)/), shown = (g.match(/<div class="note">/g) || []).length, folded = (g.match(/<p class="small sp">/g) || []).length; return (m ? +m[1] : 0) === folded && shown <= 1; });
+});
+tryc('suplementy: bez „niesprawdzone” i „wiedza ogólna”', () => { const b = SP().filter((s) => /niesprawdzone|wiedza ogólna/i.test(STXT(s))); if (b.length) throw new Error(b.map((s) => s.id).join()); return true; });
+tryc('suplementy: biotyna przed badaniami według laboratorium Quest Diagnostics', () => { const s = SID('biotyna'); return s && /według laboratorium Quest Diagnostics/.test(STXT(s)) && s.src.some((k) => T.SRC[k][0].includes('questdiagnostics.com')) && !/2-3 dni/.test(STXT(s)); });
+tryc('suplementy: lewotyroksyna 4 h (MedlinePlus) i 2 h (ChPL) z „Odstęp ustal z lekarzem.”', () => { const s = SID('lewotyroksyna'); return /4 godzin/.test(s.nie) && /2 godzin/.test(s.nie) && s.nie.includes('Odstęp ustal z lekarzem.'); });
+tryc('suplementy: lewotyroksyna, żywność z soją, orzechami włoskimi i błonnikiem bez godzin (MedlinePlus)', () => { const s = SID('lewotyroksyna'), m = s.nie.match(/[^.]*soj[^.]*\./); return !!m && /orzech/.test(m[0]) && /błonnik/.test(m[0]) && !/godzin/.test(m[0]) && s.nie.includes('Ustal z lekarzem'); });
+tryc('suplementy: błonnik bez „2-4 h”, odstęp ponad godzinę i co najmniej 30 minut ze strony NHS o preparacie z łuski babki', () => { const s = SID('blonnik'), t = STXT(s); return !/2-4 h/.test(t) && /ponad godzin/.test(t) && /30 minut/.test(t) && /po posiłku lub przekąsce/.test(t) && /NHS/.test(t) && /łusk/.test(t) && s.src.some((k) => T.SRC[k][0].includes('fybogel')); });
+tryc('suplementy: magnez bez niesprawdzonego odstępu 4 h od lewotyroksyny', () => !/4 h/.test(STXT(SID('magnez'))));
+tryc('suplementy: warfaryna tylko jako ogólne zdanie przy pozycji', () => ['glukozamina', 'omega3', 'witae'].every((id) => /Przy lekach przeciwzakrzepowych \(np\. warfaryna\) powiedz lekarzowi/.test(STXT(SID(id)))) && !SP().some((s) => /bierzesz warfaryn|przyjmujesz warfaryn/i.test(STXT(s))));
+tryc('suplementy: karta ma „Kiedy”, „Nie łącz z”, „Górna dawka dzienna” i przycisk „Biorę”', () => { const h = SUPV([]); return h.includes('<b>Kiedy:</b>') && h.includes('<b>Nie łącz z:</b>') && h.includes('<b>Górna dawka dzienna:</b>') && h.includes('data-supp="cynk" aria-pressed="false"') && !h.includes('id="suppplan"'); });
+tryc('suplementy: „Biorę” dodaje i usuwa id, karta planu pojawia się i znika', () => {
+  SUPV([]); click({ supp: 'zelazo' });
+  if (JSON.stringify(T.S().suppTake) !== '["zelazo"]') throw new Error('dodanie ' + JSON.stringify(T.S().suppTake));
+  const h = mainHtml(); if (!(h.includes('id="suppplan"') && h.includes('Mój plan suplementów') && h.includes('data-supp="zelazo" aria-pressed="true" aria-label="Biorę: Żelazo"><span aria-hidden="true">✓ </span>Biorę</button>'))) throw new Error('karta');
+  click({ supp: 'zelazo' });
+  return T.S().suppTake.length === 0 && !mainHtml().includes('id="suppplan"') && mainHtml().includes('data-supp="zelazo" aria-pressed="false" aria-label="Biorę: Żelazo">Biorę</button>');
+});
+tryc('suplementy: nieznane id w kliknięciu nic nie dodaje', () => { SUPV([]); click({ supp: 'x' }); return T.S().suppTake.length === 0; });
+tryc('suplementy: żelazo z wapniem pokazuje ostrzeżenie żelazo-wapń', () => { const p = PAIR('zelazo', 'wapn'); if (!p) throw new Error('brak pary'); const h = PLAN_OF(SUPV(['zelazo', 'wapn'])); return h.includes(T.esc(p.txt)); });
+tryc('suplementy: samo żelazo pokazuje kawę, herbatę i nabiał z 2 godzinami (NHS)', () => { const p = T.SUPP_PARY.find((x) => x.a === 'zelazo' && x.b === 'kawa'); if (!p) throw new Error('brak pary'); const h = PLAN_OF(SUPV(['zelazo'])); return h.includes(T.esc(p.txt)) && /2 godzin/.test(p.txt) && /kaw/.test(p.txt) && /herbat/.test(p.txt) && /nabiał/.test(p.txt) && h.includes('ferrous-sulfate'); });
+tryc('suplementy: lewotyroksyna z wapniem pokazuje 2 h i 4 h ze źródłami', () => { const p = PAIR('lewotyroksyna', 'wapn'); if (!p) throw new Error('brak pary'); const h = PLAN_OF(SUPV(['lewotyroksyna', 'wapn'])); return h.includes(T.esc(p.txt)) && /2 godzin/.test(p.txt) && /4 godzin/.test(p.txt) && h.includes('medlineplus.gov/druginfo/meds/a682461') && h.includes('medicinal-products/12231'); });
+tryc('suplementy: najwyżej jedno ostrzeżenie w grupie, reszta pod „Pokaż wszystkie odstępy”', () => {
+  const h = PLAN_OF(SUPV(['zelazo', 'wapn', 'cynk', 'magnez', 'lewotyroksyna', 'osseina', 'witae', 'ppi', 'b12']));
+  const groups = h.split('<section class="sgrp"').slice(1); if (!groups.length || groups.length > 4) throw new Error('grupy ' + groups.length);
+  const many = groups.filter((g) => (g.match(/class="note"/g) || []).length > 1); if (many.length) throw new Error('za dużo ostrzeżeń');
+  return h.includes('Pokaż wszystkie odstępy (') && !h.includes('note warn') && groups.every((g) => /<h4[^>]*>(Rano na czczo|Z posiłkiem|Między posiłkami|Pora bez zalecenia)<\/h4>/.test(g)) && h.includes('<h3') && !/<h3[^>]*>(Rano|Z posi|Między|Pora)/.test(h);
+});
+tryc('suplementy: plan bez serii, bez czerwonych oznaczeń i liczenia pominięć', () => { const h = PLAN_OF(SUPV(['zelazo', 'wapn'])); return h && !/seria|pominię|z rzędu|note warn/i.test(h); });
+tryc('suplementy: pora tylko z czterech grup', () => SP().every((s) => ['rano', 'posilek', 'miedzy', 'brak'].includes(s.pora)));
+tryc('suplementy: suppTake w DEF, pomijane w kopii bez zdrowia', () => { SUPV(['zelazo']); return JSON.stringify(T.DEF().suppTake) === '[]' && !('suppTake' in JSON.parse(T.bkBuild(true)).data) && JSON.stringify(JSON.parse(T.bkBuild(false)).data.suppTake) === '["zelazo"]'; });
+tryc('suplementy: wrogi import suppTake naprawiony do znanych id bez powtórzeń', () => {
+  view('set', BASE({ suppTake: [] }));
+  T.setPending({ app: 'talerz-i-trening', v: 1, created: '2026-11-09T10:00:00Z', noHealth: false, data: { suppTake: ['x', 1, null, 'zelazo', 'zelazo'] } });
+  click({ bkapply: '1' });
+  return JSON.stringify(T.S().suppTake) === '["zelazo"]';
+});
+tryc('suplementy: suppTake nie-tablica przy wczytaniu kopii daje pustą listę', () => {
+  view('set', BASE({ suppTake: [] }));
+  T.setPending({ app: 'talerz-i-trening', v: 1, created: '2026-11-09T10:00:00Z', noHealth: false, data: { suppTake: 'zelazo' } });
+  click({ bkapply: '1' });
+  return JSON.stringify(T.S().suppTake) === '[]';
+});
+tryc('suplementy: ChPL lewotyroksyny zawsze „co najmniej 2 godziny przed” żelazem i solami wapnia', () => {
+  const t = [PAIR('lewotyroksyna', 'wapn').txt, PAIR('lewotyroksyna', 'zelazo').txt, SID('zelazo').nie, SID('wapn').nie, SID('lewotyroksyna').nie];
+  const bad = t.flatMap((x) => x.split(/[.;] /)).filter((z) => /co najmniej 2 godzin/.test(z) && !/lewotyroksyna co najmniej 2 godziny przed (żelazem|solami wapnia)/.test(z));
+  if (bad.length) throw new Error(bad.join(' | '));
+  return true;
+});
+tryc('suplementy: nazwa preparatu z MedlinePlus przy żelazie i wapniu', () => SID('zelazo').nie.includes('siarczan żelaza') && SID('wapn').nie.includes('węglan wapnia'));
+tryc('suplementy: adres ze słowem fybogel tylko w dwóch linkach NHS (wyjątek, komentarz w kodzie)', () => {
+  const L = code.split('\n').filter((l) => /fybogel/i.test(l));
+  return L.length === 2 && L.every((l) => /^\s*s_nhsIsp[TW]:\['https:\/\/www\.nhs\.uk\/medicines\/fybogel-ispaghula-husk\//.test(l)) && /wyjątek/i.test(code.split('\n')[code.split('\n').findIndex((l) => /s_nhsIspT:/.test(l)) - 1]);
+});
+tryc('suplementy: lewotyroksyna bez nieużywanego źródła NHS', () => !SID('lewotyroksyna').src.includes('s_nhsLt4'));
+tryc('suplementy: kreatyna z zastrzeżeniem „według doniesień (ISSN)”', () => /według doniesień \(ISSN\)/i.test(SID('kreatyna').kiedy) && !/pewniej zostaje/.test(SID('kreatyna').kiedy));
+tryc('suplementy: błonnik jako łuska babki jajowatej (ispaghula), bez „babka płesznik”', () => SID('blonnik').n === 'Błonnik (łuska babki jajowatej, ispaghula)');
+tryc('suplementy: błonnik z innym preparatem pokazuje w planie jedną uwagę o odstępie ponad godzinę (NHS)', () => {
+  if (PLAN_OF(SUPV(['blonnik'])).includes('ponad godzinę')) throw new Error('sam błonnik');
+  const h = PLAN_OF(SUPV(['blonnik', 'jod', 'cynk'])), n = h.split('ponad godzinę').length - 1;
+  return n === 1 && h.includes('taking-fybogel-with-other-medicines');
+});
+tryc('suplementy: cytrulina bez dawki bez cytatu', () => !STXT(SID('cytrulina')).includes('6-8 g') && !SID('cytrulina').d);
+tryc('suplementy: probiotyki z antybiotykiem w Uwadze, z kontekstem C. difficile', () => { const s = SID('probiotyki'); return s.nie === BRAK && /antybiotyk/.test(s.w) && /C\. difficile/.test(s.w); });
+tryc('suplementy: witamina C, zdanie o żelazie oddzielne od leków przeciwzakrzepowych', () => { const z = SID('witc').w.split(/\. /).find((x) => /żelaz/.test(x)); const w = SID('witc').w; return !!z && !/przeciwzakrzep|warfaryn/.test(z) && w.indexOf(z) < w.indexOf('Przy lekach przeciwzakrzepowych'); });
+tryc('suplementy: para inhibitor pompy protonowej i lewotyroksyna z ChPL lewotyroksyny', () => { const p = PAIR('ppi', 'lewotyroksyna'); return !!p && /pH soku żołądkowego/.test(p.txt) && /hormonów tarczycy/.test(p.txt) && p.src.includes('s_chplLt4'); });
+tryc('suplementy: pary bez nieużywanego pola h', () => T.SUPP_PARY.every((p) => !('h' in p)));
+tryc('suplementy: beta-alanina bez zdania o własnych treningach, jod „Zapytaj lekarza lub farmaceutę”', () => !STXT(SID('betaalanina')).includes('spinningu') && SID('jod').v === 'Zapytaj lekarza lub farmaceutę');
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
