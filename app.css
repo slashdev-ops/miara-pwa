@@ -270,7 +270,11 @@ details.fold .panel,details.fold .meal{margin:0;border-radius:0;box-shadow:none}
 .step.next .lab{font-weight:600}
 .hint{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:4px}
 .btn.small{padding:8px 16px;min-height:44px;font-size:15px;width:auto;flex:none}
-.opt.hab.next{box-shadow:inset 3px 0 0 var(--green)}
+/* Pasek „następny krok” jako osobny element z odstępem od góry i dołu: cień wewnętrzny wiersza wychodził poza zaokrąglony róg ramki (18.11.2026) */
+.opt.hab.next{position:relative}
+.opt.hab.next::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:3px;background:var(--green)}
+/* Na czas wpisu na telefonie dolne menu znika: przyklejone do ekranu wjeżdżało nad klawiaturę i zasłaniało pole (18.11.2026) */
+@media (pointer:coarse){body.kbd nav.tabs{display:none}}
 .opt .chev{color:var(--muted);font-size:20px;line-height:1;margin-left:4px}
 
 /* Wskazówka pierwszego wejścia */
