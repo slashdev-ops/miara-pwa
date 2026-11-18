@@ -418,3 +418,19 @@ nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;he
 .pmac{font-size:15px;color:var(--muted);line-height:1.4}
 .mnum .b{color:var(--ink)}
 
+/* Zakupy z promocji: dzień zakupów, gazetki, wklejony fragment, propozycje (cele dotyku co najmniej 44 px) */
+.promo{padding:0 16px 12px}
+.promo .rh{margin:16px 0 8px;font-size:17px}
+.promo .field{padding:8px 0}
+.promo .field input{flex:1 1 0;min-width:0;max-width:62%;text-align:left;font:inherit;font-size:17px;padding:8px 12px;min-height:44px;box-sizing:border-box;border:1px solid var(--field);border-radius:var(--r-s);background:var(--bg);color:var(--ink)}
+.plinks{display:flex;flex-wrap:wrap;gap:8px}
+a.plink{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
+.plabel{display:block;font-weight:600;margin:4px 0 8px}
+.ptxt{display:block;width:100%;box-sizing:border-box;min-height:96px;resize:vertical;font:inherit;font-size:17px;padding:8px 12px;border:1px solid var(--field);border-radius:var(--r-s);background:var(--bg);color:var(--ink)}
+.pnote{display:block;font-size:15px;color:var(--muted)}
+.pprop{padding:12px 16px}
+.pprop + .pprop{border-top:1px solid var(--line)}
+.pprop .ptop2{display:flex;justify-content:space-between;gap:12px;font-size:15px;overflow-wrap:anywhere}
+.pprop .ptop2 b{white-space:nowrap}
+.pprop select{display:block;width:100%;box-sizing:border-box;margin:8px 0;font:inherit;font-size:15px;padding:8px 12px;min-height:44px;border:1px solid var(--field);border-radius:var(--r-s);background:var(--bg);color:var(--ink)}
+.pbtns{display:flex;flex-wrap:wrap;gap:8px}

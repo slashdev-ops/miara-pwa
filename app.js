@@ -193,8 +193,88 @@ function planFor(dw){const base=PLAN[dw];if(!((S.prof||{}).cond||{}).io)return b
   return base.map(id=>{const m=MEALS.find(x=>x.id===id);if(ioFit(m,macros(m,1,1)))return id;const off=o=>o.t==='obiad'&&(we?o.min<25:o.min>20)?1:0;
     const c=MEALS.filter(o=>o.t===m.t&&!base.includes(o.id)&&ioFit(o,macros(o,1,1))).sort((a,b)=>off(a)-off(b)||Math.abs(kc(a)-kc(m))-Math.abs(kc(b)-kc(m))||a.id.localeCompare(b.id));return c.length?c[0].id:id})}
 function planIds(){const sw=(S.swaps||{})[todayKey()]||{};return planFor(new Date().getDay()).map((id,i)=>sw[i]||id)}
-function shopLines(){const agg={};for(const d of [0,1,2,3,4,5,6])planFor(d).forEach(id=>MEALS.find(m=>m.id===id).ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g}));return Object.keys(ING).filter(i=>agg[i]).map(i=>i==='jajko'?`Jajka: ${Math.ceil(agg[i]/60)} szt.`:`${ING[i].n}: ${Math.ceil(agg[i]/10)*10} g`)}
-function shopHtml(){const L=shopLines();return `<details class="fold" id="zakupy"><summary>Lista zakupów na tydzień z planu (${L.length} pozycji)</summary><div class="panel">`+L.map(l=>{const [a,b]=l.split(': ');return `<div class="entry"><span class="txt">${a}</span><span class="val">${b}</span></div>`}).join('')+'</div><p class="small muted" style="padding:0 16px">Ilości dla 7 dni planu, bez zamian i bez dodatkowych porcji węglowodanów po treningu. Przyprawy, sól i cytryna poza listą.</p><p style="padding:0 16px 12px"><button class="btn ghost" data-shop="1">Kopiuj listę</button></p></details>'}
+function shopAgg(){const agg={};for(const d of [0,1,2,3,4,5,6])planFor(d).forEach(id=>MEALS.find(m=>m.id===id).ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g}));return agg}
+function shopKeys(){const agg=shopAgg();return Object.keys(ING).filter(i=>agg[i])}
+function shopLines(){const agg=shopAgg();return Object.keys(ING).filter(i=>agg[i]).map(i=>i==='jajko'?`Jajka: ${Math.ceil(agg[i]/60)} szt.`:`${ING[i].n}: ${Math.ceil(agg[i]/10)*10} g`)}
+function shopHtml(){const L=shopLines(),K=shopKeys();return `<details class="fold" id="zakupy" data-fold="zakupy"${OPEN_F.has('zakupy')?' open':''}><summary>${shopHead()} (${L.length} pozycji)</summary><div class="panel">`+L.map((l,i)=>{const [a,b]=l.split(': ');return `<div class="entry"><span class="txt">${a}${promoNote(K[i])}</span><span class="val">${b}</span></div>`}).join('')+'</div><p class="small muted" style="padding:0 16px">Ilości dla 7 dni planu, bez zamian i bez dodatkowych porcji węglowodanów po treningu. Przyprawy, sól i cytryna poza listą.</p><p style="padding:0 16px 12px"><button class="btn ghost" data-shop="1">Kopiuj listę</button></p>'+promoHtml()+'</details>'}
+// ---------- Zakupy z promocji (brief 18.11.2026): osoba sama ogląda gazetkę i wkleja fragment; Miara rozpoznaje go lokalnie, nic nie pobiera
+// z sieci i zapisuje tylko pozycje zatwierdzone przez osobę. Wklejony tekst nie trafia do stanu, kopii ani localStorage (tylko PROMO_PENDING). ----------
+let PROMO_PENDING=null,PR_ING=null;
+const PR_MON=['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paz','lis','gru'],PR_DOWG=['niedzieli','poniedziałku','wtorku','środy','czwartku','piątku','soboty'];
+const PR_B='(^|[^a-ząćęłńóśźż\\d.,])',PR_DAY='(0?[1-9]|[12]\\d|3[01])',PR_MO='(0?[1-9]|1[0-2])',PR_END='(?!\\d|[,.]\\d|\\s*z[łl])',PR_SEP='\\s*(?:-|–|—|do)\\s*';
+const PR_MW='(sty(?:cznia|czeń|czen)?|lut(?:ego|y)?|mar(?:ca|zec)?|kwi(?:etnia|ecień|ecien)?|maj(?:a)?|cze(?:rwca|rwiec)?|lip(?:ca|iec)?|sie(?:rpnia|rpień|rpien)?|wrz(?:eśnia|esnia|esień|esien)?|pa[zź](?:dziernika|dziernik)?|lis(?:topada|topad)?|gru(?:dnia|dzień|dzien)?)\\.?(?![a-ząćęłńóśźż])';
+// Kolejność ma znaczenie: zakres liczbowy, zakres słowny, pojedyncza data „od”/„do” liczbowo, potem słownie
+const PR_DATES=[
+  [new RegExp(PR_B+'(?:od\\s+)?'+PR_DAY+'\\.'+PR_MO+'(?:\\.(\\d{4}))?'+PR_SEP+PR_DAY+'\\.'+PR_MO+'(?:\\.(\\d{4}))?'+PR_END,'gi'),m=>[{d:+m[2],m:+m[3],y:+m[4]||0},{d:+m[5],m:+m[6],y:+m[7]||0}]],
+  [new RegExp(PR_B+'(?:od\\s+)?'+PR_DAY+'(?:\\s+'+PR_MW+')?(?:\\s+(\\d{4}))?'+PR_SEP+PR_DAY+'\\s+'+PR_MW+'(?:\\s+(\\d{4}))?','gi'),m=>[{d:+m[2],m:m[3]?prMon(m[3]):prMon(m[6]),y:+m[4]||0},{d:+m[5],m:prMon(m[6]),y:+m[7]||0}]],
+  [new RegExp(PR_B+'(od|do)\\s+'+PR_DAY+'\\.'+PR_MO+'(?:\\.(\\d{4}))?'+PR_END,'gi'),m=>{const x={d:+m[3],m:+m[4],y:+m[5]||0};return m[2].toLowerCase()==='od'?[x,null]:[null,x]}],
+  [new RegExp(PR_B+'(od|do)\\s+'+PR_DAY+'\\s+'+PR_MW+'(?:\\s+(\\d{4}))?','gi'),m=>{const x={d:+m[3],m:prMon(m[4]),y:+m[5]||0};return m[2].toLowerCase()==='od'?[x,null]:[null,x]}]];
+// Cena: 12,99 / 12.99 / 12,99 zł / 5 49 zł / 549 zł (3-4 cyfry przed zł to grosze); nie: 0,75 l, 1,50 kg, 50%; opcjonalnie /kg albo /szt.
+const PR_PRICE=new RegExp(PR_B.replace('a-ząćęłńóśźż','')+'(?:(\\d{1,4})[,.](\\d{2})(?!\\d|[,.]\\d|\\s*(?:%|(?:kg|g|dag|ml|l|szt)(?![a-ząćęłńóśźż])))|(\\d{1,3}) (\\d{2})(?=\\s*z[łl])|(\\d{3,4})(?=\\s*z[łl]))(\\s*z[łl](?![a-ząćęłńóśźż]))?(?:\\s*\\/\\s*(kg|szt)\\.?)?','gi');
+function prMon(s){return PR_MON.indexOf(String(s).slice(0,3).toLowerCase().replace('ź','z'))+1}
+function prKey(y,m,d){const t=new Date(y,m-1,d,12);return t.getFullYear()===y&&t.getMonth()===m-1&&t.getDate()===d?keyOf(t):''}
+function prAdd(k,n){const d=new Date(k+'T12:00:00');d.setDate(d.getDate()+n);return keyOf(d)}
+function prDM(k){return k?k.slice(8,10)+'.'+k.slice(5,7):''}
+function prZl(p){return (Math.round(p.p*100)/100).toFixed(2).replace('.',',')+' zł'+(p.u==='kg'?' za kg':p.u==='szt'?' za szt.':'')}
+// Rok z tekstu, a gdy go brak: ten, przy którym data jest najbliżej dzisiaj (28.12 i „do 02.01” daje następny rok)
+function prNear(m,d,today){const ty=+today.slice(0,4),t0=new Date(today+'T12:00:00');let best='',bd=Infinity;for(const y of [ty-1,ty,ty+1]){const k=prKey(y,m,d);if(!k)continue;const df=Math.abs(new Date(k+'T12:00:00')-t0);if(df<bd){bd=df;best=k}}return best}
+function prRange(a,b,today){let to='',from='';
+  if(b){if(b.y)to=prKey(b.y,b.m,b.d);else if(a&&a.y){to=prKey(a.y,b.m,b.d);const f=prKey(a.y,a.m,a.d);if(to&&f&&to<f)to=prKey(a.y+1,b.m,b.d)}else to=prNear(b.m,b.d,today)}
+  if(a){if(a.y)from=prKey(a.y,a.m,a.d);else if(to){const ty=+to.slice(0,4);from=prKey(ty,a.m,a.d);if(from&&from>to)from=prKey(ty-1,a.m,a.d)}else from=prNear(a.m,a.d,today)}
+  if(from&&to&&to<from)to=prKey(+to.slice(0,4)+1,+to.slice(5,7),+to.slice(8,10))||to;
+  return {od:from,do:to}}
+const prNorm=s=>String(s).toLowerCase().replace(/[ąćęłńóśźż]/g,c=>'acelnoszz'['ąćęłńóśźż'.indexOf(c)]);
+function prIngs(){if(!PR_ING){const used=new Set();MEALS.forEach(m=>m.ing.forEach(i=>used.add(i[0])));PR_ING=Object.keys(ING).filter(k=>used.has(k)).map(k=>[k,(prNorm(ING[k].n).match(/[a-z]+/g)||[]).filter(w=>w.length>=4)])}return PR_ING}
+// Składnik z nazwy: słowa od 4 liter z nazwy składnika, pasuje pierwsze 5 liter; najwięcej trafień, remis: mniej słów, dalej kolejność w ING
+function promoMatch(name){const t=prNorm(name);let best='',bh=0,bw=0;prIngs().forEach(([k,ws])=>{const h=ws.filter(w=>t.includes(w.slice(0,5))).length;if(h>bh||(h&&h===bh&&ws.length<bw)){best=k;bh=h;bw=ws.length}});return best}
+function nextShop(today){const sd=S.shopDay;if(sd==null||!(sd>=0&&sd<=6))return '';const d=new Date(today+'T12:00:00');d.setDate(d.getDate()+(sd-d.getDay()+7)%7);return keyOf(d)}
+function prClean(r){return r.replace(/-?\s*\d+(?:[,.]\d+)?\s*%/g,' ').replace(/(^|[^a-ząćęłńóśźż])(zł|zl|cena|ceny|taniej|promocja|promocji)(?![a-ząćęłńóśźż])/gi,'$1 ').replace(/\s+/g,' ').replace(/^[\s\-–—:;,.|/*!+]+|[\s\-–—:;,|/*!+]+$/g,'').trim()}
+function promoParse(text,today){const out=[];let cand='',glob=null;
+  String(text||'').replace(/\u00a0/g,' ').split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(line=>{
+    let r=' '+line+' ',dt=null;
+    PR_DATES.forEach(([re,f])=>{r=r.replace(re,(...m)=>{if(!dt){const [a,b]=f(m),x=prRange(a,b,today);if(x.od||x.do)dt=x}return m[1]+' '})});
+    const pr=[];r=r.replace(PR_PRICE,(...m)=>{const v=m[2]!=null?+(m[2]+'.'+m[3]):m[4]!=null?+(m[4]+'.'+m[5]):+m[6]/100;pr.push({p:Math.round(v*100)/100,u:m[8]?m[8].toLowerCase():''});return m[1]+' '});
+    const nm=prClean(r),ok=pr.filter(x=>x.p>0&&x.p<10000);
+    if(!ok.length){if(dt)glob=dt;else if((nm.match(/[a-ząćęłńóśźż]/gi)||[]).length>=3)cand=nm;return}
+    const best=ok.reduce((a,b)=>b.p<a.p?b:a),n=(nm||cand).slice(0,60).trim();cand='';
+    if(n)out.push({n,p:best.p,u:best.u,od:dt?dt.od:'',do:dt?dt.do:'',own:!!dt})});
+  const base=nextShop(today)||today;
+  return out.slice(0,20).map(o=>{const x={n:o.n,p:o.p,u:o.u,od:o.od,do:o.do,ing:promoMatch(o.n)};if(!o.own&&glob){x.od=glob.od;x.do=glob.do}
+    if(!x.do){x.do=prAdd(base,6);if(x.od&&x.do<x.od)x.do=prAdd(x.od,6);x.guess=true}return x})}
+function promosActive(k){return (Array.isArray(S.promos)?S.promos:[]).filter(p=>(!p.od||p.od<=k)&&k<=p.do)}
+// Dania z bazy Miary przez filtry osoby (wykluczenia, Dla mnie, makro), bez zawężenia do rodzaju posiłku i tempa
+function promoDishes(k){const on=new Set(promosActive(k).map(p=>p.ing).filter(Boolean));if(!on.size)return [];
+  return filtered({allTypes:true}).map((o,i)=>({m:o.m,i,hit:[...new Set(o.m.ing.map(x=>x[0]).filter(x=>on.has(x)))]})).filter(o=>o.hit.length).sort((a,b)=>b.hit.length-a.hit.length||a.i-b.i).slice(0,5).map(o=>({m:o.m,hit:o.hit}))}
+const PR_DK=/^\d{4}-\d{2}-\d{2}$/;
+function promoFix(s,today){if(!s||typeof s!=='object')return s;
+  s.shopDay=Number.isInteger(s.shopDay)&&s.shopDay>=0&&s.shopDay<=6?s.shopDay:null;
+  s.stores=(Array.isArray(s.stores)?s.stores:[]).filter(x=>x&&typeof x==='object'&&typeof x.n==='string'&&typeof x.u==='string').slice(0,3).map(x=>({n:x.n.slice(0,30),u:x.u.slice(0,500)}));
+  s.promos=(Array.isArray(s.promos)?s.promos:[]).filter(p=>p&&typeof p==='object'&&typeof p.n==='string'&&p.n.trim()&&typeof p.p==='number'&&p.p>0&&p.p<10000&&typeof p.do==='string'&&PR_DK.test(p.do)&&p.do>=today&&(!p.od||(typeof p.od==='string'&&PR_DK.test(p.od))))
+    .slice(0,40).map((p,i)=>({id:typeof p.id==='string'&&p.id?p.id.slice(0,40):'p'+i+'_'+p.do,n:p.n.trim().slice(0,60),ing:typeof p.ing==='string'&&ING[p.ing]?p.ing:'',p:Math.round(p.p*100)/100,od:p.od||'',do:p.do,u:p.u==='kg'||p.u==='szt'?p.u:''}));
+  return s}
+function promoSave(idx){if(!PROMO_PENDING)return;S.promos=Array.isArray(S.promos)?S.promos:[];const done=new Set();let full=false;
+  for(const i of idx){const p=PROMO_PENDING[i];if(!p)continue;const key=p.n.toLowerCase(),j=S.promos.findIndex(x=>String(x.n).toLowerCase()===key&&x.do===p.do),o={n:p.n.slice(0,60),ing:ING[p.ing]?p.ing:'',p:p.p,od:p.od||'',do:p.do,u:p.u||''};
+    if(j>=0)S.promos[j]=Object.assign({id:S.promos[j].id},o);else if(S.promos.length>=40){full=true;break}else S.promos.push(Object.assign({id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)},o));done.add(i)}
+  PROMO_PENDING=PROMO_PENDING.filter((_,i)=>!done.has(i));if(!PROMO_PENDING.length)PROMO_PENDING=null;OPEN_F.add('zakupy');
+  toast(full?'Masz już 40 promocji. Usuń stare, żeby dodać nowe.':done.size===1?'Zapisano promocję':`Zapisano promocje: ${done.size}`)}
+function shopHead(){const nx=nextShop(todayKey());return nx?`Lista zakupów na 7 dni od ${PR_DOWG[S.shopDay]} ${prDM(nx)}`:'Lista zakupów na tydzień z planu'}
+// Dopisek przy pozycji listy: promocja w dniu zakupów (albo dziś), inaczej uwaga, że kończy się przed zakupami
+function promoNote(k){const t=todayKey(),ref=nextShop(t)||t,L=(Array.isArray(S.promos)?S.promos:[]).filter(p=>p.ing===k&&p.do>=t);
+  const a=L.filter(p=>(!p.od||p.od<=ref)&&ref<=p.do).sort((x,y)=>x.p-y.p)[0];if(a)return `<span class="pnote">promocja ${prZl(a)} do ${prDM(a.do)}</span>`;
+  const b=L.filter(p=>p.do<ref).sort((x,y)=>x.do<y.do?1:-1)[0];return b?`<span class="pnote">promocja kończy się przed zakupami (${prDM(b.do)})</span>`:''}
+function promoHtml(){const t=todayKey(),ref=nextShop(t)||t,st=Array.isArray(S.stores)?S.stores:[],P=Array.isArray(S.promos)?S.promos:[];
+  let h='<div class="promo"><h3 class="rh">Dzień zakupów</h3>'+seg([[1,'pn'],[2,'wt'],[3,'śr'],[4,'cz'],[5,'pt'],[6,'sb'],[0,'nd'],['none','Nie ustawiam']],S.shopDay==null?'none':S.shopDay,'shopday','scroll','Dzień zakupów');
+  const ok=st.map((x,i)=>[x,i]).filter(([x])=>/^https:\/\/\S+$/.test(x.u||''));
+  h+='<h3 class="rh">Gazetki</h3>'+(ok.length?'<div class="plinks">'+ok.map(([x,i])=>`<a class="btn ghost small plink" href="${esc(x.u)}" target="_blank" rel="noopener noreferrer">Otwórz gazetkę: ${esc(x.n.trim()||'sklep '+(i+1))}</a>`).join('')+'</div>':'<p class="small muted">Link do gazetki swojego sklepu dodasz w „Twoje sklepy”.</p>');
+  h+=fold('sklepy','Twoje sklepy',st.map((x,i)=>`<div class="field"><label for="st_n${i}">Sklep ${i+1}: nazwa</label><input type="text" id="st_n${i}" data-k="stores.${i}.n" maxlength="30" autocomplete="off" value="${esc(x.n)}"></div><div class="field"><label for="st_u${i}">Sklep ${i+1}: link do gazetki</label><input type="url" id="st_u${i}" data-k="stores.${i}.u" maxlength="500" inputmode="url" autocomplete="off" placeholder="https://" value="${esc(x.u)}"></div>`).join('')+(st.length<3?'<p><button class="btn ghost small" data-storeadd="1">Dodaj sklep</button></p>':'')+'<p class="small muted">Link otwiera się w nowej karcie; działa tylko adres zaczynający się od https://.</p>');
+  h+='<h3 class="rh">Wklej z gazetki</h3><label for="promo_txt" class="plabel">Wklej fragment gazetki</label><textarea id="promo_txt" class="ptxt" rows="4" placeholder="np. Twaróg półtłusty 250 g 3,99 zł do 21.11"></textarea><p><button class="btn small" data-promoparse="1">Rozpoznaj</button></p>';
+  if(PROMO_PENDING){if(!PROMO_PENDING.length)h+='<p class="small" id="promo_h" tabindex="-1">Nie znalazłem ceny. Wklej linię z nazwą i ceną, np. Twaróg 250 g 3,99 zł</p>';
+    else h+='<h3 class="rh" id="promo_h" tabindex="-1">Propozycje do zatwierdzenia</h3><div class="panel">'+PROMO_PENDING.map((p,i)=>`<div class="pprop"><div class="ptop2"><span>${esc(p.n)}</span><b>${prZl(p)}</b></div><p class="small muted">${p.guess?'data nieznana, przyjęto do '+prDM(p.do):(p.od?'od '+prDM(p.od)+' ':'')+'do '+prDM(p.do)}</p><select data-promoing="${i}" aria-label="Składnik dla: ${esc(p.n)}"><option value="">bez dopasowania</option>${prIngs().map(([k])=>`<option value="${k}"${k===p.ing?' selected':''}>${ING[k].n}</option>`).join('')}</select><div class="pbtns"><button class="btn small" data-promosave="${i}" aria-label="Zapisz: ${esc(p.n)}">Zapisz</button><button class="btn ghost small" data-promoskip="${i}" aria-label="Pomiń: ${esc(p.n)}">Pomiń</button></div></div>`).join('')+'</div><p><button class="btn small" data-promosaveall="1">Zapisz wszystkie</button></p>'}
+  const mine=P.filter(p=>p.do>=t).sort((a,b)=>a.do<b.do?-1:a.do>b.do?1:0);
+  if(mine.length)h+='<h3 class="rh">Twoje promocje</h3><div class="panel">'+mine.map(p=>`<div class="entry"><span class="txt">${esc(p.n)}<span class="pnote">${prZl(p)}, ${p.od&&p.od>t?'od '+prDM(p.od)+' ':''}do ${prDM(p.do)}, ${ING[p.ing]?ING[p.ing].n:'bez dopasowania'}</span></span><button class="btn ghost small" data-promodel="${esc(p.id)}" aria-label="Usuń: ${esc(p.n)}">Usuń</button></div>`).join('')+'</div>';
+  const ds=promoDishes(ref);
+  if(ds.length)h+='<h3 class="rh">Dania z produktów w promocji</h3><div class="panel">'+ds.map(o=>`<div class="entry"><span class="txt">${o.m.n}<span class="pnote">w promocji: ${o.hit.map(k=>ING[k].n).join(', ')}</span></span><button class="btn ghost small" data-recipe="${o.m.id}">Przepis</button></div>`).join('')+'</div>';
+  return h+'<p class="small muted">Ceny wpisujesz sam z gazetki lub półki. Miara nic nie pobiera z internetu; promocje usuwają się po terminie.</p></div>'}
 // ---------- Zamówione: jedzenie z dostawy jednym dotknięciem; wartości orientacyjne dietetyka, przedział ±30% (rada/2026-11-08_zamowione-i-zakresy) ----------
 const plN=(n,a,b,c)=>n===1?a:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?b:c;
 const ORD={
@@ -947,7 +1027,7 @@ document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.datas
 // ---------- Kopia danych: eksport i import pliku (np. przez iCloud Drive) ----------
 const BK_SKIP=['imp','tab','introStep','sosStep','sosTrig','recipe','recipeBack','labSel'];
 // Kopia bez danych o zdrowiu: lista tego, co zostaje; każde nowe pole stanu jest domyślnie pomijane (rada 09.11.2026, kopia bez danych o zdrowiu)
-const BK_NH_KEEP=['toastLen','tips','discreet','pet','prices','ord'];
+const BK_NH_KEEP=['toastLen','tips','discreet','pet','prices','ord','shopDay','stores','promos'];
 let BK_PENDING=null;
 function bkBuild(noHealth){let d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.kopia)delete d.kopia.token;if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){const o={};BK_NH_KEEP.forEach(k=>{if(k in d)o[k]=d[k]});d=o}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
 function bkParse(text){try{const o=JSON.parse(text);if(!o||o.app!=='talerz-i-trening'||o.v!==1||!o.data||typeof o.data!=='object'||Array.isArray(o.data))return null;return o}catch(e){return null}}
@@ -974,7 +1054,7 @@ const LS='talerz-trening-v1';
 const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},shopDay:null,stores:[],promos:[],sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 // Wartości startowe (rada/2026-11-09_wartosci-startowe): punkt startowy do ustawiania przyciskami, zależny od płci; to założenie
@@ -1034,7 +1114,7 @@ function muscleHtml(){const r=muscleRec(),on=!!S.muscle,a=num(S.age);
 function goalHint(){return S.mode!=='redukcja'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny albo wybierz niżej.</p>'}
 function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
 function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,STEP.goal)}
-function syFix(s){s=suppFix(s);try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
+function syFix(s){s=suppFix(s);s=promoFix(s,todayKey());try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
 function load(){try{const r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(muscleFix(o,merge(clone(DEF),fixTouched(o))))}}catch(e){}return clone(DEF)}
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
@@ -1196,12 +1276,12 @@ function mealTags(m,x){const t=[];if(m.sw)t.push(['Słodkie','danie na słodko, 
   const fr=x.k>0?x.fib/x.k*100:0;if(fr>=3)t.push(['Dużo błonnika','co najmniej 3 g błonnika na 100 kcal (próg UE dla wysokiej zawartości)']);else if(fr>=1.5)t.push(['Źródło błonnika','co najmniej 1,5 g błonnika na 100 kcal (próg UE dla źródła błonnika)']);
   if(((S.prof||{}).cond||{}).hashi&&m.ing.some(i=>i[0]==='tofu'))t.push(['Soja: odstęp od leku','soja może zmniejszać wchłanianie lewotyroksyny (opisy przypadków, wytyczne ATA)']);return t}
 function tagsHtml(m,x){return mealTags(m,x).map(([l,w])=>`<span class="msep"><span aria-hidden="true"> | </span><span class="sr">, </span></span><span class="mtag" title="${w}">${l}</span>`).join('')}
-function filtered(){
+function filtered(o){
   const cm=carbMult(),por=num(S.f.portion)||1;
   const inc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===1),exc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===-1);
   const sorters={p:(a,b)=>b.x.p/b.x.k-a.x.p/a.x.k,k:(a,b)=>a.x.k-b.x.k,t:(a,b)=>a.m.min-b.m.min};
   const pc=S.f.pace||'all';
-  return MEALS.filter(m=>(S.f.type==='all'||m.t===S.f.type)&&(pc==='all'||(pc==='quick'?m.min<=20:m.min>=25)))
+  return MEALS.filter(m=>(o&&o.allTypes)||((S.f.type==='all'||m.t===S.f.type)&&(pc==='all'||(pc==='quick'?m.min<=20:m.min>=25))))
     .map(m=>({m,x:macros(m,cm,por),ch:chipsOf(m)}))
     .filter(o=>(!(S.f.tags||{}).sw||o.m.sw)&&(!(S.f.tags||{}).io||ioFit(o.m,o.x))&&(!forMe()||ioFit(o.m,o.x)))
     .filter(o=>!exc.some(c=>o.ch.has(c)))
@@ -1936,6 +2016,13 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.kday){const v=+d.kday,a=S.knee.days;S.knee.days=a.includes(v)?a.filter(x=>x!==v):[...a,v]}
   else if(d.swap!=null){const i=+d.swap,k=todayKey(),orig=planFor(new Date().getDay())[i],cur=planIds()[i],t=MEALS.find(m=>m.id===orig).t,bk=macros(MEALS.find(m=>m.id===orig),1,1).k,c=MEALS.filter(m=>m.t===t).sort((a,b)=>(a.id===orig?-1:b.id===orig?1:0)||Math.abs(macros(a,1,1).k-bk)-Math.abs(macros(b,1,1).k-bk)||a.id.localeCompare(b.id)).map(m=>m.id),nx=c[(c.indexOf(cur)+1)%c.length];S.swaps=S.swaps||{};S.swaps[k]=S.swaps[k]||{};if(nx===orig)delete S.swaps[k][i];else S.swaps[k][i]=nx}
   else if(d.shop){const t='Lista zakupów na tydzień\n'+shopLines().join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano listę'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
+  else if(d.shopday){S.shopDay=d.shopday==='none'?null:+d.shopday;OPEN_F.add('zakupy')}
+  else if(d.storeadd){S.stores=Array.isArray(S.stores)?S.stores:[];if(S.stores.length<3)S.stores.push({n:'',u:''});OPEN_F.add('zakupy');OPEN_F.add('sklepy')}
+  else if(d.promoparse){const el=document.getElementById('promo_txt');PROMO_PENDING=promoParse(el?String(el.value||''):'',todayKey());OPEN_F.add('zakupy');render();const n=PROMO_PENDING.length;toast(`Znaleziono ${n} ${plN(n,'pozycję','pozycje','pozycji')}`,{focus:'promo_h'});return}
+  else if(d.promosave){promoSave([+d.promosave])}
+  else if(d.promosaveall){promoSave((PROMO_PENDING||[]).map((_,i)=>i))}
+  else if(d.promoskip){if(PROMO_PENDING){const i=+d.promoskip;PROMO_PENDING=PROMO_PENDING.filter((_,j)=>j!==i);if(!PROMO_PENDING.length)PROMO_PENDING=null}OPEN_F.add('zakupy')}
+  else if(d.promodel){undoable('Usunięto promocję');S.promos=(Array.isArray(S.promos)?S.promos:[]).filter(p=>p.id!==d.promodel);OPEN_F.add('zakupy')}
   else if(d.recipe){if(S.tab!=='recipe')S.recipeBack=S.tab;S.recipe=d.recipe;S.tab='recipe';window.scrollTo(0,0)}
   else if(d.labsave){const g=id=>document.getElementById(id),v=g('l_val').value.trim(),dt=g('l_date').value,lo0=g('l_lo')?g('l_lo').value.trim().replace(',','.'):'',lo=lo0&&isFinite(parseFloat(lo0))?lo0:'';if(!v||!isFinite(parseFloat(v.replace(',','.')))){toast('Wpisz wynik liczbowo');return}if(!dt){toast('Wpisz datę');return}S.labs.push({id:Date.now().toString(36),test:LABN[S.labSel]?S.labSel:'tsh',date:dt,val:v.replace(',','.'),...(lo?{lo}:{}),unit:g('l_unit').value.trim(),fast:g('l_fast').checked,bio:g('l_bio')?g('l_bio').checked:undefined,cyc:g('l_cyc')?g('l_cyc').value.trim():'',cr:g('l_cr')?g('l_cr').checked:false});toast('Zapisano wynik')}
   else if(d.labdel){undoable('Usunięto wynik badania');S.labs=S.labs.filter(e=>e.id!==d.labdel)}
@@ -2094,6 +2181,8 @@ document.addEventListener('focusout',e=>{const el=e.target;if(REDRAW||!el.datase
   else if(num((S.meas[el.dataset.day]||{}).sleep)>=7)PET.react('sleepok');
   setTimeout(()=>{const a=document.activeElement;if(!(a&&a.dataset&&a.dataset.sl))SLEDIT=null;if(!(a&&a.dataset&&(a.dataset.k||a.dataset.sl)))renderKeep(fieldNow(el))},0)});
 document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.labsel){S.labSel=e.target.value;save();render()}});
+// Wybór składnika w propozycji z wklejenia: tylko w PROMO_PENDING, bez przerysowania
+document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||t.dataset.promoing==null||!PROMO_PENDING)return;const p=PROMO_PENDING[+t.dataset.promoing];if(p)p.ing=ING[t.value]?t.value:''});
 // usuń dni starsze niż 60
 (function(){const lim=Date.now()-60*864e5;for(const k in S.days){if(new Date(k).getTime()<lim)delete S.days[k]}save()})();
 if(!S.onb){S.tab='intro';S.introStep=0}
