@@ -177,7 +177,7 @@ test('kopia bez danych o zdrowiu ma tylko ustawienia, wczytanie nie kasuje danyc
     document.querySelector('[data-bkapply="1"]').click();
     return { keys, before, after: [S.kg, Object.keys(S.meas).length], discreet: S.discreet };
   });
-  expect(r.keys).toEqual(['discreet', 'ord', 'pet', 'prices', 'tips', 'toastLen']);
+  expect(r.keys).toEqual(['discreet', 'ord', 'pet', 'prices', 'promos', 'shopDay', 'stores', 'tips', 'toastLen']);
   expect(r.after).toEqual(r.before);
   expect(r.discreet).toBe(true);
   expect(errors).toEqual([]);

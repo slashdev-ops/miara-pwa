@@ -27,7 +27,7 @@ const zdPath = path.join(root, 'zdarzenia.js');
 if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
 const sygPath = path.join(root, 'sygnaly.js');
 if (fs.existsSync(sygPath)) vm.runInContext(fs.readFileSync(sygPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false,SUPP:typeof SUPP=="undefined"?[]:SUPP,SUPP_PARY:typeof SUPP_PARY=="undefined"?[]:SUPP_PARY};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={S:()=>S,muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false,SUPP:typeof SUPP=="undefined"?[]:SUPP,SUPP_PARY:typeof SUPP_PARY=="undefined"?[]:SUPP_PARY,promoParse:typeof promoParse=="undefined"?undefined:promoParse,promoMatch:typeof promoMatch=="undefined"?undefined:promoMatch,nextShop:typeof nextShop=="undefined"?undefined:nextShop,promosActive:typeof promosActive=="undefined"?undefined:promosActive,promoDishes:typeof promoDishes=="undefined"?undefined:promoDishes,promoFix:typeof promoFix=="undefined"?undefined:promoFix,promoPending:()=>typeof PROMO_PENDING=="undefined"?undefined:PROMO_PENDING};', sandbox);
 const T = sandbox.__T;
 
 let ok = 0, bad = 0;
@@ -601,7 +601,7 @@ tryc('12 tygodni: tabela 12 tygodni z wagą w przedziale', () => { const h = vie
 tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h = view('health', BASE({ ...PROF(['hashi', 'mig'], 'yaz'), kg: '80', goal: '70' })), m = (h.match(/<table class="weeks"[\s\S]*?<\/table>/) || [''])[0]; return !/TSH (spadnie|wyniesie)|samopoczucie (wzro|popraw)/.test(m) && h.includes('nie prognozuje'); });
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
-const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord'];
+const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord', 'shopDay', 'stores', 'promos'];
 const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'muscleAuto', 'muscleAutoLast', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'suppTake', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
@@ -1892,6 +1892,94 @@ tryc('suplementy: witamina C, zdanie o żelazie oddzielne od leków przeciwzakrz
 tryc('suplementy: para inhibitor pompy protonowej i lewotyroksyna z ChPL lewotyroksyny', () => { const p = PAIR('ppi', 'lewotyroksyna'); return !!p && /pH soku żołądkowego/.test(p.txt) && /hormonów tarczycy/.test(p.txt) && p.src.includes('s_chplLt4'); });
 tryc('suplementy: pary bez nieużywanego pola h', () => T.SUPP_PARY.every((p) => !('h' in p)));
 tryc('suplementy: beta-alanina bez zdania o własnych treningach, jod „Zapytaj lekarza lub farmaceutę”', () => !STXT(SID('betaalanina')).includes('spinningu') && SID('jod').v === 'Zapytaj lekarza lub farmaceutę');
+// Zakupy z promocji (brief 18.11.2026): osoba sama wkleja fragment gazetki, Miara rozpoznaje produkt, cenę i daty lokalnie,
+// zapisuje tylko zatwierdzone pozycje. Produkty i ceny w testach są zmyślone.
+const PADD = (k, n) => { const d = new Date(k + 'T12:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const DDMM = (k) => k.slice(8, 10) + '.' + k.slice(5, 7);
+const PP = (t, today, shopDay) => { T.S().shopDay = shopDay === undefined ? null : shopDay; return T.promoParse(t, today || '2026-11-18'); };
+const P1 = (t, today, shopDay) => (PP(t, today, shopDay) || [])[0] || {};
+const PF = () => { const S = T.S(); S.f = JSON.parse(JSON.stringify(T.DEF().f)); S.prof = { cond: {}, pill: '' }; };
+const PROMO = (o) => ({ id: 'x' + Math.random().toString(36).slice(2), n: 'Twaróg półtłusty', ing: 'twarog', p: 5.49, od: '', do: PADD(T.todayKey(), 3), u: '', ...o });
+const SHOPV = (o) => { PF(); return view('meals', BASE({ shopDay: null, stores: [], promos: [], ...o })); };
+tryc('zakupy: pola shopDay, stores, promos w DEF i w kopii bez danych o zdrowiu', () => T.DEF().shopDay === null && JSON.stringify(T.DEF().stores) === '[]' && JSON.stringify(T.DEF().promos) === '[]' && ['shopDay', 'stores', 'promos'].every((k) => (T.nhKeep() || []).includes(k)));
+tryc('zakupy: cena z przecinkiem, nazwa bez ceny, składnik i flaga guess', () => { const r = P1('Twaróg półtłusty 250 g 3,99 zł'); return r.n === 'Twaróg półtłusty 250 g' && r.p === 3.99 && r.ing === 'twarog' && r.guess === true && r.u === ''; });
+tryc('zakupy: cena z kropką, „5 49 zł” i „549 zł”', () => P1('Ser żółty 12.99').p === 12.99 && P1('Jogurt naturalny 5 49 zł').p === 5.49 && P1('Kasza jaglana 549 zł').p === 5.49 && P1('Skyr naturalny 2,49zł').p === 2.49);
+tryc('zakupy: dwie ceny w linii (stara i nowa) daje niższą', () => P1('Pierś z kurczaka 24,99 zł 19,99 zł').p === 19.99 && P1('Pierś z kurczaka 19,99 zł 24,99 zł').p === 19.99);
+tryc('zakupy: procenty, gramy, sztuki i liczby bez zł nie są ceną', () => ['Mleko 2% 1 l', 'Taniej -50% na drugi', 'Ser 250 g 2 szt.', 'Jajka 10 szt', 'Twaróg 250'].every((t) => PP(t).length === 0));
+tryc('zakupy: „0,75 l” i „1,50 kg” to nie cena', () => P1('Sok jabłkowy 0,75 l 4,99 zł').p === 4.99 && P1('Jabłka 1,50 kg 6,99 zł').p === 6.99 && PP('Woda 0,75 l').length === 0);
+tryc('zakupy: cena za kg i za sztukę zostaje z jednostką', () => { const a = P1('Pierś z kurczaka 19,99 zł/kg'), b = P1('Papryka czerwona 2,49 zł/szt.'); return a.p === 19.99 && a.u === 'kg' && b.p === 2.49 && b.u === 'szt' && a.n === 'Pierś z kurczaka' && b.n === 'Papryka czerwona'; });
+tryc('zakupy: daty „16.11-21.11” i „16.11.2026 - 21.11.2026”', () => { const a = P1('Twaróg 3,99 zł 16.11-21.11'), b = P1('Twaróg 3,99 zł 16.11.2026 - 21.11.2026'); return a.od === '2026-11-16' && a.do === '2026-11-21' && !a.guess && b.od === '2026-11-16' && b.do === '2026-11-21' && a.n === 'Twaróg'; });
+tryc('zakupy: daty słowne „12 - 18 lis 2026”, „16 lis do 21 lis”, „do 21 listopada”', () => { const a = P1('Skyr 2,49 zł 12 - 18 lis 2026'), b = P1('Skyr 2,49 zł 16 lis do 21 lis'), c = P1('Skyr 2,49 zł do 21 listopada'); return a.od === '2026-11-12' && a.do === '2026-11-18' && b.od === '2026-11-16' && b.do === '2026-11-21' && c.do === '2026-11-21' && c.od === '' && a.n === 'Skyr'; });
+tryc('zakupy: „do 18.11”, „od 16.11” (data końca przyjęta), „paź” i „paz”', () => { const a = P1('Tofu 4,99 zł do 18.11'), b = P1('Tofu 4,99 zł od 16.11'), c = P1('Tofu 4,99 zł do 30 paź', '2026-10-20'), d = P1('Tofu 4,99 zł do 30 paz', '2026-10-20'); return a.od === '' && a.do === '2026-11-18' && !a.guess && b.od === '2026-11-16' && b.guess === true && b.do >= b.od && c.do === '2026-10-30' && d.do === '2026-10-30'; });
+tryc('zakupy: zakres przez Nowy Rok i rok najbliżej dzisiaj', () => { const a = P1('Łosoś 29,99 zł 28.12-03.01', '2026-12-20'), b = P1('Łosoś 29,99 zł do 02.01', '2026-12-28'); return a.od === '2026-12-28' && a.do === '2027-01-03' && b.do === '2027-01-02'; });
+tryc('zakupy: nieistniejąca data „31.02” pominięta, nie jest ceną', () => { const r = PP('Ser 4,99 zł do 31.02'); return r.length === 1 && r[0].p === 4.99 && r[0].guess === true; });
+tryc('zakupy: linia z samą datą ustawia daty pozycji bez własnej daty', () => { const r = PP('Twaróg półtłusty 3,99 zł\nOferta ważna od 16.11 do 21.11\nSkyr naturalny 2,49 zł\nTofu 4,99 zł do 19.11'); return r.length === 3 && r[0].do === '2026-11-21' && r[0].od === '2026-11-16' && r[1].do === '2026-11-21' && r[2].do === '2026-11-19' && !r[0].guess; });
+tryc('zakupy: nazwa z poprzedniej linii bez ceny i bez słów cena, taniej, promocja', () => { const a = P1('Twaróg półtłusty\n3,99 zł'), b = P1('Masło promocja taniej -30% 5,99 zł cena'); return a.n === 'Twaróg półtłusty' && b.n === 'Masło'; });
+tryc('zakupy: pozycja bez nazwy pominięta, nazwa przycięta do 60 znaków, najwyżej 20 pozycji', () => { const long = 'Ser '.repeat(30) + '3,99 zł'; const many = Array.from({ length: 25 }, (_, i) => `Produkt ${i} 1,${String(10 + i)} zł`).join('\n'); return PP('3,99 zł').length === 0 && P1(long).n.length <= 60 && PP(many).length === 20; });
+tryc('zakupy: brak daty końca: dzień zakupów + 6 albo dziś + 6', () => P1('Tofu 4,99 zł', '2026-11-18').do === '2026-11-24' && P1('Tofu 4,99 zł', '2026-11-18', 5).do === '2026-11-26');
+tryc('zakupy: promoMatch bez polskich znaków, tylko składniki z dań', () => { const used = new Set(T.MEALS.flatMap((m) => m.ing.map((i) => i[0]))); return T.promoMatch('Twaróg półtłusty 250 g') === 'twarog' && T.promoMatch('Filet z piersi kurczaka') === 'kurczak_piers' && T.promoMatch('SKYR NATURALNY') === 'skyr' && T.promoMatch('Śrubki do drewna') === '' && ['Kasza gryczana', 'Pomidory krojone', 'Brokuł', 'Mleko'].map(T.promoMatch).every((k) => k === '' || used.has(k)); });
+tryc('zakupy: nextShop: dziś, gdy dziś jest dzień zakupów, najbliższy dzień albo pusto', () => { const S = T.S(); S.shopDay = null; const a = T.nextShop('2026-11-18'); S.shopDay = 3; const b = T.nextShop('2026-11-18'); S.shopDay = 1; const c = T.nextShop('2026-11-18'); S.shopDay = null; return a === '' && b === '2026-11-18' && c === '2026-11-23'; });
+tryc('zakupy: promosActive z puste od jako brak dolnej granicy', () => { const S = T.S(); S.promos = [PROMO({ od: '', do: '2026-11-21' }), PROMO({ od: '2026-11-20', do: '2026-11-25' }), PROMO({ od: '', do: '2026-11-17' })]; const a = T.promosActive('2026-11-18').length, b = T.promosActive('2026-11-21').length; S.promos = []; return a === 1 && b === 2; });
+tryc('zakupy: promoDishes: do 5 dań ze składnikiem w promocji, wszystkie rodzaje posiłków, wykluczenia osoby', () => {
+  PF(); const S = T.S(), k = T.todayKey(); S.promos = [PROMO({ ing: 'twarog' })];
+  const a = T.promoDishes(k); const types = new Set(a.map((o) => o.m.t));
+  if (!(a.length > 0 && a.length <= 5 && a.every((o) => o.m.ing.some((i) => i[0] === 'twarog')))) throw new Error('dania: ' + a.length);
+  S.f.chips = { [T.ING.twarog.chip]: -1 }; const b = T.promoDishes(k); PF(); S.promos = [];
+  return b.length === 0 && (types.size > 1 || a.length < 2);
+});
+tryc('zakupy: filtered() bez zmian, filtered({allTypes:true}) pomija rodzaj i tempo', () => { PF(); const S = T.S(); S.f.type = 'obiad'; const a = T.filtered(), b = T.filtered({ allTypes: true }); return a.every((o) => o.m.t === 'obiad') && new Set(b.map((o) => o.m.t)).size > 1 && b.length > a.length; });
+tryc('zakupy: promoFix czyści zły kształt, przycina i usuwa po terminie', () => {
+  const ok = { id: 'a', n: 'x'.repeat(80), ing: 'twarog', p: 3.99, od: '', do: '2026-11-20', u: 'kg' };
+  const s = T.promoFix({ shopDay: 9, stores: [{ n: 'A'.repeat(40), u: 'https://a.example' }, 'zły', { n: 1 }, { n: 'B', u: '' }, { n: 'C', u: '' }, { n: 'D', u: '' }], promos: [ok, { ...ok, id: 'b', do: '2026-11-17' }, { ...ok, id: 'c', p: -1 }, { ...ok, id: 'd', p: 20000 }, { ...ok, id: 'e', do: '18.11' }, { ...ok, id: 'f', ing: 'nieznany', u: 'litr' }, null, ...Array.from({ length: 50 }, (_, i) => ({ ...ok, id: 'z' + i }))] }, '2026-11-18');
+  const s2 = T.promoFix({ shopDay: 4, stores: 'x', promos: {} }, '2026-11-18');
+  return s.shopDay === null && s.stores.length === 3 && s.stores[0].n.length === 30 && s.promos.length === 40 && s.promos[0].n.length === 60 && !s.promos.some((p) => ['b', 'c', 'd', 'e'].includes(p.id)) && s.promos[1].ing === '' && s.promos[1].u === '' && s2.shopDay === 4 && Array.isArray(s2.stores) && Array.isArray(s2.promos);
+});
+tryc('zakupy: nagłówek listy od dnia zakupów i wybór dnia (8 przycisków, scroll)', () => {
+  const k = T.todayKey(), sd = new Date(k + 'T12:00:00').getDay(); T.S().shopDay = sd; const nx = T.nextShop(k);
+  const h = SHOPV({ shopDay: sd }), g = SHOPV({ shopDay: null });
+  const seg = (h.match(/<div class="seg scroll" role="group" aria-label="Dzień zakupów">[\s\S]*?<\/div>/) || [''])[0];
+  return nx === k && h.includes('Lista zakupów na 7 dni od ') && h.includes(DDMM(k)) && g.includes('Lista zakupów na tydzień z planu') && (seg.match(/data-shopday=/g) || []).length === 8 && seg.includes('Nie ustawiam') && seg.includes('>pn<');
+});
+tryc('zakupy: dopisek promocji przy pozycji listy i „kończy się przed zakupami”', () => {
+  const k = T.todayKey(), sd = (new Date(k + 'T12:00:00').getDay() + 3) % 7;
+  const a = SHOPV({ promos: [PROMO({ do: PADD(k, 3) })] }), b = SHOPV({ shopDay: sd, promos: [PROMO({ do: k })] }), c = SHOPV({ promos: [PROMO({ do: PADD(k, 3), p: 19.9, u: 'kg' })] });
+  return a.includes(`promocja 5,49 zł do ${DDMM(PADD(k, 3))}`) && b.includes(`promocja kończy się przed zakupami (${DDMM(k)})`) && c.includes('19,90 zł za kg');
+});
+tryc('zakupy: gazetki tylko z https, nowa karta, escapowane; pola sklepów i „Dodaj sklep” do 3', () => {
+  const h = SHOPV({ stores: [{ n: 'Sklep <b>A</b>', u: 'https://example.com/gazetka?a=1&b="2"' }, { n: 'B', u: 'javascript:alert(1)' }, { n: 'C', u: 'http://example.com' }] });
+  const links = h.match(/<a [^>]*>Otwórz gazetkę: [^<]*<\/a>/g) || [];
+  const h4 = SHOPV({ stores: [{ n: 'A', u: '' }] });
+  return links.length === 1 && links[0].includes('target="_blank"') && links[0].includes('rel="noopener noreferrer"') && links[0].includes('&amp;b=&quot;2&quot;') && links[0].includes('Sklep &lt;b&gt;A&lt;/b&gt;') && !/href="(javascript|http):/.test(h) && h.includes('data-k="stores.2.u"') && !h.includes('data-storeadd') && h4.includes('data-storeadd') && h.includes('Twoje sklepy');
+});
+tryc('zakupy: pole wklejania z etykietą, bez data-k, tekst o braku pobierania', () => { const h = SHOPV(); const ta = (h.match(/<textarea[^>]*>/) || [''])[0]; return ta.includes('id="promo_txt"') && !ta.includes('data-k') && h.includes('<label for="promo_txt"') && h.includes('Wklej fragment gazetki') && h.includes('data-promoparse') && h.includes('Ceny wpisujesz sam z gazetki lub półki. Miara nic nie pobiera z internetu; promocje usuwają się po terminie.'); });
+tryc('zakupy: Rozpoznaj: propozycje, toast, select z etykietą, Zapisz i Pomiń z nazwą; tekst nie trafia do stanu', () => {
+  SHOPV(); els.promo_txt = { value: 'Twaróg półtłusty 250 g 3,99 zł\nSkyr naturalny 2,49 zł' }; click({ promoparse: '1' });
+  const h = mainHtml(), t = els.toast.innerHTML, pend = T.promoPending();
+  return pend.length === 2 && t.includes('Znaleziono 2 pozycje') && h.includes('id="promo_h" tabindex="-1"') && h.includes('aria-label="Składnik dla: Twaróg półtłusty 250 g"') && h.includes('aria-label="Zapisz: Twaróg półtłusty 250 g"') && h.includes('aria-label="Pomiń: Skyr naturalny"') && h.includes('Zapisz wszystkie') && h.includes('bez dopasowania') && h.includes('data nieznana, przyjęto do') && !JSON.stringify(T.S()).includes('Skyr naturalny 2,49');
+});
+tryc('zakupy: Pomiń usuwa propozycję, wybór składnika i Zapisz dodaje promocję', () => {
+  click({ promoskip: '1' }); if (T.promoPending().length !== 1) throw new Error('pomiń');
+  (lis.change || []).forEach((f) => f({ target: { dataset: { promoing: '0' }, value: 'skyr' } }));
+  click({ promosave: '0' }); const S = T.S();
+  return S.promos.length === 1 && S.promos[0].ing === 'skyr' && S.promos[0].p === 3.99 && typeof S.promos[0].id === 'string' && !T.promoPending();
+});
+tryc('zakupy: brak ceny w wklejeniu: komunikat z przykładem', () => { SHOPV(); els.promo_txt = { value: 'Tylko tekst bez ceny' }; click({ promoparse: '1' }); return mainHtml().includes('Nie znalazłem ceny. Wklej linię z nazwą i ceną, np. Twaróg 250 g 3,99 zł'); });
+tryc('zakupy: duplikat (nazwa bez wielkości liter, ta sama data do) zastępuje wpis', () => {
+  const k = T.todayKey(); SHOPV({ promos: [PROMO({ n: 'Twaróg półtłusty', do: PADD(k, 2), p: 5.49 })] }); els.promo_txt = { value: `TWARÓG PÓŁTŁUSTY 4,49 zł do ${DDMM(PADD(k, 2))}` }; click({ promoparse: '1' }); click({ promosaveall: '1' });
+  const S = T.S(); return S.promos.length === 1 && S.promos[0].p === 4.49;
+});
+tryc('zakupy: limit 40 promocji: toast i brak zapisu', () => {
+  SHOPV({ promos: Array.from({ length: 40 }, (_, i) => PROMO({ n: 'P' + i })) }); els.promo_txt = { value: 'Tofu naturalne 4,99 zł' }; click({ promoparse: '1' }); click({ promosave: '0' });
+  return T.S().promos.length === 40 && els.toast.innerHTML.includes('Masz już 40 promocji. Usuń stare, żeby dodać nowe.');
+});
+tryc('zakupy: Twoje promocje, Usuń przez Cofnij, dania z produktów w promocji', () => {
+  const p = PROMO({ id: 'pdel', u: 'szt', p: 2.5 }); const h = SHOPV({ promos: [p] }); const none = SHOPV({ promos: [] });
+  const sec = h.slice(h.indexOf('Dania z produktów w promocji'));
+  view('meals', { promos: [p] }); click({ promodel: 'pdel' }); const gone = T.S().promos.length === 0; click({ undo: '1' });
+  return h.includes('Twoje promocje') && h.includes('2,50 zł za szt.') && h.includes('aria-label="Usuń: Twaróg półtłusty"') && /data-recipe="[a-z0-9]+"/.test(sec) && sec.includes('w promocji: Twaróg półtłusty') && !none.includes('Dania z produktów w promocji') && gone && T.S().promos.length === 1;
+});
+tryc('zakupy: bez pobierania i bez odczytu schowka (liczby jak przed funkcją: jedna kopia w chmurze, jeden import)', () => (code.match(/readText/g) || []).length === 2 && (code.match(/fetch\(|XMLHttpRequest|sendBeacon/g) || []).length === 1 && ['promoParse', 'promoFix', 'promoDishes'].every((f) => typeof T[f] === 'function' && !/readText|clipboard|fetch/.test(String(T[f]))));
+tryc('zakupy: spacja niełamliwa z wklejenia ze strony traktowana jak zwykła', () => P1('Twaróg półtłusty 3,99' + String.fromCharCode(160) + 'zł').p === 3.99);
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
