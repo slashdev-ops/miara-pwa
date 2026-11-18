@@ -2144,6 +2144,12 @@ let SEL_ID=null,SEL_PTR=0,SEL_HOLD=null;
 // Zaznaczenie od razu (klawiatura) i przy kliknięciu po dotknięciu, bo kursor z dotknięcia nadpisuje zaznaczenie z fokusu,
 // a zajęty procesor może obsłużyć pierwszy klawisz przed setTimeout(…, 0) (CI 09.11.2026: „8750,1”); setTimeout zostaje dla iOS.
 // WebKit ustawia kursor z dotknięcia już po kliknięciu: przez 500 ms zwinięte zaznaczenie wraca do całości, do wpisu albo kolejnego dotknięcia.
+// Klawiatura (18.11.2026): klasa kbd na body, gdy fokus jest w polu, które otwiera klawiaturę; CSS chowa wtedy dolne menu na telefonie.
+// Sprawdzenie po focusout w setTimeout, bo render() po każdym znaku odtwarza pole i oddaje mu fokus.
+const KBD_SEL='input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]):not([type=file]),textarea,select';
+const kbdOn=el=>!!(el&&el.matches&&el.matches(KBD_SEL));
+document.addEventListener('focusin',e=>{if(kbdOn(e.target)&&document.body)document.body.classList.add('kbd')});
+document.addEventListener('focusout',()=>setTimeout(()=>{if(document.body&&!kbdOn(document.activeElement))document.body.classList.remove('kbd')},0));
 document.addEventListener('pointerdown',()=>{SEL_PTR=Date.now();SEL_HOLD=null},true);
 document.addEventListener('beforeinput',()=>{SEL_HOLD=null},true);
 document.addEventListener('selectionchange',()=>{const h=SEL_HOLD;if(!h)return;const el=h.el;if(Date.now()>h.until||document.activeElement!==el){SEL_HOLD=null;return}if(el.selectionStart===el.selectionEnd)h.all()});
