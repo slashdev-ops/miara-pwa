@@ -168,9 +168,10 @@ function sleepField(k,m){const has=String(m.sleep||'').trim()!=='',[H,M]=has?hm(
     +`<button class="stp" data-stp="meas.${k}.sleep" data-d="1" aria-label="Sen: więcej o 15 minut">+</button></span></div>`}
 // Szybkie wpisy (11.11.2026): rano, gdy brakuje dzisiejszej wagi albo snu, pomiary są pod listą Dziś
 function measDue(){const m=(S.meas||{})[todayKey()]||{},has=x=>String(m[x]||'').trim()!=='';return !(has('w')&&has('sleep'))}
+function measF(k,m,lab,key,unit,mode,ph){return `<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" enterkeyhint="next" placeholder="${ph||lastMeas(key,k)}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`}
 function measHtml(part){
   const k=todayKey(),m=S.meas[k]||(S.meas[k]={});
-  const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" enterkeyhint="next" placeholder="${ph||lastMeas(key,k)}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`;
+  const f=(lab,key,unit,mode,ph)=>measF(k,m,lab,key,unit,mode,ph);
   let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, przed jedzeniem. Kroki i sen z zegarka.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+stepsChip(k,m)+sleepField(k,m)+sleepChips(k,m)+'</div><p><button class="btn ghost small" data-imppaste="1">Wklej ze Skrótu</button></p>';const top=h;h=cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+field('Nadgarstek','frame.wrist',(S.frame||{}).wrist||'','cm')+field('Kostka','frame.ankle',(S.frame||{}).ankle||'','cm')+'<p class="small muted" style="padding:0 16px">Nadgarstek i kostka: mierz najwęższe miejsce, wystarczy raz. Potrzebne do oceny potencjału mięśniowego.</p></div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). BMR z pomiaru BIA zastępuje wzór przez 90 dni, waga z pomiarów zastępuje wagę z ustawień.</p></details><details class="fold" data-fold="sprawnosc"'+(OPEN_F.has('sprawnosc')?' open':'')+'><summary>Sprawność, z zegarka</summary><div class="panel">'+f('VO2max (zegarek)','vo2','ml/kg/min')+f('Tętno spoczynkowe','hrRest','ud./min','numeric')+f('Tętno maksymalne (jeśli zmierzone)','hrMax','ud./min','numeric')+'</div><p class="small muted" style="padding:0 16px">VO2max wpisz z zegarka. Bez niego Miara oszacuje go z tętna spoczynkowego.</p></details>';
   const ks=lastKeys(28).reverse(),val=(x,key)=>{const v=num((S.meas[x]||{})[key]);return v>0?v:null};
   const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
@@ -750,9 +751,9 @@ function ekranHtml(inner){
   return (inner?'':'<h2 id="ekran">Na ekran główny</h2>')+'<p class="small">Z ikony Miara otwiera się jak aplikacja i działa bez internetu. Otwieraj ją zawsze z ikony: ikona i przeglądarka mogą mieć osobne dane.</p>'+(and?an+ios:ios+an)+'<p class="small muted">Źródła: <a href="https://support.apple.com/pl-pl/guide/iphone/iph42ab2f3a7/ios" target="_blank" rel="noopener">Podręcznik użytkownika iPhone’a</a>, <a href="https://support.google.com/chrome/answer/9658361?hl=pl&amp;co=GENIE.Platform%3DAndroid" target="_blank" rel="noopener">Pomoc Google Chrome</a>. Masz już dane w przeglądarce? Przenieś je plikiem kopii (Ustawienia, Kopia danych).</p>';
 }
 function renderIntro(){
-  let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p>'+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex','','Płeć')+'<div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalHint()+goalPctHtml()+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
+  let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p>'+(S.lite?'<p><button class="btn" data-introdone="1">Zacznij od 3 dotknięć</button></p>':'')+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex','','Płeć')+'<div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalHint()+goalPctHtml()+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
   if(!isApp())h+=fold('ekranintro','Jak dodać Miarę do ekranu głównego',ekranHtml(true));
-  h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
+  if(!S.lite)h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
   document.getElementById('main').innerHTML=h;
 }
 
@@ -1039,7 +1040,7 @@ document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.datas
 // ---------- Kopia danych: eksport i import pliku (np. przez iCloud Drive) ----------
 const BK_SKIP=['imp','tab','introStep','sosStep','sosTrig','recipe','recipeBack','labSel'];
 // Kopia bez danych o zdrowiu: lista tego, co zostaje; każde nowe pole stanu jest domyślnie pomijane (rada 09.11.2026, kopia bez danych o zdrowiu)
-const BK_NH_KEEP=['toastLen','tips','discreet','pet','prices','ord','shopDay','stores','promos'];
+const BK_NH_KEEP=['toastLen','tips','discreet','pet','prices','ord','shopDay','stores','promos','lite','unlock','unlockAt','unlockSnooze'];
 let BK_PENDING=null;
 function bkBuild(noHealth){let d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.kopia)delete d.kopia.token;if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){const o={};BK_NH_KEEP.forEach(k=>{if(k in d)o[k]=d[k]});d=o}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
 function bkParse(text){try{const o=JSON.parse(text);if(!o||o.app!=='talerz-i-trening'||o.v!==1||!o.data||typeof o.data!=='object'||Array.isArray(o.data))return null;return o}catch(e){return null}}
@@ -1066,7 +1067,7 @@ const LS='talerz-trening-v1';
 const DEF={frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},shopDay:null,stores:[],promos:[],sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,lite:false,unlock:[],unlockAt:'',unlockSnooze:'',body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},shopDay:null,stores:[],promos:[],sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 // Wartości startowe (rada/2026-11-09_wartosci-startowe): punkt startowy do ustawiania przyciskami, zależny od płci; to założenie
@@ -1176,7 +1177,7 @@ function goalHint(){return S.mode!=='redukcja'||!isStart('goal')?'':'<p class="s
 function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
 function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,STEP.goal)}
 function syFix(s){s=suppFix(s);s=promoFix(s,todayKey());try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
-function load(){try{const r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(muscleFix(o,merge(clone(DEF),fixTouched(o))))}}catch(e){}return clone(DEF)}
+function load(){let r=null;try{r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(muscleFix(o,merge(clone(DEF),fixTouched(o))))}}catch(e){}const f=clone(DEF);if(!r)f.lite=true;return f}
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
 // ---------- Scenariusze do sprawdzania: dane przykładowe pod #demo-<nazwa>, nic się nie zapisuje ----------
@@ -1203,7 +1204,9 @@ function sportS(o,b,P){const meas={},days={},cw=x=>x.toFixed(1).replace('.',',')
   return Object.assign({sex:X.sex,age:X.age,cm:X.cm,kg:cw(ref),goal:X.goal,mode:X.mode,maintRef:X.mode==='utrzymanie'?ref:0,maintSince:X.mode==='utrzymanie'?X.date:'',
     frame:{wrist:o.wrist,ankle:o.ankle},touched:{kg:true,cm:true,age:true,goal:true},meas,days,labs},P?{}:{muscle:true})}
 const SCEN={
-  start:{t:'Pierwsze wejście',chk:'Wprowadzenie, potem „Pierwsze kroki 0 z 6” w Moim dniu i wskazówka „Pierwszy raz tutaj?” na każdym ekranie.',f:()=>({onb:false,touched:{},guide:{hidden:false,dataOk:false,seenPet:false},tips:{},pet:null,petSeen:[],days:{},meas:{},hab:{},reviews:{}})},
+  prosty:{t:'Prosty start: 3 dotknięcia',tab:'day',chk:'Mój dzień: tylko karta Dziś, 3 dotknięcia, zwierzak i Pokaż całą Miarę; 3 dni z kartą za sobą, więc zwierzak proponuje wagę.',
+    f:b=>{const m={};[1,2,3].forEach((n,i)=>{m[nAgo(n)]={stepsB:['lo','mid','hi'][i],feel:['dobrze','brzuch','dobrze'][i],redz:[1,0,2][i]}});m[nAgo(0)]={};return {lite:true,unlock:[],unlockAt:'',meas:m,pain:{},days:{}}}},
+  start:{t:'Pierwsze wejście',chk:'Wprowadzenie, potem karta „Dziś, 3 dotknięcia” w Moim dniu i wskazówka „Pierwszy raz tutaj?” na każdym ekranie.',f:()=>({lite:true,onb:false,touched:{},guide:{hidden:false,dataOk:false,seenPet:false},tips:{},pet:null,petSeen:[],days:{},meas:{},hab:{},reviews:{}})},
   wpisy:{t:'Wpisy dnia',tab:'day',chk:'Mój dzień, Pomiary dnia: + przy wadze wstawia wczorajsze 80,4 kg, przytrzymanie zmienia wartość coraz szybciej, sen wpisujesz cyframi (6 i 13), minuty 75 pokazują błąd pod polem i wracają.',
     f:b=>{const m=Object.assign({},b.meas);m[nAgo(0)]={};m[nAgo(1)]=Object.assign({},m[nAgo(1)],{w:'80,4',sleep:'6:13',steps:'8500'});return {meas:m}}},
   migrena:{t:'Migrena z aurą i Yaz',tab:'health',chk:'Zdrowie: „Najpierw” każe porozmawiać z ginekologiem, bo Yaz zawiera estrogen; licznik 10 dni z lekiem w 30 dniach; w 12 tygodniach ocena 3 cykli. Mój dzień: dzień z bólem i karta „Po krótkich nocach”.',f:b=>migPain(b,'yaz')},
@@ -1305,7 +1308,7 @@ const TIPS={day:'Tu jest Twój dzień: co zrobić dziś i jak idzie. Naciśnij k
 function tipHtml(tab){if(DEMO||!TIPS[tab]||(S.tips||{})[tab]||(tab==='day'&&guideActive()))return '';return `<div class="tip panel" role="note"><p><b>Pierwszy raz tutaj?</b> ${TIPS[tab]}</p><button class="btn small" data-tipok="${tab}">Rozumiem</button></div>`}
 // Dzień aktywny: 30 pkt albo, w trybie raz dziennie, zapisany wpis dnia (posiłki oraz trening albo kroki)
 function onceDone(k){const e=S.days[k]||[];return e.some(x=>x.kind==='m')&&(e.some(x=>x.kind==='t')||num((S.meas[k]||{}).steps)>0)}
-function dayOk(k){return dayPts(k)>=30||(!!S.once&&onceDone(k))}
+function dayOk(k){return dayPts(k)>=30||(!!S.once&&onceDone(k))||liteFull(k)}
 function streak(){let n=0,miss=0;const d=new Date();for(let i=0;i<366;i++){const x=new Date(d);x.setDate(d.getDate()-i);if(dayOk(keyOf(x))){n++;miss=0}else if(i===0||(S.pain||{})[keyOf(x)]){continue}else{miss++;if(miss>=2)break}}return n}
 function habitsHtml(trained){
   const hk=todayKey(),hh=S.hab[hk]||{},wp=weekPts(),lv=level(wp),nx=LEVELS.find(x=>x[0]>wp);
@@ -1379,7 +1382,7 @@ function filtered(o){
 
 // ---------- Zwierzak (pet.js): dane dla PET.state, karta, wybór, ekran postępu ----------
 function petPts(k){const x=HABITS.find(h=>h.id==='pasmo');return dayPts(k)-(habOn(x,(S.hab||{})[k]||{},S.days[k]||[],k)?x.pts:0)}
-function petCtx(now){return {now:now||new Date(),pet:S.pet,once:!!S.once,pain:k=>!!(S.pain||{})[k],seen:S.petSeen||[],celeb:S.petCeleb&&S.petCeleb.day===todayKey()?S.petCeleb.id:null,key:keyOf,dayPts:k=>S.once&&onceDone(k)?Math.max(30,petPts(k)):petPts(k),entries:k=>S.days[k]||[],meas:k=>S.meas[k]||{},habs:k=>(S.hab||{})[k]||{},urges:k=>(S.urges||{})[k]||[],reviewed:Object.keys(S.reviews||{}).length>0,streak,weekPts,level,stage:stageInfo,avgW:(a,b)=>avgAgo(a,b,'w'),startW:(stageInfo()||{}).start||null,num,goalDone:!!(celWeek()||{}).done,goal:petGoal(),nextLevel:(()=>{const wp=weekPts(),nx=LEVELS.find(x=>x[0]>wp);return nx?{name:nx[1],need:nx[0]-wp}:null})()}}
+function petCtx(now){return {now:now||new Date(),lite:!!S.lite,liteFull:k=>liteFull(k),pet:S.pet,once:!!S.once,pain:k=>!!(S.pain||{})[k],seen:S.petSeen||[],celeb:S.petCeleb&&S.petCeleb.day===todayKey()?S.petCeleb.id:null,key:keyOf,dayPts:k=>(S.once&&onceDone(k))||liteFull(k)?Math.max(30,petPts(k)):petPts(k),entries:k=>S.days[k]||[],meas:k=>S.meas[k]||{},habs:k=>(S.hab||{})[k]||{},urges:k=>(S.urges||{})[k]||[],reviewed:Object.keys(S.reviews||{}).length>0,streak,weekPts,level,stage:stageInfo,avgW:(a,b)=>avgAgo(a,b,'w'),startW:(stageInfo()||{}).start||null,num,goalDone:!!(celWeek()||{}).done,goal:petGoal(),nextLevel:(()=>{const wp=weekPts(),nx=LEVELS.find(x=>x[0]>wp);return nx?{name:nx[1],need:nx[0]-wp}:null})()}}
 // Cel dla zapowiedzi zwierzaka: nazwa, stan z ZD.progress i pierwszy wpływ z mapy powiązań
 function petGoal(){const g=S.cel&&ZD.goalOf(S.cel.id);if(!g)return null;const wk=celWeek(),im=ZD.impact(g.id,S.prof)[0];const ok=!!(wk&&wk.done),nx=ok?ZD.goalOf(ZD.suggest(S,todayKey(),zdCtx(),[g.id])):null;return {t:g.t,left:ok?'tydzień zaliczony':'teraz '+ZD.progress(S,g.id,todayKey(),zdCtx()).txt,nx:nx?nx.t:'',gain:im?im.t:''}}
 // Kamień milowy zaliczany poza przerysowaniem przy wpisywaniu (REDRAW); świętowanie widoczne do obejrzenia ekranu zwierzaka
@@ -1387,8 +1390,31 @@ function petState(){if(DEMO&&!DEMO_N){const fr=PET.demo().frames,f=fr[DEMO_I%fr.
 // Pogoda na ścieżce kamieni: wiatr w dzień z bólem głowy, mgła po 2 krótkich nocach; nigdy kara
 function petWeather(){if((S.pain||{})[todayKey()])return 'wiatr';const a=sleepAt(todayKey()),b=sleepAt(nAgo(1));return a!=null&&b!=null&&a<6&&b<6?'mgla':''}
 // Jajko pęka z Pierwszymi krokami (dane, waga, posiłek, ruch): rada/2026-11-09_pierwsze-uruchomienie, punkt 2
-function eggCrack(){return guideSteps().filter(x=>['data','weight','meal','move'].includes(x.id)&&x.done).length}
-function petCardHtml(){const c=eggCrack();if(!S.pet)return `<button class="petcard" data-petpick="1">${PET.svg('gaska','egg','ok',null,false,c)}<span class="petinfo"><b>Wybierz towarzysza</b><span class="small">${c>=4?'Jajko gotowe do wyklucia: wybierz, kto z niego wyjdzie.':`Jajko pęka z każdym pierwszym krokiem: ${c} z 4. Wybierz, kto się wykluje.`}</span></span></button>`;const st=petState();st.crack=c;st.next=PET.next(st,petCtx());return PET.card(st,S.pet,esc)}
+function liteDays(from){return Object.keys(S.meas||{}).filter(k=>(!from||k>from)&&liteFull(k)).length}
+function eggCrack(){return Math.max(guideSteps().filter(x=>['data','weight','meal','move'].includes(x.id)&&x.done).length,Math.min(4,liteDays()))}
+// Prosty widok: karta „Dziś, 3 dotknięcia”. Zakres kroków liczy się tylko jako wpis; wpisana liczba ma pierwszeństwo.
+function stepsBand(k){const m=(S.meas||{})[k]||{},n=num(m.steps);if(n>0)return n<5000?'lo':n<=8000?'mid':'hi';return ['lo','mid','hi'].includes(m.stepsB)?m.stepsB:''}
+function liteFull(k){const m=(S.meas||{})[k]||{};return stepsBand(k)!==''&&!!m.feel&&[0,1,2].includes(m.redz)}
+// Stopniowe odkrywanie: po 3 dniach z pełną kartą od ostatniego odkrycia Miara proponuje jeden kolejny element; „Nie teraz” niczego nie usuwa
+const UNLOCK=['waga','posilki','sen','cala'];
+const UNLOCK_TXT={waga:'Dodać wagę? Jedno pole rano. Bez wagi kalorie są liczone w przybliżeniu.',posilki:'Dodać posiłki z planu? „Zjem” przy daniu zapisuje posiłek jednym dotknięciem.',sen:'Dodać sen? Jedno pole: ile godzin spałaś lub spałeś.',cala:'Chcesz zobaczyć całą Miarę? Wszystko, co dodasz, zostaje.'};
+function unlockNext(){if(!S.lite)return null;const id=UNLOCK.find(x=>!(S.unlock||[]).includes(x));if(!id||liteDays(S.unlockAt)<3)return null;if(S.unlockSnooze&&todayKey()<S.unlockSnooze)return null;return id}
+function unlockHtml(){const k=todayKey(),m=(S.meas||{})[k]||{},u=S.unlock||[];let h='';
+  if(u.includes('waga'))h+='<div class="panel">'+measF(k,m,'Waga','w','kg')+'</div>';
+  if(u.includes('posilki')){const n=(S.days[k]||[]).filter(e=>e.kind==='m').length;h+=`<div class="panel"><div class="field"><span>Posiłki z planu</span><span class="small">Zapisane dziś: ${n}</span><button class="btn ghost small" data-tab="meals">Posiłki</button></div></div>`}
+  if(u.includes('sen'))h+='<div class="panel">'+sleepField(k,m)+'</div>';
+  const nx=unlockNext();
+  if(nx)h+=`<div class="note"><p style="margin:0 0 8px">${UNLOCK_TXT[nx]}</p><p style="margin:0"><button class="btn small" data-unlock="${nx}">${nx==='cala'?'Pokaż':'Dodaj'}</button> <button class="btn ghost small" data-unlocklater="1">Nie teraz</button></p></div>`;
+  return h}
+function liteCardHtml(){const k=todayKey(),m=(S.meas||{})[k]||{},sb=stepsBand(k);
+  const row=(t,sub,f,cur,opts)=>`<p style="margin:12px 4px 4px"><b>${t}</b>${sub?`<br><span class="small muted">${sub}</span>`:''}</p><div class="chips" role="group" aria-label="${t}">`+opts.map(([v,l])=>`<button class="chip${String(cur)===String(v)?' inc':''}" data-lite="${f}:${v}" aria-pressed="${String(cur)===String(v)}">${l}</button>`).join('')+'</div>';
+  return `<section id="lite" class="panel" style="padding:4px 16px 12px"><h2 style="margin:12px 0 0">Dziś, 3 dotknięcia</h2>`
+    +row('Kroki','','stepsB',sb,[['lo','poniżej 5 tys.'],['mid','5–8 tys.'],['hi','ponad 8 tys.']])
+    +row('Jak się czujesz?','','feel',m.feel||'',[['dobrze','Dobrze'],['glowa','Ból głowy'],['brzuch','Brzuch'],['inne','Inne']])
+    +row('Jedzenie kaloryczne dziś','słodycze, fast food, słone przekąski, alkohol','redz',m.redz==null?'':m.redz,[[0,'0'],[1,'1'],[2,'2 lub więcej']])
+    +(liteFull(k)?'<div class="note" style="margin-top:12px">✓ Dzień zapisany.</div>':'')
+    +'<p class="small muted" style="margin:12px 0 0">Wstępne badania: krótki zapis codziennie działał podobnie jak pełny.</p>'+srcHtml(['patel','nezami'])+'</section>'}
+function petCardHtml(){const c=eggCrack();if(!S.pet)return `<button class="petcard" data-petpick="1">${PET.svg('gaska','egg','ok',null,false,c)}<span class="petinfo"><b>Wybierz towarzysza</b><span class="small">${c>=4?'Jajko gotowe do wyklucia: wybierz, kto z niego wyjdzie.':`Jajko pęka z każdym ${S.lite?'dniem z 3 dotknięciami':'pierwszym krokiem'}: ${c} z 4. Wybierz, kto się wykluje.`}</span></span></button>`;const st=petState();st.crack=c;st.lite=!!S.lite;st.next=PET.next(st,petCtx());return PET.card(st,S.pet,esc)}
 // Pierwszy wybór: dotknięcie rodzaju to tylko podgląd (PET_PREV, bez zapisu); zatwierdza przycisk „Wybieram: …”.
 // Przy istniejącym zwierzaku zmiana rodzaju to zwykłe ustawienie, które da się od razu zmienić z powrotem.
 let PET_PREV='';
@@ -1397,7 +1423,7 @@ function waistDelta(){const ks=Object.keys(S.meas||{}).filter(k=>num(S.meas[k].w
 function petSum(st){const k=todayKey(),m=S.meas[k]||{},d=day(),done=[num(m.w)>0,d.filter(e=>e.kind==='m').length>=3,d.some(e=>e.kind==='t')||num(m.steps)>0].filter(Boolean).length,wp=weekPts(),nx=LEVELS.find(x=>x[0]>wp),si=stageInfo(),a7=avgAgo(0,7,'w');
   return {today:{done,pts:dayPts(k)},week:{pts:wp,level:level(wp)[1],next:nx?{name:nx[1],need:nx[0]-wp}:null},all:{active:st.active,streak:streak(),dw:si&&a7!=null?a7-si.start:null,waist:waistDelta(),pct:si?si.pct:null},badges:PET.badgeList([...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])]),body:S.body?petBodyHtml():''}}
 function petBodyHtml(){const b=PET.body(S.meas,new Date(),num);return '<h2>Sylwetka</h2>'+(b.ok?`<div class="panel petbody">${b.svg}<p class="small muted">Linia przerywana: start (pierwsze 4 tygodnie pomiarów). Pełna: ostatnie 4 tygodnie. Kontur ze średnich obwodów talii, bioder i uda.</p></div>`:`<p class="small muted">${b.msg}. Potrzebne są 2 pomiary obwodów odległe o co najmniej 14 dni.</p>`)}
-function renderPet(){if(!S.pet){document.getElementById('main').innerHTML='<h2>Wybierz towarzysza</h2><p>Gąska albo kaczuszka reaguje na Twoje wpisy: posiłki, ruch, sen i nawyki. Rośnie z dni z wpisami i nie cofa się po przerwie.</p>'+petPickHtml();return}const st=petState();st.crack=eggCrack();st.next=PET.next(st,petCtx());{const sc=PET.screen(st,S.pet,petSum(st),esc),i=sc.indexOf('</div>',sc.indexOf('petstage'))+6;document.getElementById('main').innerHTML=sc.slice(0,i)+PET.path((S.pet.stones||[]).length,petWeather(),PET.nameOf(S.pet))+sc.slice(i)}if(S.petCeleb&&!DEMO){S.petCeleb=null;save()}if(S.guide&&!S.guide.seenPet){S.guide.seenPet=true;save()}document.getElementById('main').innerHTML+=nextHtml('pet')}
+function renderPet(){if(!S.pet){document.getElementById('main').innerHTML='<h2>Wybierz towarzysza</h2><p>Gąska albo kaczuszka reaguje na Twoje wpisy: posiłki, ruch, sen i nawyki. Rośnie z dni z wpisami i nie cofa się po przerwie.</p>'+petPickHtml();return}const st=petState();st.crack=eggCrack();st.lite=!!S.lite;st.next=PET.next(st,petCtx());{const sc=PET.screen(st,S.pet,petSum(st),esc),i=sc.indexOf('</div>',sc.indexOf('petstage'))+6;document.getElementById('main').innerHTML=sc.slice(0,i)+PET.path((S.pet.stones||[]).length,petWeather(),PET.nameOf(S.pet))+sc.slice(i)}if(S.petCeleb&&!DEMO){S.petCeleb=null;save()}if(S.guide&&!S.guide.seenPet){S.guide.seenPet=true;save()}document.getElementById('main').innerHTML+=nextHtml('pet')}
 // ---------- Pierwsze kroki: prowadzenie nowej osoby, kroki zaliczane z danych ----------
 function guideSteps(){const g=S.guide||{},anyMeas=f=>Object.values(S.meas||{}).some(m=>num((m||{})[f])>0),anyDay=kind=>Object.values(S.days||{}).some(d=>(d||[]).some(e=>e.kind===kind)),past=Object.keys(S.days||{}).some(k=>k<todayKey()&&(S.days[k]||[]).length);
   return [
@@ -1407,7 +1433,7 @@ function guideSteps(){const g=S.guide||{},anyMeas=f=>Object.values(S.meas||{}).s
     {id:'meal',label:'Zapisz pierwszy posiłek',hint:'W Posiłkach naciśnij Zjem przy daniu.',btn:'Posiłki',act:'tab',arg:'meals',done:anyDay('m')},
     {id:'move',label:'Dodaj ruch',hint:'Zapisz trening albo wpisz kroki w Pomiarach dnia.',btn:'Trening',act:'tab',arg:'train',done:anyDay('t')||anyMeas('steps')},
     {id:'seepet',label:'Poznaj zwierzaka',hint:'Zobacz, jak rośnie i co zdobywa.',btn:'Mój zwierzak',act:'tab',arg:'pet',done:!!g.seenPet}]}
-function guideActive(){return !(S.guide||{}).hidden&&guideSteps().some(x=>!x.done)}
+function guideActive(){return !S.lite&&!(S.guide||{}).hidden&&guideSteps().some(x=>!x.done)}
 function guideHtml(){if(!guideActive())return '';const st=guideSteps(),n=st.filter(x=>x.done).length,nx=st.find(x=>!x.done);
   return `<div class="guide panel"><div class="guidehead"><h2>Pierwsze kroki</h2><span class="met">${n} z ${st.length}</span></div><div class="petbar"><i style="width:${Math.round(n/st.length*100)}%"></i></div>`
     +st.map(x=>`<div class="step${x.done?' done':''}${x===nx?' next':''}"><span class="box">${x.done?'✓':''}</span><span class="lab">${x.label}${x.done?'':`<small class="hint">${x.hint}</small>`}</span>${x.done?'':`<button class="btn small${x===nx?'':' ghost'}" data-${x.act}="${x.arg}">${x.btn}</button>`}</div>`).join('')
@@ -1430,6 +1456,10 @@ const SRC={
   tanaka:['https://pubmed.ncbi.nlm.nih.gov/11153730/','Tanaka i in. 2001, J Am Coll Cardiol'],
   jette:['https://pubmed.ncbi.nlm.nih.gov/2204507/','Jetté i in. 1990, Clin Cardiol'],
   kodama:['https://pubmed.ncbi.nlm.nih.gov/19454641/','Kodama i in. 2009, JAMA'],
+  patel:['https://pubmed.ncbi.nlm.nih.gov/36512404/','Patel ML i in. 2022, JMIR Form Res'],
+  nezami:['https://pubmed.ncbi.nlm.nih.gov/35146942/','Nezami BT i in. 2022, Obesity'],
+  harvey:['https://pubmed.ncbi.nlm.nih.gov/30801989/','Harvey J i in. 2019, Obesity'],
+  burke:['https://pubmed.ncbi.nlm.nih.gov/21185970/','Burke LE i in. 2011, J Am Diet Assoc'],
   butt:['https://weighttraining.nz','weighttraining.nz: kalkulator odtwarzający wzór Caseya Butta'],
   // Suplementy (brief 17.11.2026): strony otwarte 15-17.11.2026; podpisy ogólne, bez nazw handlowych
   s_medlt4:['https://medlineplus.gov/druginfo/meds/a682461.html','MedlinePlus: lewotyroksyna'],
@@ -1855,6 +1885,7 @@ function zdHtml(){
   return h+'</section>';
 }
 function renderDay(){
+  if(S.lite){document.getElementById('main').innerHTML=liteCardHtml()+unlockHtml()+petCardHtml()+'<p><button class="btn ghost" data-litefull="1">Pokaż całą Miarę</button></p>';return}
   const d=day(),tr=d.filter(e=>e.kind==='t'),ml=d.filter(e=>e.kind==='m');
   const net=tr.reduce((a,e)=>a+e.net,0),eat={k:0,p:0,f:0,c:0};ml.forEach(e=>{eat.k+=e.k;eat.p+=e.p;eat.f+=e.f;eat.c+=e.c});
   const R=rmr(),target=targetKcal(),pT=protTarget();
@@ -1899,6 +1930,7 @@ function renderSet(){
   let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalWayHtml()+bmiSetHtml();
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex','','Płeć')+dataHtml();
   h+=`<h2 id="wpisy">Wpisy</h2><div class="panel"><div class="field"><label for="once">Wpisuję raz dziennie, wieczorem</label><input type="checkbox" class="switch" id="once" data-k="once" ${S.once?'checked':''}></div></div><p class="small muted">Mój dzień pokaże jeden wpis dnia, a zwierzak przypomni o posiłkach dopiero od 19:00.</p>`;
+  h+=`<div class="panel"><div class="field"><label for="lite">Prosty widok</label><input type="checkbox" class="switch" id="lite" data-k="lite" ${S.lite?'checked':''}></div></div><p class="small muted">Mój dzień pokazuje 3 dotknięcia i to, co dodasz. Dane zostają przy każdym widoku.</p>`;
   h+='<h2 id="komunikaty">Komunikaty</h2>'+seg([['std','Zwykły czas'],['long','Dłużej'],['stay','Do zamknięcia']],S.toastLen||'std','toastlen','','Czas wyświetlania komunikatów')+'<p class="small muted">Jak długo widać dymek po zapisie.</p>';
   h+=`<div class="panel"><div class="field"><label for="discreet">Tryb dyskretny: karty o migrenie i antykoncepcji tylko w Zdrowiu</label><input type="checkbox" class="switch" id="discreet" data-k="discreet" ${S.discreet?'checked':''}></div></div>`;
   h+='<h2 id="towarzysz">Towarzysz</h2>'+petPickHtml()+(S.pet?`<div class="panel"><div class="field"><label for="body">Sylwetka z pomiarów na ekranie zwierzaka</label><input type="checkbox" class="switch" id="body" data-k="body" ${S.body?'checked':''}></div></div>`:'');
@@ -1994,19 +2026,23 @@ function setPath(p,v){const a=p.split('.');let o=S;for(let i=0;i<a.length-1;i++)
 // ---------- Szybkie wpisy z każdego ekranu (11.11.2026) ----------
 // A: arkusz „Dodaj wpis” z paska; B: liczba braków z listy Dziś na zakładce; C: powtórz wczoraj; D: skróty ikony (#dodaj-…)
 let SHEET=false,QUICK_PENDING=false,QUICK_ID='';
-function dayLeft(){if(S.once||painAt(todayKey()))return 0;const k=todayKey(),m=(S.meas||{})[k]||{},d=day();
+function dayLeft(){if(S.lite)return liteFull(todayKey())||painAt(todayKey())?0:1;if(S.once||painAt(todayKey()))return 0;const k=todayKey(),m=(S.meas||{})[k]||{},d=day();
   return [num(m.w)>0,d.filter(e=>e.kind==='m').length>=3,d.some(e=>e.kind==='t')||num(m.steps)>0].filter(x=>!x).length}
 function yMeals(){return ((S.days||{})[nAgo(1)]||[]).filter(e=>e.kind==='m')}
 function repeatHtml(){const y=yMeals();return y.length&&!day().some(e=>e.kind==='m')?`<p><button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki (${y.length})</button></p>`:''}
 function sheetHtml(){const gut=!!((S.prof||{}).cond||{}).gut,y=yMeals(),it=(a,t,h)=>`<button class="opt" ${a}><span class="txt">${t}</span>${h?`<span class="small muted">${h}</span>`:''}</button>`;
-  const L=[it('data-nav="day#m_w"','Waga',lastMeas('w',todayKey())?'ostatnio '+lastMeas('w',todayKey())+' kg':''),it('data-nav="day#m_sleep"','Sen'),it('data-nav="day#m_steps"','Kroki'),
+  const un=S.unlock||[],lt=!!S.lite;
+  const L=[lt?it('data-nav="day#lite"','Dziś, 3 dotknięcia'):'',!lt||un.includes('waga')?it('data-nav="day#m_w"','Waga',lastMeas('w',todayKey())?'ostatnio '+lastMeas('w',todayKey())+' kg':''):'',!lt||un.includes('sen')?it('data-nav="day#m_sleep"','Sen'):'',lt?'':it('data-nav="day#m_steps"','Kroki'),
     it('data-tab="meals"','Posiłek'),y.length?it('data-repeat="1"',`Powtórz wczorajsze posiłki (${y.length})`):'',it('data-tab="train"','Trening'),
     painAt(todayKey())?'':it('data-pain="today"','Boli mnie głowa','zapis jednym dotknięciem'),gut?it('data-nav="day#fold_brzuch#brzuch"','Brzuch dziś'):''];
   return `<button class="sheetbg" data-sheetclose="1" aria-label="Zamknij" tabindex="-1"></button><div class="sheetbox" role="dialog" aria-modal="true" aria-labelledby="sheet_t"><h2 id="sheet_t">Dodaj wpis</h2><div class="panel">${L.join('')}</div><p><button class="btn ghost" data-sheetclose="1">Zamknij</button></p></div>`}
 function sheetFocus(){if(!SHEET||typeof document.querySelector!=='function')return;const f=document.querySelector('#sheet .sheetbox button');if(f&&f.focus)f.focus()}
 function addFocus(){if(typeof document.querySelector!=='function')return;const a=document.querySelector('nav.tabs [data-addsheet]');if(a&&a.focus)a.focus()}
+// Prosty widok: pola, których tam nie ma, nie wyglądają na zepsute; komunikat prowadzi do całej Miary
+function liteMiss(id){if(!S.lite)return false;const u=S.unlock||[];return (id==='m_w'&&!u.includes('waga'))||(id==='m_sleep'&&!u.includes('sen'))||id==='m_steps'||id==='fold_brzuch'}
+function liteMissToast(){toast('To pole jest w całej Miarze',{act:'litefull',arg:'1',label:'Pokaż całą Miarę'})}
 const QUICK={'#dodaj-waga':['day','m_w'],'#dodaj-posilek':['meals','plan'],'#dodaj-trening':['train','']};
-function quickFromHash(h){const q=QUICK[String(h||'')];if(!q)return false;S.tab=q[0];QUICK_ID=q[1];SHEET=false;
+function quickFromHash(h){const q=QUICK[String(h||'')];if(!q)return false;S.tab=q[0];QUICK_ID=q[1];SHEET=false;if(q[0]==='day'&&liteMiss(q[1])){QUICK_ID='';liteMissToast()}
   try{if(typeof history!=='undefined'&&history.replaceState)history.replaceState(null,'',location.pathname+location.search)}catch(_){}return true}
 function quickFocus(){if(typeof document.querySelector!=='function')return;window.scrollTo(0,0);const el=QUICK_ID&&document.getElementById(QUICK_ID);
   if(el){if(el.scrollIntoView)el.scrollIntoView({block:'center'});focusEl(el)}else focusEl(document.querySelector('header h1'))}
@@ -2037,7 +2073,7 @@ document.addEventListener('click',e=>{
   if(d.undo){if(UNDO){const tab=S.tab;S=JSON.parse(UNDO);S.tab=tab;UNDO=null;save();render();toast('Przywrócono')}else toastHide();return}
   if(d.preset||d.datasave)S.touched={kg:true,cm:true,age:true,goal:true};
   if(b.parentNode&&b.parentNode.id==='toast')toastHide();
-  if(d.nav||d.sygsrc){const [tab,id,fd]=(d.nav||'health#syg_'+d.sygsrc).split('#');S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
+  if(d.nav||d.sygsrc){const [tab,id,fd]=(d.nav||'health#syg_'+d.sygsrc).split('#');if(tab==='day'&&liteMiss(id)){S.tab='day';SHEET=false;render();liteMissToast();return}S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
     if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});focusEl(el);if(el.classList){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2400)}}else window.scrollTo(0,0);return}
   if(d.stp){if(STP_SKIP){STP_SKIP=false;return}if(!stpApply(d.stp,+d.d,1))return;save();stpDone(d.stp,d.d);return}
   if(d.cook){const m=MEALS.find(x=>x.id===d.cook),k=todayKey(),base=planFor(new Date().getDay()),i=m?base.findIndex(id=>MEALS.find(x=>x.id===id).t===m.t):-1;if(i<0)return;
@@ -2066,6 +2102,14 @@ document.addEventListener('click',e=>{
   else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m);day().push({kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net});PET.react('train');save();toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
   else if(d.del!=null){undoable('Usunięto wpis');day().splice(+d.del,1)}
   else if(d.clear){undoable('Wyczyszczono wpisy z dziś');S.days[todayKey()]=[]}
+  else if(d.lite){const [f,v]=String(d.lite).split(':'),k=todayKey(),wf=liteFull(k);if(!({stepsB:['lo','mid','hi'],feel:['dobrze','glowa','brzuch','inne'],redz:['0','1','2']}[f]||[]).includes(v))return;const m=(S.meas[k]=S.meas[k]||{});
+    if(f==='stepsB'){if(num(m.steps)>0){toast('Kroki są już wpisane liczbą');return}m.stepsB=v}
+    else if(f==='feel'){const was=m.feel==='glowa';m.feel=v;if(v==='glowa'){S.pain=S.pain||{};if(!S.pain[k])S.pain[k]={aura:false,med:false,card:true}}else if(was&&S.pain&&S.pain[k]&&S.pain[k].card&&!S.pain[k].aura&&!S.pain[k].med)delete S.pain[k]}
+    else m.redz=+v
+    if(!wf&&liteFull(k)){PET.react('weigh');toast('Dzień zapisany')}}
+  else if(d.litefull){S.lite=false}
+  else if(d.unlock){if(!UNLOCK.includes(d.unlock))return;S.unlock=S.unlock||[];if(!S.unlock.includes(d.unlock))S.unlock.push(d.unlock);S.unlockAt=todayKey();if(d.unlock==='cala')S.lite=false}
+  else if(d.unlocklater){const t=new Date();t.setDate(t.getDate()+7);S.unlockAt=todayKey();S.unlockSnooze=keyOf(t)}
   else if(d.introdone){const ok=d.introdone==='ok',st=['kg','cm','age'].filter(isStart);if(ok&&st.length){S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);save();render();const nm=st.map(k=>({kg:'waga',cm:'wzrost',age:'wiek'})[k]),lst=nm.length>1?nm.slice(0,-1).join(', ')+' i '+nm.at(-1):nm[0];toast(`${lst[0].toUpperCase()+lst.slice(1)} ${nm.length>1?'są':'jest'} na wartościach startowych. Ustaw swoje w Ustawieniach, żeby kalorie były liczone dla Ciebie.`,{act:'tab',arg:'set',label:'Ustawienia'});return}if(ok&&S.guide)S.guide.dataOk=true;S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);if(ok){save();render();toast(`Twój cel na start: ${fmt(targetKcal())} kcal dziennie.`+(S.pet?'':' W Moim dniu czeka jajko: wybierz, kto się z niego wykluje.'),S.pet?0:{act:'tab',arg:'pet',label:'Wybierz'});return}}
   else if(d.intro){S.introStep=0;S.tab='intro';window.scrollTo(0,0)}
   else if(d.goto){const el=document.getElementById(d.goto);if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.focus)el.focus({preventScroll:true})}return}

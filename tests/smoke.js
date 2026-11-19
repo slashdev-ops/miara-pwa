@@ -27,8 +27,9 @@ const zdPath = path.join(root, 'zdarzenia.js');
 if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
 const sygPath = path.join(root, 'sygnaly.js');
 if (fs.existsSync(sygPath)) vm.runInContext(fs.readFileSync(sygPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={S:()=>S,egfrRows:()=>typeof egfrRows=="undefined"?[]:egfrRows(),nonHdlRows:()=>typeof nonHdlRows=="undefined"?[]:nonHdlRows(),egfrCat:(v)=>typeof egfrCat=="undefined"?"":egfrCat(v),muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),fitNow:()=>typeof fitNow=="undefined"?undefined:fitNow(),potKouri:()=>typeof potKouri=="undefined"?undefined:potKouri(),potButt:()=>typeof potButt=="undefined"?undefined:potButt(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false,SUPP:typeof SUPP=="undefined"?[]:SUPP,SUPP_PARY:typeof SUPP_PARY=="undefined"?[]:SUPP_PARY,promoParse:typeof promoParse=="undefined"?undefined:promoParse,promoMatch:typeof promoMatch=="undefined"?undefined:promoMatch,nextShop:typeof nextShop=="undefined"?undefined:nextShop,promosActive:typeof promosActive=="undefined"?undefined:promosActive,promoDishes:typeof promoDishes=="undefined"?undefined:promoDishes,promoFix:typeof promoFix=="undefined"?undefined:promoFix,promoPending:()=>typeof PROMO_PENDING=="undefined"?undefined:PROMO_PENDING,labStatus:typeof labStatus=="undefined"?undefined:labStatus};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={guideActive:()=>guideActive(),S:()=>S,egfrRows:()=>typeof egfrRows=="undefined"?[]:egfrRows(),nonHdlRows:()=>typeof nonHdlRows=="undefined"?[]:nonHdlRows(),egfrCat:(v)=>typeof egfrCat=="undefined"?"":egfrCat(v),muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),fitNow:()=>typeof fitNow=="undefined"?undefined:fitNow(),potKouri:()=>typeof potKouri=="undefined"?undefined:potKouri(),potButt:()=>typeof potButt=="undefined"?undefined:potButt(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false,SUPP:typeof SUPP=="undefined"?[]:SUPP,SUPP_PARY:typeof SUPP_PARY=="undefined"?[]:SUPP_PARY,promoParse:typeof promoParse=="undefined"?undefined:promoParse,promoMatch:typeof promoMatch=="undefined"?undefined:promoMatch,nextShop:typeof nextShop=="undefined"?undefined:nextShop,promosActive:typeof promosActive=="undefined"?undefined:promosActive,promoDishes:typeof promoDishes=="undefined"?undefined:promoDishes,promoFix:typeof promoFix=="undefined"?undefined:promoFix,promoPending:()=>typeof PROMO_PENDING=="undefined"?undefined:PROMO_PENDING,labStatus:typeof labStatus=="undefined"?undefined:labStatus,load:typeof load=="undefined"?undefined:load,stepsBand:typeof stepsBand=="undefined"?undefined:stepsBand,liteFull:typeof liteFull=="undefined"?undefined:liteFull,liteCardHtml:typeof liteCardHtml=="undefined"?undefined:liteCardHtml,dayOk:typeof dayOk=="undefined"?undefined:dayOk,eggCrack:typeof eggCrack=="undefined"?undefined:eggCrack,liteDays:typeof liteDays=="undefined"?undefined:liteDays,dayLeft:typeof dayLeft=="undefined"?undefined:dayLeft,petCardHtml:typeof petCardHtml=="undefined"?undefined:petCardHtml,unlockNext:typeof unlockNext=="undefined"?undefined:unlockNext,unlockHtml:typeof unlockHtml=="undefined"?undefined:unlockHtml};', sandbox);
 const T = sandbox.__T;
+T.S().lite = false; // dotychczasowe testy zakładają pełny widok
 
 let ok = 0, bad = 0;
 const check = (name, cond, info) => { if (cond) ok++; else bad++; console.log((cond ? 'OK   ' : 'BLAD ') + name + (info ? ' -> ' + info : '')); };
@@ -601,7 +602,7 @@ tryc('12 tygodni: tabela 12 tygodni z wagą w przedziale', () => { const h = vie
 tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h = view('health', BASE({ ...PROF(['hashi', 'mig'], 'yaz'), kg: '80', goal: '70' })), m = (h.match(/<table class="weeks"[\s\S]*?<\/table>/) || [''])[0]; return !/TSH (spadnie|wyniesie)|samopoczucie (wzro|popraw)/.test(m) && h.includes('nie prognozuje'); });
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
-const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord', 'shopDay', 'stores', 'promos'];
+const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord', 'shopDay', 'stores', 'promos', 'lite', 'unlock', 'unlockAt', 'unlockSnooze'];
 const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'muscleAuto', 'muscleAutoLast', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'suppTake', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut', 'frame'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
@@ -2043,6 +2044,196 @@ tryc('karta sprawność: brak danych -> podpowiedź, wspólny nagłówek Sylwetk
 tryc('karta sprawność: źródła uth, tanaka, jette, kodama w SRC', () => [['uth', '14624296'], ['tanaka', '11153730'], ['jette', '2204507'], ['kodama', '19454641']].every(([k, p]) => T.SRC[k] && T.SRC[k][0].includes(p)));
 tryc('sprawność: pola VO2max, tętno spoczynkowe i maksymalne w sekcji Sprawność po Tanicie', () => { const h = view('day', FQ({})); const i = h.indexOf('data-fold="tanita"'), j = h.indexOf('data-fold="sprawnosc"'); return i > 0 && j > i && ['m_vo2', 'm_hrRest', 'm_hrMax'].every((x) => h.slice(j).includes('id="' + x + '"')); });
 tryc('sprawność: zakresy pól vo2 10-90, hrRest 30-120, hrMax 120-230', () => T.checkNum('meas.x.hrRest', '25').err && T.checkNum('meas.x.hrMax', '230').err === undefined && T.checkNum('meas.x.hrMax', '231').err && T.checkNum('meas.x.vo2', '9').err && T.checkNum('meas.x.vo2', '91').err && !T.checkNum('meas.x.vo2', '45').err && !T.checkNum('meas.x.hrRest', '60').err);
+// Prosty widok i karta „Dziś, 3 dotknięcia”
+const LK = () => T.todayKey();
+const liteReset = () => { const S = T.S(); S.lite = true; S.meas = {}; S.pain = {}; S.days = {}; S.onb = true; };
+tryc('prosty widok: świeży stan ma lite, zapisany stan bez pola lite go nie dostaje', () => {
+  const g = sandbox.localStorage.getItem; let a, b;
+  try { a = T.load().lite; sandbox.localStorage.getItem = () => '{"days":{"2026-01-01":[]}}'; b = T.load().lite; } finally { sandbox.localStorage.getItem = g; }
+  return a === true && b === false;
+});
+tryc('prosty widok: Mój dzień ma tylko kartę, zwierzaka i Pokaż całą Miarę', () => {
+  liteReset(); const h = view('day', { pet: null });
+  return h.includes('id="lite"') && h.includes('data-litefull') && h.includes('Pokaż całą Miarę') && !h.includes('Pierwsze kroki') && !h.includes('data-fold="wiecej"');
+});
+tryc('karta: 3 dotknięcia zapisują stepsB, feel, redz i dają liteFull', () => {
+  liteReset(); view('day', {}); const k = LK();
+  click({ lite: 'stepsB:mid' }); click({ lite: 'feel:dobrze' }); const half = !T.liteFull(k); click({ lite: 'redz:0' });
+  const m = T.S().meas[k], h = mainHtml();
+  return half && m.stepsB === 'mid' && m.feel === 'dobrze' && m.redz === 0 && T.liteFull(k) === true && h.includes('✓ Dzień zapisany.') && (h.match(/data-lite="[^"]+" aria-pressed="true"/g) || []).length === 3;
+});
+tryc('karta: ponowne dotknięcie wybranego żetonu zostawia wybór', () => {
+  liteReset(); view('day', {}); const k = LK(); click({ lite: 'redz:2' }); click({ lite: 'redz:2' }); click({ lite: 'stepsB:lo' }); click({ lite: 'stepsB:lo' });
+  const m = T.S().meas[k]; return m.redz === 2 && m.stepsB === 'lo';
+});
+tryc('karta: Ból głowy tworzy dzień z bólem z card, zmiana na Dobrze go usuwa; ręczny dzień z bólem zostaje', () => {
+  liteReset(); view('day', {}); const k = LK();
+  click({ lite: 'feel:glowa' }); const a = JSON.stringify(T.S().pain[k]) === '{"aura":false,"med":false,"card":true}';
+  click({ lite: 'feel:dobrze' }); const b = !T.S().pain[k];
+  T.S().pain[k] = { aura: false, med: false }; click({ lite: 'feel:glowa' }); click({ lite: 'feel:brzuch' });
+  return a && b && !!T.S().pain[k] && T.S().meas[k].feel === 'brzuch';
+});
+tryc('karta: liczba kroków 9000 daje stepsBand hi bez zapisu stepsB', () => {
+  liteReset(); view('day', {}); const k = LK(); T.S().meas[k] = { steps: '9000' };
+  const band = T.stepsBand(k) === 'hi'; click({ lite: 'stepsB:lo' });
+  const m = T.S().meas[k]; return band && m.stepsB === undefined && T.stepsBand(k) === 'hi';
+});
+tryc('karta: zakresy kroków z liczby i z stepsB', () => {
+  const S = T.S(); S.meas = { a: { steps: '4999' }, b: { steps: '5000' }, c: { steps: '8000' }, d: { steps: '8001' }, e: { stepsB: 'mid' }, f: {} };
+  return ['lo', 'mid', 'mid', 'hi', 'mid', ''].every((v, i) => T.stepsBand('abcdef'[i]) === v);
+});
+tryc('karta: bez słów o ograniczeniu, z podpisem jedzenia kalorycznego', () => {
+  liteReset(); const h = T.liteCardHtml();
+  return h.includes('Dziś, 3 dotknięcia') && h.includes('słodycze, fast food, słone przekąski, alkohol') && h.includes('2 lub więcej') && !/ograniczon|brakuje|niekompletn/i.test(h) && h.includes('Wstępne badania: krótki zapis codziennie działał podobnie jak pełny.');
+});
+tryc('kopia bez danych o zdrowiu: lite, unlock, unlockAt, unlockSnooze w BK_NH_KEEP; stepsB, feel, redz poza nią (w meas)', () => {
+  liteReset(); const S = T.S(); S.meas[LK()] = { stepsB: 'hi', feel: 'dobrze', redz: 1 };
+  const k = T.nhKeep(), d = JSON.parse(T.bkBuild(true)).data;
+  return ['lite', 'unlock', 'unlockAt', 'unlockSnooze'].every((x) => k.includes(x)) && !k.includes('meas') && !('meas' in d);
+});
+const FULL = (k, o) => { T.S().meas[k] = Object.assign({ stepsB: 'mid', feel: 'dobrze', redz: 0 }, o || {}); };
+tryc('pełna karta liczy się do serii i daje co najmniej 30 punktów zwierzakowi', () => {
+  liteReset(); const k = LK(); FULL(k);
+  return T.dayOk(k) === true && T.petCtx().dayPts(k) >= 30;
+});
+tryc('częściowa karta (tylko feel: inne) nie liczy się do serii', () => {
+  liteReset(); const k = LK(); T.S().meas[k] = { feel: 'inne' };
+  return T.dayOk(k) === false && T.petCtx().dayPts(k) < 30;
+});
+tryc('jajko: 2 dni z pełną kartą dają eggCrack 2; przełączenie lite na false nie zmniejsza wyniku', () => {
+  liteReset(); FULL('2026-01-01'); FULL('2026-01-02'); const S = T.S();
+  const a = T.eggCrack(), b = T.liteDays(), c = T.liteDays('2026-01-01'); S.lite = false;
+  return a === 2 && b === 2 && c === 1 && T.eggCrack() >= 2;
+});
+tryc('licznik na zakładce w prostym widoku: 1 przed kartą, 0 po pełnej karcie', () => {
+  liteReset(); const k = LK(); const a = T.dayLeft(); FULL(k); return a === 1 && T.dayLeft() === 0;
+});
+tryc('zwierzak bez zależności od wartości: stan dla redz 2 i stepsB lo równy stanowi dla redz 0 i stepsB hi', () => {
+  const st = (o) => { liteReset(); T.S().pet = { kind: 'gaska', name: 'K' }; FULL(LK(), o); const r = T.PET.state(T.petCtx()); return JSON.stringify(r); };
+  return st({ redz: 2, stepsB: 'lo' }) === st({ redz: 0, stepsB: 'hi' });
+});
+tryc('load: błąd parsowania zapisu nie daje lite, brak zapisu daje', () => {
+  const g = sandbox.localStorage.getItem; let a, b;
+  try { sandbox.localStorage.getItem = () => '{zepsute'; a = T.load().lite; sandbox.localStorage.getItem = () => null; b = T.load().lite; } finally { sandbox.localStorage.getItem = g; }
+  return a === false && b === true;
+});
+tryc('karta: Ból głowy odtwarza wpis bólu, gdy feel to już glowa, a wpisu brak', () => {
+  liteReset(); view('day', {}); const k = LK(); click({ lite: 'feel:glowa' }); delete T.S().pain[k]; click({ lite: 'feel:glowa' });
+  return JSON.stringify(T.S().pain[k]) === '{"aura":false,"med":false,"card":true}';
+});
+tryc('Pokaż całą Miarę wyłącza lite i pokazuje pełny widok', () => {
+  liteReset(); const pre = view('day', {}); click({ litefull: '1' }); const h = mainHtml();
+  return pre.includes('data-litefull') && T.S().lite === false && h.includes('data-fold="wiecej"');
+});
+tryc('ustawienia: przełącznik Prosty widok zmienia S.lite', () => {
+  liteReset(); const setH = view('set', {}); const el = { dataset: { k: 'lite' }, type: 'checkbox', checked: false, value: '', getAttribute() { return null; }, setAttribute() {}, classList: { toggle() {} } };
+  (lis.input || []).forEach((f) => f({ target: el })); const off = T.S().lite === false; el.checked = true; (lis.input || []).forEach((f) => f({ target: el }));
+  return setH.includes('data-k="lite"') && off && T.S().lite === true;
+});
+tryc('jajko: podpis w prostym widoku mówi o dniach z 3 dotknięciami, w pełnym o pierwszych krokach', () => {
+  liteReset(); T.S().pet = null; const a = T.petCardHtml(); T.S().lite = false; const b = T.petCardHtml();
+  T.S().pet = { kind: 'gaska', name: 'K', since: '2999-01-01' }; T.S().lite = true; const c = T.petCardHtml(); T.S().lite = false; const d = T.petCardHtml();
+  return a.includes('Jajko pęka z każdym dniem z 3 dotknięciami: ') && b.includes('Jajko pęka z każdym pierwszym krokiem: ')
+    && c.includes('Dni z 3 dotknięciami: ') && !c.includes('Pierwsze kroki: pęknięcia') && d.includes('Pierwsze kroki: pęknięcia ');
+});
+// Stopniowe odkrywanie
+const dAdd = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return T.todayKey().slice(0, 0) + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const unlockReset = () => { liteReset(); const S = T.S(); S.unlock = []; S.unlockAt = '2025-12-31'; S.unlockSnooze = ''; };
+const fullDays = (a) => a.forEach((k) => FULL(k));
+tryc('odkrywanie: brak propozycji przed 3 dniami z pełną kartą; po 3 dniach propozycja waga', () => {
+  unlockReset(); fullDays(['2026-01-01', '2026-01-02']); const a = T.unlockNext(); const ha = view('day', {});
+  FULL('2026-01-03'); const b = T.unlockNext(); const hb = view('day', {});
+  return a === null && !ha.includes('data-unlock=') && b === 'waga' && hb.includes('data-unlock="waga"') && hb.includes('data-unlocklater="1"') && hb.includes('Dodać wagę? Jedno pole rano. Bez wagi kalorie są liczone w przybliżeniu.') && hb.includes('>Dodaj<') && hb.includes('>Nie teraz<');
+});
+tryc('odkrywanie: Dodaj dopisuje waga, pokazuje pole m_w; kolejna propozycja (posilki) dopiero po 3 nowych dniach', () => {
+  unlockReset(); fullDays(['2026-01-01', '2026-01-02', '2026-01-03']); view('day', {}); click({ unlock: 'waga' }); const S = T.S(); const k = LK();
+  const h = mainHtml(); const a = S.unlock.join() === 'waga' && S.unlockAt === k && h.includes('id="m_w"') && h.includes('data-k="meas.' + k + '.w"') && !h.includes('Dodać wagę?') && T.unlockNext() === null;
+  S.unlockAt = '2026-01-03'; fullDays(['2026-01-04', '2026-01-05']); const mid = T.unlockNext() === null; FULL('2026-01-06');
+  const hp = view('day', {});
+  return a && mid && T.unlockNext() === 'posilki' && hp.includes('Dodać posiłki z planu? „Zjem” przy daniu zapisuje posiłek jednym dotknięciem.');
+});
+tryc('odkrywanie: posilki i sen pokazują wiersz posiłków z licznikiem i pole m_sleep', () => {
+  unlockReset(); const S = T.S(); S.unlock = ['waga', 'posilki', 'sen']; S.days[LK()] = [{ kind: 'm', id: 'x', label: 'a', k: 1, p: 1, f: 1, c: 1 }, { kind: 't', label: 't' }];
+  const h = view('day', {}); const i = h.indexOf('Posiłki z planu');
+  return i > 0 && h.includes('data-tab="meals"') && h.includes('id="m_sleep"') && h.includes('data-k="meas.' + LK() + '.w"') && /Posiłki z planu[\s\S]{0,200}Zapisane dziś: 1/.test(h.slice(i)) && !/<label>Posiłki z planu/.test(h);
+});
+tryc('odkrywanie: Nie teraz chowa propozycję na 7 dni mimo 3 nowych dni z kartą; po 7 dniach wraca', () => {
+  unlockReset(); fullDays(['2026-01-01', '2026-01-02', '2026-01-03']); view('day', {}); const S = T.S(); const before = JSON.stringify(S.unlock);
+  click({ unlocklater: '1' }); const k = LK(); const a = S.unlockAt === k && S.unlockSnooze === dAdd(7) && T.unlockNext() === null && JSON.stringify(S.unlock) === before;
+  fullDays(['2026-01-04', '2026-01-05', '2026-01-06']); S.unlockAt = '2026-01-03'; const b = T.unlockNext() === null;
+  S.unlockSnooze = dAdd(1); const c = T.unlockNext() === null; S.unlockSnooze = k; const d = T.unlockNext() === 'waga';
+  return a && b && c && d;
+});
+tryc('odkrywanie: Pokaż przy cala ustawia lite false; unlock zostaje po ponownym włączeniu lite', () => {
+  unlockReset(); const S = T.S(); S.unlock = ['waga', 'posilki', 'sen']; fullDays(['2026-01-01', '2026-01-02', '2026-01-03']);
+  const nx = T.unlockNext(); const h = view('day', {}); click({ unlock: 'cala' });
+  const a = nx === 'cala' && h.includes('Chcesz zobaczyć całą Miarę? Wszystko, co dodasz, zostaje.') && h.includes('>Pokaż<') && S.lite === false && S.unlock.includes('cala') && S.unlockAt === LK();
+  S.lite = true; return a && S.unlock.join() === 'waga,posilki,sen,cala' && T.unlockNext() === null;
+});
+tryc('odkrywanie: poza prostym widokiem unlockNext zwraca null', () => {
+  unlockReset(); fullDays(['2026-01-01', '2026-01-02', '2026-01-03']); const a = T.unlockNext(); T.S().lite = false; return a === 'waga' && T.unlockNext() === null;
+});
+tryc('zwierzak: petCtx niesie lite i liteFull, ekran jajka w prostym widoku renderuje się z pęknięciami z dni karty', () => {
+  liteReset(); T.S().pet = { kind: 'gaska', name: 'K', since: '2999-01-01' }; fullDays(['2026-01-01', '2026-01-02']); const h = view('pet', {});
+  return T.petCtx().lite === true && h.includes('petstage') && (h.match(/class="crack"/g) || []).length === 2;
+});
+// Poprawki końcowe prostego widoku (19.11.2026)
+const at15 = () => { const n = new Date(); n.setHours(15, 0, 0, 0); return n; };
+tryc('zwierzak w prostym widoku: po 12:00 bez karty nie jest głodny ani zmęczony, mówi „czeka na 3 dotknięcia.”', () => {
+  liteReset(); T.S().pet = { kind: 'gaska', name: 'K', since: '2999-01-01' }; const s = T.PET.state(T.petCtx(at15()));
+  return s.mood !== 'hungry' && s.mood !== 'tired' && s.line.includes('czeka na 3 dotknięcia.') && !s.line.includes('posiłk');
+});
+tryc('zwierzak w prostym widoku: po pełnej karcie po 12:00 nie jest głodny ani zmęczony, paski posiłków i energii co najmniej 70', () => {
+  liteReset(); T.S().pet = { kind: 'gaska', name: 'K', since: '2999-01-01' }; FULL(LK()); const s = T.PET.state(T.petCtx(at15()));
+  return s.mood !== 'hungry' && s.mood !== 'tired' && s.meters.food >= 70 && s.meters.energy >= 70;
+});
+tryc('zwierzak w prostym widoku: nastrój po 12:00 nie zależy od wybranych wartości', () => {
+  const st = (o) => { liteReset(); T.S().pet = { kind: 'gaska', name: 'K' }; FULL(LK(), o); return JSON.stringify(T.PET.state(T.petCtx(at15()))); };
+  return st({ redz: 2, stepsB: 'lo', feel: 'inne' }) === st({ redz: 0, stepsB: 'hi', feel: 'dobrze' });
+});
+tryc('zwierzak w pełnym widoku: po 12:00 bez posiłku nadal czeka na wpis posiłku', () => {
+  const S = T.S(); S.lite = false; S.pet = { kind: 'gaska', name: 'K', since: '2999-01-01' }; S.meas = {}; S.days = {}; S.pain = {};
+  const s = T.PET.state(T.petCtx(at15())); S.lite = true; return s.mood === 'hungry' && s.line.includes('czeka na wpis posiłku');
+});
+tryc('karta: przejście do pełnej karty daje komunikat „Dzień zapisany” tylko raz', () => {
+  liteReset(); view('day', {}); els.toast.innerHTML = ''; click({ lite: 'stepsB:mid' }); click({ lite: 'feel:dobrze' }); const a = els.toast.innerHTML.includes('Dzień zapisany');
+  click({ lite: 'redz:0' }); const b = els.toast.innerHTML.includes('Dzień zapisany'); els.toast.innerHTML = ''; click({ lite: 'redz:1' }); const c = els.toast.innerHTML.includes('Dzień zapisany');
+  return !a && b && !c;
+});
+tryc('prosty widok: guideActive jest nieaktywne, Dalej nie każe wpisać wagi', () => {
+  liteReset(); T.S().guide = { hidden: false, dataOk: false, seenPet: false }; return T.guideActive() === false && !T.guideToast('Zapisano').includes('Dalej');
+});
+tryc('arkusz Dodaj wpis w prostym widoku: karta, bez wagi, snu i kroków przed odkryciem', () => {
+  liteReset(); T.S().unlock = []; view('day', {}); click({ addsheet: '1' }); const h = sheetH();
+  return h.includes('data-nav="day#lite"') && h.includes('Dziś, 3 dotknięcia') && !h.includes('day#m_w') && !h.includes('day#m_sleep') && !h.includes('day#m_steps') && h.includes('data-tab="meals"') && h.includes('data-tab="train"') && h.includes('data-pain="today"');
+});
+tryc('arkusz Dodaj wpis w prostym widoku: waga i sen po odkryciu, kroki nigdy', () => {
+  liteReset(); T.S().unlock = ['waga', 'sen']; view('day', {}); click({ addsheet: '1' }); const h = sheetH(); T.S().unlock = [];
+  return h.includes('day#m_w') && h.includes('day#m_sleep') && !h.includes('day#m_steps');
+});
+tryc('prosty widok: data-nav do pola spoza widoku pokazuje komunikat z Pokaż całą Miarę, a przycisk włącza pełny widok', () => {
+  liteReset(); T.S().unlock = []; view('day', {}); els.toast.innerHTML = ''; click({ nav: 'day#m_steps' });
+  const h = els.toast.innerHTML, a = h.includes('To pole jest w całej Miarze') && h.includes('data-litefull="1"') && h.includes('Pokaż całą Miarę') && T.S().lite === true;
+  click({ litefull: '1' }); return a && T.S().lite === false;
+});
+tryc('prosty widok: skrót #dodaj-waga bez odkrytej wagi pokazuje komunikat, z odkrytą nie', () => {
+  liteReset(); T.S().unlock = []; els.toast.innerHTML = ''; const a = T.quickFromHash('#dodaj-waga'); const m = els.toast.innerHTML.includes('To pole jest w całej Miarze');
+  T.S().unlock = ['waga']; els.toast.innerHTML = ''; T.quickFromHash('#dodaj-waga'); const n = els.toast.innerHTML.includes('To pole jest w całej Miarze'); T.S().unlock = [];
+  return a && m && !n;
+});
+tryc('licznik na zakładce w prostym widoku: dzień z bólem głowy daje 0', () => {
+  liteReset(); T.S().pain[LK()] = { aura: false, med: false }; return T.dayLeft() === 0;
+});
+tryc('karta: zmiana z Bólu głowy zostawia wpis, gdy ustawiono aurę lub lek', () => {
+  liteReset(); view('day', {}); const k = LK();
+  click({ lite: 'feel:glowa' }); T.S().pain[k].aura = true; click({ lite: 'feel:dobrze' }); const a = !!T.S().pain[k];
+  delete T.S().pain[k]; click({ lite: 'feel:glowa' }); T.S().pain[k].med = true; click({ lite: 'feel:brzuch' }); return a && !!T.S().pain[k];
+});
+tryc('scenariusz start: ma lite i opis karty „Dziś, 3 dotknięcia”', () => T.scenS('start').lite === true && T.SCEN.start.chk.includes('Dziś, 3 dotknięcia') && !T.SCEN.start.chk.includes('0 z 6'));
+tryc('zwierzak: podpis jajka w prostym widoku o pierwszym dniu z 3 dotknięciami, w pełnym bez zmian', () => {
+  liteReset(); T.S().pet = { kind: 'gaska', name: 'K', since: '2999-01-01' }; const a = T.petCardHtml(); T.S().lite = false; const b = T.petCardHtml(); T.S().lite = true;
+  return a.includes('Jajo wykluje się po pierwszym dniu z 3 dotknięciami.') && !a.includes('30 punktami') && b.includes('Jajo wykluje się po dniu z co najmniej 30 punktami.');
+});
 // Scenariusze z danymi testowymi (18.11.2026): sport-m, sport-k, sport-h z danymi zmyślonymi; odczyty startowe tylko w wersji prywatnej, sprawdzane, gdy są
 const SPN = ['sport-m', 'sport-k', 'sport-h'], LAB_ID = ['tsh', 'glu', 'ins', 'hba1c', 'vitd', 'ferr', 'chol', 'ldl', 'hdl', 'tg', 'kreat'];
 const scenLabsOk = (s) => { view('set', s); return LAB_ID.every((id) => s.labs.some((e) => e.test === id)) && s.labs.every((e) => { const L = T.LABS.find((x) => x.id === e.test); return !L.tg || T.labStatus(e).t.startsWith('w zakresie docelowym'); }) && s.labs.some((e) => e.test === 'kreat' && /mg/i.test(e.unit)) && new Set(s.labs.map((e) => e.date)).size === 1; };
@@ -2060,6 +2251,13 @@ tryc('scenariusz sport-h: karta potencjału i karta sprawności, poziom „wysok
 tryc('scenariusze sportowe: VO2max i tętno spoczynkowe co tydzień', () => SPN.every((n) => { const s = T.scenS(n); return scenDays(s, 'vo2') >= 4 && scenDays(s, 'hrRest') >= 4; }));
 tryc('scenariusz sport-m w trybie pokazowym: save() nie woła localStorage.setItem', () => { let n = 0; const o = sandbox.localStorage.setItem; sandbox.localStorage.setItem = () => { n++; }; T.setDemo(true); view('health', T.scenS('sport-m')); T.save(); click({ mode: 'utrzymanie' }); T.setDemo(false); sandbox.localStorage.setItem = o; return n === 0; });
 tryc('scenariusze z odczytu startowego (tylko wersja prywatna): K i M z pomiarem, obwodami i badaniami', () => { const P = Object.keys(T.SCEN).filter((n) => T.SCEN[n].t.startsWith('Mój odczyt startowy')); if (!P.length) return true; const ss = P.map((n) => T.scenS(n)); return P.length === 2 && ss.map((s) => s.sex).sort().join() === 'K,M' && ss.every((s) => scenBody(s) && scenLabsOk(s) && T.SCEN[P[0]].chk.length > 30); });
+tryc('ekran startowy w prostym widoku: przycisk Zacznij od 3 dotknięć, bez Pomiń', () => {
+  liteReset(); const a = view('intro', { onb: false }); const lite = a.includes('Zacznij od 3 dotknięć') && /class="btn"[^>]*data-introdone="1"|data-introdone="1"[^>]*class="btn"/.test(a) && !a.includes('>Pomiń<');
+  T.S().lite = false; const b = view('intro', { onb: false });
+  return lite && b.includes('>Pomiń<') && !b.includes('Zacznij od 3 dotknięć');
+});
+tryc('źródła patel, nezami, harvey, burke z PMID', () => ['patel:36512404', 'nezami:35146942', 'harvey:30801989', 'burke:21185970'].every((x) => { const [k, id] = x.split(':'); return T.SRC[k] && T.SRC[k][0] === 'https://pubmed.ncbi.nlm.nih.gov/' + id + '/'; }));
+tryc('scenariusz prosty: propozycja waga widoczna', () => { const h = view('day', T.scenS('prosty')); return h.includes('id="lite"') && h.includes('Dodać wagę?') && T.S().lite === true; });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

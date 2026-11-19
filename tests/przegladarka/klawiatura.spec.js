@@ -6,7 +6,7 @@ async function openDay(page) {
   page.on('pageerror', (e) => errors.push('strona: ' + e.message));
   await page.goto('/index.html');
   await page.waitForFunction(() => typeof render === 'function' && typeof S === 'object');
-  await page.evaluate(() => { S.onb = true; S.tab = 'day'; render(); window.scrollTo(0, 0); });
+  await page.evaluate(() => { S.onb = true; S.lite = false; S.tab = 'day'; render(); window.scrollTo(0, 0); });
   return errors;
 }
 
