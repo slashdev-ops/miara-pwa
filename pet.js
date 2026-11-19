@@ -51,8 +51,10 @@ var PET = (function () {
     const k = c.key(c.now), h = c.now.getHours(), przerwa = gap(c), ents = c.entries(k), m = c.meas(k) || {};
     const meals = ents.filter((e) => e.kind === 'm').length, train = ents.some((e) => e.kind === 't');
     const sleep = c.num(m.sleep), steps = c.num(m.steps);
-    const food = (c.once ? h < 19 : h < 9) && meals === 0 ? 50 : [0, 40, 70, 100][Math.min(meals, 3)];
-    const energy = Math.min(sleep / 7, 1) * 60 + (train || steps >= 6000 ? 40 : steps >= 3000 ? 20 : 0);
+    const lite = !!c.lite, lf = lite && !!c.liteFull(k); // prosty widok: karta „Dziś, 3 dotknięcia” zastępuje posiłki i kroki
+    let food = (c.once ? h < 19 : h < 9) && meals === 0 ? 50 : [0, 40, 70, 100][Math.min(meals, 3)];
+    let energy = Math.min(sleep / 7, 1) * 60 + (train || steps >= 6000 ? 40 : steps >= 3000 ? 20 : 0);
+    if (lf) { food = Math.max(food, 70); energy = Math.max(energy, 70); }
     const mood = Math.min(c.dayPts(k) / 50, 1) * 80 + (c.streak() >= 3 ? 20 : 0);
     const pen = 35 * przerwa;
     const meters = { food: clamp(food - pen), energy: clamp(energy - pen), mood: clamp(mood - pen) };
@@ -65,13 +67,13 @@ var PET = (function () {
     else if (rest) md = 'sleep';
     else if (h >= 22 || h < 6) md = 'sleep';
     else if (przerwa >= 2 && isEmpty(c, k)) md = 'sad';
-    else if (h >= (c.once ? 19 : 12) && meals === 0) md = 'hungry';
-    else if (meters.energy < 40) md = 'tired';
+    else if (!lite && h >= (c.once ? 19 : 12) && meals === 0) md = 'hungry';
+    else if (!lite && meters.energy < 40) md = 'tired';
     else if (meters.food >= 70 && meters.energy >= 70 && meters.mood >= 70) md = 'happy';
     const name = (c.pet && String(c.pet.name || '').trim()) || 'Kluska';
     // Tryb pokazowy: klatka narzuca minę, etap i dodatek; bez kamienia milowego (nic nie trafia do petSeen)
     if (c.force) return { meters, przerwa, mood: c.force.mood, stage: c.force.stage, acc: c.force.acc || null, active, milestone: null, line: LINES[c.force.mood].replace('{n}', name) };
-    return { meters, przerwa, mood: md, stage, acc: ACC[c.level(c.weekPts())[1]] || null, active, milestone, line: LINES[milestone === 'cel1' ? 'goal' : rest && md === 'sleep' ? 'rest' : md].replace('{n}', name) };
+    return { meters, przerwa, mood: md, stage, acc: ACC[c.level(c.weekPts())[1]] || null, active, milestone, line: (lite && !lf && md === 'ok' ? '{n} czeka na 3 dotknięcia.' : LINES[milestone === 'cel1' ? 'goal' : rest && md === 'sleep' ? 'rest' : md]).replace('{n}', name) };
   }
 
   // ---------- Rysunek: SVG 120×120, kolory z CSS (klasy), animacje w app.css ----------
@@ -158,7 +160,7 @@ var PET = (function () {
 
   function card(st, pet, esc) {
     return `<button class="petcard" data-tab="pet" aria-label="Mój zwierzak: ${esc(nameOf(pet))}. ${esc(st.line)}">${svg(pet.kind, st.stage, st.mood, st.acc, false, st.crack)}`
-      + `<span class="petinfo"><b>${esc(nameOf(pet))}</b><span class="small">${esc(st.line)}</span>${st.next && st.next.length ? `<span class="small petnext">${esc(st.next[0].t)}</span>` : ''}${st.stage === 'egg' ? `<span class="small muted">${st.crack != null && st.crack < 4 ? `Pierwsze kroki: pęknięcia ${st.crack} z 4. ` : ''}Jajo wykluje się po dniu z co najmniej 30 punktami.</span>` : ''}${bars(st.meters)}</span></button>`;
+      + `<span class="petinfo"><b>${esc(nameOf(pet))}</b><span class="small">${esc(st.line)}</span>${st.next && st.next.length ? `<span class="small petnext">${esc(st.next[0].t)}</span>` : ''}${st.stage === 'egg' ? `<span class="small muted">${st.crack != null && st.crack < 4 ? `${st.lite ? 'Dni z 3 dotknięciami:' : 'Pierwsze kroki: pęknięcia'} ${st.crack} z 4. ` : ''}${st.lite ? 'Jajo wykluje się po pierwszym dniu z 3 dotknięciami.' : 'Jajo wykluje się po dniu z co najmniej 30 punktami.'}</span>` : ''}${bars(st.meters)}</span></button>`;
   }
   function screen(st, pet, sum, esc) {
     const nx = NEXT_STAGE[st.stage], row = (a, b) => `<div class="entry"><span class="txt">${a}</span><span class="val">${b}</span></div>`;
