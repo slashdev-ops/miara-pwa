@@ -329,6 +329,7 @@ table.weeks td:nth-child(3):not(:empty){padding-top:4px;color:var(--muted)}
 .mtag{color:var(--ink);white-space:nowrap}
 .msep{color:var(--muted)}
 .ordtip{font-size:15px;color:var(--muted);margin:0 0 8px}
+.potax{display:block;max-width:100%;height:auto}.potax text{fill:var(--ink)}.potax .axl{stroke:var(--edge);stroke-width:2}.potax .mk{stroke:var(--muted);stroke-width:2}.potax .mk.now{stroke:var(--green)}.potl{list-style:none;margin:8px 0;padding:0}.potl li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:4px 0}.potl li span:last-child{color:var(--muted)}
 .srcl{font-size:13px;color:var(--muted);margin:8px 0 0}
 .srcl a{color:var(--green)}
 .petsay{display:flex;gap:12px;align-items:center;margin:12px 0;padding:8px 12px;background:var(--surface);border-radius:var(--r)}

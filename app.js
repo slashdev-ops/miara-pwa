@@ -171,7 +171,7 @@ function measDue(){const m=(S.meas||{})[todayKey()]||{},has=x=>String(m[x]||'').
 function measHtml(part){
   const k=todayKey(),m=S.meas[k]||(S.meas[k]={});
   const f=(lab,key,unit,mode,ph)=>`<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" enterkeyhint="next" placeholder="${ph||lastMeas(key,k)}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`;
-  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, przed jedzeniem. Kroki i sen z zegarka.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+stepsChip(k,m)+sleepField(k,m)+sleepChips(k,m)+'</div><p><button class="btn ghost small" data-imppaste="1">Wklej ze Skrótu</button></p>';const top=h;h=cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+'</div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). BMR z pomiaru BIA zastępuje wzór przez 90 dni, waga z pomiarów zastępuje wagę z ustawień.</p></details>';
+  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, przed jedzeniem. Kroki i sen z zegarka.</p><div class="panel">'+f('Waga','w','kg')+f('Kroki (zegarek)','steps','','numeric')+stepsChip(k,m)+sleepField(k,m)+sleepChips(k,m)+'</div><p><button class="btn ghost small" data-imppaste="1">Wklej ze Skrótu</button></p>';const top=h;h=cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+field('Nadgarstek','frame.wrist',(S.frame||{}).wrist||'','cm')+field('Kostka','frame.ankle',(S.frame||{}).ankle||'','cm')+'<p class="small muted" style="padding:0 16px">Nadgarstek i kostka: mierz najwęższe miejsce, wystarczy raz. Potrzebne do oceny potencjału mięśniowego.</p></div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). BMR z pomiaru BIA zastępuje wzór przez 90 dni, waga z pomiarów zastępuje wagę z ustawień.</p></details><details class="fold" data-fold="sprawnosc"'+(OPEN_F.has('sprawnosc')?' open':'')+'><summary>Sprawność, z zegarka</summary><div class="panel">'+f('VO2max (zegarek)','vo2','ml/kg/min')+f('Tętno spoczynkowe','hrRest','ud./min','numeric')+f('Tętno maksymalne (jeśli zmierzone)','hrMax','ud./min','numeric')+'</div><p class="small muted" style="padding:0 16px">VO2max wpisz z zegarka. Bez niego Miara oszacuje go z tętna spoczynkowego.</p></details>';
   const ks=lastKeys(28).reverse(),val=(x,key)=>{const v=num((S.meas[x]||{})[key]);return v>0?v:null};
   const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
   const ws=ks.map(x=>val(x,'w')),w1=avg(ws.slice(-7)),w0=avg(ws.slice(-14,-7)),st=avg(ks.slice(-7).map(x=>val(x,'steps'))),sl=avg(ks.slice(-7).map(x=>val(x,'sleep')));
@@ -504,6 +504,7 @@ function renderHealth(){
   ]);
   h+='<h2>Start w 3 krokach</h2><div class="panel"><div class="entry"><span class="txt"><b>1. Badania i lekarz.</b> Zakres ustal z lekarzem, np. TSH, fT4, fT3, anty-TPO, glukoza i insulina na czczo, HbA1c, 25(OH)D, ferrytyna, magnez, wapń.</span></div><div class="entry"><span class="txt"><b>2. Witamina D3</b> według wytycznych. Pozostałe suplementy dopiero po wynikach.</span></div><div class="entry"><span class="txt"><b>3. Białko z jedzenia</b> według planu. Kreatyna 3-5 g dziennie, jeśli trenujesz siłowo.</span></div></div>';
   h+=fold('suple','Suplementy ('+SUPP.length+')',suppPlanHtml()+SUPP.map(suppCard).join(''));
+  h+='<h2 id="sylwetka">Sylwetka i sprawność</h2>'+potHtml()+fitHtml();
   h+='<h2 id="bialko">Białko za złotówkę</h2>'+whyP('bialko')+'<p class="small muted">Wpisz cenę z półki lub paragonu i wagę opakowania. Wynik to koszt 20 g białka. Ceny zapisują się w telefonie.</p><div class="panel">'+protCost().map(r=>`<div class="field" style="flex-wrap:wrap"><label style="flex:1 1 100%">${r.n}</label><input type="text" inputmode="decimal" enterkeyhint="next" id="f_prices.${r.id}.p" data-k="prices.${r.id}.p" value="${esc(S.prices[r.id].p)}" placeholder="cena" aria-label="Cena: ${r.n}"><span class="unit">zł</span><input type="text" inputmode="numeric" enterkeyhint="next" id="f_prices.${r.id}.g" data-k="prices.${r.id}.g" value="${esc(S.prices[r.id].g)}" aria-label="Waga opakowania: ${r.n}"><span class="unit">g</span></div>`).join('')+'</div>';
   const ranked=protCost().filter(r=>r.c!=null).sort((a,b)=>a.c-b.c);
   if(ranked.length)h+='<h2>Ranking</h2><div class="panel">'+ranked.map((r,i)=>`<div class="entry"><span class="txt">${i+1}. ${r.n}</span><span class="val">${r.c.toFixed(2).replace('.',',')} zł za 20 g</span></div>`).join('')+'</div>';
@@ -1062,7 +1063,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
-const DEF={kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
+const DEF={frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},shopDay:null,stores:[],promos:[],sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
@@ -1109,6 +1110,55 @@ function muscleRec(){const ffm=lastM('ffm'),cm=num(S.cm);if(!(ffm>0)||!(cm>0)||i
 // Automat (S.muscleAuto, domyślnie włączony): „Dużo mięśni” idzie za zaleceniem; ręczna zmiana przełącznika go wyłącza.
 // Działa tylko przy zmianie zalecenia względem ostatnio zastosowanego (S.muscleAutoLast): −/+ wokół mediany nie powtarza komunikatu
 // i nie nadpisuje sposobu celu wybranego ręcznie. Zwraca komunikat ('' bez zmiany); import i kopia dokładają go do własnego komunikatu.
+// Potencjał mięśniowy (rada 18.11.2026): pułap FFMI 25 z korektą wzrostu (Kouri 1995, PMID 7496846) i wzór Butta ze źródła wtórnego (nadgarstek, kostka, tłuszcz); tylko mężczyźni, wzrost spoza wartości startowej
+function potKouri(){const ffm=lastM('ffm'),cm=num(S.cm);if(S.sex!=='M'||!(ffm>0)||!(cm>0)||isStart('cm'))return null;const h=cm/100,h2=h*h,ffmi=ffm/h2,adj=6.3*(1.8-h),cap=25,ffmCap=(cap-adj)*h2;return {ffm,ffmi,ffmiN:ffmi+adj,cap,ffmCap,gap:Math.max(0,ffmCap-ffm),pct:100*ffm/ffmCap}}
+function potButt(){const ffm=lastM('ffm'),cm=num(S.cm),w=num((S.frame||{}).wrist),a=num((S.frame||{}).ankle),f=lastM('fat');if(S.sex!=='M'||!(ffm>0)||!(cm>0)||isStart('cm')||!(w>0)||!(a>0)||!(f>0))return null;const m=Math.pow(cm,1.5)*(Math.sqrt(w)/322.4+Math.sqrt(a)/241.9)*(f/224+1);return {m,m95:0.95*m,gap:Math.max(0,m-ffm),gap95:Math.max(0,0.95*m-ffm),pct:100*ffm/m,f}}
+function potDate(key){const d=Object.keys(S.meas||{}).filter(x=>num(S.meas[x][key])>0).sort().pop();return d?fmtDate(d):''}
+// Karta „Potencjał mięśniowy” (rada 18.11.2026): oś FFM w kg z markerami; pułap to granica z badań, nie cel. Liczby także w liście tekstowej pod osią.
+function potHtml(){const ffm=lastM('ffm');if(!(ffm>0))return '';
+  const head='<section id="potencjal"><h3>Potencjał mięśniowy</h3>',E='</section>';
+  if(S.sex!=='M')return head+'<div class="panel"><p class="small muted" style="padding:8px 16px;margin:0">Oba modele (pułap FFMI i wzór Butta) opisano tylko u mężczyzn, więc ich tu nie liczę. Sprawdź swoje FFMI wobec mediany: przełącznik „Dużo mięśni” w Ustawieniach.</p></div>'+E;
+  const k=potKouri(),b=potButt();
+  if(!k)return head+'<div class="panel"><p class="small muted" style="padding:8px 16px;margin:0">Wpisz wzrost w Ustawieniach, a Miara pokaże pułap z badań dla Twojego wzrostu.</p></div>'+E;
+  const h2=Math.pow(num(S.cm)/100,2),med=muscleRec().med*h2;
+  const pts=[['Teraz',ffm,'now',''],['Mediana 18-34 lat',med,'med','']];
+  pts.push(['Pułap FFMI 25 (Kouri 1995)',k.ffmCap,'cap','kouri']);
+  if(b){pts.push(['95% maksimum (Butt)',b.m95,'b95','butt']);pts.push(['Maksimum (Butt)',b.m,'bmax','butt'])}
+  const lo=Math.min(ffm,med)-5,hi=Math.max(b?b.m:0,k.ffmCap)+5,W=260,X0=8,X1=252,x=v=>X0+(v-lo)/(hi-lo)*(X1-X0);
+  // Etykiety z lewej połowy nad osią (tekst w prawo), z prawej pod osią (tekst w lewo); w obu grupach rosnąco, więc tekst nie przecina żadnego znacznika
+  const all=pts.map(p=>({p,xx:x(p[1])})),up=all.filter(r=>r.xx<=W/2).sort((a,c)=>a.xx-c.xx),dn=all.filter(r=>r.xx>W/2).sort((a,c)=>a.xx-c.xx);
+  const ay=16+up.length*20+4,H=ay+dn.length*20+28;
+  const short={now:'Teraz',med:'Mediana',cap:'Pułap 25',b95:'95% Butt',bmax:'Maks. Butt'},lab=r=>`${short[r.p[2]]} ${fmt1(r.p[1])}`,X=r=>r.xx.toFixed(1);
+  let g=`<svg class="potax" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Oś masy beztłuszczowej w kg: ${pts.map(p=>p[0]+' '+fmt1(p[1])).join(', ')}"><line class="axl" x1="${X0}" y1="${ay}" x2="${X1}" y2="${ay}"/>`;
+  up.forEach((r,i)=>{const y=16+i*20;g+=`<line class="mk ${r.p[2]}" x1="${X(r)}" y1="${y-8}" x2="${X(r)}" y2="${ay}"/><text x="${(r.xx+4).toFixed(1)}" y="${y+3}" font-size="13">${lab(r)}</text>`});
+  dn.forEach((r,i)=>{const y=ay+20+i*20;g+=`<line class="mk ${r.p[2]}" x1="${X(r)}" y1="${ay}" x2="${X(r)}" y2="${y+4}"/><text x="${(r.xx-4).toFixed(1)}" y="${y+3}" text-anchor="end" font-size="13">${lab(r)}</text>`});
+  g+=`<text x="${X0}" y="${H-4}" font-size="13">${fmt1(lo)} kg</text><text x="${X1}" y="${H-4}" text-anchor="end" font-size="13">${fmt1(hi)} kg</text></svg>`;
+  const li=(l,v,sub)=>`<li><span>${l}</span><span>${fmt1(v)} kg${sub||''}</span></li>`;
+  let ul='<ul class="potl">'+li('Teraz',ffm,'')+li('Mediana 18-34 lat',med,'')+li('Pułap FFMI 25 (Kouri 1995)',k.ffmCap,` (do pułapu z badań: ${fmt1(k.gap)} kg)`);
+  if(b)ul+=li('95% maksimum (Butt)',b.m95,` (do pułapu z badań: ${fmt1(b.gap95)} kg)`)+li('Maksimum (Butt)',b.m,` (do pułapu z badań: ${fmt1(b.gap)} kg)`);
+  ul+='</ul>';
+  const dF=potDate('ffm'),dT=potDate('fat');
+  const over=k.gap===0||(b&&b.gap===0)?' Powyżej pułapu z badania: sprawdź pomiar lub zapytaj specjalistę.':'';const note=`<p class="small muted">Pułap to górna granica z badań, nie cel. Wiele osób łączy siłę z wytrzymałością i świadomie zostaje poniżej. Twoje FFMI: ${fmt1(k.ffmi)} kg/m², z korektą wzrostu ${fmt1(k.ffmiN)}. Masa beztłuszczowa z pomiaru z ${dF}${b&&dT?`, tłuszcz (${fmt1(b.f)}%) z ${dT}`:''}. Liczby są szacunkiem z badań na wybranych grupach, nie wynikiem dla Ciebie.${over}</p>`;
+  const bh=b?'<p class="small muted">Wzór Butta pochodzi ze źródła wtórnego: wzór przepisany przez kalkulator, strona autora niedostępna.</p>':'<p class="small muted">Wpisz nadgarstek i kostkę w Pomiarach dnia, w obwodach, a Miara doliczy też wzór Butta.</p>';
+  return head+'<div class="panel" style="padding:12px 16px">'+g+ul+note+bh+srcHtml(b?['kouri','butt']:['kouri'])+'</div>'+E}
+// Sprawność (rada 18.11.2026): VO2max z zegarka albo szacunek Uth 2004 (PMID 14624296): 15,3 x HRmax / HRspoczynkowe, SEE około 4,5% przy zmierzonym HRmax i 7,8% przy HRmax z wieku;
+// HRmax z wieku: 208 - 0,7 x wiek (Tanaka 2001); 1 MET = 3,5 ml/kg/min (Jetté 1990); progi 7,9 i 10,9 MET z metaanalizy Kodama 2009 (PMID 19454641)
+function fitNow(){const ds=Object.keys(S.meas||{}).sort(),last=key=>{const d=ds.filter(x=>num(S.meas[x][key])>0).pop();return d?{d,v:num(S.meas[d][key])}:null};
+  const z=last('vo2');let vo2,src,date,hs=null;
+  if(z){vo2=z.v;src='zegarek';date=z.d}else{const r=last('hrRest');if(!r)return null;const hm=last('hrMax'),age=num(S.age);let mx;
+    if(hm){mx=hm.v;hs='wpis'}else if(!isStart('age')&&age>=18){mx=208-0.7*age;hs='wiek'}else return null;
+    vo2=15.3*mx/r.v;src='szacunek';date=r.d}
+  const met=vo2/3.5,cat=met<7.9?'niska':met<10.9?'średnia':'wysoka',toNext=met<7.9?7.9-met:met<10.9?10.9-met:0;
+  return {vo2,src,date,hrMaxSrc:hs,met,cat,toNext}}
+function fitHtml(){const head='<section id="sprawnosc"><h3>Sprawność</h3>',E='</section>',r=fitNow();
+  if(!r)return head+'<div class="panel"><p class="small muted" style="padding:8px 16px;margin:0">Wpisz VO2max z zegarka albo tętno spoczynkowe w Mój dzień, Sprawność. Miara pokaże poziom wydolności i krok do następnego progu.</p></div>'+E;
+  const est=r.src==='szacunek',nx=r.cat==='niska'?'średniej':'wysokiej';
+  let p=`<p style="margin:0"><b>${fmt1(r.vo2)} ml/kg/min</b>${est?' (szacunek z tętna)':' (z zegarka)'}, czyli ${fmt1(r.met)} MET. Wydolność ${r.cat} według progów z metaanalizy.</p>`;
+  p+='<p class="small muted">'+(r.toNext>0?`Do następnego progu: ${fmt1(r.toNext)} MET (do ${nx} wydolności). `:'Powyżej ostatniego progu z metaanalizy. ')+'1 MET to realny krok: 1 MET więcej wiązał się w metaanalizie z ryzykiem zgonu niższym o 13% (33 badania, 102 980 osób). To związek z badań, nie obietnica dla Ciebie.</p>';
+  if(est){const mx=r.hrMaxSrc==='wpis'?'Tętno maksymalne z Twojego wpisu: błąd około 4,5%.':'Tętno maksymalne z wieku (208 − 0,7 × wiek): błąd około 8%.';
+    p+=`<p class="small muted">To szacunek, nie pomiar. ${mx} Badanie objęło tylko wytrenowanych mężczyzn, więc wzór jest sprawdzony tylko u nich.${S.sex!=='M'?' Dlatego wynik jest u Ciebie mniej pewny.':''} Wpisz VO2max z zegarka, a Miara użyje go zamiast szacunku.</p>`}
+  p+=`<p class="small muted">Z wpisu z ${fmtDate(r.date)}.</p>`;
+  return head+'<div class="panel" style="padding:12px 16px">'+p+srcHtml(est?['uth','tanaka','jette','kodama']:['jette','kodama'])+'</div>'+E}
 function muscleSync(){const r=muscleRec();if(S.muscleAuto===false||!r||S.muscleAutoLast===r.above)return '';S.muscleAutoLast=r.above;if(!!S.muscle===r.above)return '';S.muscle=r.above;
   if(r.above){S.goalWay='talia';return 'Masa beztłuszczowa powyżej mediany: włączono „Dużo mięśni”, cel liczony z talii. Zmienisz to w Ustawieniach.'}
   return 'Masa beztłuszczowa poniżej mediany: wyłączono „Dużo mięśni”. Sposób liczenia celu sprawdź w Ustawieniach.'}
@@ -1130,6 +1180,28 @@ function load(){try{const r=localStorage.getItem(LS);if(r){const o=JSON.parse(r)
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
 // ---------- Scenariusze do sprawdzania: dane przykładowe pod #demo-<nazwa>, nic się nie zapisuje ----------
+// Dane testowe osoby wysportowanej i zdrowej (18.11.2026): wartości zmyślone, typowe dla profilu; badania z jednej daty w zakresach TGT
+const SIL_M={label:'Siłownia, całe ciało',min:60,gross:380,net:300},SIL_K={label:'Siłownia, całe ciało',min:60,gross:300,net:240};
+const SPORT={
+  m:{sex:'M',age:'30',cm:'180',w:80,fat:'12',ffm:'70,4',ecw:'38',waist:'82',hip:'96',thigh:'58',wrist:'17,5',ankle:'22,5',vo2:'48',hr:'55',st:[9000,12000],tr:[null,SIL_M,null,SIL_M,null,SIL_M,null],
+    lab:{tsh:'1.8',glu:'88',ins:'6',hba1c:'5.1',vitd:'38',ferr:'120',chol:'170',ldl:'95',hdl:'58',tg:'80',kreat:'1.0'}},
+  k:{sex:'K',age:'30',cm:'168',w:60,fat:'22',ffm:'46,8',ecw:'39',waist:'68',hip:'94',thigh:'54',wrist:'15',ankle:'20,5',vo2:'42',hr:'58',st:[9000,12000],tr:[null,SIL_K,null,SIL_K,null,SIL_K,null],
+    lab:{tsh:'1.6',glu:'84',ins:'5',hba1c:'5.0',vitd:'40',ferr:'60',chol:'175',ldl:'90',hdl:'68',tg:'70',kreat:'0.8'}},
+  h:{sex:'M',age:'32',cm:'178',w:74,fat:'11',ffm:'65,9',ecw:'38',waist:'78',hip:'93',thigh:'55',wrist:'17',ankle:'22',vo2:'56',hr:'48',st:[12000,15000],
+    tr:[{label:'Bieg',min:45,gross:560,net:490},SIL_M,{label:'Rower',min:60,gross:600,net:520},{label:'Bieg',min:40,gross:500,net:440},SIL_M,null,null],
+    lab:{tsh:'1.5',glu:'86',ins:'4',hba1c:'5.0',vitd:'42',ferr:'90',chol:'166',ldl:'90',hdl:'62',tg:'70',kreat:'1.0'}}};
+// 28 dni: waga ±0,5 kg, kroki i sen w paśmie profilu, VO2max i tętno co tydzień, obwody i skład dzień temu. P (opcjonalnie): odczyt {date,sex,age,cm,goal,mode,m} zamiast składu z profilu.
+function sportS(o,b,P){const meas={},days={},cw=x=>x.toFixed(1).replace('.',','),ref=P?num(P.m.w):o.w;
+  for(let i=0;i<28;i++){const k=nAgo(i),t=o.tr&&o.tr[i%7];
+    meas[k]={w:cw(ref+((i*7)%5-2)*0.25),steps:String(o.st[0]+(i*1237)%(o.st[1]-o.st[0]+1)),sleep:String(7+(i%3)*0.5).replace('.',',')};
+    if(o.vo2&&i%7===1)Object.assign(meas[k],{vo2:o.vo2,hrRest:o.hr});
+    days[k]=(((b&&b.days)||{})[k]||[]).filter(e=>e.kind!=='t').concat(t?[Object.assign({kind:'t'},t)]:[])}
+  Object.assign(meas[nAgo(1)],{waist:o.waist,hip:o.hip,thigh:o.thigh},P?{}:{fat:o.fat,ffm:o.ffm,ecw:o.ecw});
+  if(P)meas[P.date]=Object.assign({},meas[P.date]||{},P.m);
+  const ld=nAgo(7),labs=Object.entries(o.lab).map(([test,val])=>({id:'demo-'+test,test,date:ld,val,unit:LABN[test].u,fast:true}));
+  const X=P||{sex:o.sex,age:o.age,cm:o.cm,goal:cw(o.w),mode:'utrzymanie',date:nAgo(27)};
+  return Object.assign({sex:X.sex,age:X.age,cm:X.cm,kg:cw(ref),goal:X.goal,mode:X.mode,maintRef:X.mode==='utrzymanie'?ref:0,maintSince:X.mode==='utrzymanie'?X.date:'',
+    frame:{wrist:o.wrist,ankle:o.ankle},touched:{kg:true,cm:true,age:true,goal:true},meas,days,labs},P?{}:{muscle:true})}
 const SCEN={
   start:{t:'Pierwsze wejście',chk:'Wprowadzenie, potem „Pierwsze kroki 0 z 6” w Moim dniu i wskazówka „Pierwszy raz tutaj?” na każdym ekranie.',f:()=>({onb:false,touched:{},guide:{hidden:false,dataOk:false,seenPet:false},tips:{},pet:null,petSeen:[],days:{},meas:{},hab:{},reviews:{}})},
   wpisy:{t:'Wpisy dnia',tab:'day',chk:'Mój dzień, Pomiary dnia: + przy wadze wstawia wczorajsze 80,4 kg, przytrzymanie zmienia wartość coraz szybciej, sen wpisujesz cyframi (6 i 13), minuty 75 pokazują błąd pod polem i wracają.',
@@ -1145,7 +1217,10 @@ const SCEN={
     f:()=>{const gut={};for(let i=1;i<=14;i++)gut[nAgo(i)]={b:(i*3)%8,f:['twardy','uform','luzny'][i%3],n:i%4===0?0:1};return {prof:{cond:{gut:true},pill:''},gut}}},
   wszystkie:{t:'Wszystkie schorzenia i Yaz',tab:'day',chk:'Mój dzień: „Najpierw lekarz” z UKMEC 2025 (migrena bez aury, Yaz), tydzień celu „Regularne zapisy” zaliczony i „Następny cel”, „Twoje schorzenia razem”, zwierzak świętuje i mówi, co się zmieni.',
     f:()=>{const pain={};[2,6,11,17,23].forEach((n,i)=>{pain[nAgo(n)]={aura:false,med:i<2}});return {prof:{cond:{hashi:true,lip:true,io:true,mig:true},pill:'yaz'},lip:true,goal:'70',pain,cel:{id:'zapisy',since:nAgo(8)}}}},
-  pokaz:{t:'Pełny pokaz',tab:'day',chk:'70 dni danych: Stan dziś, trendy, zwierzak z odznakami, przegląd tygodnia; zakładki działają jak na co dzień.',f:()=>({})}};
+  pokaz:{t:'Pełny pokaz',tab:'day',chk:'70 dni danych: Stan dziś, trendy, zwierzak z odznakami, przegląd tygodnia; zakładki działają jak na co dzień.',f:()=>({})},
+  'sport-m':{t:'Wysportowany, zdrowy (dane zmyślone)',tab:'health',chk:'Zdrowie: karta „Potencjał mięśniowy” z pułapem FFMI 25 i wzorem Butta (FFMI ok. 21,7), karta „Sprawność” z poziomem wysokim (VO2max 48). Moje badania: wszystkie wyniki w zakresie, eGFR z kreatyniny i cholesterol nie-HDL. Tryb utrzymania, waga w paśmie.',f:b=>sportS(SPORT.m,b)},
+  'sport-k':{t:'Wysportowana, zdrowa (dane zmyślone)',tab:'health',chk:'Zdrowie: karta „Potencjał mięśniowy” ze zdaniem, że oba modele opisano tylko u mężczyzn, i wskazaniem FFMI (ok. 16,6, powyżej mediany dla kobiet); Sprawność wysoka (VO2max 42). Moje badania: wyniki w zakresie, eGFR i nie-HDL.',f:b=>sportS(SPORT.k,b)},
+  'sport-h':{t:'Sprawny, wytrzymały (dane zmyślone)',tab:'health',chk:'Zdrowie: potencjał mięśniowy umiarkowany (FFMI ok. 20,8, daleko od pułapu), karta „Sprawność” z poziomem wysokim (VO2max 56), 5 treningów mieszanych w tygodniu: bieg, siłownia, rower. Moje badania: wyniki w zakresie, eGFR i nie-HDL.',f:b=>sportS(SPORT.h,b)}};
 function migPain(b,pill){const pain={},m=Object.assign({},b.meas);for(let i=0;i<12;i++)pain[nAgo(i*2)]={aura:i<3,med:i<10};[1,3,5].forEach(i=>{m[nAgo(i)]=Object.assign({},m[nAgo(i)],{cyc:'P'})});
   m[nAgo(0)]=Object.assign({},m[nAgo(0)],{sleep:'5:20'});m[nAgo(1)]=Object.assign({},m[nAgo(1)],{sleep:'5:45'});return {prof:{cond:{aura:true,mig:true},pill},pain,meas:m}}
 function scenS(n){const b=PET.demo().S,sc=SCEN[n];if(!sc)return b;return Object.assign(b,sc.f(b),sc.tab?{tab:sc.tab}:{})}
@@ -1181,7 +1256,7 @@ function fieldErr(el,msg){const f=el.closest&&el.closest('.field');if(!f)return;
   else if(s){s.remove();f.classList.remove('haserr');el.removeAttribute('aria-describedby')}}
 function lastMeas(f,k){const ks=Object.keys(S.meas||{}).filter(x=>x<k&&String((S.meas[x]||{})[f]||'').trim()!=='').sort();return ks.length?String(S.meas[ks[ks.length-1]][f]):''}
 function stpFmt(v,st){return st<1?String(Math.round(v*10)/10).replace('.',','):String(Math.round(v))}
-const LIM={kg:[35,250],goal:[35,250],w:[35,250],cm:[120,220],age:[16,90],steps:[0,60000],sleep:[0,16],waist:[30,200],hip:[30,200],thigh:[20,120],fat:[3,60],ffm:[25,120],ecw:[30,50],bmr:[900,3000],min:[1,300],wmin:[1,300],wk:[10,3000],speed:[1,20],grade:[0,25],watts:[20,500]};
+const LIM={kg:[35,250],goal:[35,250],w:[35,250],cm:[120,220],age:[16,90],steps:[0,60000],sleep:[0,16],waist:[30,200],hip:[30,200],thigh:[20,120],fat:[3,60],ffm:[25,120],ecw:[30,50],bmr:[900,3000],min:[1,300],wmin:[1,300],wk:[10,3000],speed:[1,20],grade:[0,25],watts:[20,500],wrist:[10,40],ankle:[10,40],vo2:[10,90],hrRest:[30,120],hrMax:[120,230]};
 const INT_K=new Set(['steps','bmr','age','min','wmin','wk']);
 // Pola ca\u0142kowite: separator tysi\u0119cy spacj\u0105, kropk\u0105 albo przecinkiem (10 500, 10.500, 10,500), bez u\u0142amk\u00f3w;
 // czas treningu tak\u017ce jak w zegarku: 1:15 albo 1:15:30 (godziny:minuty[:sekundy]) zamieniany na minuty
@@ -1350,6 +1425,12 @@ function auraDays(){return Object.entries(S.pain||{}).filter(([k,p])=>p&&p.aura&
 function urges3(){return [0,1,2].reduce((a,i)=>a+((S.urges||{})[nAgo(i)]||[]).length,0)}
 // ---------- Źródła sprawdzone 08.11.2026 (rada/2026-11-08_zrodla.md): link otwarty w sesji, wartość zgodna z cytatem ----------
 const SRC={
+  kouri:['https://pubmed.ncbi.nlm.nih.gov/7496846/','Kouri i in. 1995, Clin J Sport Med'],
+  uth:['https://pubmed.ncbi.nlm.nih.gov/14624296/','Uth i in. 2004, Eur J Appl Physiol'],
+  tanaka:['https://pubmed.ncbi.nlm.nih.gov/11153730/','Tanaka i in. 2001, J Am Coll Cardiol'],
+  jette:['https://pubmed.ncbi.nlm.nih.gov/2204507/','Jetté i in. 1990, Clin Cardiol'],
+  kodama:['https://pubmed.ncbi.nlm.nih.gov/19454641/','Kodama i in. 2009, JAMA'],
+  butt:['https://weighttraining.nz','weighttraining.nz: kalkulator odtwarzający wzór Caseya Butta'],
   // Suplementy (brief 17.11.2026): strony otwarte 15-17.11.2026; podpisy ogólne, bez nazw handlowych
   s_medlt4:['https://medlineplus.gov/druginfo/meds/a682461.html','MedlinePlus: lewotyroksyna'],
   s_chplLt4:['https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/12231/characteristic','ChPL (lewotyroksyna, rejestr leków)'],
