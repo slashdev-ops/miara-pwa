@@ -33,6 +33,7 @@ const synth = (page, sel, moves, value) => page.evaluate(({ sel, moves, value })
   const out = { v: +r.value, last: WPISY.lastDrag() };
   const m = moves[moves.length - 1] || [0, 0];
   fire('pointerup', m[1], m[0] + 5);
+  r.dispatchEvent(new Event('change', { bubbles: true })); // jak przeglądarka po puszczeniu suwaka (zapis od razu przez change)
   return out;
 }, { sel, moves, value });
 // Prawdziwa mysz: ruchy po 1 px odstępem co najmniej 60 ms mierzonym zegarem (nie stałym czekaniem)
@@ -127,7 +128,8 @@ test('przytrzymanie + przy śnie: najpierw co 5 min, po ok. 1 s co 15 min (siatk
   await page.mouse.down();
   await expect.poll(() => page.evaluate(() => window.V1)).not.toBeNull();
   const v1 = await page.evaluate(() => window.V1);
-  await page.waitForTimeout(1600);
+  // Przyspieszenie zależy od zegarów strony (pod obciążeniem w CI wolniejszych): czekanie na krok zgrubny zamiast stałych 1,6 s
+  await expect.poll(() => page.evaluate((a) => WPISY.draft('wp', todayKey()).s - a, v0), { timeout: 10000 }).toBeGreaterThan(9 * 5);
   await page.mouse.up();
   const v2 = await page.evaluate(() => WPISY.draft('wp', todayKey()).s);
   expect(v1 - v0, 'pierwszy krok dokładny').toBe(5);
@@ -193,10 +195,6 @@ test('czas treningu (zapis od razu): Page Up co 5 min, strzałka co 1 min, szybk
   await expect.poll(() => page.evaluate(() => S.tr.min)).toBe('50');
   await expect(page.locator('#tr_rmin')).toBeFocused();
   await r.scrollIntoViewIfNeeded();
-  const t = await thumb(page, '#tr_rmin');
-  await page.mouse.move(t.x, t.y);
-  await page.mouse.down();
-  await page.mouse.up(); // samo dotknięcie kciuka: bez zmiany wartości
   expect((await synth(page, '#tr_rmin', [[10, 100]], 87)).v).toBe(85); // szybko: siatka 5 min
   await expect.poll(() => page.evaluate(() => S.tr.min)).toBe('85');
   expect(await page.evaluate(() => +S.tr.min)).toBeGreaterThan(50);

@@ -1214,6 +1214,9 @@ function renderChallenge(){
 const OPEN_F=new Set(['zapisane']);
 function fold(id,title,inner){return `<details class="fold" id="fold_${id}" data-fold="${id}"${OPEN_F.has(id)?' open':''}><summary>${title}</summary><div style="padding:0 12px 12px">${inner}</div></details>`}
 document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.fold){t.open?OPEN_F.add(t.dataset.fold):OPEN_F.delete(t.dataset.fold)}},true);
+// toggle przychodzi w osobnym zadaniu po kliknięciu: stan sekcji zapisany już przy kliknięciu nagłówka, więc przerysowanie zaraz po nim jej nie zwija
+document.addEventListener('click',e=>{const s=e.target&&e.target.closest&&e.target.closest('summary'),d=s&&s.parentElement;if(!d||d.tagName!=='DETAILS'||!d.dataset.fold||d.querySelector(':scope > summary')!==s)return;
+  if(e.defaultPrevented)return;d.open?OPEN_F.delete(d.dataset.fold):OPEN_F.add(d.dataset.fold)});
 
 // ---------- Kopia danych: eksport i import pliku (np. przez iCloud Drive) ----------
 const BK_SKIP=['imp','tab','introStep','sosStep','sosTrig','recipe','recipeBack','labSel'];

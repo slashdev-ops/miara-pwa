@@ -51,7 +51,8 @@
 html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 80px);scroll-padding-bottom:calc(104px + env(safe-area-inset-bottom,0px));-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-variant-numeric:tabular-nums}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:16px 24px 8px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+/* Szerszy krój pisma (inny system, większy tekst): data i Pomoc przechodzą do drugiej linii zamiast przewijania w bok */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:16px 24px 8px;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 12px}
 header h1{font-family:var(--serif);font-weight:600;font-size:32px;line-height:1.15;margin:0;letter-spacing:-.01em}
 header .who{font-size:15px;color:var(--muted)}
 main{padding:0 16px calc(104px + env(safe-area-inset-bottom,0px));max-width:640px;margin:0 auto}
@@ -188,7 +189,7 @@ nav.tabs svg{width:24px;height:24px}
 @media (max-width:359px){.toast{grid-template-columns:minmax(0,1fr) auto}.toast .tclose{grid-column:2}.toast .btn.small{grid-column:1;grid-row:2;justify-self:start}}
 .toast .btn.small{background:var(--bg);color:var(--ink)}
 .tclose{border:0;background:transparent;color:inherit;font-size:20px;min-width:44px;min-height:44px;border-radius:var(--r-s)}
-.hright{display:flex;align-items:center;gap:12px}
+.hright{display:flex;align-items:center;gap:12px;margin-left:auto}
 @media (max-width:359px){header .who{display:none}}
 .hbtn{border:0;background:transparent;color:var(--green);font-weight:600;font-size:15px;min-height:44px;padding:0 4px;text-decoration:underline;text-underline-offset:3px}
 .chips.quick{padding:0 16px 8px;margin:0}

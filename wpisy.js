@@ -337,8 +337,11 @@
       i.setAttribute('inputmode', R.inputmode || 'decimal'); i.setAttribute('enterkeyhint', c.mode === 'commit' ? enterHint(c.rows, R.key) : R.enterNext && nextVal(b) ? 'next' : 'done'); i.setAttribute('aria-describedby', I.e);
       i.setAttribute('aria-label', R.label + ': wpisz wartość, Enter zatwierdza, Escape anuluje');
       i.value = (R.editText || String)(rowState(R, c.s).cur);
-      // W ramce .wp-f pole ma szerokość przycisku wartości: etykieta nie przeskakuje do innej linii przy wpisie (bez skoku układu)
-      if (b.closest && b.closest('.wp-f')) i.style.width = Math.max(88, b.getBoundingClientRect().width) + 'px';
+      // W ramce .wp-f pole ma dokładnie szerokość przycisku wartości: etykieta nie przeskakuje do innej linii przy wpisie, także przy innym kroju
+      // pisma (szerszy krój zostawia mniej miejsca; pole szersze od przycisku przenosiło etykietę do osobnej linii)
+      // Grupa wartość + − + zachowuje zmierzoną szerokość (bez zaokrągleń szerokości pola), pole wypełnia miejsce przycisku
+      const ctl = b.closest && b.closest('.wp-f') && b.closest('.wp-ctl');
+      if (ctl) { ctl.style.width = ctl.getBoundingClientRect().width + 'px'; i.style.flex = '1 1 0'; i.style.minWidth = '0'; i.style.width = 'auto'; }
       b.hidden = true; b.parentNode.insertBefore(i, b.nextSibling); ED = { c, R, i, b, typed: false };
       i.addEventListener('input', () => { if (ED && ED.i === i) ED.typed = true; }); // wpisana wartość (także równa startowej) to jawny zapis
       i.focus(); i.select();
@@ -349,6 +352,7 @@
       ED = null;
       if (e.i.parentNode) e.i.parentNode.removeChild(e.i);
       e.b.hidden = false;
+      { const ctl = e.b.closest && e.b.closest('.wp-ctl'); if (ctl) ctl.style.width = ''; }
       if (!apply) { if (go) e.b.focus(); return; }
       const r = R.parse(e.i.value);
       if (r.err) { c.s.err[R.key] = r.err; errShow(document.getElementById(ids(c.scope, R).e), r.err); if (go) e.b.focus(); return; }
