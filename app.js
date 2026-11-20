@@ -1227,7 +1227,7 @@ const SCEN={
 function migPain(b,pill){const pain={},m=Object.assign({},b.meas);for(let i=0;i<12;i++)pain[nAgo(i*2)]={aura:i<3,med:i<10};[1,3,5].forEach(i=>{m[nAgo(i)]=Object.assign({},m[nAgo(i)],{cyc:'P'})});
   m[nAgo(0)]=Object.assign({},m[nAgo(0)],{sleep:'5:20'});m[nAgo(1)]=Object.assign({},m[nAgo(1)],{sleep:'5:45'});return {prof:{cond:{aura:true,mig:true},pill},pain,meas:m}}
 function scenS(n){const b=PET.demo().S,sc=SCEN[n];if(!sc)return b;return Object.assign(b,sc.f(b),sc.tab?{tab:sc.tab}:{})}
-const DEMO_N=typeof location!=='undefined'&&/^#demo-/.test(location.hash)&&SCEN[location.hash.slice(6)]?location.hash.slice(6):'';
+let DEMO_N=typeof location!=='undefined'&&/^#demo-/.test(location.hash)&&SCEN[location.hash.slice(6)]?location.hash.slice(6):'';
 let DEMO=typeof location!=='undefined'&&(location.hash==='#demo'||!!DEMO_N),DEMO_I=0;
 let S=DEMO?merge(clone(DEF),fixTouched(DEMO_N?scenS(DEMO_N):PET.demo().S)):load();
 if(DEMO&&!DEMO_N)setInterval(()=>{DEMO_I++;const a=document.activeElement;if((S.tab==='day'||S.tab==='pet')&&!HOLD&&!(a&&a.dataset&&(a.dataset.k||a.dataset.sl)))render()},3000);
@@ -1884,8 +1884,12 @@ function zdHtml(){
   }
   return h+'</section>';
 }
+// Demo propozycji wpisu (wpisy-demo.js): tylko w scenariuszu #demo-prosty, w prostym widoku, po karcie i zwierzaku
+const wpisyDemoOn=()=>DEMO_N==='prosty'&&typeof WPISY_DEMO!=='undefined';
+function wpisyDemoHtml(){return wpisyDemoOn()?'<section id="wpisydemo" aria-labelledby="wpisydemo_h"><h2 id="wpisydemo_h">Propozycje wpisu do wyboru (demo)</h2><p class="small muted">Dane przykładowe, nic się nie zapisuje.</p>'+WPISY_DEMO.html()+'</section>':''}
+function wpisyDemoMount(){if(!wpisyDemoOn())return;const r=document.getElementById('wpisydemo');if(r)WPISY_DEMO.mount(r)}
 function renderDay(){
-  if(S.lite){document.getElementById('main').innerHTML=liteCardHtml()+unlockHtml()+petCardHtml()+'<p><button class="btn ghost" data-litefull="1">Pokaż całą Miarę</button></p>';return}
+  if(S.lite){document.getElementById('main').innerHTML=liteCardHtml()+unlockHtml()+petCardHtml()+'<p><button class="btn ghost" data-litefull="1">Pokaż całą Miarę</button></p>'+wpisyDemoHtml();return}
   const d=day(),tr=d.filter(e=>e.kind==='t'),ml=d.filter(e=>e.kind==='m');
   const net=tr.reduce((a,e)=>a+e.net,0),eat={k:0,p:0,f:0,c:0};ml.forEach(e=>{eat.k+=e.k;eat.p+=e.p;eat.f+=e.f;eat.c+=e.c});
   const R=rmr(),target=targetKcal(),pT=protTarget();
@@ -2008,7 +2012,7 @@ function helpRes(q){const w=fold0(q||'').split(/\s+/).filter(x=>x.length>1),hit=
 function renderHelp(){let h=`<div class="panel" style="padding:4px 16px"><div class="field"><label for="help_q">Szukaj w Pomocy</label><input type="search" id="help_q" style="width:180px;text-align:left" placeholder="np. białko, sen" value="${esc(S.helpQ||'')}"></div></div><div id="helpres">${helpRes(S.helpQ)}</div>`;
   h+=skrotHelpHtml()+'<h2>Od początku</h2><p><button class="btn ghost" data-guideshow="1">Pokaż pierwsze kroki</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p>';
   document.getElementById('main').innerHTML=h}
-function render(){startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():''}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');PET.flush()}
+function render(){startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():''}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');if(S.tab==='day'&&S.lite)wpisyDemoMount();PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}

@@ -10,6 +10,7 @@ const ASSETS = [
   './pet.js',
   './zdarzenia.js',
   './sygnaly.js',
+  './wpisy-demo.js',
   './sw-register.js',
   './manifest.webmanifest',
   './brand/miara-favicon.svg?v=2',
