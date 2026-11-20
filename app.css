@@ -79,7 +79,9 @@ button{font:inherit;color:inherit}
 .field + .field{border-top:1px solid var(--line)}
 .field label{flex:1}
 .field input.bad{border-color:var(--warn-ink);background:var(--warn-bg)}
-.field input[type=text],.field input[type=date],.field input[type=password]{width:104px;text-align:right;font:inherit;font-size:17px;padding:8px 12px;border:1px solid var(--field);border-radius:var(--r-s);background:var(--bg);color:var(--ink)}
+.field input[type=text],.field input[type=date],.field input[type=password]{min-height:44px;box-sizing:border-box;width:104px;text-align:right;font:inherit;font-size:17px;padding:8px 12px;border:1px solid var(--field);border-radius:var(--r-s);background:var(--bg);color:var(--ink)}
+/* Wyszukiwanie w Pomocy: ten sam wygląd pola (bez niego Safari daje 13 px i powiększa stronę przy wpisie) */
+.field input[type=search]{min-height:44px;box-sizing:border-box;width:104px;text-align:right;font:inherit;font-size:17px;padding:8px 12px;border:1px solid var(--field);border-radius:var(--r-s);background:var(--bg);color:var(--ink)}
 .field .unit{width:44px;color:var(--muted);font-size:15px}
 .field.prot{flex-wrap:wrap;justify-content:flex-start;gap:4px 16px}
 .field.prot label,.field.prot .hint{flex:1 1 100%}
@@ -106,9 +108,9 @@ button{font:inherit;color:inherit}
 main p > .btn:not(.small){display:block;width:100%}
 /* Przyciski, które reagują (20.11.2026): napis .act-l i miarka .act-z w tej samej komórce siatki; miarka z napisów wszystkich stanów
    trzyma szerokość przycisku (bez przesunięcia przy „✓ … · Cofnij” i po oknie), ukryta wzrokowo i przed czytnikiem (aria-hidden) */
-.btn.act{display:inline-grid;grid-template-columns:minmax(0,auto);align-items:center;justify-items:center}
-main p > .btn.act:not(.small){display:grid;grid-template-columns:minmax(0,1fr)}
-.btn.act>span{grid-area:1/1;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.btn.ab{display:inline-grid;grid-template-columns:minmax(0,auto);align-items:center;justify-items:center}
+main p > .btn.ab:not(.small){display:grid;grid-template-columns:minmax(0,1fr)}
+.btn.ab>span{grid-area:1/1;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .act-z{display:grid;visibility:hidden}
 .act-z i{grid-area:1/1;font-style:normal}
 .act-z i::before{content:attr(data-l)}
@@ -294,6 +296,10 @@ details.fold .panel,details.fold .meal{margin:0;border-radius:0;box-shadow:none}
 .step .box{width:24px;height:24px;border-radius:50%;border:2px solid var(--field);display:grid;place-items:center;font-size:15px;flex:none;color:var(--on-green)}
 .step.done .box{background:var(--green);border-color:var(--green)}
 .step .lab,.opt .lab{flex:1;display:flex;flex-direction:column}
+/* Wpis dnia: przyciski wiersza razem, przy braku miejsca pod opisem (do prawej), nigdy za krawędzią panelu */
+.step{flex-wrap:wrap}
+.step .lab{min-width:9em}
+.step .sbtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-left:auto;max-width:100%}
 .step.done .lab{color:var(--muted)}
 .step.next .lab{font-weight:600}
 .hint{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:4px}
@@ -332,7 +338,7 @@ details.fold .panel,details.fold .meal{margin:0;border-radius:0;box-shadow:none}
 .stan-src{grid-column:2;font-size:13px;color:var(--muted)}
 
 /* Profil zdrowia i plan */
-.field select{max-width:60%;min-width:0;font:inherit;font-size:15px;padding:8px 12px;min-height:44px;border:1px solid var(--field);border-radius:var(--r-s);background:var(--bg);color:var(--ink)}
+.field select{max-width:60%;min-width:0;font:inherit;font-size:17px;padding:8px 12px;min-height:44px;border:1px solid var(--field);border-radius:var(--r-s);background:var(--bg);color:var(--ink)}
 .act{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin:12px 0}
 .act.first{box-shadow:inset 3px 0 0 var(--brass),var(--shadow)}
 .act h3{margin:0 0 8px;font-size:17px}
@@ -460,7 +466,7 @@ a.plink{display:inline-flex;align-items:center;text-decoration:none;color:var(--
 .pprop + .pprop{border-top:1px solid var(--line)}
 .pprop .ptop2{display:flex;justify-content:space-between;gap:12px;font-size:15px;overflow-wrap:anywhere}
 .pprop .ptop2 b{white-space:nowrap}
-.pprop select{display:block;width:100%;box-sizing:border-box;margin:8px 0;font:inherit;font-size:15px;padding:8px 12px;min-height:44px;border:1px solid var(--field);border-radius:var(--r-s);background:var(--bg);color:var(--ink)}
+.pprop select{display:block;width:100%;box-sizing:border-box;margin:8px 0;font:inherit;font-size:17px;padding:8px 12px;min-height:44px;border:1px solid var(--field);border-radius:var(--r-s);background:var(--bg);color:var(--ink)}
 .pbtns{display:flex;flex-wrap:wrap;gap:8px}
 
 /* Karta „Dziś” (wpisy.js): wiersze sen, kroki, waga; − i + obok siebie po prawej, cele co najmniej 44 px, kolory z tokenów obu motywów */
