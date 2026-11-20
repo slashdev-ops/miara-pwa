@@ -29,6 +29,8 @@ const sygPath = path.join(root, 'sygnaly.js');
 if (fs.existsSync(sygPath)) vm.runInContext(fs.readFileSync(sygPath, 'utf8'), sandbox);
 const wdPath = path.join(root, 'wpisy-demo.js');
 if (fs.existsSync(wdPath)) vm.runInContext(fs.readFileSync(wdPath, 'utf8'), sandbox);
+const zwPath = path.join(root, 'zwierzaki-demo.js');
+if (fs.existsSync(zwPath)) vm.runInContext(fs.readFileSync(zwPath, 'utf8'), sandbox);
 vm.runInContext(code + '\n;globalThis.__T={setDemoN:(v)=>{DEMO_N=v},guideActive:()=>guideActive(),S:()=>S,egfrRows:()=>typeof egfrRows=="undefined"?[]:egfrRows(),nonHdlRows:()=>typeof nonHdlRows=="undefined"?[]:nonHdlRows(),egfrCat:(v)=>typeof egfrCat=="undefined"?"":egfrCat(v),muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),fitNow:()=>typeof fitNow=="undefined"?undefined:fitNow(),potKouri:()=>typeof potKouri=="undefined"?undefined:potKouri(),potButt:()=>typeof potButt=="undefined"?undefined:potButt(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false,SUPP:typeof SUPP=="undefined"?[]:SUPP,SUPP_PARY:typeof SUPP_PARY=="undefined"?[]:SUPP_PARY,promoParse:typeof promoParse=="undefined"?undefined:promoParse,promoMatch:typeof promoMatch=="undefined"?undefined:promoMatch,nextShop:typeof nextShop=="undefined"?undefined:nextShop,promosActive:typeof promosActive=="undefined"?undefined:promosActive,promoDishes:typeof promoDishes=="undefined"?undefined:promoDishes,promoFix:typeof promoFix=="undefined"?undefined:promoFix,promoPending:()=>typeof PROMO_PENDING=="undefined"?undefined:PROMO_PENDING,labStatus:typeof labStatus=="undefined"?undefined:labStatus,load:typeof load=="undefined"?undefined:load,stepsBand:typeof stepsBand=="undefined"?undefined:stepsBand,liteFull:typeof liteFull=="undefined"?undefined:liteFull,liteCardHtml:typeof liteCardHtml=="undefined"?undefined:liteCardHtml,dayOk:typeof dayOk=="undefined"?undefined:dayOk,eggCrack:typeof eggCrack=="undefined"?undefined:eggCrack,liteDays:typeof liteDays=="undefined"?undefined:liteDays,dayLeft:typeof dayLeft=="undefined"?undefined:dayLeft,petCardHtml:typeof petCardHtml=="undefined"?undefined:petCardHtml,unlockNext:typeof unlockNext=="undefined"?undefined:unlockNext,unlockHtml:typeof unlockHtml=="undefined"?undefined:unlockHtml};', sandbox);
 const T = sandbox.__T;
 T.S().lite = false; // dotychczasowe testy zakładają pełny widok
@@ -2266,11 +2268,54 @@ tryc('wpisy-demo: w scenariuszu prosty widok dnia ma sekcję z propozycjami, w z
   return !plain.includes('id="wpisydemo"') && demo.includes('<section id="wpisydemo" aria-labelledby="wpisydemo_h">') && demo.includes('Propozycje wpisu do wyboru (demo)') && demo.includes('Dane przykładowe, nic się nie zapisuje.');
 });
 tryc('wpisy-demo: inny scenariusz nie dostaje sekcji', () => { T.setDemoN('wpisy'); try { liteReset(); return !view('day', { pet: null }).includes('id="wpisydemo"'); } finally { T.setDemoN(''); } });
-tryc('wpisy-demo: html() ma suwaki, Zatwierdź i źródło PMID 32353079', () => { const h = sandbox.WPISY_DEMO.html(); return ['id="wd_rs"', 'id="wd_rk"', 'Zatwierdź', 'pubmed.ncbi.nlm.nih.gov/32353079/', 'PMID 32353079'].every((x) => h.includes(x)) && !/<script|\son[a-z]+=/i.test(h); });
+tryc('wpisy-demo: html() ma suwaki, główny przycisk, wykres wagi i źródło PMID 32353079, bez kółka i żetonów', () => { const h = sandbox.WPISY_DEMO.html(); return ['id="wd_rs"', 'id="wd_rk"', 'id="wd_spark"', 'role="img"', 'pubmed.ncbi.nlm.nih.gov/32353079/', 'PMID 32353079'].every((x) => h.includes(x)) && !/wd_wh|wd_wm|aria-pressed|class="chip"/.test(h) && h.includes('id="wd_main"') && h.includes('Jak wczoraj') && !h.includes('Zatwierdź') && !/<script|\son[a-z]+=/i.test(h); });
+tryc('wpisy-demo: główny przycisk to automat stanów: Jak wczoraj, Zatwierdź (N), Cofnij 5 s, Zobacz zmiany, Gotowe', () => {
+  const L = sandbox.WPISY_DEMO.mainLabel, o = { changed: 0, saved: false, summaryOpen: false, hasYesterday: true, msSinceSave: 0 };
+  return L(o) === 'Jak wczoraj' && L({ ...o, hasYesterday: false }) === 'Zatwierdź' && L({ ...o, changed: 1 }) === 'Zatwierdź (1)' && L({ ...o, changed: 3 }) === 'Zatwierdź (3)'
+    && L({ ...o, saved: true, msSinceSave: 4999 }) === '✓ Zapisane · Cofnij' && L({ ...o, saved: true, msSinceSave: 5000 }) === 'Zobacz, co się zmieniło'
+    && L({ ...o, saved: true, msSinceSave: 9000, summaryOpen: true }) === 'Gotowe na dziś' && L({ ...o, saved: true, msSinceSave: 100, changed: 2 }) === 'Zatwierdź (2)';
+});
+tryc('wpisy-demo: kolejność wierszy: do 12:00 Waga, Sen, Kroki; od 18:00 Kroki, Sen, Waga; poza tym Sen, Kroki, Waga', () => {
+  const R = sandbox.WPISY_DEMO.rowOrder; return R(6).join('') === 'wsk' && R(11).join('') === 'wsk' && R(12).join('') === 'skw' && R(17).join('') === 'skw' && R(18).join('') === 'ksw' && R(23).join('') === 'ksw';
+});
+tryc('wpisy-demo: wpis z klawiatury: sen 7:15, 7,25 i 7 godzin, kroki do 500, waga do 0,1, zły wpis to null', () => {
+  const W = sandbox.WPISY_DEMO; return W.parseSleep('8:30') === 510 && W.parseSleep('7,25') === 435 && W.parseSleep('7') === 420 && W.parseSleep('1') === 180 && W.parseSleep('20') === 720 && W.parseSleep('abc') === null && W.parseSleep('7:75') === null
+    && W.parseSteps('8 250') === 8500 && W.parseSteps('99999') === 20000 && W.parseSteps('x') === null && W.parseWeight('77,14') === 77.1 && W.parseWeight('w') === null;
+});
 tryc('wpisy-demo: pasmo wagi, do 0,35% wczorajszej mieści się w wahaniu, powyżej nie', () => {
   const b = sandbox.WPISY_DEMO.bandText; return b(77, 76.8).includes('mieści się w zwykłym wahaniu') && b(76.8, 76.8).includes('mieści się w zwykłym wahaniu') && !b(77.1, 76.8).includes('mieści się') && b(77.1, 76.8).includes('więcej niż zwykłe wahanie');
 });
 tryc('wpisy-demo: sw.js i index.html znają wpisy-demo.js, skrypt przed app.js', () => /wpisy-demo\.js/.test(fs.readFileSync(path.join(root, 'sw.js'), 'utf8')) && html.indexOf('wpisy-demo.js') > 0 && html.indexOf('wpisy-demo.js') < html.indexOf('app.js'));
+// Galeria nowych zwierzaków (zwierzaki-demo.js, 20.11.2026): tylko w #demo-prosty, pod propozycjami wpisu
+const ZW_K = { gaska: 'Gąska', kaczuszka: 'Kaczuszka', kapibara: 'Kapibara', kotek: 'Kotek' };
+const ZW_M = { spokoj: 'spokój', radosc: 'radość', zapis: 'zapis', seria: 'seria', drzemka: 'drzemka', ciekawosc: 'ciekawość' };
+tryc('zwierzaki-demo: w scenariuszu prosty sekcja pod propozycjami wpisu, w zwykłym prostym widoku i innym scenariuszu jej nie ma', () => {
+  liteReset(); const plain = view('day', { pet: null });
+  T.setDemoN('wpisy'); let other; try { liteReset(); other = view('day', { pet: null }); } finally { T.setDemoN(''); }
+  T.setDemoN('prosty'); let demo; try { liteReset(); demo = view('day', { pet: null }); } finally { T.setDemoN(''); }
+  const i = demo.indexOf('<section id="zwdemo" aria-labelledby="zwdemo_h">');
+  return !plain.includes('id="zwdemo"') && !other.includes('id="zwdemo"') && i > demo.indexOf('id="wpisydemo"') && demo.indexOf('id="wpisydemo"') > 0
+    && demo.includes('<h2 id="zwdemo_h">Nowe zwierzaki do wyboru (demo)</h2>') && demo.includes('Własne postacie w stylu popularnych uroczych zwierzaków. Dotknij nastroju, żeby zobaczyć reakcję.');
+});
+tryc('zwierzaki-demo: svg(gatunek, nastrój) dla 4 gatunków i 6 nastrojów ma role="img" i właściwy aria-label', () => {
+  const Z = sandbox.ZW_DEMO, bad = [];
+  for (const k of Object.keys(ZW_K)) for (const m of Object.keys(ZW_M)) { const s = Z.svg(k, m); if (!/^<svg[^>]*\srole="img"/.test(s) || !s.includes('aria-label="' + ZW_K[k] + ': ' + ZW_M[m] + '"') || !s.endsWith('</svg>') || /<script|\son[a-z]+=/i.test(s)) bad.push(k + '/' + m); }
+  if (bad.length) throw new Error(bad.join(' ')); return true;
+});
+tryc('zwierzaki-demo: seria ma 3 serduszka, drzemka „z z”, ciekawość przechyla główkę, radość oczy-łuki', () => {
+  const S = sandbox.ZW_DEMO.svg; return Object.keys(ZW_K).every((k) => (S(k, 'seria').match(/class="zw-heart/g) || []).length === 3 && (S(k, 'spokoj').match(/class="zw-heart/g) || []).length === 0
+    && (S(k, 'drzemka').match(/class="zw-z/g) || []).length === 2 && /class="zw-head"[^>]*rotate\(-12/.test(S(k, 'ciekawosc')) && S(k, 'radosc').includes('zw-arc') && !S(k, 'spokoj').includes('zw-arc'));
+});
+tryc('zwierzaki-demo: html() ma 4 karty, 6 nastrojów z aria-pressed, ogłoszenie aria-live, bez skryptów i on...=', () => {
+  const h = sandbox.ZW_DEMO.html(), moods = ['Spokój', 'Radość', 'Zapis!', 'Seria', 'Drzemka', 'Ciekawość'];
+  return (h.match(/class="zw-card"/g) || []).length === 4 && (h.match(/aria-pressed="/g) || []).length === 6 && (h.match(/aria-pressed="true"/g) || []).length === 1
+    && moods.every((m) => h.includes('>' + m + '</button>')) && /aria-live="polite"/.test(h) && !/<script|\son[a-z]+=/i.test(h) && Object.values(ZW_K).every((n) => h.includes(n + ': spokój'));
+});
+tryc('zwierzaki-demo: sw.js i index.html znają zwierzaki-demo.js, skrypt przed app.js; CSS z prefers-reduced-motion i kolorami w obu motywach', () => {
+  const b = themeBlocks(), zw = (blk) => [...blk.matchAll(/--zw-[a-z0-9-]+(?=:)/g)].map((m) => m[0]).sort().join();
+  return /\.\/zwierzaki-demo\.js/.test(fs.readFileSync(path.join(root, 'sw.js'), 'utf8')) && html.indexOf('zwierzaki-demo.js') > 0 && html.indexOf('zwierzaki-demo.js') < html.indexOf('app.js')
+    && /prefers-reduced-motion:\s*reduce\)\{[^}]*\.zw-svg/.test(sysCss) && zw(b.light).length > 0 && zw(b.light) === zw(b.dark) && zw(b.light) === zw(b.darkMq);
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

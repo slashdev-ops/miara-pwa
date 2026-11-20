@@ -1,163 +1,226 @@
-// Propozycje wpisu do wyboru (demo): suwak, kółko, żetony, waga z wyjaśnieniem wahań i karta podsumowania.
+// Propozycja wpisu (demo): jedna karta „Dziś” z suwakami (sen, kroki), wagą od wczoraj, wpisem z klawiatury i kartą podsumowania.
 // Tylko do scenariusza #demo-prosty. Dane przykładowe, nic się nie zapisuje, żadnych danych z aplikacji.
 (function () {
   'use strict';
-  var H = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12], M = [0, 15, 30, 45];
   var HIST = [77.4, 77.1, 77.3, 77.0, 76.9, 77.4, 77.6, 77.2, 77.0, 76.8, 77.1, 76.9, 77.3, 76.8]; // 14 dni, ostatni = wczoraj
   var NB = String.fromCharCode(160);
+  var MINUS = '−';
   var CHECK = '<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="var(--green)"/><path d="M6 11.5l3.2 3L16 8" stroke="var(--on-green)" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>';
-  var PET = '<svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><ellipse cx="28" cy="36" rx="18" ry="14" fill="var(--duck)"/><circle cx="34" cy="20" r="10" fill="var(--duck)"/><circle cx="37" cy="18" r="2" fill="var(--ink)"/><path d="M43 21l8 2-8 3z" fill="var(--brass)"/></svg>';
+  var PET = '<svg width="44" height="44" viewBox="0 0 56 56" aria-hidden="true"><ellipse cx="28" cy="36" rx="18" ry="14" fill="var(--duck)"/><circle cx="34" cy="20" r="10" fill="var(--duck)"/><circle cx="37" cy="18" r="2" fill="var(--ink)"/><path d="M43 21l8 2-8 3z" fill="var(--brass)"/></svg>';
 
   var sleepTxt = function (m) { return Math.floor(m / 60) + ' h ' + (m % 60) + ' min'; };
   var fmtK = function (n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NB); };
   var fmtW = function (x) { return x.toFixed(1).replace('.', ','); };
   var avg7 = function (arr) { var a = arr.slice(-7); return a.reduce(function (s, x) { return s + x; }, 0) / a.length; };
+  var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+
+  // Wpis z klawiatury: null, gdy tekstu nie da się odczytać; inaczej wartość w zakresie i zaokrąglona do kroku.
+  function parseSleep(t) {
+    t = String(t).trim().replace(/\s+/g, ''); var m;
+    if ((m = /^(\d{1,2}):(\d{1,2})$/.exec(t))) { if (+m[2] > 59) return null; return clamp(Math.round((+m[1] * 60 + +m[2]) / 15) * 15, 180, 720); }
+    if (/^\d{1,2}([.,]\d{1,2})?$/.test(t)) return clamp(Math.round(parseFloat(t.replace(',', '.')) * 60 / 15) * 15, 180, 720);
+    return null;
+  }
+  function parseSteps(t) {
+    t = String(t).replace(/\s/g, '');
+    return /^\d{1,6}$/.test(t) ? clamp(Math.round(+t / 500) * 500, 0, 20000) : null;
+  }
+  function parseWeight(t) {
+    t = String(t).trim().replace(',', '.');
+    return /^\d{2,3}(\.\d{1,2})?$/.test(t) ? clamp(Math.round(parseFloat(t) * 10) / 10, 30, 250) : null;
+  }
 
   // Pasmo wahań wagi: ok. 0,35% masy od wczoraj mieści się w zwykłym wahaniu tygodnia (Turicchi i in. 2020).
   function band(w, y) {
     var d = Math.round((w - y) * 10) / 10, lim = y * 0.0035;
-    var ds = (d > 0 ? '+' : d < 0 ? '−' : '±') + fmtW(Math.abs(d)) + ' kg od wczoraj';
+    var ds = (d > 0 ? '+' : d < 0 ? MINUS : '±') + fmtW(Math.abs(d)) + ' kg od wczoraj';
     var inside = Math.abs(d) <= lim + 1e-9;
-    return {
-      inside: inside,
-      text: ds + ': ' + (inside
-        ? 'mieści się w zwykłym wahaniu tygodnia (ok. 0,35%, tu ok. ' + fmtW(lim) + ' kg). Liczy się średnia 7 dni.'
-        : 'więcej niż zwykłe wahanie tygodnia. Pojedyncze ważenie to jeszcze nie trend; zobacz średnią 7 dni.'),
-      ds: ds
-    };
+    return { inside: inside, ds: ds, text: ds + ': ' + (inside ? 'mieści się w zwykłym wahaniu (ok. 0,35% masy).' : 'więcej niż zwykłe wahanie. Liczy się średnia 7 dni.') };
   }
   function bandText(w, y) { return band(w, y).text; }
 
-  function wheelHtml(id, vals, txt, label) {
-    return '<div class="wd-wheel" id="' + id + '" tabindex="0" role="listbox" aria-label="' + label + '"><div class="wd-pad"></div>' +
-      vals.map(function (v) { return '<div role="option" data-v="' + v + '">' + txt(v) + '</div>'; }).join('') + '<div class="wd-pad"></div></div>';
-  }
-  function slider(idv, idr, lab, min, max, step, val, minus, plus, ends, key) {
-    return '<p class="wd-lab" id="' + idr + '_l">' + lab + '</p><p class="wd-big" id="' + idv + '" aria-live="polite"></p>' +
-      '<div class="wd-slider"><button class="wd-sq" data-wd="step:' + key + ':-1" aria-label="' + minus + '">−</button>' +
-      '<input type="range" id="' + idr + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" aria-labelledby="' + idr + '_l">' +
-      '<button class="wd-sq" data-wd="step:' + key + ':1" aria-label="' + plus + '">+</button></div>' +
-      '<div class="wd-ends" aria-hidden="true"><span>' + ends[0] + '</span><span>' + ends[1] + '</span></div>';
-  }
-  function chips(key, lab, items, on) {
-    return '<p class="wd-lab" id="wd_g' + key + '">' + lab + '</p><div class="wd-chips" role="group" aria-labelledby="wd_g' + key + '" data-wd-g="' + key + '">' +
-      items.map(function (t, i) { return '<button class="chip" data-wd="chip:' + key + ':' + i + '" aria-pressed="' + (i === on) + '">' + t + '</button>'; }).join('') + '</div>';
+  var NAME = { s: 'Sen', k: 'Kroki', w: 'Waga' };
+  var YEST = { s: 435, k: 6500, w: 76.8 };
+  var WW = 'Pojedyncze ważenie może odbiegać od średniej; w badaniu tygodniowe wahanie wynosiło średnio 0,35% masy (Turicchi 2020). Patrz na linię średniej.';
+
+  // Kolejność wierszy zależy od pory dnia: rano waga, wieczorem kroki.
+  function rowOrder(h) { return h < 12 ? ['w', 's', 'k'] : h >= 18 ? ['k', 's', 'w'] : ['s', 'k', 'w']; }
+
+  // Główny przycisk: automat stanów. Zmiana wiersza ma pierwszeństwo, bo wymaga nowego zatwierdzenia.
+  function mainLabel(o) {
+    if (o.changed > 0) return 'Zatwierdź (' + o.changed + ')';
+    if (o.saved) return o.summaryOpen ? 'Gotowe na dziś' : o.msSinceSave < 5000 ? '\u2713 Zapisane \u00b7 Cofnij' : 'Zobacz, co się zmieniło';
+    return o.hasYesterday ? 'Jak wczoraj' : 'Zatwierdź';
   }
 
-  function html() {
-    return '' +
-      '<article class="wd-card" aria-labelledby="wd_h1"><div class="wd-lead"><h3 id="wd_h1">1. Suwak i zatwierdzenie</h3><span class="wd-rec">polecany</span></div>' +
-      '<p class="wd-note">Przesuń albo dotknij toru; − i + zmieniają o jeden krok. Zapis dopiero po „Zatwierdź”.</p>' +
-      slider('wd_vs', 'wd_rs', 'Sen', 180, 720, 15, 435, 'Sen o 15 minut mniej', 'Sen o 15 minut więcej', ['3 h', '12 h'], 's') +
-      slider('wd_vk', 'wd_rk', 'Kroki', 0, 20000, 500, 6500, '500 kroków mniej', '500 kroków więcej', ['0', '20 tys.'], 'k') +
-      '<button class="btn" data-wd="ok1">Zatwierdź</button><div class="wd-done" id="wd_d1" hidden></div></article>' +
+  function row(k, minus, plus, init) {
+    var wk = k === 'w';
+    return '<div class="wd-r" data-k="' + k + '"><span class="wd-lab" id="wd_l' + k + '">' + NAME[k] + '</span>' +
+      '<button class="wd-val wd-y" id="wd_v' + k + '" data-wd="edit:' + k + '">' + init + '</button>' +
+      '<span class="wd-pm"><button class="wd-sq" data-wd="' + (wk ? 'wm' : 'step:' + k + ':-1') + '" aria-label="' + minus + '">' + MINUS + '</button>' +
+      '<button class="wd-sq" data-wd="' + (wk ? 'wp' : 'step:' + k + ':1') + '" aria-label="' + plus + '">+</button>' +
+      '<button class="wd-chg" data-wd="chg:' + k + '" aria-label="Zmień: ' + NAME[k].toLowerCase() + '">Zmień</button></span><span class="wd-hint" id="wd_h' + k + '">jak wczoraj?</span></div>';
+  }
+  function range(id, lab, min, max, step, val) {
+    return '<input class="wd-range" type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" aria-labelledby="' + lab + '">';
+  }
+  var err = function (k) { return '<p class="wd-err" id="wd_e' + k + '" role="alert"></p>'; };
+  function group(k) {
+    var g = '<div class="wd-g" data-g="' + k + '">';
+    if (k === 's') return g + row('s', 'Sen o 15 minut mniej', 'Sen o 15 minut więcej', '7 h 15 min') + range('wd_rs', 'wd_ls', 180, 720, 15, 435) + err('s') + '</div>';
+    if (k === 'k') return g + row('k', '500 kroków mniej', '500 kroków więcej', '6' + NB + '500') + range('wd_rk', 'wd_lk', 0, 20000, 500, 6500) + err('k') + '</div>';
+    return g + row('w', '0,1 kg mniej', '0,1 kg więcej', '76,8 kg') + err('w') +
+      '<p class="wd-band" id="wd_band" role="status"></p>' +
+      '<svg class="wd-spark" id="wd_spark" viewBox="0 0 320 84" role="img" aria-label=""></svg>' +
+      '<p class="wd-src">Wahanie tygodnia ok. 0,35% masy, w weekend w górę, w tygodniu w dół: Turicchi i in., PLoS One 2020, <a href="https://pubmed.ncbi.nlm.nih.gov/32353079/" target="_blank" rel="noopener">PMID 32353079</a>.</p></div>';
+  }
 
-      '<article class="wd-card" aria-labelledby="wd_h2"><div class="wd-lead"><h3 id="wd_h2">2. Kółko jak w budziku</h3></div>' +
-      '<p class="wd-note">Przewiń godziny i minuty. Przyciski obok dla osób, które nie przewijają.</p><p class="wd-lab">Sen</p>' +
-      '<div class="wd-wheelbox">' + wheelHtml('wd_wh', H, function (v) { return v; }, 'Godziny snu') + '<span class="wd-sep" aria-hidden="true">:</span>' +
-      wheelHtml('wd_wm', M, function (v) { return String(v).padStart(2, '0'); }, 'Minuty snu') + '</div>' +
-      '<div class="wd-row"><button class="wd-sq" data-wd="wheel:wd_wh:-1" aria-label="Godzina mniej">−</button><button class="wd-sq" data-wd="wheel:wd_wh:1" aria-label="Godzina więcej">+</button>' +
-      '<button class="wd-sq" data-wd="wheel:wd_wm:-1" aria-label="15 minut mniej">−</button><button class="wd-sq" data-wd="wheel:wd_wm:1" aria-label="15 minut więcej">+</button></div>' +
-      '<p class="wd-big" id="wd_v2" aria-live="polite"></p><button class="btn" data-wd="ok2">Zatwierdź</button><div class="wd-done" id="wd_d2" hidden></div></article>' +
+  function html(hour) {
+    var h = typeof hour === 'number' ? hour : new Date().getHours();
+    return '<article class="wd-card" id="wd_card" aria-labelledby="wd_h1"><h3 id="wd_h1">Dziś</h3>' + rowOrder(h).map(group).join('') +
+      '<button class="btn wd-main" id="wd_main" data-wd="main">Jak wczoraj</button><span class="wd-sr" id="wd_live" role="status" aria-live="polite"></span>' +
+      '<button class="btn ghost wd-wwb" id="wd_wwb" data-wd="ww" aria-expanded="false" aria-controls="wd_ww" hidden>Co to znaczy?</button><p class="wd-note" id="wd_ww" hidden>' + WW + '</p></article>' +
 
-      '<article class="wd-card" aria-labelledby="wd_h3"><div class="wd-lead"><h3 id="wd_h3">3. Żetony</h3></div>' +
-      '<p class="wd-note">Jedno dotknięcie, bez zatwierdzania. Najszybsze, ale mniej dokładne.</p>' +
-      chips('s', 'Sen', ['5 h', '6 h', '7 h', '8 h', '9 h lub więcej'], 2) + chips('k', 'Kroki', ['poniżej 5 tys.', '5–8 tys.', 'ponad 8 tys.'], 1) +
-      '<div class="wd-done" id="wd_d3"></div></article>' +
-
-      '<article class="wd-card" aria-labelledby="wd_hw"><div class="wd-lead"><h3 id="wd_hw">Waga: od ostatniej, ±0,1</h3></div>' +
-      '<p class="wd-note">Startuje od wczorajszej wagi. Dotknij − albo +, przytrzymanie zmienia coraz szybciej.</p>' +
-      '<div class="wd-weight"><button class="wd-sq" data-wd="wm" aria-label="0,1 kg mniej">−</button><p class="wd-big" id="wd_vw" aria-live="polite"></p>' +
-      '<button class="wd-sq" data-wd="wp" aria-label="0,1 kg więcej">+</button></div>' +
-      '<div class="wd-band" id="wd_band" role="status"></div>' +
-      '<svg class="wd-spark" id="wd_spark" viewBox="0 0 320 120" role="img" aria-label="Waga z 14 dni i średnia 7 dni"></svg>' +
-      '<button class="btn" data-wd="okw">Zatwierdź</button><div class="wd-done" id="wd_dw" hidden></div>' +
-      '<p class="wd-src">Wahanie tygodnia ok. 0,35% masy, w weekend w górę, w tygodniu w dół: Turicchi i in., PLoS One 2020, <a href="https://pubmed.ncbi.nlm.nih.gov/32353079/" target="_blank" rel="noopener">PMID 32353079</a>.</p></article>' +
-
-      '<article class="wd-card" aria-labelledby="wd_hp"><div class="wd-lead"><h3 id="wd_hp">Po zapisie: Twój stan</h3><span class="wd-rec">zaakceptowane</span></div>' +
-      '<p class="wd-note">Karta zwija się do potwierdzenia. Podsumowanie otwiera się przyciskiem, nie samo.</p>' +
-      '<div class="wd-pet" id="wd_pet">' + PET + '<div><b id="wd_petline">Gąska czeka na wpis.</b><span class="wd-note">Seria: 4 dni</span></div></div>' +
-      '<div class="wd-done" id="wd_sum">' + CHECK + '<span id="wd_sumtxt">Zatwierdź coś w wariancie 1, 2 albo przy wadze.</span></div>' +
-      '<div class="wd-row"><button class="btn" data-wd="opensum">Zobacz podsumowanie</button><button class="btn ghost" data-wd="change">Zmień</button></div>' +
-      '<div id="wd_stan" hidden><h3 id="wd_stanh" tabindex="-1">Ostatnie 7 dni</h3>' +
+      '<article class="wd-card" aria-labelledby="wd_hp"><div class="wd-pet" id="wd_pet">' + PET + '<div><h3 id="wd_hp">Twój stan</h3><b id="wd_petline">Gąska czeka na wpis.</b> <span class="wd-note">Seria: 4 dni</span></div></div>' +
+      '<div class="wd-done" id="wd_sum">' + CHECK + '<span id="wd_sumtxt">Nic jeszcze nie zapisano na dziś.</span></div>' +
+      '<div id="wd_stan" hidden><h3 id="wd_stanh">Ostatnie 7 dni</h3>' +
       '<div class="wd-dots" role="img" aria-label="Dni z wpisem: 5 z 7"><i class="on">pn</i><i class="on">wt</i><i>śr</i><i class="on">cz</i><i class="on">pt</i><i>sb</i><i class="on">nd</i></div>' +
       '<dl class="wd-kv"><dt>Sen, średnio</dt><dd id="wd_ksen">7 h 0 min</dd><dt>Kroki, średnio</dt><dd id="wd_kk">6' + NB + '200</dd><dt>Samopoczucie „dobrze”</dt><dd>4 dni</dd><dt>Ból głowy</dt><dd>1 dzień</dd><dt>Średnia waga 7 dni</dt><dd id="wd_kw">77,0 kg</dd></dl>' +
-      '<div class="wd-band">Za 2 dni z wpisami gąska zaproponuje: <b>posiłki z planu</b>.</div></div></article>';
+      '<p class="wd-band">Za 2 dni z wpisami gąska zaproponuje: <b>posiłki z planu</b>.</p></div></article>';
   }
 
   function mount(root) {
     if (!root || typeof root.querySelector !== 'function' || root._wd) return;
     root._wd = true;
     var $ = function (id) { return root.querySelector('#' + id); };
+    var K = ['s', 'k', 'w'];
     var st = { sen: null, kroki: null, waga: null };
-    var w = HIST[HIST.length - 1], hold = 0, rep = 0, hopT = 0;
-    var reduce = function () { return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches; };
-    var done = function (el, txt) { el.hidden = false; el.innerHTML = CHECK + '<span>' + txt + '</span>'; };
+    var w = YEST.w, hold = 0, rep = 0, hopT = 0, ed = null, timer = 0;
+    var ref = { s: YEST.s, k: YEST.k, w: YEST.w }, everSaved = false, saved = false, grace = false, summaryOpen = false, snap = null, last = 'Jak wczoraj';
+    var rowSaved = { s: false, k: false, w: false };
+    var rs = $('wd_rs'), rk = $('wd_rk');
+    var cur = function (k) { return k === 's' ? +rs.value : k === 'k' ? +rk.value : w; };
+    var val = function (k) { return k === 's' ? sleepTxt(+rs.value) : k === 'k' ? fmtK(+rk.value) : fmtW(w) + ' kg'; };
+    var changedN = function () { return K.filter(function (k) { return Math.abs(cur(k) - ref[k]) > 1e-9; }).length; };
+    var outside = function () { var all = HIST.concat([w]), a = avg7(all); return Math.abs(w - a) > a * 0.0035 + 1e-9; };
+
     function hop(line) {
       var p = $('wd_pet'); p.classList.remove('hop'); void p.offsetWidth; p.classList.add('hop');
-      clearTimeout(hopT); hopT = setTimeout(function () { p.classList.remove('hop'); }, 450); $('wd_petline').textContent = line;
+      clearTimeout(hopT); hopT = setTimeout(function () { p.classList.remove('hop'); }, 450); if (line) $('wd_petline').textContent = line;
+    }
+    function dx(k) {
+      var d = cur(k) - YEST[k];
+      if (Math.abs(d) < 1e-9) return 'jak wczoraj';
+      var sg = d > 0 ? '+' : MINUS, a = Math.abs(d);
+      return sg + (k === 's' ? (a < 60 ? a + ' min' : Math.floor(a / 60) + ' h' + (a % 60 ? ' ' + (a % 60) + ' min' : '')) : k === 'k' ? fmtK(a) : fmtW(a) + ' kg') + ' od wczoraj';
+    }
+    function setRows() {
+      K.forEach(function (k) {
+        var b = $('wd_v' + k), t = val(k), r = root.querySelector('.wd-r[data-k="' + k + '"]'), g = root.querySelector('.wd-g[data-g="' + k + '"]');
+        b.textContent = t; b.setAttribute('aria-label', NAME[k] + ': ' + t + ', dotknij, aby wpisać');
+        var same = Math.abs(cur(k) - YEST[k]) < 1e-9;
+        b.classList.toggle('wd-y', !everSaved && same && !rowSaved[k]);
+        $('wd_h' + k).textContent = rowSaved[k] ? '✓ ' + dx(k) : !everSaved && same ? 'jak wczoraj?' : dx(k);
+        r.classList.toggle('saved', rowSaved[k]); g.classList.toggle('saved', rowSaved[k]);
+      });
+      rs.disabled = rowSaved.s; rk.disabled = rowSaved.k;
+      var show = rowSaved.w && saved && outside();
+      $('wd_wwb').hidden = !show; if (!show) { $('wd_ww').hidden = true; $('wd_wwb').setAttribute('aria-expanded', 'false'); }
+      $('wd_stan').hidden = !(saved && summaryOpen);
+    }
+    function setMain() {
+      var l = mainLabel({ changed: changedN(), saved: saved, summaryOpen: summaryOpen, hasYesterday: !everSaved, msSinceSave: grace ? 0 : 1e9 });
+      if (l !== last) { last = l; $('wd_main').textContent = l; $('wd_live').textContent = l; hop(); }
     }
     function sumUpdate() {
       var parts = [];
       if (st.sen != null) parts.push('Sen ' + sleepTxt(st.sen));
       if (st.kroki != null) parts.push('Kroki ' + fmtK(st.kroki));
       if (st.waga != null) parts.push('Waga ' + fmtW(st.waga) + ' kg');
-      $('wd_sumtxt').textContent = parts.length ? 'Zapisane na dziś: ' + parts.join(' · ') : 'Zatwierdź coś w wariancie 1, 2 albo przy wadze.';
+      $('wd_sumtxt').textContent = parts.length ? 'Zapisane na dziś: ' + parts.join(' · ') : 'Nic jeszcze nie zapisano na dziś.';
       if (st.sen != null) $('wd_ksen').textContent = sleepTxt(Math.round((420 * 6 + st.sen) / 7 / 15) * 15);
       if (st.kroki != null) $('wd_kk').textContent = fmtK(Math.round((6200 * 6 + st.kroki) / 7 / 100) * 100);
     }
-    // 1. suwaki
-    var rs = $('wd_rs'), rk = $('wd_rk');
-    function show1() {
-      $('wd_vs').textContent = sleepTxt(+rs.value); rs.setAttribute('aria-valuetext', sleepTxt(+rs.value));
-      $('wd_vk').textContent = fmtK(+rk.value); rk.setAttribute('aria-valuetext', fmtK(+rk.value) + ' kroków');
-      $('wd_d1').hidden = true;
-    }
-    // 2. kółko
-    var idx = function (el) { return Math.round(el.scrollTop / 50); };
-    var val2 = function () { return H[Math.max(0, Math.min(H.length - 1, idx($('wd_wh'))))] * 60 + M[Math.max(0, Math.min(M.length - 1, idx($('wd_wm'))))]; };
-    function show2() { $('wd_v2').textContent = sleepTxt(val2()); $('wd_d2').hidden = true; }
-    function move(id, d) {
-      var el = $(id), max = (id === 'wd_wh' ? H.length : M.length) - 1, i = Math.max(0, Math.min(max, idx(el) + d));
-      if (typeof el.scrollTo === 'function') el.scrollTo({ top: i * 50, behavior: reduce() ? 'auto' : 'smooth' }); else el.scrollTop = i * 50;
-      setTimeout(show2, reduce() ? 30 : 300);
-    }
-    // 3. żetony
-    var CH = { s: ['5 h', '6 h', '7 h', '8 h', '9 h lub więcej'], k: ['poniżej 5 tys.', '5–8 tys.', 'ponad 8 tys.'] };
-    function show3() {
-      var s = root.querySelector('[data-wd-g="s"] [aria-pressed="true"]'), k = root.querySelector('[data-wd-g="k"] [aria-pressed="true"]');
-      done($('wd_d3'), 'Zapisane od razu: sen ' + s.textContent + ', kroki ' + k.textContent);
-    }
-    // waga
-    function drawSpark() {
-      var all = HIST.concat([w]), mn = Math.min.apply(null, all) - 0.3, mx = Math.max.apply(null, all) + 0.3, n = all.length - 1;
-      var X = function (i) { return 16 + i * (288 / n); }, Y = function (v) { return 12 + (mx - v) / (mn === mx ? 1 : mx - mn) * 84; };
+    function drawSpark(b) {
+      var all = HIST.concat([w]), avg = avg7(all), lim = avg * 0.0035, n = all.length - 1;
+      var mn = Math.min.apply(null, all.concat([avg - lim])) - 0.2, mx = Math.max.apply(null, all.concat([avg + lim])) + 0.2;
+      var X = function (i) { return 12 + i * (296 / n); }, Y = function (v) { return 6 + (mx - v) / (mx - mn) * 52; };
       var pts = all.map(function (v, i) { return X(i).toFixed(1) + ',' + Y(v).toFixed(1); }).join(' '), av = [];
       for (var i = 6; i <= n; i++) av.push(X(i).toFixed(1) + ',' + Y(avg7(all.slice(0, i + 1))).toFixed(1));
-      $('wd_spark').innerHTML = '<polyline points="' + pts + '" fill="none" stroke="var(--line)" stroke-width="2"/>' +
-        all.map(function (v, i) { return '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="' + (i === n ? 5 : 3) + '" fill="' + (i === n ? 'var(--brass)' : 'var(--muted)') + '"/>'; }).join('') +
-        '<polyline points="' + av.join(' ') + '" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round"/>' +
-        '<text x="16" y="114">14 dni temu</text><text x="304" y="114" text-anchor="end">dziś</text><text x="304" y="' + (Y(avg7(all)) - 8).toFixed(1) + '" text-anchor="end" fill="var(--green)">średnia 7 dni</text>';
-      $('wd_kw').textContent = fmtW(avg7(all)) + ' kg';
+      var sp = $('wd_spark');
+      sp.innerHTML = '<rect class="wd-zone" x="0" width="320" y="' + Y(avg + lim).toFixed(1) + '" height="' + (Y(avg - lim) - Y(avg + lim)).toFixed(1) + '"/>' +
+        '<polyline points="' + pts + '" fill="none" stroke="var(--line)" stroke-width="2"/>' +
+        '<polyline points="' + av.join(' ') + '" fill="none" stroke="var(--green)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        all.map(function (v, i) { return i === n ? '' : '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="2.5" fill="var(--muted)"/>'; }).join('') +
+        '<circle cx="' + X(n).toFixed(1) + '" cy="' + Y(w).toFixed(1) + '" r="5.5" fill="var(--brass)" stroke="var(--surface)" stroke-width="2"/>' +
+        '<text x="4" y="80">14 dni temu</text><text x="316" y="80" text-anchor="end">dziś</text><text class="wd-avgl" x="160" y="80" text-anchor="middle">średnia 7 dni</text>';
+      sp.setAttribute('aria-label', 'Waga z 14 dni, średnia 7 dni ' + fmtW(avg) + ' kg, dziś ' + fmtW(w) + ' kg, ' + b.ds + '. Pasmo to zwykłe wahanie tygodnia.');
+      $('wd_kw').textContent = fmtW(avg) + ' kg';
     }
-    function showW() {
-      var b = band(w, HIST[HIST.length - 1]);
-      $('wd_vw').innerHTML = fmtW(w) + ' <small>kg</small>';
-      $('wd_band').innerHTML = '<b>' + b.ds + '</b>' + b.text.slice(b.ds.length);
-      $('wd_dw').hidden = true; drawSpark();
+    function showW() { var b = band(w, YEST.w); $('wd_band').textContent = b.text; drawSpark(b); }
+    // Każda zmiana wartości unieważnia zapis; nic nie przełącza się samo (WCAG 3.2.2), podsumowanie tylko się zwija
+    function changed() {
+      saved = false; grace = false; summaryOpen = false; clearTimeout(timer); showW(); setRows(); setMain();
     }
-    function bump(d) { w = Math.round((w + d) * 10) / 10; showW(); }
+    function bump(d) { w = Math.round((w + d) * 10) / 10; changed(); }
     function holdEnd() { clearTimeout(hold); clearTimeout(rep); window.removeEventListener('pointerup', holdEnd); window.removeEventListener('pointercancel', holdEnd); }
 
-    root.addEventListener('input', function (e) { e.stopPropagation(); if (e.target === rs || e.target === rk) show1(); });
-    root.addEventListener('scroll', function (e) {
-      var t = e.target; if (t.id !== 'wd_wh' && t.id !== 'wd_wm') return;
-      clearTimeout(t._t); t._t = setTimeout(show2, 80);
-    }, true);
+    function save() {
+      snap = { s: +rs.value, k: +rk.value, w: w, ref: { s: ref.s, k: ref.k, w: ref.w }, ever: everSaved, rows: { s: rowSaved.s, k: rowSaved.k, w: rowSaved.w }, st: { sen: st.sen, kroki: st.kroki, waga: st.waga } };
+      ref = { s: +rs.value, k: +rk.value, w: w }; everSaved = true; saved = true; grace = true; summaryOpen = false;
+      st.sen = ref.s; st.kroki = ref.k; st.waga = ref.w; K.forEach(function (k) { rowSaved[k] = true; });
+      clearTimeout(timer); timer = setTimeout(function () { grace = false; setMain(); }, 5000);
+      sumUpdate(); setRows(); hop('Gąska się wysypia razem z Tobą.'); setMain();
+    }
+    function undo() {
+      if (!snap) return;
+      rs.value = String(snap.s); rk.value = String(snap.k); w = snap.w; ref = snap.ref; everSaved = snap.ever; rowSaved = snap.rows; st = snap.st;
+      saved = false; grace = false; summaryOpen = false; clearTimeout(timer); snap = null;
+      sumUpdate(); showW(); setRows(); setMain();
+    }
+    function mainClick() {
+      if (changedN() > 0 || !saved) save();
+      else if (grace) undo();
+      else { summaryOpen = !summaryOpen; setRows(); setMain(); }
+    }
+
+    // Wpis z klawiatury w miejscu wartości
+    var MSG = { s: 'Wpisz sen jako 7:15, 7,25 albo 7 (godziny).', k: 'Wpisz liczbę kroków, np. 8000.', w: 'Wpisz wagę w kilogramach, np. 76,8.' };
+    var PARSE = { s: parseSleep, k: parseSteps, w: parseWeight };
+    function startEdit(k) {
+      if (ed) endEdit(true);
+      $('wd_e' + k).textContent = '';
+      var b = $('wd_v' + k), i = document.createElement('input');
+      i.id = 'wd_in'; i.className = 'wd-in'; i.type = 'text'; i.autocomplete = 'off';
+      i.setAttribute('inputmode', k === 'w' ? 'decimal' : 'numeric'); i.setAttribute('enterkeyhint', 'done');
+      i.setAttribute('aria-label', NAME[k] + ': wpisz wartość, Enter zatwierdza, Escape anuluje');
+      i.value = k === 's' ? Math.floor(+rs.value / 60) + ':' + String(+rs.value % 60).padStart(2, '0') : k === 'k' ? String(+rk.value) : fmtW(w);
+      b.hidden = true; b.parentNode.insertBefore(i, b.nextSibling); ed = { k: k, i: i, b: b };
+      i.focus(); i.select();
+    }
+    function endEdit(apply, refocus) {
+      if (!ed) return; var e = ed; ed = null;
+      var v = apply ? PARSE[e.k](e.i.value) : undefined;
+      if (e.i.parentNode) e.i.parentNode.removeChild(e.i);
+      e.b.hidden = false;
+      if (apply) {
+        if (v === null) $('wd_e' + e.k).textContent = MSG[e.k];
+        else {
+          $('wd_e' + e.k).textContent = '';
+          if (v !== cur(e.k)) { if (e.k === 's') rs.value = String(v); else if (e.k === 'k') rk.value = String(v); else w = v; changed(); }
+        }
+      }
+      if (refocus) e.b.focus();
+    }
+
+    root.addEventListener('input', function (e) { e.stopPropagation(); if (e.target === rs || e.target === rk) changed(); });
+    root.addEventListener('focusout', function (e) { if (ed && e.target === ed.i) endEdit(true, false); });
     root.addEventListener('keydown', function (e) {
       e.stopPropagation();
-      var t = e.target;
-      if ((t.id === 'wd_wh' || t.id === 'wd_wm') && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); move(t.id, e.key === 'ArrowDown' ? 1 : -1); }
+      if (ed && e.target === ed.i) {
+        if (e.key === 'Enter') { e.preventDefault(); endEdit(true, true); }
+        else if (e.key === 'Escape') { e.preventDefault(); endEdit(false, true); }
+      }
     });
     root.addEventListener('pointerdown', function (e) {
       var b = e.target.closest && e.target.closest('[data-wd="wm"],[data-wd="wp"]'); if (!b || (e.button || 0) > 0) return;
@@ -171,23 +234,15 @@
       e.stopPropagation();
       var b = e.target.closest && e.target.closest('[data-wd]'); if (!b) return;
       var a = b.getAttribute('data-wd').split(':'), c = a[0];
-      if (c === 'step') { var r = a[1] === 's' ? rs : rk; r.value = String(+r.value + (+a[2]) * (+r.step)); show1(); }
-      else if (c === 'ok1') { st.sen = +rs.value; st.kroki = +rk.value; done($('wd_d1'), 'Zapisane: sen ' + sleepTxt(st.sen) + ', kroki ' + fmtK(st.kroki)); hop('Gąska się wysypia razem z Tobą.'); sumUpdate(); }
-      else if (c === 'wheel') move(a[1], +a[2]);
-      else if (c === 'ok2') { st.sen = val2(); done($('wd_d2'), 'Zapisane: sen ' + sleepTxt(st.sen)); hop('Gąska ziewa z zadowoleniem.'); sumUpdate(); }
-      else if (c === 'chip') {
-        var g = b.parentNode; [].forEach.call(g.querySelectorAll('.chip'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-        show3(); hop('Gąska kiwa głową.');
-      }
+      if (c === 'edit') startEdit(a[1]);
+      else if (c === 'step') { var r = a[1] === 's' ? rs : rk; r.value = String(+r.value + (+a[2]) * (+r.step)); changed(); }
+      else if (c === 'main') mainClick();
+      else if (c === 'chg') { rowSaved[a[1]] = false; setRows(); var f = root.querySelector('.wd-r[data-k="' + a[1] + '"] .wd-val'); if (f) f.focus(); }
+      else if (c === 'ww') { var p = $('wd_ww'), open = p.hidden; p.hidden = !open; b.setAttribute('aria-expanded', String(open)); }
       else if (c === 'wm' || c === 'wp') { if (e.detail === 0) bump(c === 'wp' ? 0.1 : -0.1); } // myszą i dotykiem zmienia pointerdown; Enter i spacja dają detail 0
-      else if (c === 'okw') { st.waga = w; done($('wd_dw'), 'Zapisane: ' + fmtW(w) + ' kg'); hop('Gąska notuje wagę.'); sumUpdate(); }
-      else if (c === 'opensum') { $('wd_stan').hidden = false; $('wd_stanh').focus(); }
-      else if (c === 'change') { $('wd_stan').hidden = true; rs.focus(); }
     });
-    show1(); show3(); showW();
-    $('wd_wh').scrollTop = 4 * 50; $('wd_wm').scrollTop = 1 * 50; show2();
-    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(function () { $('wd_wh').scrollTop = 4 * 50; $('wd_wm').scrollTop = 1 * 50; show2(); });
+    showW(); setRows(); setMain();
   }
 
-  globalThis.WPISY_DEMO = { html: html, mount: mount, band: band, bandText: bandText };
+  globalThis.WPISY_DEMO = { html: html, mount: mount, band: band, bandText: bandText, parseSleep: parseSleep, parseSteps: parseSteps, parseWeight: parseWeight, mainLabel: mainLabel, rowOrder: rowOrder };
 })();
