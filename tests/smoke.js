@@ -1688,7 +1688,7 @@ tryc('błonnik: źródła w spisie (Frida, CoFID, EFSA, UE 1924/2006)', () => ['
 
 // Zgłoszenie 13.11.2026: jak w CV, słabo widoczne kropki · zamienione na kreskę |, znaczniki w wierszu z czasem
 // Wyjątek (20.11.2026): napis przycisku, który reaguje, „✓ Zjedzone · Cofnij” z briefu przycisków (ten sam wzorzec co „✓ Zapisane · Cofnij” w karcie „Dziś”)
-tryc('separatory: ekran Posiłki bez kropek środkowych poza napisem „✓ … · Cofnij”, makro w planie rozdzielone kreską', () => { const h = view('meals', BASE()).replace(/<button class="btn act[^"]*"[\s\S]*?<\/button>/g, ''); return !h.includes('·') && /kcal \| B\u00a0\d+\u00a0g \| T\u00a0\d+\u00a0g \| W\u00a0\d+\u00a0g \| Bł\u00a0/.test(h); });
+tryc('separatory: ekran Posiłki bez kropek środkowych poza napisem „✓ … · Cofnij”, makro w planie rozdzielone kreską', () => { const h = view('meals', BASE()).replace(/<button class="btn ab[^"]*"[\s\S]*?<\/button>/g, ''); return !h.includes('·') && /kcal \| B\u00a0\d+\u00a0g \| T\u00a0\d+\u00a0g \| W\u00a0\d+\u00a0g \| Bł\u00a0/.test(h); });
 tryc('separatory: znaczniki przepisu w wierszu z czasem, po kresce', () => { view('meals', BASE()); return /<div class="meta">[^<]*\d+ min[^<]*<span class="msep"><span aria-hidden="true"> \| <\/span><span class="sr">, <\/span><\/span><span class="mtag"/.test(els.mlist.innerHTML) && !els.mlist.innerHTML.includes('class="mtags"'); });
 // Sygnały brzucha (sygnaly.js, docs/specs/2026-11-13-sygnaly-brzuch-design.md): moduł liczy z podanego stanu i dnia k.
 const Y = () => sandbox.SYG;
@@ -1952,8 +1952,8 @@ tryc('przyciski: zamówione i „Według planu” z tym samym automatem; Cofnij 
   return d.length === 1 && d[0] === b;
 });
 tryc('przyciski: stała szerokość (miarka ze wszystkich napisów, ukryta przed czytnikiem), napisy miarki w <i data-l> (btnSel bez zmian)', () => {
-  ACLR(); const h = view('train', BASE({ days: {} })), m = /<button class="btn act"[^>]*data-ab="train"[^>]*>(.*?)<\/button>/.exec(h);
-  return !!m && /<span class="act-z" aria-hidden="true">(<i data-l="[^"]+"><\/i>){3}<\/span>/.test(m[1]) && /\.btn\.act\{[^}]*display:inline-grid/.test(sysCss) && /\.act-z\{[^}]*visibility:hidden/.test(sysCss) && /\.act-z i::before\{content:attr\(data-l\)/.test(sysCss);
+  ACLR(); const h = view('train', BASE({ days: {} })), m = /<button class="btn ab"[^>]*data-ab="train"[^>]*>(.*?)<\/button>/.exec(h);
+  return !!m && /<span class="act-z" aria-hidden="true">(<i data-l="[^"]+"><\/i>){3}<\/span>/.test(m[1]) && /\.btn\.ab\{[^}]*display:inline-grid/.test(sysCss) && /\.act-z\{[^}]*visibility:hidden/.test(sysCss) && /\.act-z i::before\{content:attr\(data-l\)/.test(sysCss);
 });
 // Rada P2 (15.11.2026): alarm ogłaszany raz dziennie; kolejne przerysowania tego dnia jako region „Pilne”
 tryc('alarm: pierwsze wyświetlenie dnia role=alert, kolejne role=region aria-label=Pilne (ze zwierzakiem)', () => {
@@ -2933,6 +2933,13 @@ tryc('wiersze: wpis z klawiatury przez checkNum i LIM (talia 250 i pusty wpis od
 tryc('spark: okno 28 dni bez pasa: linia średniej, punkty, podpis „średnia 4 tygodni”, bez prostokąta pasa', () => {
   const v = Array(84).fill(null); v[10] = 88; v[30] = 87; v[60] = 86; const s = WP().spark(v, null, { win: 28, avgLab: 'średnia 4 tygodni', fromLab: '12 tygodni temu' });
   return !s.includes('wp-zone') && s.includes('średnia 4 tygodni') && s.includes('12 tygodni temu') && (s.match(/<circle/g) || []).length === 3 && s.includes('stroke="var(--green)"');
+});
+// Kolejne dni kalendarza także przy zmianie czasu (20.11.2026: o 23:09 w Polsce 25.10 trafiał do listy dwa razy, bo dni liczone co 24 h)
+tryc('daty: lastKeys podaje kolejne dni kalendarza bez powtórzeń i luk przez zmianę czasu (o 23:30 i 0:30)', () => {
+  const lk = vm.runInContext('lastKeys', sandbox), real = Date.now, prev = (k) => { const d = new Date(k + 'T12:00:00'); d.setDate(d.getDate() - 1); return dk0(d); },
+    dk0 = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  try { return [[23, 30], [0, 30]].every(([h, m]) => { const n = new Date(); n.setHours(h, m, 0, 0); Date.now = () => n.getTime(); const a = lk(400);
+    return a[0] === dk0(n) && a.every((k, i) => i === 0 || k === prev(a[i - 1])); }); } finally { Date.now = real; }
 });
 tryc('wiersze: wykres trendu talii i FFM z punktami i średnią 4 tygodni, bez pasa wahania; przy jednym pomiarze bez wykresu', () => {
   WP().reset(); const h = view('day', BASE({ lite: false, meas: { [dk(40)]: { waist: '88', ffm: '50' }, [dk(26)]: { waist: '87' }, [dk(12)]: { waist: '86', ffm: '50,6' } } }));

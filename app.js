@@ -139,7 +139,9 @@ const PLAN={1:['s1','o1','k1','p2'],2:['s2','o6','k4','p1'],3:['s3','o16','k2','
 const SLOT_T={sniadanie:'Śniadanie',obiad:'Obiad',kolacja:'Kolacja',przekaska:'Przekąska'};
 function slotNow(){const h=new Date().getHours();return h<11?'sniadanie':h<18?'obiad':'kolacja'}
 function targetKcal(){const R=rmr(),M=measuredTdee(),f=S.mode==='utrzymanie'?1:S.mode==='masa'?1.1:0.8;if(M)return Math.max(R,M.tdee*f);return Math.max(R,(R*1.3+trainNet())*f)}
-function lastKeys(n){const a=[];for(let i=0;i<n;i++)a.push(keyOf(new Date(Date.now()-i*864e5)));return a}
+// Klucz dnia i dni temu: dni kalendarza od dzisiejszego południa, nie co 24 h od teraz (przy zmianie czasu dzień się powtarzał albo znikał)
+function keyAgo(i){const d=new Date(Date.now());d.setHours(12,0,0,0);d.setDate(d.getDate()-i);return keyOf(d)}
+function lastKeys(n){const a=[];for(let i=0;i<n;i++)a.push(keyAgo(i));return a}
 function measuredTdee(){
   const ks=lastKeys(28).reverse(),W=[],I=[];
   ks.forEach((k,i)=>{const m=(S.meas||{})[k];if(m&&num(m.w)>0&&!measCp(m,'w'))W.push([i,num(m.w)]);const ms=(S.days[k]||[]).filter(e=>e.kind==='m');if(ms.length>=3)I.push(ms.reduce((a,e)=>a+e.k,0))});
@@ -374,7 +376,7 @@ const ACT_L={meal:l=>[l,'✓ Zjedzone · Cofnij','Zjem jeszcze raz'],train:['Dod
 function actOf(key){let a=ACTS[key];if(a&&a.live&&!a.live()){delete ACTS[key];a=null}const o=AB[key]||{L:['','',''],saved:false};
   return WPISY.actBtn({ms:a?(a.end?Infinity:Date.now()-a.at):null,saved:o.saved||!!a,grace:wpGrace(),idle:o.L[0],done:o.L[1],again:o.L[2]})}
 function actHtml(key,attr,L,saved,cls){AB[key]={L,saved:!!saved};const r=actOf(key);
-  return `<button class="btn act${cls||''}" ${attr} data-ab="${esc(key)}"><span class="act-l">${esc(r.label)}</span><span class="act-z" aria-hidden="true">${L.map(x=>`<i data-l="${esc(x)}"></i>`).join('')}</span></button>`}
+  return `<button class="btn ab${cls||''}" ${attr} data-ab="${esc(key)}"><span class="act-l">${esc(r.label)}</span><span class="act-z" aria-hidden="true">${L.map(x=>`<i data-l="${esc(x)}"></i>`).join('')}</span></button>`}
 // Po zapisie i cofnięciu: przerysowanie, przycisk wraca pod palec, napis ogłaszany razem z reakcją zwierzaka (PET.flush w render)
 // Kolejne dotknięcia tego samego przycisku bez przewinięcia przez osobę: miejsce z pierwszego dotknięcia (błąd zaokrąglenia się nie sumuje)
 let ACT_AY=null;
@@ -421,7 +423,7 @@ function eatenToday(){return day().filter(e=>e.kind==='m').reduce((a,e)=>a+e.k,0
 function walkPerMin(){return (3.5-1)*baseH()/60}
 function balanceFor(k){const e=S.days[k]||[],ms=e.filter(x=>x.kind==='m');if(!ms.length)return null;const net=e.filter(x=>x.kind==='t').reduce((a,x)=>a+x.net,0);const M=measuredTdee();return ms.reduce((a,x)=>a+x.k,0)-(M?M.tdee:rmr()*1.3+net)}
 function projHtml(){
-  const bs=[];for(let i=1;i<=7;i++){const b=balanceFor(keyOf(new Date(Date.now()-i*864e5)));if(b!=null)bs.push(b)}
+  const bs=[];for(let i=1;i<=7;i++){const b=balanceFor(keyAgo(i));if(b!=null)bs.push(b)}
   const goal=num(S.goal)||68,toLose=kg()-goal,M=measuredTdee(),planDef=(M?M.tdee:rmr()*1.3)-targetKcal();
   const line=(def,lab)=>{if(def<=0)return `<p>${lab}: bilans zerowy lub dodatni, masa ciała nie spada.</p>`;const w=def*7/7700;return `<p>${lab}: deficyt ok. ${fmt(def)} kcal dziennie, czyli ok. ${fmt1(w)} kg tygodniowo${toLose>0?`; ${fmt1(goal)} kg za ok. ${fmt(Math.ceil(toLose/w))} tyg.`:'.'}</p>`};
   let h='<h2>Dokąd prowadzą wybory</h2><div class="note">';
@@ -434,7 +436,7 @@ function projHtml(){
 }
 function logUrge(out){const k=todayKey();(S.urges[k]=S.urges[k]||[]).push({h:new Date().getHours(),trig:S.sosTrig,out})}
 function urgeStats(){
-  const all=[];for(let i=0;i<14;i++){(S.urges[keyOf(new Date(Date.now()-i*864e5))]||[]).forEach(u=>all.push(u))}
+  const all=[];for(let i=0;i<14;i++){(S.urges[keyAgo(i)]||[]).forEach(u=>all.push(u))}
   if(!all.length)return '<p class="small muted">Brak zapisanych ochot z ostatnich 14 dni.</p>';
   const ok=all.filter(u=>u.out!=='inne').length,cnt={},hr={};all.forEach(u=>{cnt[u.trig]=(cnt[u.trig]||0)+1;const b=Math.floor(u.h/2)*2;hr[b]=(hr[b]||0)+1});
   const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0],th=Object.entries(hr).sort((a,b)=>b[1]-a[1])[0];
@@ -650,7 +652,7 @@ function labDrop(e){S.labs=S.labs.filter(x=>x!==e&&x.id!==e.id);if(LAB_KEEP)LAB_
 // Pamięć daty i jednostki tylko tego dnia i tylko na zakładce Badania; po Cofnij wraca cały wpis (granica, na czczo, biotyna, cykl, kreatyna)
 const labFresh=()=>{if(LAB_KEEP&&LAB_KEEP.day!==todayKey())LAB_KEEP=null};
 function renderLabs(){
-  const sel=LABN[S.labSel]?S.labSel:'tsh',L=LABN[sel],inp='font:inherit;font-size:16px;padding:6px 8px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)';
+  const sel=LABN[S.labSel]?S.labSel:'tsh',L=LABN[sel],inp='font:inherit;font-size:16px;padding:6px 8px;min-height:44px;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)';
   let h='<p><button class="btn ghost" data-tab="health">Wróć</button></p>';
   const nc=nextControl();
   h+=nc?`<div class="note ${nc.overdue?'warn':''}">Ostatnie badania: ${fmtDate(nc.last)}. Następna kontrola według planu, co 3 miesiące: ${fmtDate(nc.n)}${nc.overdue?'; termin minął':''}.</div>`:'<div class="note">Brak wyników. Zacznij od kompletu: TSH, fT4, fT3, anty-TPO, glukoza i insulina na czczo, HbA1c, 25(OH)D, ferrytyna, magnez, wapń.</div>';
@@ -701,7 +703,7 @@ function toCanon(T,e){const v=num(e.val),u=String(e.unit||'').toLowerCase();for(
 // ---------- Dziś, jakość danych, przegląd tygodnia, wprowadzenie ----------
 // Tryb „raz dziennie”: jeden wieczorny wpis zamiast listy zadań na cały dzień
 function onceHtml(){const k=todayKey(),m=S.meas[k]||{},ms=day().filter(e=>e.kind==='m').length,tr=day().some(e=>e.kind==='t'),st=num(m.steps)>0;
-  const row=(ok,lab,val,btns,keep)=>`<div class="step${ok?' done':''}"><span class="box">${ok?'✓':''}</span><span class="lab">${lab}<small class="hint">${val}</small></span>${ok&&!keep?'':btns}</div>`;
+  const row=(ok,lab,val,btns,keep)=>`<div class="step${ok?' done':''}"><span class="box">${ok?'✓':''}</span><span class="lab">${lab}<small class="hint">${val}</small></span>${ok&&!keep?'':'<span class="sbtns">'+btns+'</span>'}</div>`;
   return '<h2>Wpis dnia</h2><div class="panel" style="padding:4px 16px">'
     +row(ms>0,'Posiłki',ms?ms+' zapisane':'Jak wyglądało dziś jedzenie?',actHtml('plan','data-dayplan="1"',ACT_L.plan,false,' small')+'<button class="btn small ghost" data-dayother="1">Inaczej</button>',!!ACTS.plan&&actOf('plan').st==='grace')
     +row(tr,'Trening',tr?'zapisany':'Tylko jeśli dziś był','<button class="btn small ghost" data-tab="train">Z zegarka</button>')
@@ -712,7 +714,7 @@ function firstDataDay(){const ks=Object.keys(S.days||{}).filter(k=>(S.days[k]||[
 function reliability(){const f=firstDataDay();if(!f)return null;const span=Math.max(1,Math.min(14,Math.round((Date.parse(todayKey())-Date.parse(f))/864e5)+1));let md=0,wd=0;lastKeys(span).forEach(k=>{if((S.days[k]||[]).filter(e=>e.kind==='m').length>=3)md++;if(num((S.meas[k]||{}).w)>0)wd++});return {span,md,wd,pct:Math.round(md/span*100)}}
 function relHtml(){const r=reliability();if(!r||r.span<7)return '';const M=measuredTdee(),G=dataGap(),low=r.pct<60;return `<details class="fold"${low?' open':''}><summary>Jakość danych: ${r.pct}% dni z pełnym zapisem</summary><div class="panel" style="padding:4px 16px 12px"><p>Ostatnie ${r.span} ${r.span===1?'dzień':'dni'}: pełny zapis posiłków (co najmniej 3) w ${r.md}, ważenie w ${r.wd}.</p>${low?'<p><b>Poniżej 60%.</b> Uprość: zapisuj z planu dnia przyciskiem „Zjem”, resztę szybkim wpisem.</p>':''}<p>${M?'Zapotrzebowanie liczone z Twoich danych: aktywne.':`Do zapotrzebowania z Twoich danych brakuje w ostatnich 28 dniach: ${Math.max(0,6-G.w)} ważeń (rozłożonych na co najmniej 14 dni) i ${Math.max(0,10-G.i)} dni z pełnym zapisem.`}</p><p class="small muted">Próg 60% to założenie planu, nie wynik badań.</p></div></details>`}
 function mondayOf(d){const x=new Date(d);x.setHours(12,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return keyOf(x)}
-function reviewKey(){const d=new Date();return d.getDay()===0?mondayOf(d):mondayOf(new Date(Date.now()-7*864e5))}
+function reviewKey(){const d=new Date();return d.getDay()===0?mondayOf(d):mondayOf(new Date(keyAgo(7)+'T12:00:00'))}
 function weekStats(mk){const base=Date.parse(mk+'T12:00:00'),ks=Array.from({length:7},(_,i)=>keyOf(new Date(base+i*864e5))),pk=Array.from({length:7},(_,i)=>keyOf(new Date(base+(i-7)*864e5)));const aw=a=>{const v=a.map(k=>num((S.meas[k]||{}).w)).filter(x=>x>0);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};let md=0,pts=0,ur=0,uok=0;ks.forEach(k=>{if((S.days[k]||[]).filter(e=>e.kind==='m').length>=3)md++;pts+=dayPts(k);(S.urges[k]||[]).forEach(u=>{ur++;if(u.out!=='inne')uok++})});return {ks,w:aw(ks),pw:aw(pk),md,pts,ur,uok}}
 function reviewPromptHtml(){const dw=new Date().getDay();if(![0,1,2].includes(dw)||(S.reviews||{})[reviewKey()])return '';return '<p><button class="btn" data-tab="review">Przegląd tygodnia, 2 minuty</button></p>'}
 function changeHtml(){const r=Object.entries(S.reviews||{}).sort((a,b)=>b[0].localeCompare(a[0]))[0];if(!r||!r[1].c||Date.now()-Date.parse(r[0]+'T12:00:00')>14*864e5)return '';return `<div class="note"><b>Twoja zmiana na ten tydzień:</b> ${esc(r[1].c)}</div>`}
@@ -749,7 +751,7 @@ function kChain(){const a=S.krok.ans,L=[];const bar={umiej:'nie wiesz, co i jak 
   if(a.ord==='2')L.push('zamawianie 4 i więcej razy w tygodniu');else if(a.ord==='1')L.push('zamawianie 2-3 razy w tygodniu');
   if(a.when!=='rzad')L.push('jedzenie poza planem '+{rano:'rano',pop:'po południu',wiecz:'wieczorem',roz:'o różnych porach'}[a.when]+({stres:' ze stresu',zmecz:' ze zmęczenia',nuda:' z nudy',glod:' z głodu'}[a.why]||''));
   return L}
-function kData(){let o=0,u=0;const t={};for(let i=0;i<14;i++){const k=keyOf(new Date(Date.now()-i*864e5));(S.days[k]||[]).forEach(e=>{if(e.ord)o++});(S.urges[k]||[]).forEach(x=>{u++;t[x.trig]=(t[x.trig]||0)+1})}
+function kData(){let o=0,u=0;const t={};for(let i=0;i<14;i++){const k=keyAgo(i);(S.days[k]||[]).forEach(e=>{if(e.ord)o++});(S.urges[k]||[]).forEach(x=>{u++;t[x.trig]=(t[x.trig]||0)+1})}
   const top=Object.entries(t).sort((a,b)=>b[1]-a[1])[0];return o||u?`Z Twoich zapisów z 14 dni: zamówienia ${o}, ochoty ${u}${top&&TRIGN[top[0]]?` (najczęściej: ${TRIGN[top[0]]})`:''}.`:'Brak zapisów z 14 dni, więc łańcuch wynika tylko z odpowiedzi.'}
 function krokCardHtml(){const k=S.krok;if(!k||!k.conf){const c=changeHtml(),t=!S.onb?'':!k?'Co mi utrudnia? 2 minuty':'Dokończ rozpoznanie',bt='<button class="btn ghost'+(c?' small':'')+'" data-tab="krok">'+t+'</button>';
   // Mniej ramek: zmiana tygodnia i rozpoznanie w jednym kafelku
@@ -1063,7 +1065,7 @@ const KNEE_EX={
   st:[['Przysiad do krzesła w zakresie bez bólu',['2 × 10','3 × 10','3 × 8 z plecakiem z wodą']],['Most biodrowy',['2 × 12','3 × 12','3 × 10 na jednej nodze']],['Wyprost kolana w siadzie z gumą',['2 × 12','3 × 12','3 × 10, mocniejsza guma']],['Uginanie kolana z gumą',['2 × 12','3 × 12','3 × 10, mocniejsza guma']],['Wspięcia na palce',['2 × 15','3 × 15','3 × 12 na jednej nodze']]]
 };
 function kneeWeek(){const s=S.knee.start;if(!s)return 0;return Math.max(1,Math.min(12,Math.floor((Date.parse(todayKey())-Date.parse(s))/(7*864e5))+1))}
-function kneeBannerHtml(){const K=S.knee;if(!K.start)return '';const dw=new Date().getDay(),t=todayKey(),done=K.sessions.some(x=>x.d===t),last=K.sessions.at(-1),y=keyOf(new Date(Date.now()-864e5));let h='';if(last&&last.d===y&&!K.morning[t])h+='<div class="note"><b>Kolano rano po wczorajszej sesji:</b><div class="chips" style="margin-top:8px">'+['lepiej','tak samo','gorzej'].map(v=>`<button class="chip" data-kmorn="${v}">${v}</button>`).join('')+'</div></div>';if(K.days.includes(dw)&&!done)h+='<p><button class="btn" data-tab="knee">Dziś sesja programu kolana</button></p>';return h}
+function kneeBannerHtml(){const K=S.knee;if(!K.start)return '';const dw=new Date().getDay(),t=todayKey(),done=K.sessions.some(x=>x.d===t),last=K.sessions.at(-1),y=keyAgo(1);let h='';if(last&&last.d===y&&!K.morning[t])h+='<div class="note"><b>Kolano rano po wczorajszej sesji:</b><div class="chips" style="margin-top:8px">'+['lepiej','tak samo','gorzej'].map(v=>`<button class="chip" data-kmorn="${v}">${v}</button>`).join('')+'</div></div>';if(K.days.includes(dw)&&!done)h+='<p><button class="btn" data-tab="knee">Dziś sesja programu kolana</button></p>';return h}
 function renderKnee(){
   const K=S.knee,wk=kneeWeek(),n=K.sessions.length,ph=wk<=4?0:wk<=8?1:2,today=todayKey(),done=K.sessions.find(x=>x.d===today);
   let h='<p><button class="btn ghost" data-tab="train">Wróć</button></p><div class="note warn">Program z badania dotyczył osób w wieku 35-60 lat ze zwyrodnieniowym uszkodzeniem łąkotki potwierdzonym rezonansem. Przed startem: diagnoza u ortopedy, a ćwiczenia zatwierdza fizjoterapeuta.</div>';
@@ -1138,7 +1140,7 @@ function renderMob(){
 }
 
 // ---------- Mój wpływ: decyzje i zmierzone efekty ----------
-function avgAgo(a,b,key){const v=[];for(let i=a;i<b;i++){const m=S.meas[keyOf(new Date(Date.now()-i*864e5))]||{};if(measCp(m,key||'w'))continue;const x=num(m[key||'w']);if(x>0)v.push(x)}return v.length?v.reduce((s,x)=>s+x,0)/v.length:null}
+function avgAgo(a,b,key){const v=[];for(let i=a;i<b;i++){const m=S.meas[keyAgo(i)]||{};if(measCp(m,key||'w'))continue;const x=num(m[key||'w']);if(x>0)v.push(x)}return v.length?v.reduce((s,x)=>s+x,0)/v.length:null}
 function ser(key,n){return lastKeys(n).reverse().map(k=>num((S.meas[k]||{})[key])).filter(v=>v>0)}
 function impactData(){const T=targetKcal(),pT=protTarget();let full=0,planDays=0,protDays=0,planned=0,extra=0,trainN=0,urAll=0,urOk=0;lastKeys(28).forEach(k=>{const e=S.days[k]||[],ms=e.filter(x=>x.kind==='m');if(ms.length>=3){full++;if(ms.reduce((a,x)=>a+x.k,0)<=T)planDays++;if(ms.reduce((a,x)=>a+(x.p||0),0)>=pT)protDays++}ms.forEach(x=>{if(x.id)planned++;else extra+=x.k});trainN+=e.filter(x=>x.kind==='t').length;(S.urges[k]||[]).forEach(u=>{urAll++;if(u.out!=='inne')urOk++})});return {full,planDays,protDays,planned,extra,trainN,urAll,urOk,pT}}
 function renderImpact(){
@@ -2404,7 +2406,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.labdel){undoable('Usunięto wynik badania');S.labs=S.labs.filter(e=>e.id!==d.labdel)}
   else if(d.labcopy){const t=LABS.map(x=>{const es=S.labs.filter(e=>e.test===x.id).sort((a,b)=>a.date.localeCompare(b.date));return es.length?x.n+': '+es.map(e=>fmtDate(e.date)+' '+e.val+' '+e.unit).join('; '):''}).filter(Boolean).join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
   else if(d.quick){const n=document.getElementById('q_n').value.trim(),k=num(document.getElementById('q_k').value);if(k<=0){toast('Wpisz liczbę kalorii');return}buzz();day().push({kind:'m',label:n||'Szybki wpis',k,p:0,f:0,c:0})}
-  else if(d.repeat){const y=(S.days[keyOf(new Date(Date.now()-864e5))]||[]).filter(e=>e.kind==='m');if(!y.length){toast('Wczoraj nie ma zapisanych posiłków');return}y.forEach(e=>day().push(Object.assign({},e)));PET.react('meal')}
+  else if(d.repeat){const y=(S.days[keyAgo(1)]||[]).filter(e=>e.kind==='m');if(!y.length){toast('Wczoraj nie ma zapisanych posiłków');return}y.forEach(e=>day().push(Object.assign({},e)));PET.react('meal')}
   else if(d.copy){const m=MEALS.find(x=>x.id===d.copy),x=macros(m,carbMult(),num(S.f.portion)||1),t=m.n+'\n'+x.items.map(i=>i.n+': '+Math.round(i.g/5)*5+' g').join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano składniki'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
   else if(d.hab){const k=todayKey();S.hab[k]=S.hab[k]||{};S.hab[k][d.hab]=!S.hab[k][d.hab];if(S.hab[k][d.hab])PET.react('habit',(HABITS.find(x=>x.id===d.hab)||{}).pts||0)}
   else if(d.share){const wp=weekPts(),t=`Mój tydzień w aplikacji Miara: ${wp} pkt, poziom ${level(wp)[1]}, seria ${streak()} dni. Robimy wspólne wyzwanie na przyszły tydzień?`;
