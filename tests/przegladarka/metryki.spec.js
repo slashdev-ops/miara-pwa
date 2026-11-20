@@ -5,7 +5,8 @@ const { test, expect } = require('@playwright/test');
 
 test.beforeEach(({}, info) => { test.skip(!/-jasny$/.test(info.project.name), 'szerokość i krój ustawia sam test'); });
 
-const FONTS = ['', '"Verdana","DejaVu Sans",sans-serif', '"Trebuchet MS","DejaVu Sans",sans-serif', 'Arial,"Liberation Sans",sans-serif'];
+// DejaVu Sans (CI na Linuksie) jest szerszy od Verdany: na Windows szersze znaki symuluje dodatkowy odstęp liter
+const FONTS = ['', '"Verdana","DejaVu Sans",sans-serif', '"Trebuchet MS","DejaVu Sans",sans-serif', 'Arial,"Liberation Sans",sans-serif', '"Verdana","DejaVu Sans",sans-serif;letter-spacing:.05em'];
 async function open(page, w, font) {
   const errors = [];
   page.on('pageerror', (e) => errors.push('strona: ' + e.message));

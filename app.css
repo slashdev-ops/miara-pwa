@@ -435,8 +435,10 @@ nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;he
 .entry.prow{display:block}
 .prow .ptop{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .prow .pname{display:block;text-align:left;margin:2px 0 8px}
-.prow .pbot{display:flex;align-items:center;justify-content:space-between;gap:12px}
+/* Szerszy krój pisma (np. DejaVu Sans): przycisk „Zjem” przechodzi pod wartości, po prawej, zamiast wychodzić poza ekran */
+.prow .pbot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
 .prow .pbot .btn,.prow .pbot .val{flex:none}
+.prow .pbot .btn{margin-left:auto}
 /* Zjem: krótkie podświetlenie wiersza po zapisie (ok. 1 s); przy ograniczonym ruchu bez animacji */
 .prow.ate{animation:ateflash 1s ease-out 1}
 @keyframes ateflash{from{background:var(--surface2)}to{background:transparent}}
