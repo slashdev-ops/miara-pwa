@@ -170,10 +170,12 @@ test('przytrzymanie + w wierszu z zapisem od razu (kroki w szybkim wpisie): podg
   const b = await plus.boundingBox();
   await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
   await page.mouse.down();
-  await page.waitForTimeout(700);
-  expect(await page.evaluate(() => (S.meas[todayKey()] || {}).steps)).toBeUndefined();
-  await expect(page.locator('#q_steps')).not.toHaveText(/^5\s000$/);
-  await page.waitForTimeout(1100);
+  // Zegary strony pod obciążeniem CI bywają wolniejsze: czekanie na widoczny podgląd (zmiana, potem siatka 500 po przyspieszeniu) zamiast stałych czasów
+  const preview = () => page.evaluate(() => +document.getElementById('q_steps').textContent.replace(/\D/g, ''));
+  await expect.poll(preview).not.toBe(5000);
+  expect(await page.evaluate(() => (S.meas[todayKey()] || {}).steps), 'w trakcie przytrzymania bez zapisu').toBeUndefined();
+  await expect.poll(async () => { const v = await preview(); return v - 5000 > 9 * 50 && v % 500 === 0; }, { timeout: 10000 }).toBe(true);
+  expect(await page.evaluate(() => (S.meas[todayKey()] || {}).steps), 'nadal bez zapisu przed puszczeniem').toBeUndefined();
   await page.mouse.up();
   await expect.poll(() => page.evaluate(() => (S.meas[todayKey()] || {}).steps)).toBeDefined();
   await page.waitForTimeout(300);
