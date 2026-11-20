@@ -60,6 +60,7 @@ var PET = (function () {
     const mood = Math.min(c.dayPts(k) / 50, 1) * 80 + (c.streak() >= 3 ? 20 : 0);
     const pen = 35 * przerwa;
     const meters = { food: clamp(food - pen), energy: clamp(energy - pen), mood: clamp(mood - pen) };
+    if (lite && !lf) Object.keys(meters).forEach((x) => { meters[x] = Math.max(meters[x], 60); }); // prosty widok przed pierwszym szybkim wpisem dnia: wskaźniki neutralne, nie niskie
     const milestone = milestones(c).find((id) => !(c.seen || []).includes(id)) || null;
     const active = Math.max(sinceKeys(c).filter((x) => c.dayPts(x) >= 30).length, (c.pet && c.pet.peak) || 0);
     const stage = active >= 30 ? 'adult' : active >= 7 ? 'young' : active >= 1 ? 'chick' : 'egg';
@@ -363,17 +364,44 @@ var PET = (function () {
   }
 
   // ---------- Ścieżka kamieni: kamień za zaliczony tydzień celu, 7 na jezioro, przeszkody to pogoda (nic nie przepada) ----------
-  function path(n, weather, name) {
-    const lake = n ? Math.floor((n - 1) / 7) + 1 : 1, pos = n ? ((n - 1) % 7) + 1 : 0;
+  // Styl postaci (rada/plany/2026-11-20-jezioro-brief.md): kamienie z gradientem z tokenów i konturem, postać gatunku na kamieniu,
+  // jezioro zależne od numeru (odcień wody i rośliny), wiatr pochyla trzcinę, mgła to półprzezroczysta warstwa. Ruch tylko w CSS (no-preference).
+  const LAKE = [['a', 'v0'], ['b', 'v1'], ['c', 'v2']];
+  function plants(v, wind) {
+    const tilt = (x, y) => (wind ? ` transform="rotate(16 ${x} ${y})"` : '');
+    const reed = (x, y, h) => `<g class="trzcina"${tilt(x, y)}><path d="M${x} ${y}v-${h}" fill="none" stroke="${v_('reed-ln')}" stroke-width="1.6" stroke-linecap="round"/><rect x="${x - 2}" y="${y - h - 2}" width="4" height="9" rx="2" fill="${v_('reed')}" stroke="${v_('reed-ln')}" stroke-width="1"/></g>`;
+    const rush = (x, y) => `<g class="sitowie"${tilt(x, y)}><path d="M${x} ${y}q-2 -14 -6 -22M${x} ${y}q1 -16 2 -26M${x} ${y}q3 -12 8 -18" fill="none" stroke="${v_('reed-ln')}" stroke-width="1.4" stroke-linecap="round"/></g>`;
+    const gold = (x, y) => `<g class="kaczeniec"><path d="M${x} ${y + 8}v-8" stroke="${v_('reed-ln')}" stroke-width="1.2"/><circle cx="${x}" cy="${y}" r="3.4" fill="${v_('gold')}" stroke="${v_('reed-ln')}" stroke-width=".8"/></g>`;
+    const pad = (x, y) => `<path class="lisc" d="M${x} ${y}m-8 0a8 4 0 1 0 16 0l-8 0z" fill="${v_('leaf')}" stroke="${v_('reed-ln')}" stroke-width="1"/>`;
+    if (v === 'v1') return pad(270, 100) + pad(296, 95) + `<g class="grzybien"><circle cx="296" cy="92" r="3.2" fill="${v_('lily')}" stroke="${v_('reed-ln')}" stroke-width=".8"/><circle cx="296" cy="92" r="1.2" fill="${v_('gold')}"/></g>`;
+    if (v === 'v2') return rush(258, 90) + rush(312, 92) + reed(304, 90, 20);
+    return reed(306, 92, 24) + reed(313, 94, 18) + gold(258, 84) + gold(266, 80);
+  }
+  const v_ = (n) => `var(--zw-${n})`;
+  function path(n, weather, name, kindIn, hop) {
+    const lake = n ? Math.floor((n - 1) / 7) + 1 : 1, pos = n ? ((n - 1) % 7) + 1 : 0, kind = kindOf(kindIn);
     const where = pos ? `${name} jest na ${pos}. kamieniu z 7` : `${name} stoi na brzegu`;
     const W = { wiatr: `${name} odpoczywa na kamieniu: dziś wiatr, droga poczeka.`, mgla: 'Mgła po krótkich nocach: idziemy wolniej, kamienie zostają.' };
-    let g = '';
+    const [col, v] = LAKE[(lake - 1) % 3], gs = 'zw' + (++gid), wind = weather === 'wiatr';
+    const soft = (id, x2, y2, st) => `<linearGradient id="${id}" x1="0" y1="0" x2="${x2}" y2="${y2}">${st}</linearGradient>`;
+    const defs = `<defs>${soft(gs + 's', 1, 0, `<stop offset="0" stop-color="${v_('lake-' + col)}" stop-opacity="0"/><stop offset=".3" stop-color="${v_('lake-' + col)}" stop-opacity="1"/><stop offset="1" stop-color="${v_('lake-' + col)}" stop-opacity="1"/>`)}${soft(gs + 'f', 0, 1, `<stop offset="0" stop-color="${v_('fog')}" stop-opacity="0"/><stop offset=".4" stop-color="${v_('fog')}" stop-opacity="1"/><stop offset="1" stop-color="${v_('fog')}" stop-opacity="1"/>`)}<radialGradient id="${gs}" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="${v_('stone-hi')}"/><stop offset=".55" stop-color="${v_('stone')}"/><stop offset="1" stop-color="${v_('stone-sh')}"/></radialGradient></defs>`;
+    let g = '', px = 16, py = 92;
     for (let i = 1; i <= 7; i++) {
-      const x = 14 + (i - 1) * 32, y = 44 + (i % 2 ? 0 : -10);
-      g += `<ellipse class="stone${i <= pos ? ' done' : ''}${i === pos ? ' now' : ''}" cx="${x}" cy="${y}" rx="12" ry="6"/>`;
-      if (i === pos) g += `<circle class="stonepet" cx="${x}" cy="${y - 12}" r="6"/>`;
+      const x = 48 + (i - 1) * 30, y = 100 + (i % 2 ? 0 : -6), done = i <= pos;
+      g += `<ellipse class="stone ${done ? 'done' : 'next'}${i === pos ? ' now' : ''}" cx="${x}" cy="${y}" rx="11" ry="6" fill="${done ? `url(#${gs})` : v_('stone-next')}" stroke="${v_('stone-ln')}" stroke-width="${done ? 2 : 1.4}"/>`;
+      if (i === pos) { px = x; py = y - 4; }
     }
-    return `<div class="panel stones"><svg viewBox="0 0 224 64" role="img" aria-label="${where}. Jezioro ${lake}.">${weather === 'mgla' ? '<rect class="fog" x="0" y="0" width="224" height="64"/>' : ''}<path class="water" d="M0 54 Q56 46 112 54 T224 54 V64 H0Z"/>${g}</svg>`
+    // Postać gatunku w skali na kamieniu (przy pogodzie odpoczywa: zamknięte oczy); figura bez własnej etykiety obrazka
+    const s = 0.42, [fd, fig] = figure(kind, weather === 'wiatr' || weather === 'mgla' ? 'tired' : 'ok', null);
+    const pet = `<g transform="translate(${(px - 60 * s).toFixed(1)} ${(py - 103 * s).toFixed(1)}) scale(${s})">${fd}<g class="stonepet pet-${kind}${hop ? ' hop' : ''}" data-stone="${pos}">${fig}</g></g>`;
+    const scene = `<path class="bank" d="M0 120V90Q14 82 30 90Q36 98 36 120Z" fill="${v_('bank')}" stroke="${v_('reed-ln')}" stroke-width="1.4"/>`
+      + `<path class="stream" d="M30 112Q140 102 252 106Q258 113 248 120H30Z" fill="url(#${gs}s)" opacity=".7"/>`
+      + `<ellipse class="lake lake-${v}" cx="284" cy="98" rx="36" ry="16" fill="${v_('lake-' + col)}" stroke="${v_('lake-ln')}" stroke-width="1.6"/>`
+      + `<path class="wave" d="M262 100q5 -3 10 0t10 0t10 0t10 0" fill="none" stroke="${v_('lake-hi')}" stroke-width="1.6" stroke-linecap="round"/>`
+      + plants(v, wind)
+      + (wind ? [[40, 62], [150, 50], [196, 60]].map(([x, y]) => `<path class="wind" d="M${x} ${y}q16 -6 32 0t30 0" fill="none" stroke="${v_('wind')}" stroke-width="2" stroke-linecap="round"/>`).join('') : '');
+    const fog = weather === 'mgla' ? `<rect class="fog" x="0" y="44" width="320" height="76" fill="url(#${gs}f)" opacity=".55"/>` : '';
+    return `<div class="panel stones"><svg viewBox="0 44 320 76" role="img" aria-label="${where}. Jezioro ${lake}.">${defs}${scene}${g}${pet}${fog}</svg>`
       + `<p><b>Jezioro ${lake}.</b> ${where}.</p><p class="small muted">${W[weather] || 'Następny kamień po zaliczonym tygodniu celu. Przerwa niczego nie zabiera.'}</p></div>`;
   }
 

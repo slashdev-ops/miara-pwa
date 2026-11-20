@@ -98,13 +98,15 @@ for (const scheme of ['light', 'dark']) {
   test(`reakcje Zdrowia ${scheme}: wpis FFM daje „Zanotowane”, zalecany obwód serduszka, „Boli mnie głowa” daje „Odpocznij dziś”`, async ({ page }) => {
     const errors = await healthOpen(page, { scheme });
     await page.evaluate(() => { S.tab = 'day'; OPEN_F.add('tanita'); OPEN_F.add('obwody'); render(); }); // pomiary ciała są w Moim dniu (Pomiary dnia)
-    await page.locator('#m_ffm').fill('52,4');
-    await page.locator('#m_ffm').blur();
+    await page.locator('#m_ffm').click(); // wiersz wartości (zadanie 5): dotknięcie otwiera wpis, Enter zapisuje
+    await page.keyboard.type('52,4');
+    await page.keyboard.press('Enter');
     await toDay(page);
     await expect(page.locator('#main .petcard .petfx')).toHaveText('Zanotowane');
     await shot(page, `react-zanotowane-${scheme}.png`);
-    await page.locator('#m_waist').fill('81');
-    await page.locator('#m_waist').blur();
+    await page.locator('#m_waist').click();
+    await page.keyboard.type('81');
+    await page.keyboard.press('Enter');
     await toDay(page);
     await expect(page.locator('#main .petcard .petfx.hearts')).toBeVisible();
     await expect(page.locator('#main .petcard .petfx.hearts')).toContainText('♥');
@@ -154,5 +156,52 @@ test('dymek „czeka na wpis” nie zachodzi na uszy kotka i kapibary', async ({
     }, [k, stage]);
     expect(hit, k + ' ' + stage).toEqual([]);
   }
+  expect(errors).toEqual([]);
+});
+
+// Jezioro w nowym stylu: postać gatunku na kamieniu, pogoda, bez poziomego przewijania, ruch tylko bez ograniczenia
+const lake = (page, kind, weather) => page.evaluate(([k, w]) => {
+  SHEET = false; S.lite = false; const t = todayKey(); S.pain = {}; S.meas = { ...(S.meas || {}) };
+  if (w === 'wiatr') S.pain[t] = { aura: false, med: false };
+  if (w === 'mgla') { S.meas[t] = { ...(S.meas[t] || {}), sleep: '5' }; S.meas[nAgo(1)] = { ...(S.meas[nAgo(1)] || {}), sleep: '5' }; } else { S.meas[t] = { ...(S.meas[t] || {}), sleep: '7,5' }; }
+  S.pet = { kind: k, name: '', since: '2026-10-01', peak: 40, stones: ['a', 'b', 'c'], pathSeen: 3 }; S.tab = 'pet'; render();
+  document.querySelector('#main .stones').scrollIntoView({ block: 'center' });
+}, [kind, weather]);
+for (const w of [320, 390]) for (const scheme of ['light', 'dark']) {
+  test(`jezioro ${w}px ${scheme}: postać każdego gatunku na 3. kamieniu, wiatr i mgła, bez poziomego przewijania`, async ({ page }) => {
+    const errors = await open(page, { w, scheme });
+    for (const k of Object.keys(KINDS)) {
+      await lake(page, k, '');
+      const st = page.locator('#main .stones');
+      await expect(st.locator('svg')).toHaveAttribute('aria-label', /jest na 3\. kamieniu z 7\. Jezioro 1\./);
+      await expect(st.locator(`.stonepet.pet-${k}`)).toHaveCount(1);
+      await expect(st.locator('.stone')).toHaveCount(7);
+      const bb = await st.locator(`.stonepet`).boundingBox();
+      expect(bb.height, k).toBeGreaterThan(20);
+      expect(await noHScroll(page), k).toBe(true);
+      if (w === 390 && SHOTS) await st.screenshot({ path: path.join(SHOTS, `jezioro-${k}-${scheme}.png`) });
+    }
+    for (const wt of ['wiatr', 'mgla']) {
+      await lake(page, 'kotek', wt);
+      const st = page.locator('#main .stones');
+      await expect(st.locator(wt === 'wiatr' ? '.wind' : '.fog').first()).toBeAttached();
+      await expect(st.locator('.stone')).toHaveCount(7);
+      expect(await noHScroll(page)).toBe(true);
+      if (w === 390 && SHOTS) await st.screenshot({ path: path.join(SHOTS, `jezioro-${wt}-${scheme}.png`) });
+    }
+    expect(errors).toEqual([]);
+  });
+}
+test('jezioro: fala i podskok tylko bez ograniczenia ruchu', async ({ page }) => {
+  let errors = await open(page);
+  const anim = (p) => p.evaluate(() => [...document.querySelectorAll('#main .stones, #main .stones *')].reduce((n, e) => n + e.getAnimations().length, 0));
+  await lake(page, 'gaska', '');
+  expect(await anim(page)).toBeGreaterThan(0);
+  await page.close();
+  const p2 = await page.context().newPage();
+  errors = await open(p2, { reduce: true });
+  await lake(p2, 'gaska', '');
+  await p2.evaluate(() => { S.pet.pathSeen = 0; render(); });
+  expect(await anim(p2)).toBe(0);
   expect(errors).toEqual([]);
 });

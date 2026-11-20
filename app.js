@@ -213,9 +213,9 @@ function wpSpec(r){const k=todayKey(),m=(S.meas||{})[k]||{},f=WP_F[r],today=wpVa
   const base={key:r,day:k,today,last,start,parse:t=>wpParse(r,t)};
   if(r==='w')return Object.assign(base,{id:'m_w',label:'Waga',step:.1,lim:LIM.w,grid:false,inputmode:'decimal',copy:false,pm:['0,1 kg mniej','0,1 kg więcej'],
     fmt:v=>WF.w(v)+' kg',fmtDelta:v=>WF.w(v)+' kg',editText:v=>WF.w(v),hintDefault:'wpisz dzisiejszą wagę',extra:wpWeightExtra});
-  if(r==='s')return Object.assign(base,{id:'m_sleep',label:'Sen',step:15,range:[180,720],lim:[0,LIM.sleep[1]*60],grid:true,inputmode:'decimal',pm:['Sen o 15 minut mniej','Sen o 15 minut więcej'],
+  if(r==='s')return Object.assign(base,{id:'m_sleep',label:'Sen',step:5,coarse:15,range:[180,720],lim:[0,LIM.sleep[1]*60],grid:true,inputmode:'decimal',pm:['Sen o 5 minut mniej','Sen o 5 minut więcej'],
     fmt:WF.sleep,fmtDelta:WF.dur,editText:v=>sleepFmt(v/60),hintDefault:'przesuń suwak albo dotknij liczby'});
-  return Object.assign(base,{id:'m_steps',label:'Kroki',step:500,range:[0,20000],lim:LIM.steps,grid:true,inputmode:'numeric',pm:['500 kroków mniej','500 kroków więcej'],
+  return Object.assign(base,{id:'m_steps',label:'Kroki',step:50,coarse:500,range:[0,20000],lim:LIM.steps,grid:true,inputmode:'numeric',pm:['50 kroków mniej','50 kroków więcej'],
     fmt:WF.k,editText:v=>String(Math.round(v)),hintDefault:'przesuń suwak albo dotknij liczby'})}
 function wpSummary(){const k=todayKey(),ks=WPISY.rowOrder(new Date().getHours()).filter(x=>wpRows().includes(x)),R=ks.map(wpSpec),done=R.filter(x=>x.today!=null);
   if(!done.length)return '<p>Nic jeszcze nie zapisano na dziś.</p>';
@@ -225,7 +225,7 @@ function wpSummary(){const k=todayKey(),ks=WPISY.rowOrder(new Date().getHours())
   return '<p><b>Zapisane na dziś:</b> '+done.map(x=>x.label+' '+x.fmt(x.today)).join(' · ')+'</p>'+(dxs.length?'<p>Zmiana: '+dxs.join(', ')+'.</p>':'')+(av.length?'<p>Średnio z 7 dni: '+av.join(', ')+'.</p>':'')}
 function wpCfg(){const rows=WPISY.rowOrder(new Date().getHours()).filter(x=>wpRows().includes(x)).map(wpSpec);return {scope:'wp',day:todayKey(),title:'Dziś',rows,api:WP_API}}
 // Zapis zatwierdzonych wierszy; meta.copied: wiersze skopiowane „Jak wczoraj” (pochodzenie w meas.cp, zmieniony wiersz przestaje być kopią)
-function wpCommit(vals,meta){const k=todayKey(),m=S.meas[k]=S.meas[k]||{},prev={cp:m.cp?m.cp.slice():undefined},cp=new Set(m.cp||[]);
+function wpCommit(vals,meta){buzz();const k=todayKey(),m=S.meas[k]=S.meas[k]||{},prev={cp:m.cp?m.cp.slice():undefined},cp=new Set(m.cp||[]);
   Object.keys(vals).forEach(r=>{const f=WP_F[r];prev[f]=m[f];m[f]=wpStore(r,vals[r]);if(((meta||{}).copied||[]).includes(r))cp.add(f);else cp.delete(f)});
   if(cp.size)m.cp=[...cp];else delete m.cp;save();render();return prev}
 function wpRestore(prev){const k=todayKey(),m=S.meas[k]=S.meas[k]||{};Object.keys(prev).forEach(f=>{if(prev[f]==null)delete m[f];else m[f]=prev[f]});save();render()}
@@ -234,11 +234,9 @@ function wpOnSaved(key,v){if(key==='w')PET.react('weigh');if(key==='s'&&v>=420)P
 function wpGrace(){return S.toastLen==='stay'?Infinity:Math.max(5000,toastMs('✓ Zapisane · Cofnij'))}
 const WP_API={commit:wpCommit,restore:wpRestore,onSaved:wpOnSaved,summary:()=>wpSummary(),grace:wpGrace,say:t=>{const sr=document.getElementById('sr');if(sr)sr.textContent=t}};
 function wpCardHtml(){return typeof WPISY!=='undefined'&&wpRows().length?WPISY.card(wpCfg()):''}
-function measF(k,m,lab,key,unit,mode,ph){return `<div class="field"><label for="m_${key}">${lab}</label>${stpWrap(lab,`meas.${k}.${key}`,`<input type="text" inputmode="${mode||'decimal'}" enterkeyhint="next" placeholder="${ph||lastMeas(key,k)}" id="m_${key}" data-k="meas.${k}.${key}" value="${esc(m[key]||'')}">`)}<span class="unit">${unit}</span></div>`}
 function measHtml(part){
   const k=todayKey(),m=S.meas[k]||(S.meas[k]={});
-  const f=(lab,key,unit,mode,ph)=>measF(k,m,lab,key,unit,mode,ph);
-  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, przed jedzeniem. Kroki i sen z zegarka.</p>'+wpCardHtml()+'<p><button class="btn ghost small" data-imppaste="1">Wklej ze Skrótu</button></p>';const top=h;h=cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+f('Talia','waist','cm')+f('Biodra','hip','cm')+f('Udo','thigh','cm')+field('Nadgarstek','frame.wrist',(S.frame||{}).wrist||'','cm')+field('Kostka','frame.ankle',(S.frame||{}).ankle||'','cm')+'<p class="small muted" style="padding:0 16px">Nadgarstek i kostka: mierz najwęższe miejsce, wystarczy raz. Potrzebne do oceny potencjału mięśniowego.</p></div></details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+f('Tłuszcz (BIA)','fat','%')+f('FFM (BIA)','ffm','kg')+f('ECW/TBW (BIA)','ecw','%')+f('BMR (BIA, kJ ÷ 4,184)','bmr','kcal','numeric')+'</div><p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). BMR z pomiaru BIA zastępuje wzór przez 90 dni, waga z pomiarów zastępuje wagę z ustawień.</p></details><details class="fold" data-fold="sprawnosc"'+(OPEN_F.has('sprawnosc')?' open':'')+'><summary>Sprawność, z zegarka</summary><div class="panel">'+f('VO2max (zegarek)','vo2','ml/kg/min')+f('Tętno spoczynkowe','hrRest','ud./min','numeric')+f('Tętno maksymalne (jeśli zmierzone)','hrMax','ud./min','numeric')+'</div><p class="small muted" style="padding:0 16px">VO2max wpisz z zegarka. Bez niego Miara oszacuje go z tętna spoczynkowego.</p></details>';
+  let h='<h2>Pomiary dnia</h2><p class="small muted">Waga rano, przed jedzeniem. Kroki i sen z zegarka.</p>'+wpCardHtml()+'<p><button class="btn ghost small" data-imppaste="1">Wklej ze Skrótu</button></p>';const top=h;h=cycHtml(k)+'<details class="fold" data-fold="obwody"'+(OPEN_F.has('obwody')?' open':'')+'><summary>Obwody, co 2 tygodnie</summary><div class="panel">'+rwHtml('ms',['waist','hip','thigh','wrist','ankle'])+RW_TIP+'<p class="small muted" style="padding:0 16px">Nadgarstek i kostka: mierz najwęższe miejsce, wystarczy raz. Potrzebne do oceny potencjału mięśniowego.</p></div>'+trendSpark('waist','Talia','cm','ms_tw')+'</details><details class="fold" data-fold="tanita"'+(OPEN_F.has('tanita')?' open':'')+'><summary>Skład ciała (BIA), raz na 4 tygodnie</summary><div class="panel">'+rwHtml('ms',['fat','ffm','ecw','bmr'])+RW_TIP+'</div>'+trendSpark('ffm','FFM','kg','ms_tf')+'<p class="small muted" style="padding:0 16px">Pomiar BIA najlepiej rano, na czczo, po toalecie, bez treningu dzień wcześniej (wiedza ogólna). BMR z pomiaru BIA zastępuje wzór przez 90 dni, waga z pomiarów zastępuje wagę z ustawień.</p></details><details class="fold" data-fold="sprawnosc"'+(OPEN_F.has('sprawnosc')?' open':'')+'><summary>Sprawność, z zegarka</summary><div class="panel">'+rwHtml('ms',['vo2','hrRest','hrMax'])+RW_TIP+'</div><p class="small muted" style="padding:0 16px">VO2max wpisz z zegarka. Bez niego Miara oszacuje go z tętna spoczynkowego.</p></details>';
   // Trendy z pomiarów: wartości skopiowane „Jak wczoraj” (meas.cp) się nie liczą (także waga, choć karta jej nie kopiuje)
   const ks=lastKeys(28).reverse(),val=(x,key)=>{const m=S.meas[x]||{};if(measCp(m,key))return null;const v=num(m[key]);return v>0?v:null};
   const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
@@ -364,11 +362,43 @@ function orderHtml(){const o=S.ord||{},dk=ordDish(),d=ORD[dk],q=String(ordQty())
     +'<div class="chips">'+d.opts.map(x=>{const [v,l]=Array.isArray(x)?x:[String(x),d.lab(x)];return `<button class="chip${v===q?' inc':''}" data-ordn="${v}" aria-pressed="${v===q}">${l}</button>`}).join('')+'</div>'
     +(d.alt?`<div class="chips"><button class="chip${o.alt?' inc':''}" data-ordalt="1" aria-pressed="${!!o.alt}">${d.alt.lab}</button></div>`:'')
     +'<p class="small" style="margin:8px 0 4px">Dodatki</p><div class="chips">'+ORD_ADD.map(([id,n])=>`<button class="chip${(o.add||{})[id]?' inc':''}" data-ordadd="${id}" aria-pressed="${!!(o.add||{})[id]}">${n}</button>`).join('')+'</div>'
-    +`<p><b>ok. ${fmt(t.k)} kcal (${fmt(t.k*0.7)}-${fmt(t.k*1.3)})</b>, białko ${fmt(t.p)} g</p><p class="ordtip">${d.tip}</p>${srcHtml([dk==='sushi'&&o.alt?d.alt.ref:d.ref,...ORD_ADD.filter(([id])=>(o.add||{})[id]).map(x=>x[4])])}<p><button class="btn" data-ordsave="1">Zapisz zamówione</button></p></div></div></details>`}
-// Zjem ze stanem (15.11.2026): danie w dzisiejszych wpisach pokazuje „✓ Zjedzone”; dotknięcie usuwa ostatni wpis z „Cofnij”
+    +`<p><b>ok. ${fmt(t.k)} kcal (${fmt(t.k*0.7)}-${fmt(t.k*1.3)})</b>, białko ${fmt(t.p)} g</p><p class="ordtip">${d.tip}</p>${srcHtml([dk==='sushi'&&o.alt?d.alt.ref:d.ref,...ORD_ADD.filter(([id])=>(o.add||{})[id]).map(x=>x[4])])}<p>${actHtml('ord','data-ordsave="1"',ACT_L.ord,false)}</p></div></div></details>`}
+// Przyciski, które reagują (20.11.2026, plan „Łatwość” pkt 6): Zjem, trening, wynik badania, zamówione i „Według planu”.
+// Stan z WPISY.actBtn, tego samego automatu co główny przycisk karty „Dziś”: zapis → „✓ … · Cofnij” przez wpGrace → „… jeszcze raz / kolejny”.
+// ACTS[klucz] = {at, end, undo, live}: czas zapisu, okno zakończone nowym zapisem innego przycisku (cofa się ostatni zapis), cofnięcie dokładnie
+// dodanego wpisu, test, czy wpis jeszcze jest (usunięty inaczej: bez okna). Ten sam przycisk (te same data-) we wszystkich stanach, więc actDone
+// oddaje go pod palec z fokusem (WCAG 3.2.2); miarka .act-z ze wszystkich napisów trzyma szerokość; napis przez #sr z reakcją zwierzaka (WCAG 4.1.3).
+const ACTS={},AB={},ACT_OK='✓ Zapisano · Cofnij';let ACT_T=0;
+const ACT_L={meal:l=>[l,'✓ Zjedzone · Cofnij','Zjem jeszcze raz'],train:['Dodaj do dnia',ACT_OK,'Dodaj kolejny'],watch:['Dodaj trening z zegarka',ACT_OK,'Dodaj kolejny'],
+  lab:['Zapisz wynik',ACT_OK,'Dodaj następny wynik'],ord:['Zapisz zamówione',ACT_OK,'Zapisz kolejne'],plan:['Według planu',ACT_OK,'✓ Plan zapisany']};
+function actOf(key){let a=ACTS[key];if(a&&a.live&&!a.live()){delete ACTS[key];a=null}const o=AB[key]||{L:['','',''],saved:false};
+  return WPISY.actBtn({ms:a?(a.end?Infinity:Date.now()-a.at):null,saved:o.saved||!!a,grace:wpGrace(),idle:o.L[0],done:o.L[1],again:o.L[2]})}
+function actHtml(key,attr,L,saved,cls){AB[key]={L,saved:!!saved};const r=actOf(key);
+  return `<button class="btn act${cls||''}" ${attr} data-ab="${esc(key)}"><span class="act-l">${esc(r.label)}</span><span class="act-z" aria-hidden="true">${L.map(x=>`<i data-l="${esc(x)}"></i>`).join('')}</span></button>`}
+// Po zapisie i cofnięciu: przerysowanie, przycisk wraca pod palec, napis ogłaszany razem z reakcją zwierzaka (PET.flush w render)
+// Kolejne dotknięcia tego samego przycisku bez przewinięcia przez osobę: miejsce z pierwszego dotknięcia (błąd zaokrąglenia się nie sumuje)
+let ACT_AY=null;
+// Krótka wibracja po zapisie, tam gdzie urządzenie ją obsługuje; niezależna od ograniczenia ruchu (to nie ruch na ekranie), wyłączana w Ustawieniach
+function buzz(){if(S.vibr===false)return;try{if(typeof navigator!=='undefined'&&typeof navigator.vibrate==='function')navigator.vibrate(15)}catch(_){}}
+function actSay(key,at){const sr=document.getElementById('sr');if(sr)sr.textContent='';if(ACT_AY&&ACT_AY.key===key&&ACT_AY.sy===at.sy&&at.y!=null)at.y=ACT_AY.y;save();render();actDone(at);if(at.y!=null&&typeof window.scrollY==='number')ACT_AY={key,y:at.y,sy:window.scrollY};const p=sr?String(sr.textContent||''):'',l=AB[key]?actOf(key).label:'';if(sr&&l)sr.textContent=l+(p?'. '+p:'')}
+function actSave(key,undo,live,at){buzz();Object.values(ACTS).forEach(a=>{a.end=true});ACTS[key]={at:Date.now(),end:false,undo,live};clearTimeout(ACT_T);const g=wpGrace();if(isFinite(g))ACT_T=setTimeout(actPaint,g+20);actSay(key,at)}
+function actUndo(key,at){const a=ACTS[key];delete ACTS[key];clearTimeout(ACT_T);if(a&&a.undo)a.undo();actSay(key,at)}
+// Po oknie „Cofnij”: napis zmieniany w miejscu, bez przerysowania; ogłaszany, gdy przycisk ma fokus
+function actPaint(){if(typeof document.querySelectorAll!=='function')return;const sr=document.getElementById('sr');
+  document.querySelectorAll('#main button[data-ab]').forEach(b=>{const k=b.dataset.ab;if(!AB[k])return;const l=actOf(k).label,el=b.querySelector('.act-l');if(el&&el.textContent!==l){el.textContent=l;if(sr&&document.activeElement===b)sr.textContent=l}if(k.indexOf('meal:')===0){const n=document.querySelector('#main [data-eatn="'+k.slice(5)+'"]');if(n)n.hidden=actOf(k).st!=='again'}})}
+// Usuwany dokładnie dodany wpis: ten sam obiekt, a gdy dane wczytano od nowa (synchronizacja), ostatni identyczny
+function actIdx(arr,e){if(!Array.isArray(arr))return -1;let i=arr.indexOf(e);if(i<0){const s=JSON.stringify(e);for(let j=arr.length-1;j>=0;j--)if(JSON.stringify(arr[j])===s){i=j;break}}return i}
+function actDrop(arr,e){const i=actIdx(arr,e);if(i>=0)arr.splice(i,1)}
+// Wpisy es dodane do dnia k: cofnięcie usuwa je (more: np. oddanie wpisanej wartości), okno trwa, dopóki choć jeden jest w dniu
+function actDay(key,k,es,at,more){actSave(key,()=>{es.forEach(e=>actDrop(S.days[k],e));if(more)more()},()=>es.some(e=>actIdx(S.days[k],e)>=0),at)}
+// Komunikat tylko z następnym krokiem pierwszych kroków; poza nimi potwierdzeniem jest sam przycisk
+function actGuide(t){const g=guideAct();if(g)toast(guideToast(t),g)}
 let ATE_FLASH='';
 const mealEaten=id=>day().some(e=>e.kind==='m'&&e.id===id);
-function eatBtn(id,lab,cls){return mealEaten(id)?`<button class="btn ghost eaten" data-uneat="${esc(id)}" aria-pressed="true">✓ Zjedzone</button>`:`<button class="btn${cls||''}" data-addmeal="${esc(id)}">${lab}</button>`}
+function eatBtn(id,lab,cls){return actHtml('meal:'+id,`data-addmeal="${esc(id)}"`,ACT_L.meal(lab),mealEaten(id),cls)}
+// Pod „Zjem jeszcze raz”: ile razy danie jest dziś zapisane i „Usuń” ostatniego wpisu (przez undoable, 8 s „Cofnij”); w oknie „Cofnij” ukryte, bo cofa przycisk
+const eatN=id=>day().filter(e=>e.kind==='m'&&e.id===id).length;
+function eatLine(id){const n=eatN(id);if(!n)return '';return `<p class="small muted eatn" data-eatn="${esc(id)}"${actOf('meal:'+id).st==='again'?'':' hidden'}>Zjedzone dziś: ${n}× · <button class="linkbtn small" data-eatrm="${esc(id)}">Usuń</button></p>`}
 function planHtml(){
   const ids=planIds(),d=day(),cm=carbMult(),por=num(S.f.portion)||1,ms=d.filter(e=>e.kind==='m'),logged=new Set(ms.map(e=>e.id));
   const left=targetKcal()-ms.reduce((a,e)=>a+e.k,0),now=slotNow();
@@ -376,8 +406,8 @@ function planHtml(){
   let h=`<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>`+repeatHtml()+`<h2 id="plan">Dziś według planu</h2><p class="small muted">${[0,6].includes(new Date().getDay())?'Weekend: jedno większe danie, jest więcej czasu.':'Dzień roboczy: obiad do 20 min.'} ${left>=0?`Zostało ok. ${fmt(left)} kcal na dziś.`:`Cel dnia przekroczony o ok. ${fmt(-left)} kcal.`}</p><div class="panel">`;
   const pk=ids.map(id=>macros(MEALS.find(m=>m.id===id),cm,por)),tk=pk.reduce((a,b)=>a+b.k,0),tp=pk.reduce((a,b)=>a+b.p,0),tf=pk.reduce((a,b)=>a+b.fib,0),tfNA=pk.some(b=>b.fibNA),room=targetKcal()-tk;
   const base=planFor(new Date().getDay()),orig=PLAN[new Date().getDay()];
-  h+=ids.map((id,i)=>{const m=MEALS.find(x=>x.id===id),x=macros(m,cm,por),done=logged.has(id);return `<div class="entry prow${ATE_FLASH===id?' ate':''}"><div class="ptop"><span class="small muted">${SLOT_T[m.t]}${m.t==='kolacja'&&postTrain()?', po treningu':''}${id!==base[i]?', Twój wybór':base[i]!==orig[i]?', dopasowane do IO':''}${rec&&rec.id===id?', polecane teraz':''}</span>${done?'':`<button class="linkbtn small" data-swap="${i}" style="color:var(--muted);font-size:13px">zamień na inne</button>`}</div><button class="linkbtn pname" data-recipe="${id}">${m.n}</button><div class="pbot">${macLine(x)}${eatBtn(id,'Zjem')}</div></div>`}).join('');
-  h+=`<p class="small muted" style="padding:0 16px 12px">Plan dnia: ${fmt(tk)} kcal, ${fmt(tp)} g białka i ${tfNA?'co najmniej ':''}${fmt(tf)} g błonnika (EFSA: 25 g dziennie) przy celu ${fmt(targetKcal())} kcal.${room>=50?` Zostaje ok. ${fmt(room)} kcal na dodatek albo większą porcję.`:''}</p>`;
+  h+=ids.map((id,i)=>{const m=MEALS.find(x=>x.id===id),x=macros(m,cm,por),done=logged.has(id);return `<div class="entry prow${ATE_FLASH===id?' ate':''}"><div class="ptop"><span class="small muted">${SLOT_T[m.t]}${m.t==='kolacja'&&postTrain()?', po treningu':''}${id!==base[i]?', Twój wybór':base[i]!==orig[i]?', dopasowane do IO':''}${rec&&rec.id===id?', polecane teraz':''}</span>${done?'':`<button class="linkbtn small" data-swap="${i}" style="color:var(--muted);font-size:13px">zamień na inne</button>`}</div><button class="linkbtn pname" data-recipe="${id}">${m.n}</button><div class="pbot">${macLine(x)}${eatBtn(id,'Zjem')}</div>${eatLine(id)}</div>`}).join('');
+  h+=`<p class="small muted" style="padding:0 16px 12px">Plan dnia: ${fmt(tk)} kcal, ${fmt(tp)} g białka i ${tfNA?'co najmniej ':''}${fmt(tf)} g błonnika (EFSA: 25 g dziennie) przy celu ${fmt(targetKcal())} kcal${tgtApx()?' ('+tgtApx()+')':''}.${room>=50?` Zostaje ok. ${fmt(room)} kcal na dodatek albo większą porcję.`:''}</p>`;
   return h+'</div>';
 }
 
@@ -428,7 +458,9 @@ function renderSos(){
 }
 
 // ---------- Zdrowie: suplementy, badania, białko za złotówkę ----------
-const PROT=[['twarog','Twaróg półtłusty',18],['jajka','Jajka (10 szt. to ok. 600 g)',12.5],['skyr','Skyr naturalny',11],['kurczak','Pierś z kurczaka',23],['soczewica','Soczewica czerwona (sucha)',24],['tunczyk','Tuńczyk w sosie własnym (masa po odsączeniu)',25],['tofu','Tofu naturalne',12],['wpc','Odżywka białkowa WPC (sprawdź etykietę)',75]];
+// Przykładowa cena regularna: [cena zł, waga opakowania g, opis opakowania]; tylko podpowiedź i placeholder, nigdy dane osoby
+const PROT_EX_DATE='listopad 2026';
+const PROT=[['twarog','Twaróg półtłusty',18,[5.88,250,'250 g']],['jajka','Jajka (10 szt. to ok. 600 g)',12.5,[16.99,600,'10 szt. (ok. 600 g)']],['skyr','Skyr naturalny',11,[6.89,300,'300 g']],['kurczak','Pierś z kurczaka',23,[44.88,1000,'1 kg']],['soczewica','Soczewica czerwona (sucha)',24],['tunczyk','Tuńczyk w sosie własnym (masa po odsączeniu)',25],['tofu','Tofu naturalne',12,[5.49,180,'180 g']],['wpc','Odżywka białkowa WPC (sprawdź etykietę)',75]];
 // Suplementy (brief 17.11.2026): pora, odstępy i górne dawki tylko z cytatów otwartych 15-17.11.2026 (NHS, MedlinePlus, ChPL z rejestru
 // leków, EFSA, NCCIH, ISSN, Quest Diagnostics). Pozycje po substancji, bez nazw handlowych. Gdy źródła brak: SUPP_BRAK.
 // pora: rano (Rano na czczo), posilek (Z posiłkiem), miedzy (Między posiłkami), brak (Pora bez zalecenia), tylko według słów źródła.
@@ -548,7 +580,7 @@ function suppPlanHtml(){const take=(Array.isArray(S.suppTake)?S.suppTake:[]).fil
     if(ps.length>1)h+=fold('suppall_'+k,`Pokaż wszystkie odstępy (${ps.length-1})`,ps.slice(1).map(p=>`<p class="small sp">${line(p)}</p>`).join(''));
     h+='</section>'});
   return h+'</div><!--/suppplan-->'}
-function protCost(){return PROT.map(([id,n,pp])=>{const r=S.prices[id]||{},p=num(r.p),g=num(r.g);return {id,n,pp,c:p>0&&g>0?p/(g*pp/100)*20:null}})}
+function protCost(){return PROT.map(([id,n,pp,ex])=>{const r=S.prices[id]||{},p=num(r.p),g=num(r.g);return {id,n,pp,ex,c:p>0&&g>0?p/(g*pp/100)*20:null}})}
 function renderHealth(){
   let h=(profSet()?healthPlanHtml()+sygCardHtml()+profHtml():profHtml()+healthPlanHtml()+sygCardHtml())+fold('tygodnie','12 tygodni: czego się spodziewać',weeksHtml())+'<p><button class="btn" data-tab="labs">Moje badania</button></p><div class="note"><b>Co realne.</b> Przy chorobach przewlekłych, np. tarczycy, celem jest dobra kontrola wyników i objawów, nie wyleczenie. Insulinooporność często wyraźnie się poprawia przy spadku masy ciała, ruchu i śnie. Niedobory wyrównuje się według wyników badań.</div>';
   h+=cardsHtml('health')+visitHtml();
@@ -573,7 +605,7 @@ function renderHealth(){
   h+='<h2>Start w 3 krokach</h2><div class="panel"><div class="entry"><span class="txt"><b>1. Badania i lekarz.</b> Zakres ustal z lekarzem, np. TSH, fT4, fT3, anty-TPO, glukoza i insulina na czczo, HbA1c, 25(OH)D, ferrytyna, magnez, wapń.</span></div><div class="entry"><span class="txt"><b>2. Witamina D3</b> według wytycznych. Pozostałe suplementy dopiero po wynikach.</span></div><div class="entry"><span class="txt"><b>3. Białko z jedzenia</b> według planu. Kreatyna 3-5 g dziennie, jeśli trenujesz siłowo.</span></div></div>';
   h+=fold('suple','Suplementy ('+SUPP.length+')',suppPlanHtml()+SUPP.map(suppCard).join(''));
   h+='<h2 id="sylwetka">Sylwetka i sprawność</h2>'+potHtml()+fitHtml();
-  h+='<h2 id="bialko">Białko za złotówkę</h2>'+whyP('bialko')+'<p class="small muted">Wpisz cenę z półki lub paragonu i wagę opakowania. Wynik to koszt 20 g białka. Ceny zapisują się w telefonie.</p><div class="panel">'+protCost().map(r=>`<div class="field" style="flex-wrap:wrap"><label style="flex:1 1 100%">${r.n}</label><input type="text" inputmode="decimal" enterkeyhint="next" id="f_prices.${r.id}.p" data-k="prices.${r.id}.p" value="${esc(S.prices[r.id].p)}" placeholder="cena" aria-label="Cena: ${r.n}"><span class="unit">zł</span><input type="text" inputmode="numeric" enterkeyhint="next" id="f_prices.${r.id}.g" data-k="prices.${r.id}.g" value="${esc(S.prices[r.id].g)}" aria-label="Waga opakowania: ${r.n}"><span class="unit">g</span></div>`).join('')+'</div>';
+  h+='<h2 id="bialko">Białko za złotówkę</h2>'+whyP('bialko')+'<p class="small muted">Wpisz cenę z półki lub paragonu i wagę opakowania. Wynik to koszt 20 g białka. Ceny zapisują się w telefonie.</p><div class="panel">'+protCost().map(r=>{const d=DEF.prices[r.id]||{},fm=x=>String(x).replace('.',','),ph='cena';return `<div class="field prot"><label for="f_prices.${r.id}.p">${r.n}</label>${r.ex?`<span class="small muted hint">np. ${fm(r.ex[0].toFixed(2))} zł za ${r.ex[2]} (${PROT_EX_DATE})</span>`:''}<span class="pair"><input type="text" inputmode="decimal" enterkeyhint="next" id="f_prices.${r.id}.p" data-k="prices.${r.id}.p" value="${esc(S.prices[r.id].p)}" placeholder="${ph}" aria-label="Cena: ${r.n}"><span class="unit">zł</span></span><span class="pair"><input type="text" inputmode="numeric" enterkeyhint="next" id="f_prices.${r.id}.g" data-k="prices.${r.id}.g" value="${esc(S.prices[r.id].g)}" aria-label="Waga opakowania: ${r.n}"><span class="unit">g</span></span></div>`}).join('')+'</div><p class="small muted">Przykładowe ceny regularne ze sklepu internetowego dużej sieci, '+PROT_EX_DATE+'. Wpisz cenę ze swojego sklepu.</p>';
   const ranked=protCost().filter(r=>r.c!=null).sort((a,b)=>a.c-b.c);
   if(ranked.length)h+='<h2>Ranking</h2><div class="panel">'+ranked.map((r,i)=>`<div class="entry"><span class="txt">${i+1}. ${r.n}</span><span class="val">${r.c.toFixed(2).replace('.',',')} zł za 20 g</span></div>`).join('')+'</div>';
   h+='<h2>Źródła</h2><ol class="src"><li><a href="https://pubmed.ncbi.nlm.nih.gov/36771403/" target="_blank" rel="noopener">Wytyczne witaminy D w Polsce, aktualizacja 2023</a></li><li><a href="https://pubmed.ncbi.nlm.nih.gov/37221858/" target="_blank" rel="noopener">Stanowisko ISSN: żywienie kobiet aktywnych fizycznie (kreatyna)</a></li><li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4501114/" target="_blank" rel="noopener">Stanowisko ISSN: beta-alanina</a></li><li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10951571" target="_blank" rel="noopener">Metaanaliza: selen w Hashimoto (Thyroid 2024)</a></li></ol><p class="small muted">Aplikacja nie zastępuje lekarza. Suplementy omawiaj z lekarzem, zwłaszcza przy zmianie leków.</p>';
@@ -612,6 +644,11 @@ function egfrCat(v){return v>=90?'powyżej 90: wynik prawidłowy (stadium 1 tylk
 function nonHdlRows(){const out=[],hd=S.labs.filter(e=>e.test==='hdl');S.labs.filter(e=>e.test==='chol').forEach(x=>{const mm=/mmol/i.test(x.unit||''),y=hd.find(z=>z.date===x.date&&/mmol/i.test(z.unit||'')===mm);if(y&&num(x.val)>0&&num(y.val)>0)out.push({date:x.date,v:num(x.val)-num(y.val),mmol:mm})});return out.sort((a,b)=>b.date.localeCompare(a.date))}
 function homaRows(){const out=[],ins=S.labs.filter(e=>e.test==='ins');S.labs.filter(e=>e.test==='glu').forEach(x=>{const y=ins.find(z=>z.date===x.date);if(y)out.push({date:x.date,v:num(x.val)*num(y.val)/(/mmol/i.test(x.unit)?22.5:405)})});return out.sort((a,b)=>b.date.localeCompare(a.date))}
 function nextControl(){const ds=S.labs.map(e=>e.date).filter(Boolean).sort();if(!ds.length)return null;const last=ds.at(-1),n=new Date(Date.parse(last)+90*864e5).toISOString().slice(0,10);return {last,n,overdue:n<todayKey()}}
+// „Dodaj następny wynik” (20.11.2026): data pobrania i jednostka zostają z poprzedniego wpisu (ten sam wydruk); po cofnięciu wraca wpisana wartość
+let LAB_KEEP=null;
+function labDrop(e){S.labs=S.labs.filter(x=>x!==e&&x.id!==e.id);if(LAB_KEEP)LAB_KEEP.back=true}
+// Pamięć daty i jednostki tylko tego dnia i tylko na zakładce Badania; po Cofnij wraca cały wpis (granica, na czczo, biotyna, cykl, kreatyna)
+const labFresh=()=>{if(LAB_KEEP&&LAB_KEEP.day!==todayKey())LAB_KEEP=null};
 function renderLabs(){
   const sel=LABN[S.labSel]?S.labSel:'tsh',L=LABN[sel],inp='font:inherit;font-size:16px;padding:6px 8px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)';
   let h='<p><button class="btn ghost" data-tab="health">Wróć</button></p>';
@@ -619,15 +656,16 @@ function renderLabs(){
   h+=nc?`<div class="note ${nc.overdue?'warn':''}">Ostatnie badania: ${fmtDate(nc.last)}. Następna kontrola według planu, co 3 miesiące: ${fmtDate(nc.n)}${nc.overdue?'; termin minął':''}.</div>`:'<div class="note">Brak wyników. Zacznij od kompletu: TSH, fT4, fT3, anty-TPO, glukoza i insulina na czczo, HbA1c, 25(OH)D, ferrytyna, magnez, wapń.</div>';
   h+='<h2>Dodaj wynik</h2><div class="panel">';
   h+=`<div class="field"><label for="l_test">Badanie</label><select id="l_test" data-labsel="1" style="${inp};max-width:210px">${LABS.map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${x.n}</option>`).join('')}</select></div>`;
-  h+=`<div class="field"><label for="l_date">Data pobrania</label><input type="date" id="l_date" value="${todayKey()}" style="${inp}"></div>`;
-  h+='<div class="field"><label for="l_val">Wynik</label><input type="text" inputmode="decimal" enterkeyhint="next" id="l_val"><span class="unit"></span></div>';
-  h+=`<div class="field"><label for="l_unit">Jednostka z wydruku</label><input type="text" id="l_unit" value="${esc(L.u)}"><span class="unit"></span></div>`;
-  h+='<div class="field"><label for="l_lo">Dolna granica normy z wydruku (opcjonalnie)</label><input type="text" inputmode="decimal" enterkeyhint="next" id="l_lo"><span class="unit"></span></div>';
-  h+='<div class="field"><label for="l_fast">Na czczo</label><input type="checkbox" class="switch" id="l_fast"></div>';
-  if(L.thy)h+='<div class="field"><label for="l_bio">Biotyna odstawiona co najmniej 2-3 dni</label><input type="checkbox" class="switch" id="l_bio"></div>';
-  if(S.sex==='K')h+='<div class="field"><label for="l_cyc">Tydzień cyklu lub przerwa w tabletkach</label><input type="text" id="l_cyc" placeholder="np. 2"><span class="unit"></span></div>';
-  if(sel==='kreat')h+='<div class="field"><label for="l_cr">Przyjmuję kreatynę</label><input type="checkbox" class="switch" id="l_cr"></div>';
-  h+='</div><p><button class="btn" data-labsave="1">Zapisz wynik</button></p>';
+  labFresh();const lk=LAB_KEEP,lu=lk&&lk.test===sel?lk.unit:L.u,bk=lk&&lk.back&&lk.test===sel?lk:null,lv=bk?bk.raw:'',fb=bk&&bk.f||{};if(lk)lk.back=false;
+  h+=`<div class="field"><label for="l_date">Data pobrania</label><input type="date" id="l_date" value="${esc(lk?lk.date:todayKey())}" style="${inp}"></div>`;
+  h+=`<div class="field"><label for="l_val">Wynik</label><input type="text" inputmode="decimal" enterkeyhint="next" id="l_val"${lv?` value="${esc(lv)}"`:''}><span class="unit"></span></div>`;
+  h+=`<div class="field"><label for="l_unit">Jednostka z wydruku</label><input type="text" id="l_unit" value="${esc(lu)}"><span class="unit"></span></div>`;
+  h+='<div class="field"><label for="l_lo">Dolna granica normy z wydruku (opcjonalnie)</label><input type="text" inputmode="decimal" enterkeyhint="next" id="l_lo"'+(fb.lo?` value="${esc(fb.lo)}"`:'')+'><span class="unit"></span></div>';
+  h+='<div class="field"><label for="l_fast">Na czczo</label><input type="checkbox" class="switch" id="l_fast"'+(fb.fast?' checked':'')+'></div>';
+  if(L.thy)h+='<div class="field"><label for="l_bio">Biotyna odstawiona co najmniej 2-3 dni</label><input type="checkbox" class="switch" id="l_bio"'+(fb.bio?' checked':'')+'></div>';
+  if(S.sex==='K')h+='<div class="field"><label for="l_cyc">Tydzień cyklu lub przerwa w tabletkach</label><input type="text" id="l_cyc" placeholder="np. 2"'+(fb.cyc?` value="${esc(fb.cyc)}"`:'')+'><span class="unit"></span></div>';
+  if(sel==='kreat')h+='<div class="field"><label for="l_cr">Przyjmuję kreatynę</label><input type="checkbox" class="switch" id="l_cr"'+(fb.cr?' checked':'')+'></div>';
+  h+='</div><p>'+actHtml('lab','data-labsave="1"',ACT_L.lab,false)+'</p>';
   h+=L.tg?`<p class="small"><b>Zakres docelowy:</b> ${tgTxt(L.tg)}. Źródło: ${L.tg.src}.</p>`:'<p class="small muted">Dla tego badania nie ma jednego zakresu docelowego: wynik zależy od metody laboratorium. Aplikacja pokaże trend, ocenę zostaw lekarzowi.</p>';
   if(L.note)h+=`<p class="small muted">${L.note}</p>`+srcHtml(L.src);
   const tested=LABS.filter(x=>S.labs.some(e=>e.test===x.id));
@@ -663,9 +701,9 @@ function toCanon(T,e){const v=num(e.val),u=String(e.unit||'').toLowerCase();for(
 // ---------- Dziś, jakość danych, przegląd tygodnia, wprowadzenie ----------
 // Tryb „raz dziennie”: jeden wieczorny wpis zamiast listy zadań na cały dzień
 function onceHtml(){const k=todayKey(),m=S.meas[k]||{},ms=day().filter(e=>e.kind==='m').length,tr=day().some(e=>e.kind==='t'),st=num(m.steps)>0;
-  const row=(ok,lab,val,btns)=>`<div class="step${ok?' done':''}"><span class="box">${ok?'✓':''}</span><span class="lab">${lab}<small class="hint">${val}</small></span>${ok?'':btns}</div>`;
+  const row=(ok,lab,val,btns,keep)=>`<div class="step${ok?' done':''}"><span class="box">${ok?'✓':''}</span><span class="lab">${lab}<small class="hint">${val}</small></span>${ok&&!keep?'':btns}</div>`;
   return '<h2>Wpis dnia</h2><div class="panel" style="padding:4px 16px">'
-    +row(ms>0,'Posiłki',ms?ms+' zapisane':'Jak wyglądało dziś jedzenie?','<button class="btn small" data-dayplan="1">Według planu</button><button class="btn small ghost" data-dayother="1">Inaczej</button>')
+    +row(ms>0,'Posiłki',ms?ms+' zapisane':'Jak wyglądało dziś jedzenie?',actHtml('plan','data-dayplan="1"',ACT_L.plan,false,' small')+'<button class="btn small ghost" data-dayother="1">Inaczej</button>',!!ACTS.plan&&actOf('plan').st==='grace')
     +row(tr,'Trening',tr?'zapisany':'Tylko jeśli dziś był','<button class="btn small ghost" data-tab="train">Z zegarka</button>')
     +row(st,'Kroki',st?fmt(num(m.steps))+' kroków':'Liczba z telefonu','<button class="btn small ghost" data-goto="m_steps">Wpisz</button>')+'</div>'
     +(ms>0&&(tr||st)?'<div class="note">✓ Dzień zapisany. Do jutra wieczorem.</div><p class="nextbar"><button class="btn" data-tab="pet">Zobacz zwierzaka</button></p>':'')}
@@ -813,12 +851,14 @@ function isApp(){try{return navigator.standalone===true||(typeof matchMedia==='f
 function ekranHtml(inner){
   if(isApp())return (inner?'':'<h2 id="ekran">Na ekranie głównym</h2>')+'<p class="small">Miara jest na ekranie głównym i otwierasz ją z ikony. Dane zostają w tym telefonie.</p>';
   const and=String(navigator.userAgent||'').includes('Android');
-  const ios='<p><b>iPhone</b> (Safari)</p><ol class="steps"><li>Otwórz tę stronę w Safari.</li><li>Stuknij w przycisk menu strony (…), a potem w Udostępnij. Przy układzie kart Na dole lub Na górze od razu stuknij w przycisk udostępniania.</li><li>Przewiń listę w dół i stuknij w „Do ekranu głównego”. Jeśli jej nie ma, na dole listy stuknij w „Edytuj czynności” i dodaj „Do ekranu głównego”.</li><li>Wybierz „Otwórz jako aplikację www”, jeśli widzisz tę opcję, i stuknij w „Dodaj”.</li></ol>';
-  const an='<p><b>Android</b> (Chrome)</p><ol class="steps"><li>Otwórz tę stronę w Chrome.</li><li>Na prawo od paska adresu stuknij w Więcej (⋮), potem w „Zainstaluj i utwórz skrót”, a potem w „Zainstaluj”.</li><li>Postępuj zgodnie z instrukcjami na ekranie.</li></ol>';
-  return (inner?'':'<h2 id="ekran">Na ekran główny</h2>')+'<p class="small">Z ikony Miara otwiera się jak aplikacja i działa bez internetu. Otwieraj ją zawsze z ikony: ikona i przeglądarka mogą mieć osobne dane.</p>'+(and?an+ios:ios+an)+'<p class="small muted">Źródła: <a href="https://support.apple.com/pl-pl/guide/iphone/iph42ab2f3a7/ios" target="_blank" rel="noopener">Podręcznik użytkownika iPhone’a</a>, <a href="https://support.google.com/chrome/answer/9658361?hl=pl&amp;co=GENIE.Platform%3DAndroid" target="_blank" rel="noopener">Pomoc Google Chrome</a>. Masz już dane w przeglądarce? Przenieś je plikiem kopii (Ustawienia, Kopia danych).</p>';
+  // Kroki każdego telefonu w zwiniętej sekcji ze źródłem (plan „Łatwość”, zadanie 7); we wprowadzeniu sekcja tego telefonu otwarta
+  const ef=(id,t,body,own)=>`<details class="fold" data-fold="ekran_${id}"${(inner&&own)||OPEN_F.has('ekran_'+id)?' open':''}><summary>${t}</summary><div class="panel" style="padding:4px 16px 12px">${body}</div></details>`;
+  const ios=ef('ios','iPhone (Safari)','<ol class="steps"><li>Otwórz tę stronę w Safari.</li><li>Stuknij w przycisk menu strony (…), a potem w Udostępnij. Przy układzie kart Na dole lub Na górze od razu stuknij w przycisk udostępniania.</li><li>Przewiń listę w dół i stuknij w „Do ekranu głównego”. Jeśli jej nie ma, na dole listy stuknij w „Edytuj czynności” i dodaj „Do ekranu głównego”.</li><li>Wybierz „Otwórz jako aplikację www”, jeśli widzisz tę opcję, i stuknij w „Dodaj”.</li></ol><p class="srcl">Źródło: <a href="https://support.apple.com/pl-pl/guide/iphone/iph42ab2f3a7/ios" target="_blank" rel="noopener">Podręcznik użytkownika iPhone’a</a></p>',!and);
+  const an=ef('and','Android (Chrome)','<ol class="steps"><li>Otwórz tę stronę w Chrome.</li><li>Na prawo od paska adresu stuknij w Więcej (⋮), potem w „Zainstaluj i utwórz skrót”, a potem w „Zainstaluj”.</li><li>Postępuj zgodnie z instrukcjami na ekranie.</li></ol><p class="srcl">Źródło: <a href="https://support.google.com/chrome/answer/9658361?hl=pl&amp;co=GENIE.Platform%3DAndroid" target="_blank" rel="noopener">Pomoc Google Chrome</a></p>',and);
+  return (inner?'':'<h2 id="ekran">Na ekran główny</h2>')+'<p class="small">Z ikony Miara otwiera się jak aplikacja i działa bez internetu. Otwieraj ją zawsze z ikony: ikona i przeglądarka mogą mieć osobne dane.</p>'+(and?an+ios:ios+an)+'<p class="small muted">Masz już dane w przeglądarce? Przenieś je plikiem kopii (Ustawienia, Kopia danych).</p>';
 }
 function renderIntro(){
-  let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p>'+(S.lite?'<p><button class="btn" data-introdone="1">Zacznij od szybkiego wpisu</button></p>':'')+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex','','Płeć')+'<div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalHint()+goalPctHtml()+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
+  let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p>'+(S.lite?'<p><button class="btn" data-introdone="1">Zacznij od szybkiego wpisu</button></p>':'')+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex','','Płeć')+'<div class="panel">'+rwHtml('pf',['kg','cm','age','goal'])+RW_TIP+'</div>'+goalHint()+goalPctHtml()+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
   if(!isApp())h+=fold('ekranintro','Jak dodać Miarę do ekranu głównego',ekranHtml(true));
   if(!S.lite)h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
   document.getElementById('main').innerHTML=h;
@@ -848,7 +888,7 @@ function cycHtml(k){if(S.sex!=='K')return '';const c=(S.meas[k]||{}).cyc||'';ret
 // Wiersze z zapisem od razu (wpisy.js, runda 2): kroki w szybkim wpisie i skale 0-10; zapis w dotychczasowym formacie danych
 function qSet(act,v,meta){const k=todayKey();v=Math.round(+v);if(!isFinite(v))return;
   // Kroki: kopia ostatniej wartości (dotknięcie suwaka) ze znacznikiem meas.cp; prawdziwa wartość go zdejmuje
-  if(act==='steps'){const m=S.meas[k]=S.meas[k]||{},wf=liteFull(k),cp=new Set(m.cp||[]);m.steps=String(Math.max(0,Math.min(LIM.steps[1],v)));if(meta&&meta.copied)cp.add('steps');else cp.delete('steps');if(cp.size)m.cp=[...cp];else delete m.cp;if(!wf&&liteFull(k)){PET.react('weigh');toast('Dzień zapisany')}return}
+  if(act==='steps'){const m=S.meas[k]=S.meas[k]||{},wf=liteFull(k),cp=new Set(m.cp||[]);m.steps=String(Math.max(0,Math.min(LIM.steps[1],v)));if(meta&&meta.copied)cp.add('steps');else cp.delete('steps');if(cp.size)m.cp=[...cp];else delete m.cp;if(!wf&&liteFull(k)){PET.react('weigh');liteCollapse(k,true)}return}
   v=Math.max(0,Math.min(10,v));
   if(act==='leg:b'||act==='leg:c'){S.legs=S.legs||{};S.legs[k]=S.legs[k]||{};const pv=S.legs[k][act.slice(4)];S.legs[k][act.slice(4)]=v;petHealth(act,v,pv)}
   else if(act==='gutb'){S.gut=S.gut||{};const g=S.gut[k]=S.gut[k]||{},pv=g.b;g.b=v;petHealth('gutb',v,pv)}
@@ -859,8 +899,63 @@ function qSpec(o){return Object.assign({day:todayKey(),edit:false,grid:true,step
   put:(v,meta)=>qSet(o.act,v,meta),start:o.today!=null?{v:o.today,src:'today'}:o.last?{v:o.last.v,src:'last'}:{v:o.def||0,src:'default'}},o)}
 function scaleHtml(act,label,today,last,hi){return WPISY.rows('q',todayKey(),[qSpec({key:act.replace(':',''),act,label,today:today==null?null:+today,last:last==null?null:{v:+last},ends:['0 brak','10 '+(hi||'najgorszy')]})])}
 function stepsRowHtml(m,k){const ts=String(m.steps==null?'':m.steps).trim(),l=wpLast('steps',k);
-  return WPISY.rows('q',k,[qSpec({key:'steps',act:'steps',label:'Kroki',today:ts!==''?Math.round(num(ts)):null,last:l,def:5000,edit:true,step:500,range:[0,20000],lim:LIM.steps,inputmode:'numeric',fmt:WF.k,vt:v=>WF.k(v)+' kroków',
-    lastLab:x=>x.date,hintLast:'jak ostatnio?',copyTap:true,hintDefault:'przesuń suwak albo dotknij liczby',parse:t=>wpParse('k',t),editText:v=>String(Math.round(v)),pm:['500 kroków mniej','500 kroków więcej']})])}
+  return WPISY.rows('q',k,[qSpec({key:'steps',act:'steps',label:'Kroki',today:ts!==''?Math.round(num(ts)):null,last:l,def:5000,edit:true,step:50,coarse:500,range:[0,20000],lim:LIM.steps,inputmode:'numeric',fmt:WF.k,vt:v=>WF.k(v)+' kroków',
+    lastLab:x=>x.date,hintLast:'jak ostatnio?',copyTap:true,hintDefault:'przesuń suwak albo dotknij liczby',parse:t=>wpParse('k',t),editText:v=>String(Math.round(v)),pm:['50 kroków mniej','50 kroków więcej']})])}
+// Wiersze wartości poza kartą „Dziś” (zadanie 5, 20.11.2026): Trening, obwody, skład ciała, sprawność i profil jako wiersze wpisy.js (ten sam komponent).
+// Zapis od razu (save:'immediate') do tej samej ścieżki danych co dawne pole: format stpFmt, wpis przez checkNum i zakresy LIM, reakcje Zdrowia jak po polu.
+// Trening: wiersze to wartości formularza (S.tr), nie pomiary; trening dodaje dopiero przycisk, więc wiersz nie potrzebuje osobnego zatwierdzenia.
+// Start: dzisiejsza (zapisana) wartość, inaczej ostatnia wyszarzona z datą, inaczej typowa wyszarzona; wyszarzona trafia do danych dopiero po zmianie albo potwierdzeniu.
+const RW_DEF={waist:[80,92],hip:[100,100],thigh:[55,55],wrist:[15.5,17.5],ankle:[21,23],fat:[30,20],ffm:[46,62],ecw:[39,39],vo2:[33,40],hrRest:[65,65]};
+function rwNum(st){return v=>numStep(v,st,true)}
+function rwSpec(o){const st=o.step,nf=rwNum(st),u=o.unit,raw=stpVal(o.path),stT=nf(st);
+  const today=o.today!==undefined?o.today:raw!=null&&String(raw).trim()!==''&&num(raw)>0?num(raw):null,last=o.last||null;
+  const start=today!=null?{v:today,src:'today'}:last?{v:last.v,src:'last'}:{v:o.def,src:'default'};
+  return Object.assign({key:o.key,id:o.id,day:todayKey(),label:o.label,today,last,start,step:st,coarse:o.coarse,range:o.range,lim:o.lim||LIM[o.path.split('.').pop()],grid:st>=.5,edit:true,copy:false,enterNext:true,
+    inputmode:st<1?'decimal':'numeric',fmt:v=>nf(v)+' '+u,editText:v=>st<1?nf(v):String(Math.round(v)),lastLab:l=>l.date,hintLast:'',hintDefault:'',
+    pm:[o.label+' o '+stT+' '+u+' mniej',o.label+' o '+stT+' '+u+' więcej'],
+    parse:t=>{const c=checkNum(o.path,String(t==null?'':t));if(c.err)return {err:c.err+'.'};if(c.s==='')return {err:'Wpisz liczbę.'};return {v:num(c.s)}},
+    put:v=>rwPut(o,v),announce:v=>rwSay(o,v)},o.x||{})}
+function rwPut(o,v){const a=o.path.split('.'),prev=stpVal(o.path);if(a[0]==='meas')S.meas[a[1]]=S.meas[a[1]]||{};if(a[0]==='frame')S.frame=S.frame||{};
+  const s=stpFmt(v,o.step);setPath(o.path,s);if(START_K.includes(o.path))(S.touched=S.touched||{})[o.path]=true;if(o.after)o.after(s,prev);
+  const sr=document.getElementById('sr');if(sr)sr.textContent=''}
+// Nowa wartość dla czytnika ekranu (WCAG 4.1.3) po przerysowaniu, razem z reakcją zwierzaka, jeśli ją ogłoszono (PET.flush w render)
+function rwSay(o,v){const sr=document.getElementById('sr'),p=sr?String(sr.textContent||''):'';return o.label+': '+rwNum(o.step)(v)+' '+o.unit+(p?'. '+p:'')}
+// Reakcja Zdrowia i mięśnie jak po wyjściu z dawnego pola (petHealth z poprzednią wartością, muscleToast po FFM i wzroście)
+const rwHealth=path=>(s,prev)=>{petHealth(path,s,prev==null?'':String(prev));if(/\.ffm$/.test(path))muscleToast()};
+function lastWatch(){const ks=Object.keys(S.days||{}).sort().reverse();for(const k of ks){const e=(S.days[k]||[]).filter(x=>x&&x.kind==='t'&&x.src==='zegarek').at(-1);if(e&&num(e.gross)>0)return {min:num(e.min),gross:num(e.gross),date:fmtDate(k)}}return null}
+function trRows(){const t=S.tr||{},w=lastWatch(),one=(key,id,label,unit,step,o)=>rwSpec(Object.assign({key,id,label,unit,step,path:'tr.'+key},o));
+  return [one('min','f_tr.min','Czas treningu','min',1,{coarse:5,range:[5,180],today:num(t.min)>0?num(t.min):null,def:STP0.min,x:{vt:v=>v+' minut'}}),
+    one('wmin','f_tr.wmin','Czas z zegarka','min',5,{last:w&&w.min>0?{v:w.min,date:w.date}:null,def:STP0.wmin,x:{confirmMsg:v=>'Wpisano jak ostatnio: '+v+' min'}}),
+    one('wk','f_tr.wk','Kalorie z zegarka','kcal',10,{last:w?{v:w.gross,date:w.date}:null,def:STP0.wk,x:{confirmMsg:v=>'Wpisano jak ostatnio: '+WF.k(v)+' kcal'}}),
+    // Bieżnia i spinning: wartości formularza szacunku (nachylenie 0 to wartość, nie brak)
+    one('speed','f_tr.speed','Prędkość','km/h',.5,{today:num(t.speed)>0?num(t.speed):null,def:STP0.speed}),
+    one('grade','f_tr.grade','Nachylenie','%',.5,{today:String(t.grade==null?'':t.grade).trim()!==''?num(t.grade):null,def:STP0.grade}),
+    one('watts','f_tr.watts','Średnia moc','W',5,{today:num(t.watts)>0?num(t.watts):null,def:STP0.watts})]}
+function msRows(){const k=todayKey(),m=(S.meas||{})[k]||{},sx=S.sex==='M'?1:0,F=S.frame||{},val=x=>{const t=String(x==null?'':x).trim();return t!==''&&num(t)>0?num(t):null};
+  const ms=(key,label,unit,step,o)=>{const l=lastMeasK(key,k),lv=l&&num(l[1])>0?{v:num(l[1]),date:fmtDate(l[0]),y:l[0]===nAgo(1)}:null,path='meas.'+k+'.'+key;
+    return rwSpec(Object.assign({key,id:'m_'+key,label,unit,step,path,today:val(m[key]),last:lv,def:(RW_DEF[key]||[])[sx],after:rwHealth(path)},o||{}))};
+  const fr=(key,label)=>rwSpec({key,id:'f_frame.'+key,label,unit:'cm',step:.5,path:'frame.'+key,today:val(F[key]),last:null,def:RW_DEF[key][sx],after:rwHealth('frame.'+key)});
+  return [ms('waist','Talia','cm',.5),ms('hip','Biodra','cm',.5),ms('thigh','Udo','cm',.5),fr('wrist','Nadgarstek'),fr('ankle','Kostka'),
+    ms('fat','Tłuszcz (BIA)','%',.1),ms('ffm','FFM (BIA)','kg',.1),ms('ecw','ECW/TBW (BIA)','%',.1),ms('bmr','BMR (BIA, kJ ÷ 4,184)','kcal',10,{def:Math.round(rmr()/10)*10}),
+    ms('vo2','VO2max (zegarek)','ml/kg/min',1),ms('hrRest','Tętno spoczynkowe','ud./min',1),ms('hrMax','Tętno maksymalne (jeśli zmierzone)','ud./min',1,{def:isStart('age')?180:Math.round(208-0.7*num(S.age))})]}
+// Profil: ustawienia, nie pomiar dnia. Wartość startowa (isStart) wyszarzona z podpisem „wartość startowa”; zmiana albo wpis bez zmiany ustawia S.touched
+const PF_U={kg:'kg',goal:'kg',cm:'cm',age:'lat'};
+// Pusta wartość z dawnych danych (np. S.kg '') nie jest pokazywana jako 0: wyszarzona wartość startowa jak przy nieustawionej
+function pfRows(){const b=START[S.sex]||START.K,fb={kg:b.kg,cm:b.cm,age:b.age,goal:Math.round((num(S.kg)||b.kg)*0.95*2)/2},one=(key,label,step,range,coarse)=>{const v=num(S[key]),ok=v>0;
+    return rwSpec({key,id:'f_'+key,label,unit:PF_U[key],step,range,coarse,path:key,today:isStart(key)||!ok?null:v,def:ok?v:fb[key],
+    after:key==='cm'?()=>muscleToast():null,x:{subStart:'wartość startowa',greyLab:''}})};
+  return [one('kg','Waga',.1),one('cm','Wzrost',1,[140,210],5),one('age','Wiek',1,[16,90],5),one('goal','Waga docelowa',.5)]}
+function rowSpecs(g){return g==='tr'?trRows():g==='ms'?msRows():g==='pf'?pfRows():[]}
+const rwHtml=(g,keys)=>{const R=rowSpecs(g);return WPISY.rows(g,todayKey(),keys.map(k=>R.find(x=>x.key===k)),'wp-f')};
+// Jeden podpis na ramkę zamiast podpowiedzi w każdym wierszu
+const RW_TIP='<p class="small muted wp-pc">Dotknij liczby, aby ją wpisać.</p>';
+// Trend talii i FFM: punkty pomiarów i średnia 4 tygodni, bez pasa wahania (brak sprawdzonego źródła o zwykłym wahaniu tych pomiarów, zasada „badania tylko z linków”)
+// Wykres serii z opisem dla czytnika: „<tytuł>: n pomiarów, od X do Y <jednostka><dalej>.”
+function sparkSvg(cls,id,head,ok,word,u,f,tail,vals,band,o){const n=ok.length,lab=`${head}: ${n} ${n<5?word[0]:word[1]}, od ${f(Math.min(...ok))} do ${f(Math.max(...ok))} ${u}${tail}`;
+  return `<svg class="${cls}"${id?` id="${id}"`:''} viewBox="0 0 320 84" role="img" aria-label="${lab}">${typeof WPISY!=='undefined'?WPISY.spark(vals,band,o):''}</svg>`}
+function trendSpark(key,lab,u,id){const vals=lastKeys(84).reverse().map(x=>{const m=S.meas[x]||{},v=num(m[key]);return measCp(m,key)||!(v>0)?null:v}),ok=vals.filter(v=>v!=null),n=ok.length;
+  if(n<2)return '';const r=vals.slice(-28).filter(v=>v!=null),av=r.length?r.reduce((s,x)=>s+x,0)/r.length:null;
+  return `<p class="small muted wp-tl">${lab} z 12 tygodni: punkty to pomiary, zielona linia to średnia 4 tygodni.</p>`+sparkSvg('wp-spark wp-trend',id,lab+' z 12 tygodni',ok,['pomiary','pomiarów'],u,fmt1,`, ostatni ${fmt1(ok[n-1])} ${u}${av!=null?`, średnia 4 tygodni ${fmt1(av)} ${u}`:''}.`,vals,null,{win:28,avgLab:'średnia 4 tygodni',fromLab:'12 tygodni temu',lastPt:true})}
 function legHtml(){
   if(S.sex!=='K'||!S.lip)return '';
   const L=S.legs||{},ks=Object.keys(L).filter(k=>L[k].b!=null&&L[k].c!=null).sort(),last=ks.at(-1),k=todayKey(),cur=L[k]||{};
@@ -958,7 +1053,7 @@ function renderRecipe(){
   if(cm!==1||por!==1)h+=`<p class="small muted">Porcja przeliczona: węglowodany ×${fmt1(cm)}, wielkość ×${fmt1(por)}.</p>`;
   h+='<h3 class="rh">Przygotowanie</h3><ol class="steps">'+steps.map(s=>`<li>${s}</li>`).join('')+'</ol>';
   h+=tipsHtml(m,x);
-  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz w odstępie od leku, bo może zmniejszać jego wchłanianie (opisy przypadków, wytyczne ATA 2014).</p>':''}${planIds().includes(m.id)?(mealEaten(m.id)?'':'<p class="small muted">W planie na dziś. Wieczorem „Według planu” zapisze to danie.</p>'):`<p><button class="btn" data-cook="${m.id}">Gotuję to dziś</button></p>`}<p>${eatBtn(m.id,'Zjem, zapisz',planIds().includes(m.id)?'':' ghost')}</p><p><button class="btn ghost" data-copy="${m.id}">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
+  h+=`<p class="small muted">${leftTxt(x.k)}</p>${m.ing.some(i=>i[0]==='tofu')?'<p class="small muted">Jeśli przyjmujesz lewotyroksynę: soję jedz w odstępie od leku, bo może zmniejszać jego wchłanianie (opisy przypadków, wytyczne ATA 2014).</p>':''}${planIds().includes(m.id)?(mealEaten(m.id)?'':'<p class="small muted">W planie na dziś. Wieczorem „Według planu” zapisze to danie.</p>'):`<p><button class="btn" data-cook="${m.id}">Gotuję to dziś</button></p>`}<p>${eatBtn(m.id,'Zjem, zapisz',planIds().includes(m.id)?'':' ghost')}</p>${eatLine(m.id)}<p><button class="btn ghost" data-copy="${m.id}">Kopiuj składniki</button></p><p class="small muted">Gramatury produktów suchych przed ugotowaniem. Miary domowe są przybliżone: łyżka oleju ok. 10 g, kromka chleba ok. 40 g, jajko ok. 60 g.</p></div>`;
   document.getElementById('main').innerHTML=h;
 }
 
@@ -991,10 +1086,10 @@ function renderKnee(){
 // ---------- Rutyna mobilności (decyzja 11.11.2026): opisy z NHS i CSP, częstotliwość z ACSM 2011 i NHS ----------
 // Tekst ćwiczeń to opis własnymi słowami stron źródłowych; dawka tylko tam, gdzie źródło ją podaje
 const MOB=[
-  {id:'m_mied',part:'hip',n:'Pochylenie miednicy',src:'csp',dose:'powoli, bez bólu (źródło nie podaje liczby powtórzeń)',how:'Leżąc na plecach z ugiętymi kolanami napnij dół brzucha i dno miednicy, przechyl miednicę, spłaszczając plecy, i powoli wróć. Potem lekko wygnij plecy w drugą stronę i wróć do środka. Zatrzymaj się na chwilę w pozycji środkowej.'},
-  {id:'m_kol',part:'hip',n:'Kolano do klatki',src:'csp',dose:'powoli, bez bólu (źródło nie podaje liczby powtórzeń)',how:'Leżąc na plecach, stopy na podłodze, przyciągnij jedno kolano do klatki, trzymając dłonie pod udem. Wróć i powtórz tą samą nogą, potem drugą.'},
+  {id:'m_mied',part:'hip',n:'Pochylenie miednicy',src:'csp',dose:'powoli, bez bólu',how:'Leżąc na plecach z ugiętymi kolanami napnij dół brzucha i dno miednicy, przechyl miednicę, spłaszczając plecy, i powoli wróć. Potem lekko wygnij plecy w drugą stronę i wróć do środka. Zatrzymaj się na chwilę w pozycji środkowej.'},
+  {id:'m_kol',part:'hip',n:'Kolano do klatki',src:'csp',dose:'powoli, bez bólu',how:'Leżąc na plecach, stopy na podłodze, przyciągnij jedno kolano do klatki, trzymając dłonie pod udem. Wróć i powtórz tą samą nogą, potem drugą.'},
   {id:'m_udo',part:'hip',n:'Rozciąganie przodu uda na boku',src:'csp',dose:'łącznie ok. 60 s na nogę (ACSM)',how:'Leżąc na boku, dolna noga ugięta z przodu, złap kostkę górnej nogi i przyciągnij piętę do pośladka, aż poczujesz rozciąganie z przodu uda. Kolano trzymaj nisko; możesz użyć ręcznika na kostce.'},
-  {id:'m_pieta',part:'hip',n:'Wysuwanie pięty',src:'csp',dose:'powoli, bez bólu (źródło nie podaje liczby powtórzeń)',how:'Leżąc na plecach z ugiętymi kolanami napnij dno miednicy i mięśnie brzucha, oddychaj spokojnie i wysuń jedną stopę, aż noga się wyprostuje. Wróć powoli, potem druga noga. Plecy nie zmieniają ułożenia.'},
+  {id:'m_pieta',part:'hip',n:'Wysuwanie pięty',src:'csp',dose:'powoli, bez bólu',how:'Leżąc na plecach z ugiętymi kolanami napnij dno miednicy i mięśnie brzucha, oddychaj spokojnie i wysuń jedną stopę, aż noga się wyprostuje. Wróć powoli, potem druga noga. Plecy nie zmieniają ułożenia.'},
   {id:'m_wstan',part:'str',n:'Wstawanie z krzesła',src:'nhsstr',dose:'5 powtórzeń; im wolniej, tym lepiej',how:'Usiądź na brzegu stabilnego krzesła, stopy na szerokość bioder, lekko pochyl się do przodu. Wstań siłą nóg, nie rąk, i powoli usiądź.'},
   {id:'m_przys',part:'str',n:'Mini przysiad',src:'nhsstr',dose:'5 razy',how:'Trzymając oparcie krzesła, stopy na szerokość bioder, ugnij kolana na tyle, na ile wygodnie, plecy proste. Wstając, napnij pośladki.'},
   {id:'m_bok',part:'str',n:'Unoszenie nogi w bok',src:'nhsstr',dose:'5 razy każdą nogą',how:'Trzymając oparcie krzesła, unieś prostą nogę w bok, biodra i plecy proste, bez przechylania. Wróć i zmień nogę.'},
@@ -1031,13 +1126,13 @@ function renderMob(){
   const M=S.mob||{done:{}},dn=(M.done||{})[todayKey()]||[],saved=day().some(e=>e.kind==='t'&&e.mob),n=mobWeek();
   let h='<p><button class="btn ghost" data-tab="train">Wróć</button></p>'+specPlanHtml()+insoleHtml()+'<h2>Rutyna mobilności</h2>';
   if(((S.prof||{}).cond||{}).acl)h+='<div class="note warn">Po rekonstrukcji ACL: zanim zrobisz ćwiczenia z tej rutyny, zapytaj fizjoterapeutę, czy pasują do Twojej fazy.</div>'+srcHtml('aspetar');
-  h+=`<p>Co najmniej 2 razy w tygodniu, ok. 10 minut. W tym tygodniu: <b>${n} z 2 sesji w 7 dniach</b>.</p>`+srcHtml(['acsm','nhsflex']);
+  h+=`<p>Co najmniej 2 razy w tygodniu, ok. 10 minut. W tym tygodniu: <b>${n} z 2 sesji w 7 dniach</b>.</p>`+whyFold('mobczest','<p>Częstość i czas z zaleceń dla ćwiczeń rozciągających.</p>'+srcHtml(['acsm','nhsflex']));
   h+='<div class="note warn">Przerwij, gdy ból się nasila, i porozmawiaj z lekarzem. Dzwoń 112, gdy pojawi się drętwienie lub osłabienie obu nóg, utrata czucia w okolicy krocza albo zmiany w oddawaniu moczu lub stolca. Masz ból albo rozpoznanie? Pokaż tę rutynę fizjoterapeucie.</div>'+srcHtml(['nhsback','csp']);
   h+=fold('mobdow','Przodopochylenie miednicy: co mówią badania','<p class="small">Przegląd badań nie znalazł dowodów, że ćwiczenia zmniejszają nadmierne przodopochylenie miednicy; jakość dowodów była bardzo niska. Ćwiczenia korekcyjne zmieniały kąt lordozy w odcinku lędźwiowym w umiarkowanym stopniu. Ta rutyna jest dla ruchomości i siły.</p>'+srcHtml(['falk','lordoza']));
   for(const [pk,pt] of Object.entries(MOB_PART)){
     h+=`<h3 class="rh" style="margin:16px 4px 8px">${pt}</h3><div class="panel">`+MOB.filter(x=>x.part===pk).map(x=>{const on=dn.includes(x.id);return `<button class="opt hab ${on?'on':''}" data-mobex="${x.id}" aria-pressed="${on}"><span class="box">${on?'✓':''}</span><span class="lab"><b>${x.n}</b><span class="small">${x.how}</span><span class="small muted">${x.dose}</span></span></button>`}).join('')+'</div>';
   }
-  h+=srcHtml(['csp','nhsstr','nhsflex']);
+  h+=whyFold('mobzrodla','<p>Źródło nie podaje liczby powtórzeń przy ćwiczeniach z dawką „powoli, bez bólu”.</p>'+srcHtml(['csp','nhsstr','nhsflex']));
   h+=saved?'<div class="note">Dzisiejsza sesja zapisana. Liczy się w Moim dniu i u zwierzaka.</div>':'<p><button class="btn" data-mobsave="1">Zapisz sesję</button></p>';
   document.getElementById('main').innerHTML=h;
 }
@@ -1119,11 +1214,14 @@ function renderChallenge(){
 const OPEN_F=new Set(['zapisane']);
 function fold(id,title,inner){return `<details class="fold" id="fold_${id}" data-fold="${id}"${OPEN_F.has(id)?' open':''}><summary>${title}</summary><div style="padding:0 12px 12px">${inner}</div></details>`}
 document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.fold){t.open?OPEN_F.add(t.dataset.fold):OPEN_F.delete(t.dataset.fold)}},true);
+// toggle przychodzi w osobnym zadaniu po kliknięciu: stan sekcji zapisany już przy kliknięciu nagłówka, więc przerysowanie zaraz po nim jej nie zwija
+document.addEventListener('click',e=>{const s=e.target&&e.target.closest&&e.target.closest('summary'),d=s&&s.parentElement;if(!d||d.tagName!=='DETAILS'||!d.dataset.fold||d.querySelector(':scope > summary')!==s)return;
+  if(e.defaultPrevented)return;d.open?OPEN_F.delete(d.dataset.fold):OPEN_F.add(d.dataset.fold)});
 
 // ---------- Kopia danych: eksport i import pliku (np. przez iCloud Drive) ----------
 const BK_SKIP=['imp','tab','introStep','sosStep','sosTrig','recipe','recipeBack','labSel'];
 // Kopia bez danych o zdrowiu: lista tego, co zostaje; każde nowe pole stanu jest domyślnie pomijane (rada 09.11.2026, kopia bez danych o zdrowiu)
-const BK_NH_KEEP=['toastLen','tips','discreet','pet','prices','ord','shopDay','stores','promos','lite','unlock','unlockAt','unlockSnooze'];
+const BK_NH_KEEP=['toastLen','tips','discreet','pet','prices','ord','shopDay','stores','promos','lite','unlock','unlockAt','unlockSnooze','pmLeft','vibr'];
 let BK_PENDING=null;
 function bkBuild(noHealth){let d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.kopia)delete d.kopia.token;if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){const o={};BK_NH_KEEP.forEach(k=>{if(k in d)o[k]=d[k]});d=o}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
 function bkParse(text){try{const o=JSON.parse(text);if(!o||o.app!=='talerz-i-trening'||o.v!==1||!o.data||typeof o.data!=='object'||Array.isArray(o.data))return null;return o}catch(e){return null}}
@@ -1150,7 +1248,7 @@ const LS='talerz-trening-v1';
 const DEF={frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
-  days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,lite:false,unlock:[],unlockAt:'',unlockSnooze:'',body:false,once:false,toastLen:'std',ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},shopDay:null,stores:[],promos:[],sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
+  days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,lite:false,unlock:[],unlockAt:'',unlockSnooze:'',body:false,once:false,toastLen:'std',pmLeft:false,vibr:true,ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},shopDay:null,stores:[],promos:[],sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))merge(a[k],b[k]);else a[k]=b[k];}return a}
 // Wartości startowe (rada/2026-11-09_wartosci-startowe): punkt startowy do ustawiania przyciskami, zależny od płci; to założenie
@@ -1158,6 +1256,8 @@ function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.is
 // Nieustawione wartości nie są potwierdzonymi danymi: podpis „wartość startowa”, krok „Sprawdź swoje dane” niezaliczony.
 const START={K:{kg:70,cm:165,age:35},M:{kg:85,cm:178,age:35}},START_K=['kg','cm','age','goal'];
 const isStart=k=>!(S.touched||{})[k];
+// Cel kalorii liczony z wartości startowych (waga, wzrost lub wiek): podpis przy każdym pokazaniu celu
+const APX_T='cel w przybliżeniu, wpisz wagę, wzrost i wiek',tgtApx=()=>['kg','cm','age'].some(isStart)?APX_T:'';
 // Opis wartości suwaka dla czytnika ekranu (WCAG 4.1.2, aria-valuetext w APG slider)
 function rTxt(k,v){v=num(v);return k==='minP'?`co najmniej ${v} g białka`:k==='maxK'?(v>=1000?'kalorie bez limitu':`najwyżej ${v} kcal`):k==='maxC'?(v>=130?'węglowodany bez limitu':`najwyżej ${v} g węglowodanów`):`porcja ${fmt1(v)} ×`}
 // Gotowe cele: 5-10% (NHLBI) i 7% (DPP); zaznaczony ten, który odpowiada obecnemu celowi
@@ -1184,10 +1284,10 @@ function goalWayHtml(){if(S.mode!=='redukcja')return '';const w=S.goalWay||'proc
   if(w==='proc')return h+goalHint()+goalPctHtml();
   if(w==='bmi'){const n=bmiCut()==='nhs',up=n?22.9:24.9,a=num(S.age),nd=a>=70?24:a>=50?23:a>=35?22:0,o=[[up,`poniżej ${n?23:25}`]];if(nd&&nd<up)o.push([nd,'najniżej dla wieku']);
     h+='<div class="chips">'+o.map(([v,l])=>{const g=Math.round(v*h2*2)/2,on=Math.abs(num(S.goal)-g)<0.01;return `<button class="chip opt${on?' inc':''}" data-goalbmi="${v}" aria-pressed="${on}">BMI ${fmt1(v)} (${l}): ${fmt1(g)} kg</button>`}).join('')+'</div>';
-    h+=`<p class="small muted">Najniższa śmiertelność w badaniach przy BMI 20-25; dolna część normy (18,5-20) wiązała się z wyższą. Najniżej: BMI 22 w wieku 35-49 lat, 23 w wieku 50-69, 24 w wieku 70-89.${bmiOf(S.kg)<up?' Twoje BMI już jest w tym zakresie.':' Przy dużej różnicy zacznij od 5-10% mniej.'}</p>`+srcHtml(['bmimort','whoob'].concat(n?['nhsob']:[]));return h}
+    h+=`<p class="small muted">${bmiOf(S.kg)<up?`Twoje BMI już jest poniżej ${n?23:25}.`:'Przy dużej różnicy zacznij od 5-10% mniej.'}</p>`+whyFold('bmicel','<p>Najniższa śmiertelność w badaniach przy BMI 20-25; dolna część normy (18,5-20) wiązała się z wyższą. Najniżej: BMI 22 w wieku 35-49 lat, 23 w wieku 50-69, 24 w wieku 70-89.</p>'+srcHtml(['bmimort','whoob'].concat(n?['nhsob']:[])));return h}
   const c=num(S.cm)||165,lw=lastWaist();
   return h+`<div class="note">Cel: talia poniżej ${fmt(c/2)} cm (połowa wzrostu).${lw?` Ostatni pomiar: ${fmt1(lw)} cm, talia do wzrostu ${fmt2(lw/c)}.`:' Zmierz talię w Pomiarach dnia, w obwodach.'} Waga docelowa jest tu opcjonalna: postęp pokaże talia.</div>`+srcHtml('nhsob')}
-function bmiSetHtml(){const a=bmiCutFor(typeof navigator!=='undefined'&&navigator.language);return '<p style="margin:12px 4px 4px"><b>Progi BMI</b></p>'+seg([['auto','Kraj telefonu'],['who','WHO'],['nhs','NHS']],S.bmiCut||'auto','bmicut','','Progi BMI')+`<p class="small muted">WHO: nadwaga od BMI 25, otyłość od 30. NHS: od 23 i 27,5 dla osób pochodzenia azjatyckiego, bliskowschodniego, afrykańskiego i afrykańsko-karaibskiego. Kraj telefonu: progi ${a==='nhs'?'NHS':'WHO'}.</p>`+muscleHtml()}
+function bmiSetHtml(){const a=bmiCutFor(typeof navigator!=='undefined'&&navigator.language);return '<p style="margin:12px 4px 4px"><b>Progi BMI</b></p>'+seg([['auto','Kraj telefonu'],['who','WHO'],['nhs','NHS']],S.bmiCut||'auto','bmicut','','Progi BMI')+`<p class="small muted">Kraj telefonu: progi ${a==='nhs'?'NHS':'WHO'}.</p>`+whyFold('bmicut','<p>WHO: nadwaga od BMI 25, otyłość od 30. NHS: od 23 i 27,5 dla osób pochodzenia azjatyckiego, bliskowschodniego, afrykańskiego i afrykańsko-karaibskiego.</p>')+muscleHtml()}
 // Dużo mięśni z danych (15.11.2026): FFMI = ostatnia FFM / wzrost w m do kwadratu wobec mediany 18-34 lat z Schutz 2002 (PMID 12080449, abstrakt):
 // 18,9 kg/m² u mężczyzn, 15,4 u kobiet. Tabela centyli niedostępna, więc tylko mediana. Reguła Miary: powyżej mediany = włączone.
 function muscleRec(){const ffm=lastM('ffm'),cm=num(S.cm);if(!(ffm>0)||!(cm>0)||isStart('cm'))return null;const ffmi=ffm/Math.pow(cm/100,2),med=S.sex==='M'?18.9:15.4;return {ffmi,med,above:ffmi>med}}
@@ -1258,7 +1358,7 @@ function muscleHtml(){const r=muscleRec(),on=!!S.muscle,a=num(S.age);
   return h+srcHtml(['schutz'])+'</div></div>'}
 function goalHint(){return S.mode!=='redukcja'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny albo wybierz niżej.</p>'}
 function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
-function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,STEP.goal)}
+function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,.5)}
 // Rodzaj zwierzaka z kopii: tylko znane gatunki (stare kaczka zostaje kaczuszką), nieznany to gąska
 function petFix(s){if(s&&s.pet&&typeof s.pet==='object'&&!PET.kinds().includes(s.pet.kind))s.pet.kind='gaska';return s}
 function syFix(s){s=petFix(suppFix(s));s=promoFix(s,todayKey());try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
@@ -1318,34 +1418,22 @@ let DEMO=typeof location!=='undefined'&&(location.hash==='#demo'||!!DEMO_N),DEMO
 let S=DEMO?merge(clone(DEF),fixTouched(DEMO_N?scenS(DEMO_N):PET.demo().S)):load();
 // Karta „Dziś”: wartości robocze w sessionStorage tylko poza trybem pokazowym (tam nic się nie zapisuje)
 if(typeof WPISY!=='undefined')WPISY.persistOn(!DEMO);
-if(DEMO&&!DEMO_N)setInterval(()=>{DEMO_I++;const a=document.activeElement;if((S.tab==='day'||S.tab==='pet')&&!HOLD&&!(typeof WPISY!=='undefined'&&WPISY.busy())&&!(a&&a.dataset&&a.dataset.k))render()},3000);
+if(DEMO&&!DEMO_N)setInterval(()=>{DEMO_I++;const a=document.activeElement;if((S.tab==='day'||S.tab==='pet')&&!(typeof WPISY!=='undefined'&&WPISY.busy())&&!(a&&a.dataset&&a.dataset.k))render()},3000);
 const open=new Set();
 
 // ---------- Obliczenia ----------
 const num=v=>{const s=String(v).trim().replace(/(\d)[\s\u00a0]+(?=\d{3}(\D|$))/g,'$1'),t=s.match(/^(\d{1,2})\s*(?::|h)\s*(\d{1,2})?\s*(?:m|min)?$/i);if(t)return +t[1]+(+(t[2]||0))/60;const x=parseFloat(s.replace(',','.'));return isFinite(x)?x:0};
-// Pola liczbowe: format i zakres (ostatni człon klucza data-k). Wpis błędny lub poza zakresem nie trafia do danych.
-const STEP={kg:.1,goal:.5,w:.1,cm:1,age:1,steps:1000,sleep:.25,waist:.5,hip:.5,thigh:.5,fat:.1,ffm:.1,ecw:.1,bmr:10,min:5,wmin:5,wk:10,speed:.5,grade:.5,watts:5};
-const STP0={sleep:7,steps:5000,wmin:45,wk:300,min:45,speed:5,grade:0,watts:100,cm:165,age:30};
-// Pierwsze naciśnięcie pustego pola: ostatnia zapisana wartość (waga z ostatniego ważenia), inaczej typowa
-function stpStart(k){const a=k.split('.'),f=a[a.length-1];if(a[0]==='meas'){const ks=Object.keys(S.meas||{}).filter(x=>x<a[1]&&num((S.meas[x]||{})[f])>0).sort();if(ks.length)return num(S.meas[ks[ks.length-1]][f]);if(f==='w')return kg()}if(f==='goal')return kg();if(f==='kg')return kg();return STP0[f]!=null?STP0[f]:LIM[f][0]}
-// Krok − i +: jedna funkcja dla dotknięcia, przytrzymania i strzałek; mult to mnożnik kroku przy długim trzymaniu
-function stpApply(k,dir,mult){const f=k.split('.').pop(),st=STEP[f],L=LIM[f],a=k.split('.');if(!st)return false;if(a[0]==='meas'){S.meas[a[1]]=S.meas[a[1]]||{}}
-  const raw=k.split('.').reduce((o,x)=>o==null?o:o[x],S),has=raw!=null&&String(raw).trim()!=='';if(START_K.includes(k))(S.touched=S.touched||{})[k]=true;let v=has?num(raw)+dir*st*(mult||1):stpStart(k);v=Math.min(L[1],Math.max(L[0],v));setPath(k,stpFmt(v,st));return true}
+// Wartości typowe formularza treningu (wiersze wartości, gdy pole jest puste)
+const STP0={wmin:45,wk:300,min:45,speed:5,grade:0,watts:100};
 function stpVal(k){return k.split('.').reduce((o,x)=>o==null?o:o[x],S)}
-// W trakcie przytrzymania zmienia się tylko pole, bez przerysowania ekranu (przycisk zostaje pod palcem)
-function stpShow(k){const el=document.querySelector(`[data-k="${k}"]`);if(el)el.value=stpVal(k)}
-// Po zmianie: przerysowanie, fokus na tym samym przycisku (WCAG 2.4.3), nowa wartość dla czytnika ekranu (4.1.3)
-// Przycisk zostaje w tym samym miejscu ekranu, nawet gdy nad nim pojawi się nowa karta (bez przesunięcia pod palcem)
-function stpDone(k,d){const v=num(stpVal(k)),sel=`[data-stp="${k}"][data-d="${d}"]`,o=document.querySelector(sel),y0=o&&o.getBoundingClientRect?o.getBoundingClientRect().top:null;
-  if(/^meas\.[^.]+\.w$/.test(k))PET.react('weigh');if(/^(meas\.[^.]+\.ffm|cm)$/.test(k)&&muscleToast())save();render();
-  const b=document.querySelector(sel);if(b&&y0!=null&&b.getBoundingClientRect)window.scrollBy(0,b.getBoundingClientRect().top-y0);if(b&&b.focus)b.focus({preventScroll:true});
-  const sr=document.getElementById('sr'),fl=b&&b.closest&&b.closest('.field'),lab=fl&&fl.querySelector('label');if(sr)sr.textContent=(lab?lab.textContent+': ':'')+String(stpVal(k))}
 // Błąd widoczny od razu pod polem i powiązany z nim (WCAG 3.3.1, 3.3.3)
 function fieldErr(el,msg){const f=el.closest&&el.closest('.field');if(!f)return;let s=f.querySelector('.err');
   if(msg){if(!s){s=document.createElement('small');s.className='err';s.id='err_'+(el.id||'pole');f.appendChild(s)}s.textContent=msg;f.classList.add('haserr');el.setAttribute('aria-describedby',s.id)}
   else if(s){s.remove();f.classList.remove('haserr');el.removeAttribute('aria-describedby')}}
 function lastMeas(f,k){const ks=Object.keys(S.meas||{}).filter(x=>x<k&&String((S.meas[x]||{})[f]||'').trim()!=='').sort();return ks.length?String(S.meas[ks[ks.length-1]][f]):''}
-function stpFmt(v,st){return st<1?String(Math.round(v*10)/10).replace('.',','):String(Math.round(v))}
+// Liczba z krokiem: zapis (82,5 albo 82; całkowite bez odstępów) i wyświetlanie (82,0; 1 530 z odstępem tysięcy)
+function numStep(v,st,disp){const r=Math.round(v*10)/10;return st<1?(disp?r.toFixed(1):String(r)).replace('.',','):disp?WF.k(v):String(Math.round(v))}
+function stpFmt(v,st){return numStep(v,st,false)}
 const LIM={kg:[35,250],goal:[35,250],w:[35,250],cm:[120,220],age:[16,90],steps:[0,60000],sleep:[0,16],waist:[30,200],hip:[30,200],thigh:[20,120],fat:[3,60],ffm:[25,120],ecw:[30,50],bmr:[900,3000],min:[1,300],wmin:[1,300],wk:[10,3000],speed:[1,20],grade:[0,25],watts:[20,500],wrist:[10,40],ankle:[10,40],vo2:[10,90],hrRest:[30,120],hrMax:[120,230]};
 const INT_K=new Set(['steps','bmr','age','min','wmin','wk']);
 // Pola ca\u0142kowite: separator tysi\u0119cy spacj\u0105, kropk\u0105 albo przecinkiem (10 500, 10.500, 10,500), bez u\u0142amk\u00f3w;
@@ -1473,7 +1561,7 @@ function petCtx(now){return {now:now||new Date(),lite:!!S.lite,liteFull:k=>liteF
 // Cel dla zapowiedzi zwierzaka: nazwa, stan z ZD.progress i pierwszy wpływ z mapy powiązań
 function petGoal(){const g=S.cel&&ZD.goalOf(S.cel.id);if(!g)return null;const wk=celWeek(),im=ZD.impact(g.id,S.prof)[0];const ok=!!(wk&&wk.done),nx=ok?ZD.goalOf(ZD.suggest(S,todayKey(),zdCtx(),[g.id])):null;return {t:g.t,left:ok?'tydzień zaliczony':'teraz '+ZD.progress(S,g.id,todayKey(),zdCtx()).txt,nx:nx?nx.t:'',gain:im?im.t:''}}
 // Kamień milowy zaliczany poza przerysowaniem przy wpisywaniu (REDRAW); świętowanie widoczne do obejrzenia ekranu zwierzaka
-function petState(){if(DEMO&&!DEMO_N){const fr=PET.demo().frames,f=fr[DEMO_I%fr.length];S.pet.kind=f.kind;return PET.state(Object.assign(petCtx(),{force:f}))}const st=PET.state(petCtx());let ch=false;if(st.milestone&&!REDRAW){S.petSeen=(S.petSeen||[]).concat(st.milestone);S.petCeleb={id:st.milestone,day:todayKey()};ch=true}if(S.pet&&st.active>(S.pet.peak||0)){S.pet.peak=st.active;ch=true}const wk=celWeek();if(S.pet&&wk&&wk.done){const id=S.cel.id+':'+wk.end;S.pet.stones=S.pet.stones||[];if(!S.pet.stones.includes(id)){S.pet.stones.push(id);ch=true}}if(ch)save();return st}
+function petState(){if(DEMO&&!DEMO_N){const fr=PET.demo().frames,f=fr[DEMO_I%fr.length];S.pet.kind=f.kind;return PET.state(Object.assign(petCtx(),{force:f}))}const st=PET.state(petCtx());let ch=false;if(st.milestone&&!REDRAW){S.petSeen=(S.petSeen||[]).concat(st.milestone);S.petCeleb={id:st.milestone,day:todayKey()};ch=true}if(S.pet&&st.active>(S.pet.peak||0)){S.pet.peak=st.active;ch=true}const wk=celWeek();if(S.pet&&wk&&wk.done){const id=S.cel.id+':'+wk.end;S.pet.stones=S.pet.stones||[];if(S.pet.pathSeen==null)S.pet.pathSeen=S.pet.stones.length;if(!S.pet.stones.includes(id)){S.pet.stones.push(id);ch=true}}if(ch)save();return st}
 // Pogoda na ścieżce kamieni: wiatr w dzień z bólem głowy, mgła po 2 krótkich nocach; nigdy kara
 function petWeather(){if((S.pain||{})[todayKey()])return 'wiatr';const a=sleepAt(todayKey()),b=sleepAt(nAgo(1));return a!=null&&b!=null&&a<6&&b<6?'mgla':''}
 // Jajko pęka z Pierwszymi krokami (dane, waga, posiłek, ruch): rada/2026-11-09_pierwsze-uruchomienie, punkt 2
@@ -1492,13 +1580,52 @@ function unlockHtml(){const k=todayKey(),m=(S.meas||{})[k]||{},u=S.unlock||[];le
   const nx=unlockNext();
   if(nx)h+=`<div class="note"><p style="margin:0 0 8px">${UNLOCK_TXT[nx]}</p><p style="margin:0"><button class="btn small" data-unlock="${nx}">${nx==='cala'?'Pokaż':'Dodaj'}</button> <button class="btn ghost small" data-unlocklater="1">Nie teraz</button></p></div>`;
   return h}
+// Podsumowanie po szybkim wpisie (plan łatwości 20.11.2026, zadanie 4): pełny dzień zwija kartę w miejscu do „✓ Zapisane na dziś”;
+// „Twój stan” rozwija się w miejscu, bez zmiany ekranu (WCAG 3.2.2). Same liczby, ten sam neutralny wygląd dla każdej wartości.
+// LITE_UI to stan widoku, nie dane: open = dzień rozwinięty przez „Zmień”, sum = podsumowanie otwarte, focus i say = fokus i komunikat po przerysowaniu
+const LITE_UI={open:'',sum:'',focus:'',say:''};
+const LITE_FEEL=[['dobrze','Dobrze'],['glowa','Ból głowy'],['brzuch','Brzuch'],['inne','Inne']],LITE_REDZ=[[0,'0','0 razy'],[1,'1','1 raz'],[2,'2 lub więcej','2 lub więcej']];
+const dniPl=n=>n===1?'1 dzień':n+' dni',zDni=n=>n===1?'z 1 dnia':'z '+n+' dni';
+function liteVals(k){const m=(S.meas||{})[k]||{},ts=String(m.steps==null?'':m.steps).trim(),n=num(ts),SB={lo:'poniżej '+WF.k(5000),mid:'od '+WF.k(5000)+' do '+WF.k(8000),hi:'powyżej '+WF.k(8000)};
+  return ['Kroki '+(ts!==''&&n>=0?WF.k(Math.round(n)):SB[m.stepsB]||''),(LITE_FEEL.find(x=>x[0]===m.feel)||[,''])[1],'Jedzenie kaloryczne '+(LITE_REDZ.find(x=>x[0]===m.redz)||[,''])[1]]}
+// Zwinięcie karty: fokus na „Podsumowanie”, jedno ogłoszenie w #sr po przerysowaniu (liteAfter); przy przejściu do pełnego dnia
+// to ogłoszenie zastępuje komunikat „Dzień zapisany”, żeby dwa regiony na żywo nie nadpisywały się nawzajem
+function liteCollapse(k,fresh){LITE_UI.open='';LITE_UI.sum='';LITE_UI.focus='lite_see';LITE_UI.say=(fresh?'Dzień zapisany. ':'')+'Szybki wpis zwinięty: '+liteVals(k).join(', ')+'.'}
+function liteAfter(){const id=LITE_UI.focus;if(!id)return false;const say=LITE_UI.say;LITE_UI.focus='';LITE_UI.say='';const sr=document.getElementById('sr');if(sr&&say)sr.textContent=say;
+  const el=document.getElementById(id);if(!el||!el.focus)return false;const r=el.getBoundingClientRect&&el.getBoundingClientRect();if(r&&(r.top<0||r.bottom>innerHeight)&&el.scrollIntoView)el.scrollIntoView({block:'center'});focusEl(el);return true}
+// Waga z 14 dni przez WPISY.spark z pasem ±0,35% (to samo źródło co karta „Dziś”) tylko przy co najmniej 2 ważeniach; jedno ważenie to sama liczba
+function liteWHtml(){const ks=lastKeys(14).reverse(),vals=ks.map(x=>{const m=(S.meas||{})[x]||{};return measCp(m,'w')?null:wpVal('w',m.w)}),ok=vals.filter(x=>x!=null);
+  if(!ok.length)return '';if(ok.length<2){const i=vals.findIndex(x=>x!=null);return `<p>Waga ${WF.w(ok[0])} kg (${fmtDate(ks[i])}).</p>`}
+  const l7=vals.slice(7).filter(x=>x!=null),b=l7.length?l7:ok,ref=b.reduce((s,x)=>s+x,0)/b.length,n=ok.length;
+  return `<p>Waga z 14 dni, średnia 7 dni ${WF.w(ref)} kg. Pas to zwykłe wahanie tygodnia, ok. 0,35% masy.</p>`+sparkSvg('wp-spark','','Waga z 14 dni',ok,['ważenia','ważeń'],'kg',WF.w,`, średnia 7 dni ${WF.w(ref)} kg. Pas to zwykłe wahanie tygodnia.`,vals,{ref,pct:0.0035})
+    +'<p class="wp-src">Wahanie tygodnia: Turicchi i in., PLoS One 2020, <a href="https://pubmed.ncbi.nlm.nih.gov/32353079/" target="_blank" rel="noopener">PMID 32353079</a>.</p>'}
+function liteStanHtml(k){const D=lastKeys(7).reverse(),M=x=>(S.meas||{})[x]||{},WD=['niedziela','poniedziałek','wtorek','środa','czwartek','piątek','sobota'],IN=['nd','pn','wt','śr','cz','pt','sb'];
+  const td=liteVals(k),w=wpVal('w',M(k).w),sl=sleepAt(k);if(w!=null)td.push('Waga '+WF.w(w)+' kg');if(sl!=null)td.push('Sen '+WF.sleep(sl*60));
+  const dots=D.map(x=>{const d=new Date(x+'T12:00:00').getDay(),on=liteFull(x);return `<li class="lite-dot${on?' on':''}"><span class="lite-d" aria-hidden="true"></span><span aria-hidden="true">${IN[d]}</span><span class="wp-sr">${WD[d]} ${fmtDate(x)}: ${on?'szybki wpis':'bez wpisu'}</span></li>`}).join('');
+  const nz=L=>L.filter(x=>x[1]>0).map(([l,n])=>l+' '+dniPl(n)).join(' · ')||'brak wpisów';
+  const cnt=(f,v)=>D.filter(x=>M(x)[f]===v).length,nS=D.filter(x=>!measCp(M(x),'steps')&&num(M(x).steps)>0).length,nL=D.filter(x=>sleepAt(x)!=null).length,aS=avgAgo(0,7,'steps'),aL=avgAgo(0,7,'sleep');
+  let h=`<h3 id="lite_stan_h">Twój stan</h3><p><b>Dziś:</b> ${td.join(' · ')}</p><p><b>Ostatnie 7 dni:</b> Szybki wpis w ${D.filter(liteFull).length} z 7 dni</p><ol class="lite-dots" aria-label="Ostatnie 7 dni">${dots}</ol>`
+    +`<p><b>Samopoczucie:</b> ${nz(LITE_FEEL.map(([v,l])=>[l,cnt('feel',v)]))}</p><p><b>Jedzenie kaloryczne:</b> ${nz(LITE_REDZ.map(([v,,l])=>[l,cnt('redz',v)]))}</p>`;
+  if(aS!=null&&nS)h+=`<p>Kroki średnio ${WF.k(Math.round(aS/100)*100)} (${zDni(nS)})</p>`;
+  if(aL!=null&&nL)h+=`<p>Sen średnio ${WF.sleep(aL*60)} (z ${nL} nocy)</p>`;
+  h+=liteWHtml();
+  const pet=S.pet?` · ${esc(PET.nameOf(S.pet))}: aktywne dni ${PET.state(petCtx()).active}`:'';
+  h+=`<p>Seria: ${dniPl(streak())}${pet}</p>`;
+  const nx=unlockNext();if(nx)h+=`<p><b>Co dalej:</b> ${UNLOCK_TXT[nx]}</p>`;
+  return h}
+function liteDoneHtml(k){const op=LITE_UI.sum===k;
+  return `<section id="lite" class="panel" style="padding:4px 16px 12px"><h2 style="margin:12px 0 0">Szybki wpis dnia</h2><p class="lite-line"><b>✓ Zapisane na dziś:</b> ${liteVals(k).join(' · ')}</p>`
+    +`<div class="lite-act"><button class="btn ghost" id="lite_see" data-litesum="1" aria-expanded="${op}" aria-controls="lite_stan">Podsumowanie</button><button class="btn ghost" id="lite_edit" data-liteedit="1">Zmień</button></div>`
+    +`<div class="wp-sum lite-stan" id="lite_stan" role="region" aria-labelledby="lite_stan_h"${op?'':' hidden'}>${op?liteStanHtml(k):''}</div></section>`}
 function liteCardHtml(){const k=todayKey(),m=(S.meas||{})[k]||{};
+  if(liteFull(k)&&LITE_UI.open!==k)return liteDoneHtml(k);
   const row=(t,sub,f,cur,opts)=>`<p style="margin:12px 4px 4px"><b>${t}</b>${sub?`<br><span class="small muted">${sub}</span>`:''}</p><div class="chips" role="group" aria-label="${t}">`+opts.map(([v,l])=>`<button class="chip${String(cur)===String(v)?' inc':''}" data-lite="${f}:${v}" aria-pressed="${String(cur)===String(v)}">${l}</button>`).join('')+'</div>';
   return `<section id="lite" class="panel" style="padding:4px 16px 12px"><h2 style="margin:12px 0 0">Szybki wpis dnia</h2>`
     +'<div class="wp-qbox">'+stepsRowHtml(m,k)+'</div>'
+    +'<p class="small muted lite-fold">Po odpowiedziach karta zwinie się do podsumowania dnia.</p>'
     +row('Jak się czujesz?','','feel',m.feel||'',[['dobrze','Dobrze'],['glowa','Ból głowy'],['brzuch','Brzuch'],['inne','Inne']])
     +row('Jedzenie kaloryczne dziś','słodycze, fast food, słone przekąski, alkohol','redz',m.redz==null?'':m.redz,[[0,'0'],[1,'1'],[2,'2 lub więcej']])
-    +(liteFull(k)?'<div class="note" style="margin-top:12px">✓ Dzień zapisany.</div>':'')
+    +(liteFull(k)?'<div class="note lite-ok"><span>✓ Dzień zapisany.</span><button class="btn ghost small" data-litedone="1">Gotowe</button></div>':'')
     +'<p class="small muted" style="margin:12px 0 0">Wstępne badania: krótki zapis codziennie działał podobnie jak pełny.</p>'+srcHtml(['patel','nezami'])+'</section>'}
 function petCardHtml(){const c=eggCrack();if(!S.pet)return `<button class="petcard" data-petpick="1">${PET.svg('gaska','egg','ok',null,false,c)}<span class="petinfo"><b>Wybierz towarzysza</b><span class="small">${c>=4?'Jajko gotowe do wyklucia: wybierz, kto z niego wyjdzie.':`Jajko pęka z każdym ${S.lite?'dniem z szybkim wpisem':'pierwszym krokiem'}: ${c} z 4. Wybierz, kto się wykluje.`}</span></span></button>`;const st=petState();st.crack=c;st.lite=!!S.lite;st.next=PET.next(st,petCtx());return PET.card(st,S.pet,esc)}
 // Pierwszy wybór: dotknięcie rodzaju to tylko podgląd (PET_PREV, bez zapisu); zatwierdza przycisk „Wybieram: …”.
@@ -1509,7 +1636,7 @@ function waistDelta(){const ks=Object.keys(S.meas||{}).filter(k=>num(S.meas[k].w
 function petSum(st){const k=todayKey(),m=S.meas[k]||{},d=day(),done=[num(m.w)>0,d.filter(e=>e.kind==='m').length>=3,d.some(e=>e.kind==='t')||num(m.steps)>0].filter(Boolean).length,wp=weekPts(),nx=LEVELS.find(x=>x[0]>wp),si=stageInfo(),a7=avgAgo(0,7,'w');
   return {today:{done,pts:dayPts(k)},week:{pts:wp,level:level(wp)[1],next:nx?{name:nx[1],need:nx[0]-wp}:null},all:{active:st.active,streak:streak(),dw:si&&a7!=null?a7-si.start:null,waist:waistDelta(),pct:si?si.pct:null},badges:PET.badgeList([...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])]),body:S.body?petBodyHtml():''}}
 function petBodyHtml(){const b=PET.body(S.meas,new Date(),num);return '<h2>Sylwetka</h2>'+(b.ok?`<div class="panel petbody">${b.svg}<p class="small muted">Linia przerywana: start (pierwsze 4 tygodnie pomiarów). Pełna: ostatnie 4 tygodnie. Kontur ze średnich obwodów talii, bioder i uda.</p></div>`:`<p class="small muted">${b.msg}. Potrzebne są 2 pomiary obwodów odległe o co najmniej 14 dni.</p>`)}
-function renderPet(){if(!S.pet){document.getElementById('main').innerHTML='<h2>Wybierz towarzysza</h2><p>Gąska, kaczuszka, kapibara albo kotek reaguje na Twoje wpisy: posiłki, ruch, sen i nawyki. Rośnie z dni z wpisami i nie cofa się po przerwie.</p>'+petPickHtml();return}const st=petState();st.crack=eggCrack();st.lite=!!S.lite;st.next=PET.next(st,petCtx());{const sc=PET.screen(st,S.pet,petSum(st),esc),i=sc.indexOf('</div>',sc.indexOf('petstage'))+6;document.getElementById('main').innerHTML=sc.slice(0,i)+PET.path((S.pet.stones||[]).length,petWeather(),PET.nameOf(S.pet))+sc.slice(i)}if(S.petCeleb&&!DEMO){S.petCeleb=null;save()}if(S.guide&&!S.guide.seenPet){S.guide.seenPet=true;save()}document.getElementById('main').innerHTML+=nextHtml('pet')}
+function renderPet(){if(!S.pet){document.getElementById('main').innerHTML='<h2>Wybierz towarzysza</h2><p>Gąska, kaczuszka, kapibara albo kotek reaguje na Twoje wpisy: posiłki, ruch, sen i nawyki. Rośnie z dni z wpisami i nie cofa się po przerwie.</p>'+petPickHtml();return}const st=petState();st.crack=eggCrack();st.lite=!!S.lite;st.next=PET.next(st,petCtx());{const pn=(S.pet.stones||[]).length;if(S.pet.pathSeen==null){S.pet.pathSeen=pn;save()}/* po aktualizacji bez fałszywego podskoku */const hop=S.pet.pathSeen<pn;if(hop){S.pet.pathSeen=pn;save()}/* podskok raz po przybyciu kamienia */const sc=PET.screen(st,S.pet,petSum(st),esc),i=sc.indexOf('</div>',sc.indexOf('petstage'))+6;document.getElementById('main').innerHTML=sc.slice(0,i)+PET.path(pn,petWeather(),PET.nameOf(S.pet),S.pet.kind,hop)+sc.slice(i)}if(S.petCeleb&&!DEMO){S.petCeleb=null;save()}if(S.guide&&!S.guide.seenPet){S.guide.seenPet=true;save()}document.getElementById('main').innerHTML+=nextHtml('pet')}
 // ---------- Pierwsze kroki: prowadzenie nowej osoby, kroki zaliczane z danych ----------
 function guideSteps(){const g=S.guide||{},anyMeas=f=>Object.values(S.meas||{}).some(m=>num((m||{})[f])>0),anyDay=kind=>Object.values(S.days||{}).some(d=>(d||[]).some(e=>e.kind===kind)),past=Object.keys(S.days||{}).some(k=>k<todayKey()&&(S.days[k]||[]).length);
   return [
@@ -1808,7 +1935,8 @@ function kopiaAuto(){if(!kopiaDue()||typeof fetch!=='function'||(typeof navigato
   return kopiaSend().then(()=>true,e=>{if(S.kopia){S.kopia.err=e.message;save()}return false})}
 
 function radaKopiaHtml(){const c=S.consent;let h='<h3>Kopia dla rady (zaszyfrowana)</h3>';
-  if(!c||c.v!==CONSENT_V)return h+`<div class="note"><p><b>Zgoda na zaszyfrowaną kopię danych dla rady (wersja ${CONSENT_V})</b></p><ul>${CONSENT_TXT.map(x=>`<li>${x}</li>`).join('')}</ul><p><label><input type="checkbox" id="c_ok"> Przeczytałam(-em) i wyrażam zgodę na przetwarzanie moich danych o zdrowiu w tym celu.</label></p><p><button class="btn small" data-consent="1">Wyrażam zgodę</button></p></div>`;
+  // Bez zgody cała sekcja zwinięta (plan „Łatwość”, zadanie 7): po rozwinięciu pełna treść zgody i pole wyboru razem, nic nie jest skracane
+  if(!c||c.v!==CONSENT_V)return `<details class="fold" id="fold_radakopia" data-fold="radakopia"${OPEN_F.has('radakopia')?' open':''}><summary>Kopia dla rady (zaszyfrowana)</summary><div class="note"><p><b>Zgoda na zaszyfrowaną kopię danych dla rady (wersja ${CONSENT_V})</b></p><ul>${CONSENT_TXT.map(x=>`<li>${x}</li>`).join('')}</ul><p><label><input type="checkbox" id="c_ok"> Przeczytałam(-em) i wyrażam zgodę na przetwarzanie moich danych o zdrowiu w tym celu.</label></p><p><button class="btn small" data-consent="1">Wyrażam zgodę</button></p></div></details>`;
   h+=`<p class="small">Zgoda z ${fmtDate(String(c.at).slice(0,10))}, wersja ${c.v}. <button class="btn ghost small" data-consentshow="1">Pokaż treść</button></p>`;
   if(S.consentShow)h+=`<div class="note"><ul>${CONSENT_TXT.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
   h+=S.kopia?`<p class="small">Klucz zapisany w tym telefonie ${fmtDate(String(S.kopia.at).slice(0,10))}. Kopia wysyła się sama przy otwarciu aplikacji, najwyżej raz na 7 dni. Ostatnia wysyłka: ${S.kopia.sent?fmtDate(S.kopia.sent.slice(0,10)):'jeszcze nie było'}.</p>${S.kopia.err?`<div class="note warn">${esc(S.kopia.err)}</div>`:''}<p><button class="btn small" data-kopiasend="1">Wyślij teraz</button></p>`
@@ -1852,9 +1980,6 @@ function renderTabs(){const tb=document.getElementById('tabs');if(tb&&tb.style)t
 // Grupa wyboru jednej opcji: nazwa grupy (label) jest obowiązkowa, stan opcji w aria-pressed (test strażnika w smoke.js)
 function seg(items,cur,attr,cls,label){return `<div class="seg ${cls||''}" role="group" aria-label="${label}">`+items.map(([v,l])=>{const on=String(cur)===String(v);return `<button class="${on?'on':''}" data-${attr}="${v}" aria-pressed="${on}">${l}</button>`}).join('')+'</div>'}
 function optList(list,cur,attr){return '<div class="panel">'+list.map(o=>`<button class="opt ${o.id===cur?'on':''}" data-${attr}="${o.id}"><span class="dot"></span><span>${o.n}</span>${o.met?`<span class="met">MET ${fmt1(o.met)}</span>`:''}</button>`).join('')+'</div>'}
-// Przyciski − i + przy polu liczbowym: wpis bez klawiatury; klawiatura zostaje dla chętnych
-function stpWrap(label,key,inp){const f=key.split('.').pop();return STEP[f]?`<span class="num"><button class="stp" data-stp="${key}" data-d="-1" aria-label="${label}: mniej">−</button>${inp}<button class="stp" data-stp="${key}" data-d="1" aria-label="${label}: więcej">+</button></span>`:inp}
-function field(label,key,val,unit,mode){return `<div class="field"><label for="f_${key}">${label}${START_K.includes(key)&&isStart(key)?'<small class="hint">wartość startowa</small>':''}</label>${stpWrap(label,key,`<input type="text" inputmode="${mode||'decimal'}" enterkeyhint="next" id="f_${key}" data-k="${key}" value="${esc(val)}">`)}<span class="unit">${unit}</span></div>`}
 
 function renderMeals(){
   const cm=carbMult(),n=trainNet();
@@ -1884,30 +2009,31 @@ function renderMealList0(){
     return (i===6?`<details class="fold" id="fold_mreszta" data-fold="mreszta"${OPEN_F.has('mreszta')?' open':''}><summary>Pokaż pozostałe (${L.length-6})</summary>`:'')+`<article class="meal"><button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div><div class="meta">${S.f.type==='all'?TN[m.t]+', ':''}${m.min} min${m.prep?', z gotowania na zapas':''}${tagsHtml(m,x)}</div><div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Składniki i przygotowanie</div></button>
       <div class="mnum"><span><b>${fmt(x.k)}</b> kcal</span><span class="p">B ${fmt(x.p)} g</span><span class="f">T ${fmt(x.f)} g</span><span class="c">W ${fmt(x.c)} g</span><span class="b">Bł ${fibG(x)}</span></div>
       <div class="bar" aria-hidden="true"><i style="width:${x.p*4/tot*100}%;background:var(--p)"></i><i style="width:${x.f*9/tot*100}%;background:var(--f)"></i><i style="width:${x.c*4/tot*100}%;background:var(--c)"></i></div>
-      ${isOpen?`<div class="mdet"><ul>${x.items.map(i=>`<li><span>${i.n}</span><span>${fmt(Math.round(i.g/5)*5)} g</span></li>`).join('')}</ul><p class="small">${m.how}</p><p class="small muted">${leftTxt(x.k)} ${fmt(x.k)} kcal to ok. ${fmt(x.k/walkPerMin())} min spaceru.</p><p>${eatBtn(m.id,'Dodaj do dnia')} <button class="btn ghost" data-copy="${m.id}">Kopiuj składniki do Fitatu</button></p></div>`:''}
+      ${isOpen?`<div class="mdet"><ul>${x.items.map(i=>`<li><span>${i.n}</span><span>${fmt(Math.round(i.g/5)*5)} g</span></li>`).join('')}</ul><p class="small">${m.how}</p><p class="small muted">${leftTxt(x.k)} ${fmt(x.k)} kcal to ok. ${fmt(x.k/walkPerMin())} min spaceru.</p><p>${eatBtn(m.id,'Dodaj do dnia')} <button class="btn ghost" data-copy="${m.id}">Kopiuj składniki do Fitatu</button></p>${eatLine(m.id)}</div>`:''}
     </article>`}).join('')+(L.length>6?'</details>':'')+fold('mlinfo','Skąd te wartości','<p class="small muted">Wartości odżywcze orientacyjne, z typowych tabel składu. Gramatury produktów suchych (kasza, ryż, makaron, soczewica) przed ugotowaniem. Kasza i ryż z mikrofali: 1 część na 2 części wody, duża miska pod przykryciem, ok. 12-20 min na średniej mocy z mieszaniem; czas zależy od mikrofali, więc przy pierwszym razie sprawdź miękkość.</p>'+'<p class="small muted">Błonnik (Bł) z duńskiej bazy składu żywności Frida 6.1, hummus z brytyjskiej CoFID; polskie tabele składu nie są dostępne jako otwarte dane. Mrożona mieszanka warzyw nie ma wartości błonnika w żadnej z tych tabel, dlatego przy daniach z nią jest znak +: błonnika jest co najmniej tyle. Oznaczenia „Źródło błonnika” (od 1,5 g na 100 kcal) i „Dużo błonnika” (od 3 g na 100 kcal) to progi z rozporządzenia UE, tu liczone na porcję.</p>'+'<p class="small muted">Błonnik rozpuszczalny (owies, strączki, siemię) spowalnia opróżnianie żołądka i zmniejsza skok cukru po posiłku; pokazało to badanie na 40 osobach po jednym posiłku. EFSA uznaje 25 g błonnika dziennie za ilość wystarczającą dla prawidłowej pracy jelit, a w metaanalizach największe zmniejszenie ryzyka chorób serca i cukrzycy typu 2 wiązało się z 25-29 g dziennie.</p>'+srcHtml(['frida','cofid','eu1924','fibGE','efsaFib','reynolds']));
 }
 
 function renderTrain(){
   const t=S.tr;
   let h=''
-    +'<h2>Trening z zegarka</h2><div class="panel">'+field('Czas','tr.wmin',t.wmin||'','min','numeric')+'<div class="chips quick">'+[30,45,60,90].map(v=>`<button class="chip${String(t.wmin)===String(v)?' inc':''}" data-setv="tr.wmin" data-v="${v}" aria-pressed="${String(t.wmin)===String(v)}">${v} min</button>`).join('')+'</div>'+field('Kalorie z zegarka','tr.wk',t.wk||'','kcal','numeric')+'<p><button class="btn" data-addwatch="1">Dodaj trening z zegarka</button></p></div>'
+    +'<h2>Trening z zegarka</h2><div class="panel">'+rwHtml('tr',['wmin'])+'<div class="chips quick">'+[30,45,60,90].map(v=>`<button class="chip${String(t.wmin)===String(v)?' inc':''}" data-setv="tr.wmin" data-v="${v}" aria-pressed="${String(t.wmin)===String(v)}">${v} min</button>`).join('')+'</div>'+rwHtml('tr',['wk'])+RW_TIP+'<p>'+actHtml('watch','data-addwatch="1"',ACT_L.watch,false)+'</p></div>'
     +'<p class="small muted">Zegarek też szacuje kalorie, zwykle z tętna, a błąd bywa większy niż 20%. Do bilansu liczy się netto: kalorie z zegarka minus spoczynek w tym czasie.</p><h2>Albo oszacuj z rodzaju treningu</h2>'+seg([['silownia','Siłownia'],['plywanie','Pływanie'],['bieznia','Bieżnia'],['spinning','Spinning'],['inne','Inne']],t.cat,'cat','scroll','Rodzaj treningu');
   if(t.cat==='bieznia'){
     h+=seg([['marsz','Marsz'],['bieg','Bieg']],t.bMode,'bmode','','Marsz czy bieg');
-    h+='<div class="panel">'+field('Prędkość','tr.speed',t.speed,'km/h')+field('Nachylenie','tr.grade',t.grade,'%')+'</div>';
+    h+='<div class="panel">'+rwHtml('tr',['speed','grade'])+RW_TIP+'</div>';
   }else if(t.cat==='spinning'){
     h+=seg([['w','Moc z monitora'],['k','Rodzaj zajęć']],t.sMode,'smode','','Spinning: skąd liczyć kalorie');
-    if(t.sMode==='w')h+='<div class="panel">'+field('Średnia moc','tr.watts',t.watts,'W')+'</div><p class="small muted">Monitor roweru pokazuje średnią moc z całych zajęć. Ta wartość daje dokładniejszy wynik niż rodzaj zajęć.</p>';
+    if(t.sMode==='w')h+='<div class="panel">'+rwHtml('tr',['watts'])+RW_TIP+'</div><p class="small muted">Monitor roweru pokazuje średnią moc z całych zajęć. Ta wartość daje dokładniejszy wynik niż rodzaj zajęć.</p>';
     else h+=optList(SPIN,t.sClass,'sclass');
   }else{
     h+=optList(ACT[t.cat].opts,t.opt[t.cat],'opt');
     if(ACT[t.cat].note)h+=`<p class="small muted">${ACT[t.cat].note}</p>`;
   }
   const sp=spec(),m=Math.max(0,num(t.min)),km=kcal(sp,m);
+  h+='<div class="panel">'+rwHtml('tr',['min'])+RW_TIP+'</div>';
   h+=`<section class="readout"><h3>${sp.label}</h3><div class="trio">`+[30,45,60].map(mm=>{const k=kcal(sp,mm);return `<div class="cell"><div class="min">${mm} min</div><div class="big">${fmt(k.gross)}</div><div class="sub">netto ${fmt(k.net)}</div></div>`}).join('')+
     `</div><p class="unit">kcal brutto przy ${fmt1(kg())} kg${S.korekta?', z korektą na spoczynkowe zużycie energii':''}. Netto to część ponad spoczynek.</p>
-    <div class="custom"><input type="text" inputmode="numeric" enterkeyhint="next" id="f_tr.min" data-k="tr.min" value="${t.min}" aria-label="Czas w minutach"><span>min</span><span class="res">${fmt(km.gross)} kcal, netto ${fmt(km.net)}</span><button class="btn" data-addtrain="1">Dodaj do dnia</button></div></section>`;
+    <div class="custom"><span class="res">${fmt(m)} min: ${fmt(km.gross)} kcal, netto ${fmt(km.net)}</span>${actHtml('train','data-addtrain="1"',ACT_L.train,false)}</div></section>`;
   if(sp.knee)h+=`<div class="note warn">Kolano: ${sp.knee}</div>`;
   if(sp.warn)h+=`<div class="note warn">${sp.warn}</div>`;
   h+=`<p class="small muted">Źródło wartości: ${sp.src}${sp.met?`, MET ${fmt1(sp.met)}`:''}. Wynik jest szacunkiem dla przeciętnej osoby; rzeczywiste spalanie może różnić się o kilkadziesiąt procent.</p>`;
@@ -1922,7 +2048,7 @@ function stanHtml(){const k=todayKey(),m=S.meas[k]||{},d=day(),ml=d.filter(e=>e.
   const a=wAvg(0,6),b=wAvg(7,13),dw=a.n&&b.n?a.avg-b.avg:null;
   let h=row('Waga',a.n?`${fmt1(a.avg)} kg${dw!=null?` <small>${dw<=0?'−':'+'}${fmt1(Math.abs(dw))} kg</small>`:''}`:'brak danych',a.n?`średnia z ${a.n} ważeń w 7 dni${b.n?`; tydzień wcześniej ${fmt1(b.avg)} kg z ${b.n}`:''}`:'wpisz wagę w Pomiarach dnia niżej');
   const eat=ml.reduce((s,e)=>s+e.k,0),prot=ml.reduce((s,e)=>s+e.p,0),fk=ml.filter(e=>typeof e.fib==='number'),fb=fk.reduce((s,e)=>s+e.fib,0),fna=fk.length<ml.length||fk.some(e=>e.fibNA);
-  h+=row('Jedzenie',ml.length?(p?`${fmt(eat)} kcal`:`${fmt(eat)} z ${fmt(targetKcal())} kcal`):'brak danych',ml.length?`${ml.length} ${plPos(ml.length)} zapisane, białko ${fmt(prot)} g${fk.length?`, błonnik ${fna?'co najmniej ':''}${fmt(fb)} g z 25 g`:''}`+(p?'; dziś bez celu deficytu':''):(p?'dziś bez celu deficytu; ':'')+'zapisz posiłek w Posiłkach');
+  h+=row('Jedzenie',ml.length?(p?`${fmt(eat)} kcal`:`${fmt(eat)} z ${fmt(targetKcal())} kcal`):'brak danych',ml.length?`${ml.length} ${plPos(ml.length)} zapisane, białko ${fmt(prot)} g${fk.length?`, błonnik ${fna?'co najmniej ':''}${fmt(fb)} g z 25 g`:''}`+(p?'; dziś bez celu deficytu':tgtApx()?'; '+tgtApx():''):(p?'dziś bez celu deficytu; ':'')+'zapisz posiłek w Posiłkach');
   const sl=sleepAt(k),s7=Array.from({length:7},(_,i)=>sleepAt(nAgo(i))).filter(x=>x!=null);
   h+=row('Sen',sl!=null?fmtSleep(sl):'brak danych',s7.length?`${sl!=null?'ostatnia noc; ':''}średnia ${fmtSleep(s7.reduce((s,x)=>s+x,0)/s7.length)} z ${s7.length} nocy`:'wpisz sen w Pomiarach dnia niżej');
   const st=num(m.steps),tm=tr.reduce((s,e)=>s+num(e.min),0),mv=[st>0?`${fmt(st)} kroków`:'',tr.length?`trening ${fmt(tm)} min`:''].filter(Boolean).join(', ');
@@ -1982,7 +2108,7 @@ function renderDay(){
   const due=measDue();
   const gh=gutHtml(),sy=sygHtml(),gb=gh?sy+gh:'';
   let h=(gh?'':sy)+guideHtml()+modePropHtml()+focusHtml()+painHtml()+(due?measHtml('top')+gb:'')+cardsHtml('day')+stanHtml()+celHtml()+razemHtml()+zdHtml()+krokCardHtml()+reviewPromptHtml()+petCardHtml()+sos+(due?measHtml('rest'):measHtml())+legHtml()+(due?'':gb)+kneeBannerHtml();
-  let more=modeHtml()+`<h3 class="rh" style="margin:4px 4px 8px">Energia i białko dziś</h3><div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.</p></div>`;
+  let more=modeHtml()+`<h3 class="rh" style="margin:4px 4px 8px">Energia i białko dziś</h3><div class="panel" style="padding:8px 16px">${bar('Energia z posiłków',eat.k,target,'kcal')}${bar('Białko',eat.p,pT,'g')}<p class="small muted">Tłuszcz ${fmt(eat.f)} g, węglowodany ${fmt(eat.c)} g. Treningi dziś: ${fmt(net)} kcal netto.${tgtApx()?' Cel: '+tgtApx()+'.':''}</p></div>`;
   more+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
   more+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
   more+=relHtml();
@@ -2015,26 +2141,27 @@ function nextHtml(cur){const g=guideActive()?guideSteps().find(x=>!x.done):null,
   return `<p class="nextbar"><button class="btn" data-${a}="${v}">${t}</button></p>`}
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
-  let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+field('Waga','kg',S.kg,'kg')+field('Wzrost','cm',S.cm,'cm','numeric')+field('Wiek','age',S.age,'lat','numeric')+field('Waga docelowa','goal',S.goal,'kg')+'</div>'+goalWayHtml()+bmiSetHtml();
+  let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+rwHtml('pf',['kg','cm','age','goal'])+RW_TIP+'</div>'+goalWayHtml()+bmiSetHtml();
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex','','Płeć')+dataHtml();
   h+=`<h2 id="wpisy">Wpisy</h2><div class="panel"><div class="field"><label for="once">Wpisuję raz dziennie, wieczorem</label><input type="checkbox" class="switch" id="once" data-k="once" ${S.once?'checked':''}></div></div><p class="small muted">Mój dzień pokaże jeden wpis dnia, a zwierzak przypomni o posiłkach dopiero od 19:00.</p>`;
-  h+=`<div class="panel"><div class="field"><label for="lite">Prosty widok</label><input type="checkbox" class="switch" id="lite" data-k="lite" ${S.lite?'checked':''}></div></div><p class="small muted">Mój dzień pokazuje szybki wpis i to, co dodasz. Dane zostają przy każdym widoku.</p>`;
+  h+=`<div class="panel"><div class="field"><label for="lite">Prosty widok</label><input type="checkbox" class="switch" id="lite" data-k="lite" ${S.lite?'checked':''}></div></div><p class="small muted">Mój dzień pokazuje szybki wpis i to, co dodasz, a dane zostają przy każdym widoku.</p>`;
   h+='<h2 id="komunikaty">Komunikaty</h2>'+seg([['std','Zwykły czas'],['long','Dłużej'],['stay','Do zamknięcia']],S.toastLen||'std','toastlen','','Czas wyświetlania komunikatów')+'<p class="small muted">Jak długo widać dymek po zapisie.</p>';
   h+=`<div class="panel"><div class="field"><label for="discreet">Tryb dyskretny: karty o migrenie i antykoncepcji tylko w Zdrowiu</label><input type="checkbox" class="switch" id="discreet" data-k="discreet" ${S.discreet?'checked':''}></div></div>`;
+  h+=`<div class="panel"><div class="field"><label for="pmLeft">Przyciski − i + po lewej</label><input type="checkbox" class="switch" id="pmLeft" data-k="pmLeft" ${S.pmLeft?'checked':''}></div>${typeof navigator!=='undefined'&&typeof navigator.vibrate==='function'?`<div class="field"><label for="vibr">Wibracja po zapisie</label><input type="checkbox" class="switch" id="vibr" data-k="vibr" ${S.vibr!==false?'checked':''}></div>`:''}</div>`;
   h+='<h2 id="towarzysz">Towarzysz</h2>'+petPickHtml()+(S.pet?`<div class="panel"><div class="field"><label for="body">Sylwetka z pomiarów na ekranie zwierzaka</label><input type="checkbox" class="switch" id="body" data-k="body" ${S.body?'checked':''}></div></div>`:'');
   h+='<h2 id="tryb">Tryb</h2>'+whyP('tryb')+seg([['redukcja','Redukcja'],['utrzymanie','Utrzymanie'],['masa','Przyrost masy']],S.mode,'mode','','Tryb')+modePropHtml();
   h+=`<div class="panel"><div class="field"><label for="korekta">Korekta na spoczynkowe zużycie energii</label><input type="checkbox" class="switch" id="korekta" data-k="korekta" ${S.korekta?'checked':''}></div>
 ${S.sex==='K'?`<div class="field"><label for="lip">Śledź objawy nóg (lipodemia)</label><input type="checkbox" class="switch" id="lip" data-k="lip" ${S.lip?'checked':''}></div>`:''}</div>
-  <p class="small muted">Korekta liczy spoczynek wzorem Mifflina-St Jeora zamiast stałego 1 kcal na kg na godzinę. Dla kobiet zwykle daje niższe wyniki (wniosek z definicji MET, niesprawdzony pomiarem).</p>
+  <p class="small muted">Korekta liczy spoczynek w kaloriach z treningu ze wzoru dla Twojej płci, wieku i wagi.</p>${whyFold('korekta','<p>Korekta liczy spoczynek wzorem Mifflina-St Jeora zamiast stałego 1 kcal na kg na godzinę. Dla kobiet zwykle daje niższe wyniki (wniosek z definicji MET, niesprawdzony pomiarem).</p>')}
   <div class="note">${wskTxt()} Spoczynkowe zużycie energii ok. ${fmt(rmr())} kcal na dobę.</div>
   ${ekranHtml()}
   ${bkHtml()}
-  <h2>Fitatu</h2><p class="small">Bezpośredniego połączenia nie ma. Fitatu wymienia dane przez Apple Zdrowie, a strona otwarta w przeglądarce nie ma do niego dostępu. Najprostsza droga: posiłek wybierasz tutaj, w karcie posiłku kopiujesz składniki z gramaturą i wpisujesz je w Fitatu. Treningi z zegarka lub telefonu Fitatu pobiera samo.</p>
-  <h2>Źródła</h2><ol class="src">
+  <h2>Fitatu</h2><p class="small">Składniki z gramaturą kopiujesz w karcie posiłku i wpisujesz w Fitatu.</p>${whyFold('fitatu','<p>Bezpośredniego połączenia nie ma. Fitatu wymienia dane przez Apple Zdrowie, a strona otwarta w przeglądarce nie ma do niego dostępu. Najprostsza droga: posiłek wybierasz tutaj, w karcie posiłku kopiujesz składniki z gramaturą i wpisujesz je w Fitatu. Treningi z zegarka lub telefonu Fitatu pobiera samo.</p>')}
+  <h2>Źródła</h2><p class="small">Skąd Miara bierze wydatek energii i wartości odżywcze.</p>${whyFold('zrodla',`<ol class="src">
   <li><a href="https://pacompendium.com/wp-content/uploads/2024/01/2024-adult-compendium_1_2024.pdf" target="_blank" rel="noopener">2024 Adult Compendium of Physical Activities</a>: siłownia, spinning, joga, obwód.</li>
   <li><a href="https://fitmum.ku.dk/2011_Compendium_of_Physical_Activities.pdf" target="_blank" rel="noopener">2011 Compendium of Physical Activities</a>: ergometr wioślarski. Pływanie, nordic walking i orbitrek z wiedzy ogólnej, niesprawdzone.</li>
   <li>Równania metaboliczne ACSM dla marszu i biegu, wzór Mifflina-St Jeora, sprawność brutto jazdy na rowerze ok. 20%: wiedza ogólna, niesprawdzone w tej aplikacji ze źródłem.</li>
-  <li>Wartości odżywcze: typowe wartości z tabel składu, orientacyjne.</li></ol>
+  <li>Wartości odżywcze: typowe wartości z tabel składu, orientacyjne.</li></ol>`)}
   ${nextHtml('set')}<p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-reset="1">Przywróć ustawienia domyślne</button></p>`;
   document.getElementById('main').innerHTML=h;
 }
@@ -2060,7 +2187,14 @@ const GLOSS=[
   ['cykl','Tydzień cyklu dziś','Tydzień cyklu albo opakowania; „Przerwa w tabletkach” to dni bez hormonów. ICHD-3: napady od 2 dni przed do 3. dnia miesiączki w 2 z 3 cykli.','day#cykl','mm'],
   ['profil','Mój profil zdrowia','Zaznacz choroby i tabletki, a Miara ułoży plan działań z Twoich wpisów i zaleceń. Profil zostaje w tym telefonie; kopia bez danych zdrowotnych go pomija.','health#profil'],
   ['dyskretny','Tryb dyskretny','Karty o migrenie i antykoncepcji pokazują się tylko w Zdrowiu, nie na ekranie Mój dzień.','set#discreet']];
-function whyP(id){const g=GLOSS.find(x=>x[0]===id);return g?`<p class="why"><b>Po co:</b> ${g[2]}${g[4]?` Źródło: ${[].concat(g[4]).map(srcA).join(', ')}.`:''}</p>`:''}
+// „Dlaczego?” (rada 11.11.2026, działania 6-7): pod wyborem jedno zdanie, dłuższe wyjaśnienie i źródła w zwiniętej sekcji (stan otwarcia w OPEN_F)
+function whyFold(id,inner,topic){return inner?`<details class="fold" data-fold="why_${id}"${OPEN_F.has('why_'+id)?' open':''}><summary aria-label="Dlaczego: ${esc(topic||WHY_T[id]||id)}">Dlaczego?</summary><div class="panel" style="padding:4px 16px 12px">${inner}</div></details>`:''}
+// Krótsze „Po co” tam, gdzie pierwsze zdanie opisu nie mówi całości; pełny opis zostaje w „Dlaczego?”
+// Temat „Dlaczego?” dla czytnika ekranu tam, gdzie nie wynika z hasła słowniczka (GLOSS)
+const WHY_T={mobczest:'częstość i czas ćwiczeń mobilności',mobzrodla:'źródła ćwiczeń mobilności',bmicel:'cel BMI',bmicut:'progi BMI',korekta:'korekta na spoczynek',fitatu:'kopiowanie składników',zrodla:'źródła'};
+const WHY_SHORT={tryb:'Tryb ustala, czy cel kalorii jest poniżej zapotrzebowania, równy mu czy powyżej.',oznaczenia:'Słodkie to danie na słodko, Przy IO to porcja według reguły Miary dla insulinooporności.'};
+function whyP(id){const g=GLOSS.find(x=>x[0]===id);if(!g)return '';const t=g[2],m=t.match(/^(.+?[.!?])\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])/),own=WHY_SHORT[id],first=own||(m?m[1]:t),rest=own?t:m?t.slice(m[0].length):'';
+  return `<p class="why"><b>Po co:</b> ${first}</p>`+whyFold(id,(rest?`<p>${rest}</p>`:'')+(g[4]?srcHtml(g[4]):''),g[1])}
 const HELP=[
   ['Posiłki','Zapisać zjedzony posiłek','W planie dnia naciśnij Zjem przy daniu.','meals#plan'],
   ['Posiłki','Wybrać, co gotuję dziś','Otwórz przepis i naciśnij Gotuję to dziś. Wieczorem Według planu zapisze to danie.','meals#plan'],
@@ -2110,7 +2244,7 @@ function tileFit(root){if(!root||typeof root.querySelectorAll!=='function'||type
 // Po załadowaniu czcionek szerokość słów jest inna: kolumny kafelków liczone ponownie
 if(typeof document!=='undefined'&&document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>tileFit(document.getElementById('main'))).catch(()=>{});
 if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('resize',()=>tileFit(document.getElementById('main')));document.addEventListener('toggle',()=>tileFit(document.getElementById('main')),true)}
-function render(){startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():''}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');if(typeof WPISY!=='undefined')WPISY.mount(document.getElementById('main'),{done:id=>{save();renderKeep((id&&document.getElementById(id))||document.activeElement)},say:t=>{const sr=document.getElementById('sr');if(sr)sr.textContent=t}});tileLabels(document.getElementById('main'));tileLabels(document.getElementById('sheet'));PET.flush()}
+function render(){if(S.tab!=='day'){LITE_UI.focus='';LITE_UI.say=''}if(S.tab!=='labs')LAB_KEEP=null;if(typeof document!=='undefined'&&document.documentElement&&document.documentElement.dataset)document.documentElement.dataset.pm=S.pmLeft?'l':'r';startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():''}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');if(typeof WPISY!=='undefined')WPISY.mount(document.getElementById('main'),{done:id=>{save();renderKeep((id&&document.getElementById(id))||document.activeElement);liteAfter()},say:t=>{const sr=document.getElementById('sr');if(sr)sr.textContent=t}});tileLabels(document.getElementById('main'));tileLabels(document.getElementById('sheet'));PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -2136,7 +2270,7 @@ function sheetHtml(){const gut=!!((S.prof||{}).cond||{}).gut,y=yMeals(),it=(a,t,
   const un=S.unlock||[],lt=!!S.lite;
   const L=[lt?it('data-nav="day#lite"','Szybki wpis dnia'):'',!lt||un.includes('waga')?it('data-nav="day#m_w"','Waga',lastMeas('w',todayKey())?'ostatnio '+lastMeas('w',todayKey())+' kg':''):'',!lt||un.includes('sen')?it('data-nav="day#m_sleep"','Sen'):'',lt?'':it('data-nav="day#m_steps"','Kroki'),
     it('data-tab="meals"','Posiłek'),y.length?it('data-repeat="1"',`Powtórz wczorajsze posiłki (${y.length})`):'',it('data-tab="train"','Trening'),
-    painAt(todayKey())?'':it('data-pain="today"','Boli mnie głowa','zapis jednym dotknięciem'),gut?it('data-nav="day#fold_brzuch#brzuch"','Brzuch dziś'):''];
+    painAt(todayKey())?'':it('data-pain="today"','Boli mnie głowa','zapis jednym dotknięciem'),gut&&!lt?it('data-nav="day#fold_brzuch#brzuch"','Brzuch dziś'):''];
   return `<button class="sheetbg" data-sheetclose="1" aria-label="Zamknij" tabindex="-1"></button><div class="sheetbox" role="dialog" aria-modal="true" aria-labelledby="sheet_t"><h2 id="sheet_t">Dodaj wpis</h2><div class="panel">${L.join('')}</div><p><button class="btn ghost" data-sheetclose="1">Zamknij</button></p></div>`}
 function sheetFocus(){if(!SHEET||typeof document.querySelector!=='function')return;const f=document.querySelector('#sheet .sheetbox button');if(f&&f.focus)f.focus()}
 function addFocus(){if(typeof document.querySelector!=='function')return;const a=document.querySelector('nav.tabs [data-addsheet]');if(a&&a.focus)a.focus()}
@@ -2164,7 +2298,8 @@ function actDone(at){if(!document.querySelector)return;
   if(at.rev&&typeof SYG!=='undefined'){const x=SYG.visible(S,todayKey())[0],l=x&&x.lvl==='112'&&document.querySelector('#main a[href="tel:112"]'),al=l&&l.closest('.petsay.syg,.note.warn');if(al&&al.scrollIntoView){al.scrollIntoView({block:'center',behavior:'auto'});focusEl(l);return}}
   if(at.own||window.scrollY!==at.sy)return;
   const b=at.sel&&document.querySelector(at.sel);
-  if(b&&b.getBoundingClientRect&&at.y!=null){window.scrollBy(0,b.getBoundingClientRect().top-at.y);focusEl(b);return}
+  // Przewinięcie o pełne piksele (połowa zawsze od zera), drugi przebieg poprawia resztę, gdy przeglądarka przewinęła inaczej (WebKit)
+  if(b&&b.getBoundingClientRect&&at.y!=null){for(let i=0;i<2;i++){const dy=b.getBoundingClientRect().top-at.y;if(Math.abs(dy)>=0.5)window.scrollTo(0,window.scrollY+Math.sign(dy)*Math.round(Math.abs(dy)))}focusEl(b);return}
   const hs=typeof document.querySelectorAll==='function'?[...(document.querySelectorAll('#main h2,#main h3')||[])]:[],h=(at.head&&hs.find(x=>x.textContent===at.head))||hs[0];
   if(h){if(h.scrollIntoView){const r=h.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)h.scrollIntoView({block:'start'})}focusEl(h)}}
 document.addEventListener('click',e=>{
@@ -2173,11 +2308,12 @@ document.addEventListener('click',e=>{
   if(SHEET){SHEET=false;if(d.sheetclose){render();addFocus();return}}
   if(d.toastclose){toastHide();return}
   if(d.undo){if(UNDO){const tab=S.tab;S=JSON.parse(UNDO);S.tab=tab;UNDO=null;save();render();toast('Przywrócono')}else toastHide();return}
+  // Przycisk, który reaguje: w oknie „Cofnij” dotknięcie cofa ostatni zapis, drugie dotknięcie w 700 ms po zapisie nic nie robi
+  if(d.ab&&AB[d.ab]){const r=actOf(d.ab);if(r.tap==='skip')return;if(r.tap==='undo'){actUndo(d.ab,at);return}}
   if(d.preset||d.datasave)S.touched={kg:true,cm:true,age:true,goal:true};
   if(b.parentNode&&b.parentNode.id==='toast')toastHide();
   if(d.nav||d.sygsrc){const [tab,id,fd]=(d.nav||'health#syg_'+d.sygsrc).split('#');if(tab==='day'&&liteMiss(id)){S.tab='day';SHEET=false;render();liteMissToast();return}S.tab=tab;if(fd)fd.split(',').forEach(x=>OPEN_F.add(x));save();render();const el=id&&document.getElementById(id);
     if(el){if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});focusEl(el);if(el.classList){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2400)}}else window.scrollTo(0,0);return}
-  if(d.stp){if(STP_SKIP){STP_SKIP=false;return}if(!stpApply(d.stp,+d.d,1))return;save();stpDone(d.stp,d.d);return}
   if(d.cook){const m=MEALS.find(x=>x.id===d.cook),k=todayKey(),base=planFor(new Date().getDay()),i=m?base.findIndex(id=>MEALS.find(x=>x.id===id).t===m.t):-1;if(i<0)return;
     S.swaps=S.swaps||{};S.swaps[k]=S.swaps[k]||{};if(base[i]===m.id)delete S.swaps[k][i];else S.swaps[k][i]=m.id;save();render();
     toast(`${SLOT_T[m.t]} na dziś: ${m.n}. Wieczorem „Według planu” zapisze to danie.`,{act:'tab',arg:'meals',label:'Plan dnia'});return}
@@ -2191,25 +2327,29 @@ document.addEventListener('click',e=>{
   else if(d.carb){S.f.carb=d.carb}
   else if(d.sort){S.f.sort=d.sort}
   else if(d.toggle){open.has(d.toggle)?open.delete(d.toggle):open.add(d.toggle);renderMealList();return}
-  else if(d.addmeal){const m=MEALS.find(x=>x.id===d.addmeal),x=macros(m,carbMult(),num(S.f.portion)||1);day().push({kind:'m',id:m.id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c,...FIBE(x)});PET.react('meal');save();ATE_FLASH=m.id;at.sel=`button[data-uneat="${m.id}"]`;try{render()}finally{ATE_FLASH=''}actDone(at);toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
-  else if(d.uneat){const a=day(),i=a.map(e=>e.kind==='m'&&e.id===d.uneat).lastIndexOf(true);if(i<0)return;undoable('Usunięto z dnia');a.splice(i,1);at.sel=`button[data-addmeal="${d.uneat}"]`}
+  else if(d.addmeal){const m=MEALS.find(x=>x.id===d.addmeal);if(!m)return;const x=macros(m,carbMult(),num(S.f.portion)||1),e={kind:'m',id:m.id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c,...FIBE(x)};day().push(e);PET.react('meal');ATE_FLASH=m.id;try{actDay('meal:'+m.id,todayKey(),[e],at)}finally{ATE_FLASH=''}actGuide('Dodano do dnia');return}
+  else if(d.eatrm){const a=day();let i=a.length-1;while(i>=0&&!(a[i].kind==='m'&&a[i].id===d.eatrm))i--;if(i<0)return;const lb=a[i].label;undoable('Usunięto ostatni wpis: '+lb);a.splice(i,1)}
   else if(d.cat){S.tr.cat=d.cat}
   else if(d.opt){S.tr.opt[S.tr.cat]=d.opt}
   else if(d.bmode){S.tr.bMode=d.bmode;if(d.bmode==='bieg'&&num(S.tr.speed)<8)S.tr.speed='8';if(d.bmode==='marsz'&&num(S.tr.speed)>6.5)S.tr.speed='5'}
   else if(d.smode){S.tr.sMode=d.smode}
   else if(d.sclass){S.tr.sClass=d.sclass}
-  else if(d.addwatch){const m=num(S.tr.wmin),w=num(S.tr.wk);if(!(m>=1&&m<=300)){toast('Wpisz czas w minutach',{focus:'f_tr.wmin'});return}if(!(w>=10&&w<=3000)){toast('Wpisz kalorie z zegarka, od 10 do 3000',{focus:'f_tr.wk'});return}day().push({kind:'t',label:'Trening z zegarka',min:m,gross:w,net:Math.max(0,Math.round(w-baseH()*m/60)),src:'zegarek'});S.tr.wk='';PET.react('train');save();toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
-  else if(d.dayplan){const lg=new Set(day().filter(e=>e.kind==='m').map(e=>e.id));let n=0;planIds().forEach(id=>{if(lg.has(id))return;const m=MEALS.find(x=>x.id===id),x=macros(m,carbMult(),num(S.f.portion)||1);day().push({kind:'m',id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c,...FIBE(x),plan:true});lg.add(id);n++});if(n)PET.react('meal');save();toast(n?`Dodano ${n} ${n===1?'posiłek':'posiłki'} z planu, wartości szacunkowe`:'Plan na dziś jest już zapisany',3200);return}
+  else if(d.addwatch){const m=num(S.tr.wmin),w=num(S.tr.wk);if(!(m>=1&&m<=300)){toast('Wpisz czas w minutach',{focus:'f_tr.wmin'});return}if(!(w>=10&&w<=3000)){toast('Wpisz kalorie z zegarka, od 10 do 3000',{focus:'f_tr.wk'});return}const e={kind:'t',label:'Trening z zegarka',min:m,gross:w,net:Math.max(0,Math.round(w-baseH()*m/60)),src:'zegarek'},wk=S.tr.wk;day().push(e);S.tr.wk='';PET.react('train');actDay('watch',todayKey(),[e],at,()=>{S.tr.wk=wk});actGuide('Dodano do dnia');return}
+  else if(d.dayplan){const lg=new Set(day().filter(e=>e.kind==='m').map(e=>e.id)),es=planIds().filter(id=>!lg.has(id)&&lg.add(id)).map(id=>{const m=MEALS.find(x=>x.id===id),x=macros(m,carbMult(),num(S.f.portion)||1);return {kind:'m',id,label:m.n,k:x.k,p:x.p,f:x.f,c:x.c,...FIBE(x),plan:true}});es.forEach(e=>day().push(e));const n=es.length;
+    if(!n){toast('Plan na dziś jest już zapisany');return}PET.react('meal');actDay('plan',todayKey(),es,at);actGuide(`Dodano ${n} ${n===1?'posiłek':'posiłki'} z planu, wartości szacunkowe`);return}
   else if(d.dayother){OPEN_F.add('szybki')}
-  else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m);day().push({kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net});PET.react('train');save();toast(guideToast('Dodano do dnia'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
+  else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m),e={kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net};day().push(e);PET.react('train');actDay('train',todayKey(),[e],at);actGuide('Dodano do dnia');return}
   else if(d.del!=null){undoable('Usunięto wpis');day().splice(+d.del,1)}
   else if(d.clear){undoable('Wyczyszczono wpisy z dziś');S.days[todayKey()]=[]}
-  else if(d.lite){const [f,v]=String(d.lite).split(':'),k=todayKey(),wf=liteFull(k);if(!({stepsB:['lo','mid','hi'],feel:['dobrze','glowa','brzuch','inne'],redz:['0','1','2']}[f]||[]).includes(v))return;const m=(S.meas[k]=S.meas[k]||{});
+  else if(d.lite){const [f,v]=String(d.lite).split(':'),k=todayKey(),wf=liteFull(k);if(!({stepsB:['lo','mid','hi'],feel:['dobrze','glowa','brzuch','inne'],redz:['0','1','2']}[f]||[]).includes(v))return;buzz();const m=(S.meas[k]=S.meas[k]||{});
     if(f==='stepsB'){if(num(m.steps)>0){toast('Kroki są już wpisane liczbą');return}m.stepsB=v}
     else if(f==='feel'){const was=m.feel==='glowa';m.feel=v;if(v==='glowa'){S.pain=S.pain||{};if(!S.pain[k])S.pain[k]={aura:false,med:false,card:true}}else if(was&&S.pain&&S.pain[k]&&S.pain[k].card&&!S.pain[k].aura&&!S.pain[k].med)delete S.pain[k]}
     else m.redz=+v
-    if(!wf&&liteFull(k)){PET.react('weigh');toast('Dzień zapisany')}}
+    if(!wf&&liteFull(k)){PET.react('weigh');liteCollapse(k,true)}}
   else if(d.litefull){S.lite=false}
+  else if(d.litesum){const k=todayKey();LITE_UI.sum=LITE_UI.sum===k?'':k}
+  else if(d.liteedit){LITE_UI.open=todayKey();LITE_UI.sum='';LITE_UI.focus='q_steps';LITE_UI.say='Szybki wpis rozwinięty do zmiany.'}
+  else if(d.litedone){liteCollapse(todayKey())}
   else if(d.unlock){if(!UNLOCK.includes(d.unlock))return;S.unlock=S.unlock||[];if(!S.unlock.includes(d.unlock))S.unlock.push(d.unlock);S.unlockAt=todayKey();if(d.unlock==='cala')S.lite=false}
   else if(d.unlocklater){const t=new Date();t.setDate(t.getDate()+7);S.unlockAt=todayKey();S.unlockSnooze=keyOf(t)}
   else if(d.introdone){const ok=d.introdone==='ok',st=['kg','cm','age'].filter(isStart);if(ok&&st.length){S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);save();render();const nm=st.map(k=>({kg:'waga',cm:'wzrost',age:'wiek'})[k]),lst=nm.length>1?nm.slice(0,-1).join(', ')+' i '+nm.at(-1):nm[0];toast(`${lst[0].toUpperCase()+lst.slice(1)} ${nm.length>1?'są':'jest'} na wartościach startowych. Ustaw swoje w Ustawieniach, żeby kalorie były liczone dla Ciebie.`,{act:'tab',arg:'set',label:'Ustawienia'});return}if(ok&&S.guide)S.guide.dataOk=true;S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);if(ok){save();render();toast(`Twój cel na start: ${fmt(targetKcal())} kcal dziennie.`+(S.pet?'':' W Moim dniu czeka jajko: wybierz, kto się z niego wykluje.'),S.pet?0:{act:'tab',arg:'pet',label:'Wybierz'});return}}
@@ -2232,8 +2372,8 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.imppaste){if(typeof navigator!=='undefined'&&navigator.clipboard&&navigator.clipboard.readText)navigator.clipboard.readText().then(t=>{S.imp=parseImport(t);S.tab='import';save();render()},()=>toast('Nie udało się odczytać schowka. Zezwól na wklejenie albo użyj adresu ze Skrótu.'));else toast('Ta przeglądarka nie pozwala odczytać schowka.');return}
   else if(d.goalway){S.goalWay=d.goalway}
   else if(d.bmicut){S.bmiCut=d.bmicut}
-  else if(d.goalbmi){S.goal=stpFmt(Math.round(+d.goalbmi*Math.pow((num(S.cm)||165)/100,2)*2)/2,STEP.goal);(S.touched=S.touched||{}).goal=true}
-  else if(d.goalpct){S.goal=stpFmt(goalOf(+d.goalpct),STEP.goal);(S.touched=S.touched||{}).goal=true}
+  else if(d.goalbmi){S.goal=stpFmt(Math.round(+d.goalbmi*Math.pow((num(S.cm)||165)/100,2)*2)/2,.5);(S.touched=S.touched||{}).goal=true}
+  else if(d.goalpct){S.goal=stpFmt(goalOf(+d.goalpct),.5);(S.touched=S.touched||{}).goal=true}
   else if(d.kcalset){const [id,v]=d.kcalset.split(':'),el=document.getElementById(id);if(el){el.value=v;if(el.focus)el.focus()}return}
   else if(d.revsave){const g=id=>document.getElementById(id).value.trim();S.reviews=S.reviews||{};S.reviews[reviewKey()]={a:g('r_a'),b:g('r_b'),c:g('r_c'),d:todayKey()};S.tab='day';toast('Zapisano przegląd');window.scrollTo(0,0)}
   else if(d.mode){S.mode=d.mode;if(d.mode==='utrzymanie'){S.maintRef=Math.round((avg7()||kg())*10)/10;S.maintSince=todayKey()}else{S.maintSince=''}toast(d.mode==='utrzymanie'?'Tryb utrzymania':d.mode==='masa'?'Tryb przyrostu masy':'Tryb redukcji')}
@@ -2260,10 +2400,10 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.promoskip){if(PROMO_PENDING){const i=+d.promoskip;PROMO_PENDING=PROMO_PENDING.filter((_,j)=>j!==i);if(!PROMO_PENDING.length)PROMO_PENDING=null}OPEN_F.add('zakupy')}
   else if(d.promodel){undoable('Usunięto promocję');S.promos=(Array.isArray(S.promos)?S.promos:[]).filter(p=>p.id!==d.promodel);OPEN_F.add('zakupy')}
   else if(d.recipe){if(S.tab!=='recipe')S.recipeBack=S.tab;S.recipe=d.recipe;S.tab='recipe';window.scrollTo(0,0)}
-  else if(d.labsave){const g=id=>document.getElementById(id),v=g('l_val').value.trim(),dt=g('l_date').value,lo0=g('l_lo')?g('l_lo').value.trim().replace(',','.'):'',lo=lo0&&isFinite(parseFloat(lo0))?lo0:'';if(!v||!isFinite(parseFloat(v.replace(',','.')))){toast('Wpisz wynik liczbowo');return}if(!dt){toast('Wpisz datę');return}S.labs.push({id:Date.now().toString(36),test:LABN[S.labSel]?S.labSel:'tsh',date:dt,val:v.replace(',','.'),...(lo?{lo}:{}),unit:g('l_unit').value.trim(),fast:g('l_fast').checked,bio:g('l_bio')?g('l_bio').checked:undefined,cyc:g('l_cyc')?g('l_cyc').value.trim():'',cr:g('l_cr')?g('l_cr').checked:false});petHealth('lab',v,null,{out:labStatus(S.labs.at(-1)).w===1});toast('Zapisano wynik')}
+  else if(d.labsave){const g=id=>document.getElementById(id),v=g('l_val').value.trim(),dt=g('l_date').value,lo0=g('l_lo')?g('l_lo').value.trim().replace(',','.'):'',lo=lo0&&isFinite(parseFloat(lo0))?lo0:'';if(!v||!isFinite(parseFloat(v.replace(',','.')))){toast('Wpisz wynik liczbowo');return}if(!dt){toast('Wpisz datę');return}const e={id:Date.now().toString(36),test:LABN[S.labSel]?S.labSel:'tsh',date:dt,val:v.replace(',','.'),...(lo?{lo}:{}),unit:g('l_unit').value.trim(),fast:g('l_fast').checked,bio:g('l_bio')?g('l_bio').checked:undefined,cyc:g('l_cyc')?g('l_cyc').value.trim():'',cr:g('l_cr')?g('l_cr').checked:false};S.labs.push(e);petHealth('lab',v,null,{out:labStatus(e).w===1});LAB_KEEP={test:e.test,date:dt,unit:e.unit,raw:v,back:false,day:todayKey(),f:{lo:g('l_lo')?g('l_lo').value.trim():'',fast:e.fast,bio:e.bio,cyc:e.cyc,cr:e.cr}};actSave('lab',()=>labDrop(e),()=>S.labs.some(x=>x===e||x.id===e.id),at);return}
   else if(d.labdel){undoable('Usunięto wynik badania');S.labs=S.labs.filter(e=>e.id!==d.labdel)}
   else if(d.labcopy){const t=LABS.map(x=>{const es=S.labs.filter(e=>e.test===x.id).sort((a,b)=>a.date.localeCompare(b.date));return es.length?x.n+': '+es.map(e=>fmtDate(e.date)+' '+e.val+' '+e.unit).join('; '):''}).filter(Boolean).join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
-  else if(d.quick){const n=document.getElementById('q_n').value.trim(),k=num(document.getElementById('q_k').value);if(k<=0){toast('Wpisz liczbę kalorii');return}day().push({kind:'m',label:n||'Szybki wpis',k,p:0,f:0,c:0})}
+  else if(d.quick){const n=document.getElementById('q_n').value.trim(),k=num(document.getElementById('q_k').value);if(k<=0){toast('Wpisz liczbę kalorii');return}buzz();day().push({kind:'m',label:n||'Szybki wpis',k,p:0,f:0,c:0})}
   else if(d.repeat){const y=(S.days[keyOf(new Date(Date.now()-864e5))]||[]).filter(e=>e.kind==='m');if(!y.length){toast('Wczoraj nie ma zapisanych posiłków');return}y.forEach(e=>day().push(Object.assign({},e)));PET.react('meal')}
   else if(d.copy){const m=MEALS.find(x=>x.id===d.copy),x=macros(m,carbMult(),num(S.f.portion)||1),t=m.n+'\n'+x.items.map(i=>i.n+': '+Math.round(i.g/5)*5+' g').join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano składniki'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
   else if(d.hab){const k=todayKey();S.hab[k]=S.hab[k]||{};S.hab[k][d.hab]=!S.hab[k][d.hab];if(S.hab[k][d.hab])PET.react('habit',(HABITS.find(x=>x.id===d.hab)||{}).pts||0)}
@@ -2308,7 +2448,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.ordn){S.ord=S.ord||{add:{}};const dk=ordDish();S.ord[dk]=dk==='tofu'?d.ordn:+d.ordn}
   else if(d.ordalt){S.ord.alt=!S.ord.alt}
   else if(d.ordadd){S.ord.add=S.ord.add||{};S.ord.add[d.ordadd]=!S.ord.add[d.ordadd]}
-  else if(d.ordsave){const t=ordCalc();day().push({kind:'m',id:'zam_'+ordDish(),label:ordLabel()+' (zamówione)',k:Math.round(t.k),p:Math.round(t.p),f:Math.round(t.f),c:Math.round(t.c),ord:1});PET.react('meal');save();render();toast(guideToast('Zapisano zamówione'),guideAct()||{act:'tab',arg:'day',label:'Mój dzień'});return}
+  else if(d.ordsave){const t=ordCalc(),e={kind:'m',id:'zam_'+ordDish(),label:ordLabel()+' (zamówione)',k:Math.round(t.k),p:Math.round(t.p),f:Math.round(t.f),c:Math.round(t.c),ord:1};day().push(e);PET.react('meal');actDay('ord',todayKey(),[e],at);actGuide('Zapisano zamówione');return}
   else if(d.forme){S.f.forme=!forMe()}
   else if(d.ftag){S.f.tags=S.f.tags||{};S.f.tags[d.ftag]=!S.f.tags[d.ftag]}
   else if(d.sygseen){S.sygSeen=S.sygSeen||{};S.sygSeen[d.sygseen]=todayKey()}
@@ -2323,23 +2463,8 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.sex){S.sex=d.sex;muscleToast()}
   else if(d.reset){undoable('Przywrócono ustawienia domyślne');const days=S.days;S=clone(DEF);S.days=days;S.tab='set'}
   else return;
-  save();render();actDone(at);
+  save();render();if(!liteAfter())actDone(at);
 });
-// Przytrzymanie − i +: krok od razu, po 0,3 s powtarzanie co 0,08 s, po 8 krokach co 0,04 s, po 30 krokach krokiem ×5
-// (15 kroków w ok. 1,2 s, np. 1,5 kg wagi albo 7500 kroków);
-// zwykłe dotknięcie działa jak dotąd. Przerysowanie dopiero po kliknięciu, które przeglądarka wysyła po puszczeniu palca,
-// żeby kliknięcie nie trafiło w element przesunięty przez przerysowanie.
-let HOLD=null,STP_SKIP=false;
-const HOLD_DELAY=300,holdGap=n=>n>8?40:80,holdMult=n=>n>30?5:1;
-document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest('.stp');if(!b||e.button>0)return;e.preventDefault();
-  const k=b.dataset.stp,d=+b.dataset.d;if(!stpApply(k,d,1))return;stpShow(k);let n=0;try{b.setPointerCapture(e.pointerId)}catch(_){}
-  const rep=()=>{n++;stpApply(k,d,holdMult(n));stpShow(k);HOLD.t=setTimeout(rep,holdGap(n))};HOLD={k,d:b.dataset.d,t:setTimeout(rep,HOLD_DELAY)}});
-function holdEnd(){if(!HOLD)return;clearTimeout(HOLD.t);const h=HOLD;HOLD=null;STP_SKIP=true;save();setTimeout(()=>{STP_SKIP=false;stpDone(h.k,h.d)},350)}
-document.addEventListener('pointerup',holdEnd);document.addEventListener('pointercancel',holdEnd);
-// Strzałki w górę i w dół w polu liczbowym zmieniają wartość o krok, Page Up i Page Down o 10 kroków (wzorzec spinbutton APG)
-const KEYSTEP={ArrowUp:[1,1],ArrowDown:[-1,1],PageUp:[1,10],PageDown:[-1,10]};
-document.addEventListener('keydown',e=>{const el=e.target,ks=KEYSTEP[e.key];if(!el||!el.dataset||!ks)return;
-  const k=el.dataset.k;if(!k||!STEP[k.split('.').pop()])return;e.preventDefault();if(!stpApply(k,ks[0],ks[1]))return;stpShow(k);save()});
 document.addEventListener('input',e=>{
   const el=e.target;
   if(el.id==='help_q'){S.helpQ=el.value;document.getElementById('helpres').innerHTML=helpRes(el.value);return}

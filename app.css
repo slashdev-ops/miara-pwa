@@ -13,6 +13,7 @@
   --zw-eye:#2A211E; --zw-hi:#FFFFFF; --zw-blush:#F28B8B; --zw-mouth:#9E3D3D; --zw-heart:#E2506A; --zw-nose:#E07A86; --zw-pink:#F7B2B2; --zw-shadow:rgb(60 45 30 / .24); --zw-beak:#F0963C; --zw-beak-ln:#B4601E;
   --zw-goose-hi:#FFFFFF; --zw-goose:#F7F2E8; --zw-goose-sh:#DCD2C0; --zw-goose-ln:#857A63; --zw-duck-hi:#FFF2A8; --zw-duck-sh:#E2AE2E; --zw-duck-ln:#A87A12;
   --zw-capy-hi:#D4A77C; --zw-capy:#B5875C; --zw-capy-sh:#8E6340; --zw-capy-ln:#654225; --zw-capy-mz:#9E7148; --zw-cat-hi:#FFD6A6; --zw-cat:#F2AE6B; --zw-cat-sh:#D8884A; --zw-cat-ln:#A45A26;
+  --zw-stone-hi:#F4EFE4; --zw-stone:#CFC3AA; --zw-stone-sh:#A89C82; --zw-stone-ln:#7A7060; --zw-stone-next:#F3EFE6; --zw-lake-a:#A9D3DC; --zw-lake-b:#B5DCC8; --zw-lake-c:#B9C6E6; --zw-lake-hi:#FFFFFF; --zw-lake-ln:#3F7A8C; --zw-reed:#7E9A4A; --zw-reed-ln:#557030; --zw-gold:#E9B92F; --zw-lily:#F2B8C6; --zw-leaf:#8DB05A; --zw-bank:#CFE0B4; --zw-fog:#F3F1EC; --zw-wind:#6B7D83; --zw-fog-o:.55;
   --r:16px; --r-s:12px; --pill:999px;
   --serif:"Fraunces",Georgia,"Times New Roman",serif;
   color-scheme:light;
@@ -30,6 +31,7 @@
     --zw-eye:#1E1714; --zw-hi:#FFFFFF; --zw-blush:#E07C7C; --zw-mouth:#8A3434; --zw-heart:#F06A82; --zw-nose:#D06B78; --zw-pink:#E89C9C; --zw-shadow:rgb(0 0 0 / .5); --zw-beak:#E08A36; --zw-beak-ln:#A05518;
     --zw-goose-hi:#F4F0E8; --zw-goose:#E2DCD0; --zw-goose-sh:#B9AF9C; --zw-goose-ln:#8E826C; --zw-duck-hi:#F0DE86; --zw-duck-sh:#B8902A; --zw-duck-ln:#8C6A14;
     --zw-capy-hi:#BE9472; --zw-capy:#A27852; --zw-capy-sh:#7C573A; --zw-capy-ln:#5A3B22; --zw-capy-mz:#86603E; --zw-cat-hi:#F2C391; --zw-cat:#DE9E60; --zw-cat-sh:#BF7840; --zw-cat-ln:#8E4E22;
+    --zw-stone-hi:#6E6658; --zw-stone:#6A6252; --zw-stone-sh:#3E3A32; --zw-stone-ln:#A39C8C; --zw-stone-next:#2B2A25; --zw-lake-a:#2E5560; --zw-lake-b:#2F5646; --zw-lake-c:#34416A; --zw-lake-hi:#9CC8D4; --zw-lake-ln:#7FB3C4; --zw-reed:#6E8A3E; --zw-reed-ln:#9DBB72; --zw-gold:#D9A92A; --zw-lily:#D58FA2; --zw-leaf:#5F7F38; --zw-bank:#34442A; --zw-fog:#9AA3A0; --zw-wind:#AEBDC2; --zw-fog-o:.3;
     color-scheme:dark;
   }
 }
@@ -42,13 +44,15 @@
     --zw-eye:#1E1714; --zw-hi:#FFFFFF; --zw-blush:#E07C7C; --zw-mouth:#8A3434; --zw-heart:#F06A82; --zw-nose:#D06B78; --zw-pink:#E89C9C; --zw-shadow:rgb(0 0 0 / .5); --zw-beak:#E08A36; --zw-beak-ln:#A05518;
     --zw-goose-hi:#F4F0E8; --zw-goose:#E2DCD0; --zw-goose-sh:#B9AF9C; --zw-goose-ln:#8E826C; --zw-duck-hi:#F0DE86; --zw-duck-sh:#B8902A; --zw-duck-ln:#8C6A14;
     --zw-capy-hi:#BE9472; --zw-capy:#A27852; --zw-capy-sh:#7C573A; --zw-capy-ln:#5A3B22; --zw-capy-mz:#86603E; --zw-cat-hi:#F2C391; --zw-cat:#DE9E60; --zw-cat-sh:#BF7840; --zw-cat-ln:#8E4E22;
+    --zw-stone-hi:#6E6658; --zw-stone:#6A6252; --zw-stone-sh:#3E3A32; --zw-stone-ln:#A39C8C; --zw-stone-next:#2B2A25; --zw-lake-a:#2E5560; --zw-lake-b:#2F5646; --zw-lake-c:#34416A; --zw-lake-hi:#9CC8D4; --zw-lake-ln:#7FB3C4; --zw-reed:#6E8A3E; --zw-reed-ln:#9DBB72; --zw-gold:#D9A92A; --zw-lily:#D58FA2; --zw-leaf:#5F7F38; --zw-bank:#34442A; --zw-fog:#9AA3A0; --zw-wind:#AEBDC2; --zw-fog-o:.3;
     color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 80px);scroll-padding-bottom:calc(104px + env(safe-area-inset-bottom,0px));-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-variant-numeric:tabular-nums}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:16px 24px 8px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+/* Szerszy krój pisma (inny system, większy tekst): data i Pomoc przechodzą do drugiej linii zamiast przewijania w bok */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:16px 24px 8px;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 12px}
 header h1{font-family:var(--serif);font-weight:600;font-size:32px;line-height:1.15;margin:0;letter-spacing:-.01em}
 header .who{font-size:15px;color:var(--muted)}
 main{padding:0 16px calc(104px + env(safe-area-inset-bottom,0px));max-width:640px;margin:0 auto}
@@ -77,6 +81,11 @@ button{font:inherit;color:inherit}
 .field input.bad{border-color:var(--warn-ink);background:var(--warn-bg)}
 .field input[type=text],.field input[type=date],.field input[type=password]{width:104px;text-align:right;font:inherit;font-size:17px;padding:8px 12px;border:1px solid var(--field);border-radius:var(--r-s);background:var(--bg);color:var(--ink)}
 .field .unit{width:44px;color:var(--muted);font-size:15px}
+.field.prot{flex-wrap:wrap;justify-content:flex-start;gap:4px 16px}
+.field.prot label,.field.prot .hint{flex:1 1 100%}
+.field.prot .pair{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.field.prot .pair input[type=text]{width:96px}
+.field.prot .pair .unit{width:auto;display:inline-flex;align-items:center;align-self:stretch}
 .switch{appearance:none;width:51px;height:31px;border-radius:var(--pill);background:var(--field);position:relative;flex:none;margin:0;cursor:pointer}
 .switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
 .switch:checked{background:var(--green)}
@@ -91,11 +100,18 @@ button{font:inherit;color:inherit}
 .trio .sub{font-size:13px;opacity:.9}
 .readout .unit{font-size:13px;opacity:.9;margin-top:12px}
 .custom{display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap}
-.custom input{width:72px;font:inherit;font-size:17px;padding:8px;border-radius:var(--r-s);border:0;text-align:center;background:rgba(255,255,255,.92);color:#22251F}
 .custom .res{flex:1;font-size:15px}
 /* Przyciski: jeden kształt dla działań (jak pola, 12 px), tekst w jednej linii; pigułka tylko dla chipów; zasady: rada/przyciski */
 .btn{border:0;border-radius:var(--r-s);padding:12px 20px;font-weight:600;min-height:48px;line-height:1.25;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;background:var(--green);color:var(--on-green)}
 main p > .btn:not(.small){display:block;width:100%}
+/* Przyciski, które reagują (20.11.2026): napis .act-l i miarka .act-z w tej samej komórce siatki; miarka z napisów wszystkich stanów
+   trzyma szerokość przycisku (bez przesunięcia przy „✓ … · Cofnij” i po oknie), ukryta wzrokowo i przed czytnikiem (aria-hidden) */
+.btn.act{display:inline-grid;grid-template-columns:minmax(0,auto);align-items:center;justify-items:center}
+main p > .btn.act:not(.small){display:grid;grid-template-columns:minmax(0,1fr)}
+.btn.act>span{grid-area:1/1;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.act-z{display:grid;visibility:hidden}
+.act-z i{grid-area:1/1;font-style:normal}
+.act-z i::before{content:attr(data-l)}
 main p > .btn:not(.small) + .btn:not(.small){margin-top:8px}
 .why{font-size:15px;color:var(--muted);margin:0 8px 12px}
 .readout .btn{background:var(--on-green);color:var(--green)}
@@ -173,12 +189,9 @@ nav.tabs svg{width:24px;height:24px}
 @media (max-width:359px){.toast{grid-template-columns:minmax(0,1fr) auto}.toast .tclose{grid-column:2}.toast .btn.small{grid-column:1;grid-row:2;justify-self:start}}
 .toast .btn.small{background:var(--bg);color:var(--ink)}
 .tclose{border:0;background:transparent;color:inherit;font-size:20px;min-width:44px;min-height:44px;border-radius:var(--r-s)}
-.hright{display:flex;align-items:center;gap:12px}
+.hright{display:flex;align-items:center;gap:12px;margin-left:auto}
 @media (max-width:359px){header .who{display:none}}
 .hbtn{border:0;background:transparent;color:var(--green);font-weight:600;font-size:15px;min-height:44px;padding:0 4px;text-decoration:underline;text-underline-offset:3px}
-.num{display:flex;align-items:center;gap:4px}
-.field .num input[type=text]{width:76px}
-.stp{touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;border:0;width:44px;height:44px;border-radius:var(--r-s);background:var(--surface2);color:var(--ink);font-size:20px;line-height:1;flex:none}
 .chips.quick{padding:0 16px 8px;margin:0}
 .flash{outline:3px solid var(--brass);outline-offset:4px;transition:outline-color 2s}
 @media (prefers-reduced-motion:reduce){.flash{transition:none}}
@@ -333,9 +346,6 @@ table.weeks th,table.weeks td{padding:0;text-align:left}
 table.weeks td:nth-child(3),table.weeks th:nth-child(3){grid-column:1/-1}
 table.weeks td:nth-child(3):not(:empty){padding-top:4px;color:var(--muted)}
 .field.sleep{flex-wrap:wrap}
-.field.sleep .num{gap:4px}
-.field.sleep .num input[type=text]{width:44px;padding:8px 4px;text-align:center}
-.field.sleep .num .unit{margin:0;width:auto;padding:0 4px}
 .field.haserr{flex-wrap:wrap}
 .field .err{flex:1 1 100%;font-size:13px;color:var(--warn-ink)}
 /* 320 px: etykieta, przyciski z polem i jednostka nie mieszczą się w jednym wierszu; zawijanie od razu, a nie dopiero przy komunikacie błędu (pole nie przeskakuje), jednostka nie wychodzi za ramkę */
@@ -398,13 +408,12 @@ button:disabled{opacity:.55;cursor:not-allowed;filter:none;transform:none}
 /* Ścieżka kamieni (rada/2026-11-11_zwierzak-droga.md): kamienie z palety, skok tylko bez ograniczenia ruchu */
 .stones{padding:8px 16px}
 .stones svg{width:100%;height:auto;display:block}
-.stones .water{fill:var(--tint)}
-.stones .fog{fill:var(--surface2);opacity:.6}
-.stone{fill:var(--surface2);stroke:var(--edge);stroke-width:1}
-.stone.done{fill:var(--green);stroke:var(--green)}
-.stonepet{fill:var(--duck);stroke:var(--ink);stroke-width:1}
-@media (prefers-reduced-motion: no-preference){.stone.now,.stonepet{animation:stonehop .6s ease-out 1}}
-@keyframes stonehop{0%{transform:translateY(-6px)}60%{transform:translateY(1px)}100%{transform:none}}
+/* Jezioro (pet.js path): kolory w atrybutach z tokenów --zw-*; podskok na nowym kamieniu i fala tylko bez ograniczenia ruchu */
+.stones .fog{opacity:var(--zw-fog-o)}
+.stones .stonepet,.stones .wave{transform-box:fill-box;transform-origin:50% 100%}
+@media (prefers-reduced-motion: no-preference){.stonepet.hop{animation:stonehop .7s ease-out 1}.stones .wave{animation:stonewave 3.2s ease-in-out infinite}}
+@keyframes stonehop{0%{transform:translateY(-24px)}60%{transform:translateY(3px)}100%{transform:none}}
+@keyframes stonewave{50%{transform:translateX(-4px)}}
 
 /* Mniej ramek (11.11.2026): sąsiadujące zwinięte sekcje to jedna lista z jedną ramką */
 details.fold:has(+ details.fold){margin-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-width:0;box-shadow:none}
@@ -426,8 +435,10 @@ nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;he
 .entry.prow{display:block}
 .prow .ptop{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .prow .pname{display:block;text-align:left;margin:2px 0 8px}
-.prow .pbot{display:flex;align-items:center;justify-content:space-between;gap:12px}
+/* Szerszy krój pisma (np. DejaVu Sans): przycisk „Zjem” przechodzi pod wartości, po prawej, zamiast wychodzić poza ekran */
+.prow .pbot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
 .prow .pbot .btn,.prow .pbot .val{flex:none}
+.prow .pbot .btn{margin-left:auto}
 /* Zjem: krótkie podświetlenie wiersza po zapisie (ok. 1 s); przy ograniczonym ruchu bez animacji */
 .prow.ate{animation:ateflash 1s ease-out 1}
 @keyframes ateflash{from{background:var(--surface2)}to{background:transparent}}
@@ -468,6 +479,7 @@ a.plink{display:inline-flex;align-items:center;text-decoration:none;color:var(--
 .wp-hint:empty,.wp-sub:empty{display:none}
 .wp-hint:empty + .wp-sub{grid-column:1/-1}
 .wp-pm{display:flex;gap:4px}
+.wp-ctl{display:contents}
 .wp-sq,.wp-chg{touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;min-width:44px;min-height:44px;border-radius:var(--r-s);border:1px solid var(--edge);background:var(--surface);color:var(--ink);font-size:20px;font-weight:600;cursor:pointer;padding:0}
 .wp-chg{display:none;font-size:15px;padding:0 12px;color:var(--green)}
 .wp-r.saved .wp-sq{display:none}
@@ -495,7 +507,40 @@ a.plink{display:inline-flex;align-items:center;text-decoration:none;color:var(--
 .wp-qbox{margin:4px 0}
 .wp-big{cursor:default;text-decoration:none}
 .wp-ends{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:-4px}
+/* Wiersze wartości w ramce .panel w miejscu dawnych pól (zadanie 5): krótka etykieta, wartość i − + w jednej linii; długa etykieta
+   zawija się do własnej linii, wartość i − + zostają razem po prawej; pod spodem jedna linia podpisu („ostatnio: data”), pusta znika */
+.wp-f{margin:0;padding:2px 16px}
+.wp-f + .wp-f,.chips + .wp-f{border-top:1px solid var(--line)}
+.wp-f .wp-r{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:0}
+.wp-f .wp-r::before{content:"";order:2;flex-basis:100%;height:0}
+.wp-f .wp-lab,.wp-f .wp-ctl{order:1}
+.wp-f .wp-lab{flex:1 0 auto;max-width:100%;overflow-wrap:anywhere}
+.wp-f .wp-ctl{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
+.wp-f .wp-hint,.wp-f .wp-sub{order:3;margin:-4px 0 4px}
+/* Ustawienie „Przyciski − i + po lewej” (S.pmLeft, atrybut data-pm na html): grupa − + przed etykietą w kartach i ramkach */
+html[data-pm="l"] .wp-pm{order:-1}
+html[data-pm="l"] .wp-hint{grid-column:2/3}
+html[data-pm="l"] .wp-hint:empty + .wp-sub{grid-column:1/-1}
+html[data-pm="l"] .wp-f .wp-ctl{display:contents}
+html[data-pm="l"] .wp-f .wp-val{order:1}
+html[data-pm="l"] .wp-f .wp-hint{grid-column:auto}
+.wp-f .wp-sub{margin-left:auto}
+.wp-pc{margin:0;padding:4px 16px 8px}
+.wp-tl{margin:8px 0 0;padding:0 16px}
+.wp-trend{background:var(--surface);border-radius:var(--r-s);margin:4px 0 12px}
 .wp-sq:focus-visible,.wp-chg:focus-visible,.wp-val:focus-visible,.wp-in:focus-visible,.wp-range:focus-visible,.wp-main:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+/* Szybki wpis po pełnym dniu (plan łatwości, zadanie 4): zwinięta karta i „Twój stan” w miejscu; kropki dni neutralne (obecność wpisu, nie ocena) */
+.lite-line{margin:8px 0;font-size:15px}
+.lite-act{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.lite-stan{margin-top:12px}
+.lite-stan h3{font-size:17px;margin:4px 0}
+.lite-stan .wp-spark{background:var(--surface);border-radius:var(--r-s);margin:4px 0}
+.lite-ok{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lite-dots{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;list-style:none;margin:8px 0;padding:0;text-align:center;font-size:13px;color:var(--muted)}
+.lite-dot{position:relative;display:grid;justify-items:center;gap:2px}
+.lite-d{width:16px;height:16px;border-radius:50%;border:2px solid var(--field);box-sizing:border-box}
+.lite-dot.on .lite-d{background:var(--ink);border-color:var(--ink)}
+@media (max-width:359px){.lite-act{grid-template-columns:minmax(0,1fr)}}
 /* Postacie zwierzaka (pet.js, 20.11.2026): serduszka serii, radość z lekkim podskokiem; przy prefers-reduced-motion bez ruchu, reakcja to napis */
 .pet .zw-heart{transform-box:fill-box;transform-origin:center;animation:zwfloat 2.4s ease-out infinite backwards}
 .pet .zw-f2{animation-delay:.8s}

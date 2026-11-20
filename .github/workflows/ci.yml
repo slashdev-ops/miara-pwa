@@ -32,7 +32,8 @@ jobs:
   przegladarka:
     # Chromium i WebKit (silnik Safari), tryb jasny i ciemny, iPhone 13 i 320 px: tests/przegladarka/miara.spec.js
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # ok. 1100 testów: na ubuntu 26-29 min przy domyślnej liczbie procesów; 4 procesy i zapas czasu
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: tests/przegladarka
@@ -69,7 +70,8 @@ jobs:
           done
           exit 1
       - name: Testy w przeglądarce
-        run: npx playwright test
+        timeout-minutes: 40
+        run: npx playwright test --workers=4
       - name: Raport po błędzie
         if: failure()
         uses: actions/upload-artifact@v7

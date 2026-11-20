@@ -15,6 +15,10 @@ async function open(page, o = {}) {
   await page.locator('#wp_card').scrollIntoViewIfNeeded();
   return errors;
 }
+// Przycisk nie przesuwa się i nie zmienia rozmiaru: po zakończeniu przejść CSS, z tolerancją 1 px (WebKit zaokrągla ułamki piksela)
+const settled = (loc) => loc.evaluate((e) => Promise.all(e.ownerDocument.getAnimations().filter((a) => a.effect && a.effect.getComputedTiming().endTime !== Infinity).map((a) => a.finished.catch(() => null))));
+const near = (a, b) => !!a && !!b && ['x', 'y', 'width', 'height'].every((k) => Math.abs(a[k] - b[k]) <= 1);
+async function expectSameBox(loc, box0) { await settled(loc); await expect.poll(async () => near(await loc.boundingBox(), box0), { message: 'przycisk w tym samym miejscu i rozmiarze (±1 px)' }).toBe(true); }
 const today = (page) => page.evaluate(() => { const m = S.meas[todayKey()] || {}; return { w: m.w, sleep: m.sleep, steps: m.steps }; });
 
 test('karta: prosty widok, „Dodaj” przy wadze pokazuje ostatnie ważenie zamiast pustego pola i wykres 14 dni', async ({ page }) => {
@@ -66,7 +70,7 @@ test('karta: „Jak wczoraj” od razu, zmiana wiersza daje „Zatwierdź (1)”
   await expect(main).toHaveText('Jak wczoraj');
   await expect(page.locator('#wp_hs')).toHaveText('jak wczoraj?');
   await expect(page.locator('#m_sleep')).toHaveText('6 h 13 min');
-  await page.getByRole('button', { name: 'Sen o 15 minut więcej' }).click();
+  await page.getByRole('button', { name: 'Sen o 5 minut więcej' }).click();
   await expect(page.locator('#m_sleep')).toHaveText('6 h 15 min');
   await expect(page.locator('#wp_hs')).toHaveText('+2 min od wczoraj');
   await expect(main).toHaveText('Zatwierdź (1)');
@@ -106,16 +110,17 @@ test('karta: „Jak wczoraj” kopiuje sen i kroki (nie wagę), po 5 s „Zobacz
   await expect(page.locator('#wp_card .wp-r.saved')).toHaveCount(3);
   await expect(page.locator('#wp_card .wp-chg:visible')).toHaveCount(3);
   await main.scrollIntoViewIfNeeded();
+  await settled(main);
   const box0 = await main.boundingBox();
   await page.clock.fastForward(5100);
   await expect(main).toHaveText('Zobacz, co się zmieniło');
-  expect(await main.boundingBox()).toEqual(box0);
+  await expectSameBox(main, box0);
   await expect(page.locator('#wp_sum')).toBeHidden();
   await main.click();
   await expect(page.locator('#wp_sum')).toBeVisible();
   await expect(page.locator('#wp_sum')).toContainText('Zapisane na dziś: Sen 6 h 13 min · Kroki 8');
   await expect(main).toHaveText('Gotowe na dziś');
-  expect(await main.boundingBox()).toEqual(box0);
+  await expectSameBox(main, box0);
   await main.click();
   await expect(page.locator('#wp_sum')).toBeHidden();
   await expect(main).toHaveText('Zobacz, co się zmieniło');
@@ -258,12 +263,12 @@ test('karta: − i + obok siebie w prawej połowie karty', async ({ page }) => {
 test('karta: przy 390 px najwyżej 780 px wysokości; wartości robocze przeżywają przerysowanie ekranu', async ({ page }) => {
   const errors = await open(page, { w: 390 });
   expect(await page.evaluate(() => document.querySelector('#wp_card').getBoundingClientRect().height)).toBeLessThanOrEqual(780);
-  await page.getByRole('button', { name: 'Sen o 15 minut więcej' }).click();
+  await page.getByRole('button', { name: 'Sen o 5 minut więcej' }).click();
   await page.evaluate(() => render());
   await expect(page.locator('#m_sleep')).toHaveText('6 h 15 min');
   await expect(page.locator('#wp_main')).toHaveText('Zatwierdź (1)');
-  await page.getByRole('button', { name: 'Sen o 15 minut więcej' }).click();
-  await expect(page.locator('#m_sleep')).toHaveText('6 h 30 min');
+  await page.getByRole('button', { name: 'Sen o 5 minut więcej' }).click();
+  await expect(page.locator('#m_sleep')).toHaveText('6 h 20 min');
   await page.locator('#wp_rk').fill('12000');
   await expect(page.locator('#m_steps')).toHaveText(/^12\s000$/);
   await expect(page.locator('#wp_main')).toHaveText('Zatwierdź (2)');
@@ -273,7 +278,7 @@ test('karta: przy 390 px najwyżej 780 px wysokości; wartości robocze przeżyw
 test('karta: drugie dotknięcie głównego przycisku zaraz po zapisie nie cofa zapisu (błąd trybu)', async ({ page }) => {
   const errors = await open(page);
   const main = page.locator('#wp_main');
-  await page.getByRole('button', { name: 'Sen o 15 minut więcej' }).click();
+  await page.getByRole('button', { name: 'Sen o 5 minut więcej' }).click();
   // Dwa dotknięcia jedno po drugim (bez czekania przeglądarki na stabilność przycisku między nimi)
   await page.evaluate(() => { document.getElementById('wp_main').click(); document.getElementById('wp_main').click(); });
   await expect(main).toHaveText('✓ Zapisane · Cofnij');
@@ -314,20 +319,20 @@ test('karta: wartości robocze przeżywają przeładowanie strony (sessionStorag
   await page.waitForFunction(() => typeof render === 'function' && typeof WPISY === 'object');
   const setup = () => page.evaluate(() => { S.onb = true; S.lite = false; S.tab = 'day'; SHEET = false; render(); });
   await page.evaluate(() => { S.onb = true; S.lite = false; S.tab = 'day'; S.meas = { [nAgo(1)]: { sleep: '6:15' } }; save(); render(); });
-  await page.getByRole('button', { name: 'Sen o 15 minut więcej' }).click();
-  await expect(page.locator('#m_sleep')).toHaveText('6 h 30 min');
+  await page.getByRole('button', { name: 'Sen o 5 minut więcej' }).click();
+  await expect(page.locator('#m_sleep')).toHaveText('6 h 20 min');
   await page.reload();
   await page.waitForFunction(() => typeof render === 'function' && typeof WPISY === 'object');
   await setup();
-  await expect(page.locator('#m_sleep')).toHaveText('6 h 30 min');
+  await expect(page.locator('#m_sleep')).toHaveText('6 h 20 min');
   await expect(page.locator('#wp_main')).toHaveText('Zatwierdź (1)');
   await page.locator('#wp_main').click();
   expect(await page.evaluate(() => sessionStorage.getItem('miara-wpisy:wp'))).toBeNull();
   await page.reload();
   await page.waitForFunction(() => typeof render === 'function' && typeof WPISY === 'object');
   await setup();
-  await expect(page.locator('#m_sleep')).toHaveText('6 h 30 min');
-  expect(await page.evaluate(() => S.meas[todayKey()].sleep)).toBe('6:30');
+  await expect(page.locator('#m_sleep')).toHaveText('6 h 20 min');
+  expect(await page.evaluate(() => S.meas[todayKey()].sleep)).toBe('6:20');
   await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
   expect(errors).toEqual([]);
 });
@@ -338,7 +343,7 @@ test('karta: przerysowanie w trakcie wpisu nie zostawia karty „zajętej” na 
   await expect(page.locator('#wp_in')).toBeFocused();
   expect(await page.evaluate(() => WPISY.busy())).toBe(true);
   expect(await page.evaluate(() => { render(); return WPISY.busy(); })).toBe(false);
-  await page.getByRole('button', { name: 'Sen o 15 minut więcej' }).click();
+  await page.getByRole('button', { name: 'Sen o 5 minut więcej' }).click();
   await expect(page.locator('#m_sleep')).toHaveText('6 h 15 min');
   expect(errors).toEqual([]);
 });
