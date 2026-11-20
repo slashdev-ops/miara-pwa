@@ -29,7 +29,7 @@ const sygPath = path.join(root, 'sygnaly.js');
 if (fs.existsSync(sygPath)) vm.runInContext(fs.readFileSync(sygPath, 'utf8'), sandbox);
 const wpPath = path.join(root, 'wpisy.js');
 if (fs.existsSync(wpPath)) vm.runInContext(fs.readFileSync(wpPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={setDemoN:(v)=>{DEMO_N=v},wpModel:()=>wpCfg(),wpCfg:()=>wpCfg(),wpParse:(k,t)=>wpParse(k,t),wpStore:(k,v)=>wpStore(k,v),wpBand:(w,r)=>wpBand(w,r),wpOnSaved:(k,v)=>wpOnSaved(k,v),wpGrace:()=>wpGrace(),measCp:(m,f)=>measCp(m,f),dataGap:()=>dataGap(),wpCommit:(v,o)=>wpCommit(v,o),wpRestore:(p)=>wpRestore(p),qSet:(a,v,o)=>qSet(a,v,o),sleepAt:(k)=>sleepAt(k),avgAgo:(a,b,k)=>avgAgo(a,b,k),guideActive:()=>guideActive(),S:()=>S,egfrRows:()=>typeof egfrRows=="undefined"?[]:egfrRows(),nonHdlRows:()=>typeof nonHdlRows=="undefined"?[]:nonHdlRows(),egfrCat:(v)=>typeof egfrCat=="undefined"?"":egfrCat(v),muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),fitNow:()=>typeof fitNow=="undefined"?undefined:fitNow(),potKouri:()=>typeof potKouri=="undefined"?undefined:potKouri(),potButt:()=>typeof potButt=="undefined"?undefined:potButt(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false,SUPP:typeof SUPP=="undefined"?[]:SUPP,SUPP_PARY:typeof SUPP_PARY=="undefined"?[]:SUPP_PARY,promoParse:typeof promoParse=="undefined"?undefined:promoParse,promoMatch:typeof promoMatch=="undefined"?undefined:promoMatch,nextShop:typeof nextShop=="undefined"?undefined:nextShop,promosActive:typeof promosActive=="undefined"?undefined:promosActive,promoDishes:typeof promoDishes=="undefined"?undefined:promoDishes,promoFix:typeof promoFix=="undefined"?undefined:promoFix,promoPending:()=>typeof PROMO_PENDING=="undefined"?undefined:PROMO_PENDING,labStatus:typeof labStatus=="undefined"?undefined:labStatus,load:typeof load=="undefined"?undefined:load,stepsBand:typeof stepsBand=="undefined"?undefined:stepsBand,liteFull:typeof liteFull=="undefined"?undefined:liteFull,liteCardHtml:typeof liteCardHtml=="undefined"?undefined:liteCardHtml,dayOk:typeof dayOk=="undefined"?undefined:dayOk,eggCrack:typeof eggCrack=="undefined"?undefined:eggCrack,liteDays:typeof liteDays=="undefined"?undefined:liteDays,dayLeft:typeof dayLeft=="undefined"?undefined:dayLeft,petCardHtml:typeof petCardHtml=="undefined"?undefined:petCardHtml,healthReact:typeof healthReact=="undefined"?undefined:healthReact,bodyDue:typeof bodyDue=="undefined"?undefined:bodyDue,qSet:typeof qSet=="undefined"?undefined:qSet,unlockNext:typeof unlockNext=="undefined"?undefined:unlockNext,unlockHtml:typeof unlockHtml=="undefined"?undefined:unlockHtml};', sandbox);
+vm.runInContext(code + '\n;globalThis.__T={acts:()=>ACTS,setDemoN:(v)=>{DEMO_N=v},wpModel:()=>wpCfg(),wpCfg:()=>wpCfg(),wpParse:(k,t)=>wpParse(k,t),wpStore:(k,v)=>wpStore(k,v),wpBand:(w,r)=>wpBand(w,r),wpOnSaved:(k,v)=>wpOnSaved(k,v),wpGrace:()=>wpGrace(),measCp:(m,f)=>measCp(m,f),dataGap:()=>dataGap(),wpCommit:(v,o)=>wpCommit(v,o),wpRestore:(p)=>wpRestore(p),qSet:(a,v,o)=>qSet(a,v,o),sleepAt:(k)=>sleepAt(k),avgAgo:(a,b,k)=>avgAgo(a,b,k),guideActive:()=>guideActive(),S:()=>S,egfrRows:()=>typeof egfrRows=="undefined"?[]:egfrRows(),nonHdlRows:()=>typeof nonHdlRows=="undefined"?[]:nonHdlRows(),egfrCat:(v)=>typeof egfrCat=="undefined"?"":egfrCat(v),muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),fitNow:()=>typeof fitNow=="undefined"?undefined:fitNow(),potKouri:()=>typeof potKouri=="undefined"?undefined:potKouri(),potButt:()=>typeof potButt=="undefined"?undefined:potButt(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),PROT:()=>PROT,DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,SCEN,scenS,mealTags,macros,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false,SUPP:typeof SUPP=="undefined"?[]:SUPP,SUPP_PARY:typeof SUPP_PARY=="undefined"?[]:SUPP_PARY,promoParse:typeof promoParse=="undefined"?undefined:promoParse,promoMatch:typeof promoMatch=="undefined"?undefined:promoMatch,nextShop:typeof nextShop=="undefined"?undefined:nextShop,promosActive:typeof promosActive=="undefined"?undefined:promosActive,promoDishes:typeof promoDishes=="undefined"?undefined:promoDishes,promoFix:typeof promoFix=="undefined"?undefined:promoFix,promoPending:()=>typeof PROMO_PENDING=="undefined"?undefined:PROMO_PENDING,labStatus:typeof labStatus=="undefined"?undefined:labStatus,load:typeof load=="undefined"?undefined:load,stepsBand:typeof stepsBand=="undefined"?undefined:stepsBand,liteFull:typeof liteFull=="undefined"?undefined:liteFull,liteCardHtml:typeof liteCardHtml=="undefined"?undefined:liteCardHtml,liteUi:()=>typeof LITE_UI=="undefined"?{}:LITE_UI,liteStanHtml:(k)=>typeof liteStanHtml=="undefined"?"":liteStanHtml(k),unlockTxt:()=>UNLOCK_TXT,dayOk:typeof dayOk=="undefined"?undefined:dayOk,eggCrack:typeof eggCrack=="undefined"?undefined:eggCrack,liteDays:typeof liteDays=="undefined"?undefined:liteDays,dayLeft:typeof dayLeft=="undefined"?undefined:dayLeft,petCardHtml:typeof petCardHtml=="undefined"?undefined:petCardHtml,healthReact:typeof healthReact=="undefined"?undefined:healthReact,bodyDue:typeof bodyDue=="undefined"?undefined:bodyDue,qSet:typeof qSet=="undefined"?undefined:qSet,unlockNext:typeof unlockNext=="undefined"?undefined:unlockNext,unlockHtml:typeof unlockHtml=="undefined"?undefined:unlockHtml,labKeep:()=>LAB_KEEP,rowSpecs:(g)=>typeof rowSpecs=="undefined"?[]:rowSpecs(g),stpFmt:(v,st)=>stpFmt(v,st)};', sandbox);
 const T = sandbox.__T;
 T.S().lite = false; // dotychczasowe testy zakładają pełny widok
 
@@ -177,7 +177,7 @@ tryc('odznaka świętowana raz (petSeen)', () => {
 });
 tryc('wprowadzenie: 1 ekran danych, Zaczynam, bez kropek postępu i bez wyboru zwierzaka', () => { const a = view('intro', { introStep: 0 }); return a.includes('Twoje dane') && !a.includes('data-intronext') && a.includes('>Zaczynam<') && !a.includes('Krok 1 z') && !a.includes('data-petkind'); });
 const swSrc = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-check('sw.js: pet.js i krój pisma w pamięci podręcznej, CACHE miara-v4 (duże wydanie: karta Dziś, suwaki)', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v4'") && swSrc.includes("'./fonts/fraunces-latin-ext-600-normal.woff2'"));
+check('sw.js: pet.js i krój pisma w pamięci podręcznej, CACHE miara-v5 (duże wydanie: wiersze wartości, suwaki z prędkością, przyciski, które reagują)', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v5'") && swSrc.includes("'./fonts/fraunces-latin-ext-600-normal.woff2'"));
 check('index.html: pet.js przed app.js', /pet\.js[\s\S]*app\.js/.test(html));
 
 // Zwierzak: sylwetka z pomiarów (opcjonalna)
@@ -323,6 +323,8 @@ const dk = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.g
 const BASE = (o) => ({ ...CLEAN(), consent: null, kopia: null, prof: { cond: {}, pill: '' }, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, tips: { day: true, health: true, set: true }, pain: {}, cardsOk: {}, discreet: false, once: false, visit: null, ...o });
 // Karta „Dziś” (wpisy.js): pomocnicze do testów karty
 const WP = () => sandbox.WPISY;
+// Napis przycisku, który reaguje (data-ab), z miejsca etykiety .act-l (miarka szerokości ma napisy w atrybutach)
+const ABL = (h, key) => { const m = new RegExp('data-ab="' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"[^>]*><span class="act-l">([^<]*)<').exec(h); return m ? m[1] : null; };
 const wpDay = (meas, o) => { WP().reset(); return view('day', BASE({ meas: meas || {}, kg: '82', lite: false, touched: {}, ...(o || {}) })); };
 const wpS = (k) => T.wpCfg().rows.find((R) => R.key === k), wpD = () => WP().draft('wp', T.todayKey()), wpSet = (d) => WP().commitSet(T.wpCfg(), d || {});
 const card = (h) => { const i = h.indexOf('<article class="wp-card"'); return i < 0 ? '' : h.slice(i, h.indexOf('</article>', i) + 10); };
@@ -569,17 +571,19 @@ tryc('komunikat: przycisk zamknięcia i przejścia, rola status', () => { T.toas
 tryc('komunikat: tekst jest escapowany', () => { T.toast('<img src=x>'); return !els.toast.innerHTML.includes('<img'); });
 tryc('komunikat: Ustawienia mają wybór czasu komunikatów', () => { const h = view('set', BASE()); return h.includes('id="komunikaty"') && h.includes('data-toastlen="stay"'); });
 tryc('komunikat: po zapisie posiłku w pierwszych krokach przycisk do następnego kroku', () => { view('meals', { ...NEWU(), kg: '82', guide: { hidden: false, dataOk: true, seenPet: false }, pet: { ...PETA } }); click({ addmeal: 's1' }); return /data-(tab|goto|nav)="/.test(els.toast.innerHTML); });
-tryc('pola: Ustawienia mają przyciski − i + przy wadze i wzroście', () => { const h = view('set', BASE()); return h.includes('data-stp="kg"') && h.includes('data-stp="cm"'); });
-tryc('pola: + przy wadze dodaje 0,1 kg', () => { view('set', BASE({ kg: '82' })); click({ stp: 'kg', d: '1' }); return T.S().kg === '82,1'; });
-tryc('pola: − przy wadze odejmuje 0,1 kg', () => { view('set', BASE({ kg: '82' })); click({ stp: 'kg', d: '-1' }); return T.S().kg === '81,9'; });
-tryc('pola: krok nie wychodzi poza limit', () => { view('set', BASE({ cm: '220' })); click({ stp: 'cm', d: '1' }); return T.S().cm === '220'; });
+// Zadanie 5 (20.11.2026): profil w wierszach wartości (wpisy.js); waga i waga docelowa co 0,5 kg, wpis z klawiatury dla dokładnej wartości
+const PFR = (k) => T.rowSpecs('pf').find((R) => R.key === k), PFS = (k, d) => { const R = PFR(k); R.put(WP().step(R, R.start.v, d)); return T.S()[k]; };
+tryc('pola: Ustawienia mają przyciski − i + przy wadze i wzroście', () => { WP().reset(); const h = view('set', BASE()); return ['kg', 'cm'].every((k) => h.includes(`data-wps="pf" data-wpk="${k}"`) && h.includes(`data-wp="pm:${k}:-1"`) && h.includes(`data-wp="pm:${k}:1"`)); });
+tryc('pola: + przy wadze dodaje 0,1 kg', () => { view('set', BASE({ kg: '82', touched: { kg: true, cm: true, age: true, goal: true } })); return PFS('kg', 1) === '82,1'; });
+tryc('pola: − przy wadze odejmuje 0,1 kg', () => { view('set', BASE({ kg: '82', touched: { kg: true, cm: true, age: true, goal: true } })); return PFS('kg', -1) === '81,9'; });
+tryc('pola: krok nie wychodzi poza limit', () => { view('set', BASE({ cm: '220', touched: { kg: true, cm: true, age: true, goal: true } })); return PFS('cm', 1) === '220'; });
 tryc('pola: waga dnia zaczyna od ostatniego ważenia, potem krok (karta Dziś)', () => {
   WP().reset(); view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } })); const R = wpS('w'), a = R.start.v, b = WP().step(R, a, 1); T.wpCommit({ w: b }); return a === 80.4 && T.S().meas[dk(0)].w === '80,5';
 });
-tryc('pola: sen zaczyna od 7 h i idzie co 15 minut', () => { WP().reset(); view('day', BASE()); const R = wpS('s'), a = R.start.v; T.wpCommit({ s: WP().step(R, a, 1) }); return a === 420 && T.S().meas[dk(0)].sleep === '7:15'; });
+tryc('pola: sen zaczyna od 7 h i idzie co 5 minut (krok dokładny suwaka)', () => { WP().reset(); view('day', BASE()); const R = wpS('s'), a = R.start.v; T.wpCommit({ s: WP().step(R, a, 1) }); return a === 420 && T.S().meas[dk(0)].sleep === '7:05'; });
 tryc('pola: Pomiary dnia mają przyciski przy wadze, krokach i śnie', () => { WP().reset(); const h = view('day', BASE()); return ['w', 's', 'k'].every((x) => h.includes(`data-wp="pm:${x}:-1"`) && h.includes(`data-wp="pm:${x}:1"`)); });
 tryc('trening: szybki wybór czasu 30, 45, 60, 90 min', () => { const h = view('train', BASE()); if (![30, 45, 60, 90].every((v) => h.includes(`data-setv="tr.wmin" data-v="${v}"`))) return false; click({ setv: 'tr.wmin', v: '45' }); return T.S().tr.wmin === '45'; });
-tryc('przepis: po „Zjem, zapisz” danie z planu nie pokazuje „W planie na dziś”', () => { const S0 = BASE({ swaps: {}, days: {} }); view('recipe', S0); const id = T.planIds()[0]; T.S().recipe = id; const a = view('recipe'); click({ addmeal: id }); const b = view('recipe'); return a.includes('W planie na dziś') && b.includes('✓ Zjedzone') && !b.includes('W planie na dziś'); });
+tryc('przepis: po „Zjem, zapisz” danie z planu nie pokazuje „W planie na dziś”', () => { const S0 = BASE({ swaps: {}, days: {} }); view('recipe', S0); const id = T.planIds()[0]; T.S().recipe = id; const a = view('recipe'); click({ addmeal: id }); const b = view('recipe'); return a.includes('W planie na dziś') && ABL(b, 'meal:' + id) === '✓ Zjedzone · Cofnij' && !b.includes('W planie na dziś'); });
 tryc('gotuję: przepis ma przycisk Gotuję to dziś', () => { T.S().recipe = 'o10'; return view('recipe', BASE()).includes('data-cook="o10"'); });
 tryc('gotuję: danie trafia do planu dnia w miejsce posiłku tego samego rodzaju', () => { view('recipe', BASE({ swaps: {} })); click({ cook: 'o10' }); const ids = T.planIds(); return ids.includes('o10') && ids.filter((id) => T.MEALS.find((m) => m.id === id).t === 'obiad').length === 1; });
 tryc('gotuję: Według planu zapisuje wybrane danie, plan pokazuje Twój wybór', () => { view('recipe', BASE({ swaps: {}, once: true })); click({ cook: 'o10' }); const h = view('meals', {}); click({ dayplan: '1' }); return h.includes('Twój wybór') && (T.S().days[T.todayKey()] || []).some((e) => e.id === 'o10'); });
@@ -591,7 +595,7 @@ tryc('plan: obiady w dni robocze do 20 min, w weekend większe danie', () => [1,
 // Zgłoszenie 06.11.2026: jeden styl przycisków pilnowany testami; „Po co” przy niejasnych sekcjach i w Pomocy
 const rule = (sel) => { const i = sysCss.indexOf('\n' + sel + '{'); return i < 0 ? '' : sysCss.slice(i + sel.length + 2, sysCss.indexOf('}', i)); };
 tryc('przyciski: działania mają kształt pól (12 px) i tekst w jednej linii', () => /border-radius:var\(--r-s\)/.test(rule('.btn')) && /white-space:nowrap/.test(rule('.btn')));
-tryc('przyciski: − i + w kształcie pól', () => /border-radius:var\(--r-s\)/.test(rule('.stp')));
+tryc('przyciski: − i + w kształcie pól (wiersze wartości)', () => /border-radius:var\(--r-s\)/.test(ruleOf('.wp-sq,.wp-chg')));
 tryc('przyciski: brak var(--pill) w regułach wyboru (kafelki 12 px; pigułka tylko dla znaczników .rec .chip, które nie są wyborem)', () => { const bad = [...sysCss.matchAll(/([^{}\n]+)\{[^}]*border-radius:var\(--pill\)/g)].map((m) => m[1].trim()).filter((sel) => /\.btn|\.stp|\.tclose|\.hbtn|button|\.chip|\.seg|\.zw-mood/.test(sel) && !/^\.rec \.chip\b/.test(sel)); if (bad.length) throw new Error(bad.join(' | ')); return true; });
 tryc('przyciski: działania sekcji na pełną szerokość, jedno pod drugim', () => /main p > \.btn:not\(\.small\)\{[^}]*width:100%/.test(sysCss));
 tryc('przyciski: bez szerokości w atrybucie style i bez pływania', () => !/class="btn[^"]*"[^>]*style="width:100%"/.test(code) && !/\.btn\{[^}]*float/.test(sysCss) && !/\.btn[^{]*\{[^}]*float:/.test(sysCss));
@@ -635,7 +639,7 @@ tryc('12 tygodni: tabela 12 tygodni z wagą w przedziale', () => { const h = vie
 tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h = view('health', BASE({ ...PROF(['hashi', 'mig'], 'yaz'), kg: '80', goal: '70' })), m = (h.match(/<table class="weeks"[\s\S]*?<\/table>/) || [''])[0]; return !/TSH (spadnie|wyniesie)|samopoczucie (wzro|popraw)/.test(m) && h.includes('nie prognozuje'); });
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
-const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord', 'shopDay', 'stores', 'promos', 'lite', 'unlock', 'unlockAt', 'unlockSnooze'];
+const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord', 'shopDay', 'stores', 'promos', 'lite', 'unlock', 'unlockAt', 'unlockSnooze', 'pmLeft', 'vibr'];
 const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'muscleAuto', 'muscleAutoLast', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'suppTake', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut', 'frame'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
@@ -678,11 +682,11 @@ tryc('sen: 6:75 w tekście odrzucone przez walidację', () => !!cn('meas.d.sleep
 tryc('sen: karty piszą sen w godzinach i minutach', () => view('day', BASE({ meas: { [dk(0)]: { sleep: '5:20' }, [dk(1)]: { sleep: '5:45' } } })).includes('sen: 5 h 45 min i 5 h 20 min'));
 
 // Zgłoszenie 06.11.2026: przytrzymanie − i +, pola według WCAG 2.2, scenariusze do sprawdzania bez wpisywania
-tryc('przytrzymanie: krok ze wspólnej funkcji, większy krok przy długim trzymaniu', () => { view('set', BASE({ kg: '82' })); T.stpApply('kg', 1, 1); const a = T.S().kg; T.stpApply('kg', 1, 5); return a === '82,1' && T.S().kg === '82,6'; });
-tryc('przytrzymanie: obsługa wciśnięcia i puszczenia przycisku', () => /addEventListener\('pointerdown'/.test(code) && /addEventListener\('pointerup'/.test(code) && /addEventListener\('pointercancel'/.test(code));
-tryc('przytrzymanie: po puszczeniu fokus wraca na ten sam przycisk', () => /data-stp="\$\{[^}]+\}"\]\[data-d="\$\{[^}]+\}"\]/.test(code) && /\.focus\(\{preventScroll:true\}\)/.test(code));
-tryc('przytrzymanie: przyciski bez zaznaczania tekstu i z szybkim dotykiem', () => /\.stp\{[^}]*touch-action:manipulation/.test(sysCss) && /\.stp\{[^}]*user-select:none/.test(sysCss));
-tryc('klawiatura: strzałka w górę w polu zwiększa wartość o krok', () => { view('set', BASE({ kg: '82' })); let pd = false; (lis.keydown || []).forEach((f) => f({ key: 'ArrowUp', target: { dataset: { k: 'kg' }, value: '82' }, preventDefault: () => { pd = true; } })); return pd && T.S().kg === '82,1'; });
+tryc('przytrzymanie: krok ze wspólnej funkcji, większy krok przy długim trzymaniu (waga w profilu bez siatki zgrubnej: ×5 po 30 krokach)', () => { WP().reset(); view('set', BASE({ kg: '82', touched: { kg: true, cm: true, age: true, goal: true } })); const R = T.rowSpecs('pf').find((x) => x.key === 'kg'), h = WP().holdStep; return Math.abs(h(R, 82, 1, 1) - 82.1) < 1e-9 && Math.abs(h(R, 82, 1, 31) - 82.5) < 1e-9; });
+tryc('przytrzymanie: obsługa wciśnięcia i puszczenia przycisku (wiersze wartości: pointercancel osobno jako anulowanie)', () => { const w = fs.readFileSync(wpPath, 'utf8'); return /addEventListener\('pointerdown'/.test(w) && /addEventListener\('pointerup', holdEnd\)/.test(w) && /addEventListener\('pointercancel', holdCancel\)/.test(w) && !/addEventListener\('pointercancel', holdEnd\)/.test(w); });
+tryc('przytrzymanie: po puszczeniu fokus wraca na ten sam przycisk (fokus na − albo + przed zapisem, przerysowanie oddaje go po data-)', () => { const w = fs.readFileSync(wpPath, 'utf8'); return /document\.activeElement !== b && b\.focus\) b\.focus\(\{ preventScroll: true \}\)/.test(w) && /function btnSel\(/.test(code); });
+tryc('przytrzymanie: przyciski bez zaznaczania tekstu i z szybkim dotykiem', () => /\.wp-sq,\.wp-chg\{[^}]*touch-action:manipulation/.test(sysCss) && /\.wp-sq,\.wp-chg\{[^}]*user-select:none/.test(sysCss) && !sysCss.includes('.stp{'));
+tryc('klawiatura: wiersze wartości mają suwak natywny (strzałki o krok dokładny) albo − i + jako przyciski; pola z data-k i − + nie zostały', () => { WP().reset(); const h = view('set', BASE({ touched: { kg: true, cm: true, age: true, goal: true } })); return /<input class="wp-range" type="range" id="pf_rcm" min="140" max="210" step="1"/.test(h) && h.includes('data-wp="pm:kg:1"') && !h.includes('data-stp') && !/data-k="(kg|cm|age|goal)"/.test(h); });
 tryc('podpowiedź: waga dnia bez dzisiejszego ważenia pokazuje ostatnie ważenie', () => { WP().reset(); return /id="m_w"[^>]*>80,4 kg</.test(card(view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } })))); });
 tryc('fokus niezasłonięty: przewijanie z marginesem na dolny pasek', () => /html\{[^}]*scroll-padding-bottom:/.test(sysCss));
 tryc('komunikat dla czytnika: obszar aria-live na wartości pól', () => /id="sr"[^>]*aria-live="polite"|aria-live="polite"[^>]*id="sr"/.test(html));
@@ -719,7 +723,7 @@ tryc('oznaczenia: lista dań pokazuje znaczniki, filtr Słodkie i Przy IO', () =
 tryc('oznaczenia: przepis poza regułą przy IO podpowiada zmianę porcji', () => { T.S().recipe = 's6'; const h = view('recipe', BASE({ prof: { cond: { io: true }, pill: '' } })); return h.includes('×0,75') && h.includes('60 g węglowodanów'); });
 tryc('oznaczenia: plan przy IO mówi, że słodkie śniadanie może zostać', () => planOf(view('health', BASE(PROF(['io'], '')))).includes('Słodkie śniadanie może zostać'));
 
-tryc('przytrzymanie: 15 kroków w mniej niż 1,5 s, 30 kroków w mniej niż 2 s', () => { const tAt = (n) => { let t = T.HOLD_DELAY; for (let i = 1; i < n - 1; i++) t += T.holdGap(i); return t; }; return tAt(15) < 1500 && tAt(30) < 2000; });
+tryc('przytrzymanie: 15 kroków w mniej niż 1,5 s, 30 kroków w mniej niż 2 s', () => { const tAt = (n) => { let t = WP().HOLD_DELAY; for (let i = 1; i < n - 1; i++) t += WP().holdGap(i); return t; }; return tAt(15) < 1500 && tAt(30) < 2000; });
 
 // Zgłoszenie 06.11.2026: posiłki według całego profilu, łączenie schorzeń
 const fitAll = (ids) => ids.every((id) => { const m = M(id); return T.ioFit(m, T.macros(m, 1, 1)); });
@@ -754,10 +758,10 @@ tryc('zamówione: zapamiętany wybór widać jako etykietę, bez zapisu jej nie 
 tryc('zamówione: każde danie ma zdanie dietetyka', () => ['sushi', 'kurczak', 'tofu'].every((d) => /class="why"|class="small muted"/.test(view('meals', ORDB({ dish: d }))) && view('meals', ORDB({ dish: d })).includes('class="ordtip"')));
 tryc('zamówione: szybki wpis prowadzi do Zamówione', () => view('day', BASE()).includes('data-nav="meals#zamowione#zamowione"'));
 tryc('zamówione: bez nazw lokali', () => !/chingu|kfc|sushi\s*master/i.test(code));
-tryc('sen: suwak 3-12 h co 15 minut ustawia sen', () => { WP().reset(); const h = view('day', BASE()); if (!/id="wp_rs" min="180" max="720" step="15"/.test(h)) return false; wpD().s = 450; const o = wpSet(wpD()); T.wpCommit(o.vals, o); return T.S().meas[dk(0)].sleep === '7:30' && !T.measCp(T.S().meas[dk(0)], 'sleep'); });
+tryc('sen: suwak 3-12 h co 5 minut (siatka 15 minut przy szybkim przesunięciu) ustawia sen', () => { WP().reset(); const h = view('day', BASE()); if (!/id="wp_rs" min="180" max="720" step="5"/.test(h)) return false; wpD().s = 450; const o = wpSet(wpD()); T.wpCommit(o.vals, o); return T.S().meas[dk(0)].sleep === '7:30' && !T.measCp(T.S().meas[dk(0)], 'sleep'); });
 tryc('sen: jak wczoraj z wczorajszą wartością', () => { WP().reset(); const h = card(view('day', BASE({ meas: { [dk(1)]: { sleep: '6:13' } } }))); return /id="m_sleep"[^>]*>6 h 13 min</.test(h) && h.includes('jak wczoraj?') && h.includes('>Jak wczoraj<'); });
 tryc('kroki: jak wczoraj, gdy dziś pusto; po zapisie bez pytania', () => { WP().reset(); const h = card(view('day', BASE({ meas: { [dk(1)]: { steps: '8500' } } }))); if (!/id="m_steps"[^>]*>8.500</.test(h) || !h.includes('>Jak wczoraj<')) return false; const o = wpSet(); T.wpCommit(o.vals, o); const b = card(view('day', {})); return T.S().meas[dk(0)].steps === '8500' && !b.includes('jak wczoraj?') && !b.includes('>Jak wczoraj<'); });
-tryc('kroki: − i + co 500 (siatka suwaka)', () => { WP().reset(); view('day', BASE({ meas: { [dk(0)]: { steps: '5000' } } })); const R = wpS('k'); T.wpCommit({ k: WP().step(R, R.start.v, 1) }); return T.S().meas[dk(0)].steps === '5500'; });
+tryc('kroki: − i + co 50 (krok dokładny suwaka), Page Up co 500', () => { WP().reset(); view('day', BASE({ meas: { [dk(0)]: { steps: '5000' } } })); const R = wpS('k'); T.wpCommit({ k: WP().step(R, R.start.v, 1) }); return T.S().meas[dk(0)].steps === '5050' && WP().pageStep(R, 5050, 1) === 5500; });
 // Zasada 08.11.2026: dane z badań tylko ze sprawdzonych linków; każda treść zdrowotna ma źródło
 const isUrl = (u) => /^https:\/\/[^\s"'<>]+$/.test(u);
 tryc('źródła: każde źródło to link https z opisem', () => Object.values(T.SRC).every(([u, l]) => isUrl(u) && l && l.length > 3));
@@ -854,7 +858,7 @@ tryc('start: mężczyzna: 178 cm, 35 lat, 85 kg, cel 81 kg', () => { view('intro
 tryc('start: zmiana płci zmienia tylko nieustawione wartości', () => { view('intro', NEWD({ cm: '160', touched: { cm: true } })); click({ sex: 'M' }); const S = T.S(); return T.num(S.cm) === 160 && T.num(S.kg) === 85; });
 tryc('start: cel idzie za wagą, dopóki nie ustawisz celu', () => { view('intro', NEWD({ kg: '90', touched: { kg: true } })); const a = T.num(T.S().goal); view('intro', NEWD({ kg: '90', goal: '80', touched: { kg: true, goal: true } })); return a === 85.5 && T.num(T.S().goal) === 80; });
 tryc('start: przy nieustawionej wartości podpis „wartość startowa”', () => { const h = view('intro', NEWD()); const k = view('intro', NEWD({ touched: { kg: true, cm: true, age: true, goal: true } })); return (h.match(/wartość startowa/g) || []).length === 4 && !k.includes('wartość startowa'); });
-tryc('start: + i - ustawiają wartość jako Twoją', () => { view('intro', NEWD()); T.stpApply('kg', 1, 1); return T.S().touched.kg === true && !T.S().touched.cm; });
+tryc('start: + i - ustawiają wartość jako Twoją', () => { WP().reset(); view('intro', NEWD()); PFS('kg', 1); return T.S().touched.kg === true && !T.S().touched.cm; });
 tryc('start: cel startowy ze źródłem NHLBI (5-10% w ok. 6 miesięcy)', () => { const h = view('intro', NEWD()); return h.includes('nhlbi.nih.gov') && h.includes('5% mniej'); });
 tryc('start: Zaczynam z wartościami startowymi nie zalicza danych i prowadzi do Ustawień', () => { view('intro', NEWD({ guide: { hidden: false, dataOk: false, seenPet: false } })); click({ introdone: 'ok' }); const t = els.toast.innerHTML; return !T.S().guide.dataOk && t.includes('wartościach startowych') && t.includes('data-tab="set"'); });
 tryc('start: Zapisz i sprawdź w Ustawieniach potwierdza wartości', () => { view('set', { ...NEWD(), onb: true, guide: { hidden: false, dataOk: false, seenPet: false } }); click({ datasave: '1' }); const t = T.S().touched; return t.kg && t.cm && t.age && t.goal && T.S().guide.dataOk; });
@@ -864,7 +868,7 @@ const TA4 = { kg: true, cm: true, age: true, goal: true };
 tryc('suwaki filtrów: aria-valuetext z jednostką (WCAG 4.1.2)', () => { const h = view('meals', BASE({ f: { ...T.S().f, minP: 30, maxK: 1000, maxC: 50, portion: 1.2 } })); return h.includes('aria-valuetext="co najmniej 30 g białka"') && h.includes('aria-valuetext="kalorie bez limitu"') && h.includes('aria-valuetext="najwyżej 50 g węglowodanów"') && h.includes('aria-valuetext="porcja 1,2 ×"'); });
 tryc('suwaki filtrów: przesunięcie aktualizuje aria-valuetext', () => { view('meals', BASE()); const el = { dataset: { r: 'minP' }, value: '40', attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, getAttribute() { return null; } }; (lis.input || []).forEach((f) => f({ target: el })); return el.attrs['aria-valuetext'] === 'co najmniej 40 g białka'; });
 const key = (k, kk) => { const el = { dataset: { k: kk }, value: '' }; let p = false; (lis.keydown || []).forEach((f) => f({ key: k, target: el, preventDefault() { p = true; } })); return p; };
-tryc('pola + i -: Page Up i Page Down zmieniają o 10 kroków (APG spinbutton)', () => { view('set', BASE({ kg: '80', touched: { ...TA4 } })); key('PageUp', 'kg'); const a = T.num(T.S().kg); key('PageDown', 'kg'); key('PageDown', 'kg'); return a === 81 && T.num(T.S().kg) === 79; });
+tryc('suwaki: Page Up i Page Down zmieniają o krok zgrubny (wzrost co 5 cm, wiek co 5 lat; strzałki natywnie co 1)', () => { WP().reset(); view('set', BASE({ cm: '172', age: '40', touched: { ...TA4 } })); const R = (k) => T.rowSpecs('pf').find((x) => x.key === k), p = WP().pageStep; return p(R('cm'), 172, 1) === 175 && p(R('cm'), 175, -1) === 170 && p(R('age'), 40, 1) === 45 && R('cm').step === 1; });
 tryc('waga docelowa: przyciski 5, 7 i 10% mniej ze źródłami', () => { const h = view('set', BASE({ kg: '80', mode: 'redukcja', touched: { ...TA4 } })); return ['5', '7', '10'].every((x) => h.includes(`data-goalpct="${x}"`)) && h.includes('nhlbi.nih.gov') && h.includes('pubmed.ncbi.nlm.nih.gov/11832527'); });
 tryc('waga docelowa: przycisk 10% mniej ustawia cel zaokrąglony do 0,5 kg i oznacza jako ustawiony', () => { view('set', BASE({ kg: '83', mode: 'redukcja', touched: { kg: true, cm: true, age: true } })); click({ goalpct: '10' }); return T.num(T.S().goal) === 74.5 && T.S().touched.goal === true && /aria-pressed="true"[^>]*>10% mniej/.test(mainHtml()); });
 tryc('waga docelowa: w utrzymaniu bez przycisków procentowych', () => !view('set', BASE({ mode: 'utrzymanie', touched: { ...TA4 } })).includes('data-goalpct'));
@@ -951,6 +955,51 @@ tryc('ekran główny: wprowadzenie pokazuje kroki w przeglądarce, a z ikony nie
   UA(IOS); view('intro', { introStep: 0, onb: false }); const a = els.main.innerHTML; UA(IOS, true); view('intro', { introStep: 0, onb: false }); const b = els.main.innerHTML; UA('');
   return a.includes('Do ekranu głównego') && !b.includes('Do ekranu głównego');
 });
+// Rada 11.11.2026, działania 6-7 (plan „Łatwość” 20.11, zadanie 7): pod wyborem jedno zdanie, dłuższe wyjaśnienie i źródła w zwiniętym „Dlaczego?”.
+// Nic nie znika: każdy przeniesiony tekst (lista niżej) jest w „Dlaczego?” i nie ma go poza nim.
+const WHY_RE = /<details class="fold"[^>]*><summary[^>]*>Dlaczego\?<\/summary>([\s\S]*?)<\/details>/g;
+const whyIn = (h) => [...h.matchAll(WHY_RE)].map((m) => m[1]).join(' ');
+const whyOut = (h) => h.replace(WHY_RE, '');
+const sentN = (t) => t.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])/).filter(Boolean).length;
+const poCo = (h) => [...h.matchAll(/<p class="why"><b>Po co:<\/b>([\s\S]*?)<\/p>/g)].map((m) => m[1]);
+const WHY_VIEWS = [['set', {}], ['meals', {}], ['health', {}], ['sos', {}], ['day', { sex: 'K' }]];
+tryc('dlaczego: każde „Po co” to jedno zdanie bez źródła, reszta w „Dlaczego?”', () => {
+  const bad = [];
+  let n = 0;
+  for (const [tab, o] of WHY_VIEWS) for (const t of poCo(view(tab, BASE(o)))) { n++; if (sentN(t) !== 1 || /Źródło/.test(t)) bad.push(tab + ': ' + t.replace(/<[^>]+>/g, '').slice(0, 60)); }
+  if (bad.length) throw new Error(bad.join(' | '));
+  return n >= 6;
+});
+const MOVED = [
+  ['set', {}, 'Redukcja: cel kalorii ok. 20% poniżej zapotrzebowania. Utrzymanie: cel równy zapotrzebowaniu. Przyrost masy: ok. 10% powyżej, 0,25-0,5% masy ciała tygodniowo. Miara proponuje tryb z Twoich danych.'],
+  ['set', {}, 'Iraki i in. 2019 (przyrost masy)'],
+  ['set', {}, 'WHO: nadwaga od BMI 25, otyłość od 30. NHS: od 23 i 27,5 dla osób pochodzenia azjatyckiego, bliskowschodniego, afrykańskiego i afrykańsko-karaibskiego.'],
+  ['set', {}, 'Korekta liczy spoczynek wzorem Mifflina-St Jeora zamiast stałego 1 kcal na kg na godzinę. Dla kobiet zwykle daje niższe wyniki (wniosek z definicji MET, niesprawdzony pomiarem).'],
+  ['set', {}, 'Bezpośredniego połączenia nie ma. Fitatu wymienia dane przez Apple Zdrowie, a strona otwarta w przeglądarce nie ma do niego dostępu.'],
+  ['set', {}, '2024 Adult Compendium of Physical Activities</a>: siłownia, spinning, joga, obwód.'],
+  ['set', {}, 'Wartości odżywcze: typowe wartości z tabel składu, orientacyjne.'],
+  ['set', { mode: 'redukcja', goalWay: 'bmi' }, 'dolna część normy (18,5-20) wiązała się z wyższą. Najniżej: BMI 22 w wieku 35-49 lat, 23 w wieku 50-69, 24 w wieku 70-89.'],
+  ['meals', {}, 'Przy IO (reguła Miary): porcja co najmniej 20 g białka i do 50 g węglowodanów, przekąska do 20 g.'],
+  ['health', {}, 'Ranking pokaże najtańsze źródła na zakupy.'],
+  ['health', {}, 'Profil zostaje w tym telefonie; kopia bez danych zdrowotnych go pomija.'],
+  ['day', { sex: 'K' }, 'ICHD-3: napady od 2 dni przed do 3. dnia miesiączki w 2 z 3 cykli.'],
+  ['mob', {}, 'Źródło nie podaje liczby powtórzeń'],
+  ['mob', {}, 'ACSM 2011'],
+];
+tryc('dlaczego: przeniesione teksty i źródła są w „Dlaczego?”, nie poza nim', () => {
+  const gw = T.S().goalWay, md = T.S().mode;
+  const bad = MOVED.filter(([tab, o, t]) => { const h = view(tab, BASE(o)); return !whyIn(h).includes(t) || whyOut(h).includes(t); }).map(([tab, , t]) => tab + ': ' + t.slice(0, 50));
+  T.S().goalWay = gw; T.S().mode = md; // bez przecieku do kolejnych testów Ustawień
+  if (bad.length) throw new Error(bad.join(' | '));
+  return true;
+});
+tryc('dlaczego: „Dlaczego?” zwinięte na starcie (bez atrybutu open)', () => { const h = view('set', BASE()); const f = [...h.matchAll(/<details class="fold"([^>]*)><summary[^>]*>Dlaczego\?/g)]; return f.length >= 4 && f.every((m) => !/\sopen/.test(m[1])); });
+tryc('ekran główny: kroki każdego telefonu w zwiniętej sekcji ze źródłem', () => {
+  UA(IOS); const h = view('set', BASE()); UA('');
+  return /<details class="fold"[^>]*><summary>iPhone \(Safari\)<\/summary>(?:(?!<\/details>)[\s\S])*Do ekranu głównego(?:(?!<\/details>)[\s\S])*support\.apple\.com/.test(h)
+    && /<details class="fold"[^>]*><summary>Android \(Chrome\)<\/summary>(?:(?!<\/details>)[\s\S])*Zainstaluj i utwórz skrót(?:(?!<\/details>)[\s\S])*support\.google\.com/.test(h);
+});
+tryc('Ustawienia: opisy pod przełącznikami po jednym zdaniu', () => { const h = whyOut(view('set', BASE())); return ['Mój dzień pokazuje szybki wpis i to, co dodasz', 'Jak długo widać dymek po zapisie.'].every((t) => h.includes(t)) && !h.includes('dodasz. Dane zostają'); });
 tryc('ekran główny: Pomoc znajduje instrukcję po słowie „ekran”', () => view('help', BASE({ helpQ: 'ekran główny' })).includes('set#ekran'));
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
@@ -1573,6 +1622,53 @@ tryc('kamienie: dzień z bólem to wiatr i odpoczynek, krótkie noce to mgła; b
   return w.includes('odpoczywa na kamieniu') && f.includes('Mgła') && !/przegr|porażk|spad|traci/i.test(w + f);
 });
 tryc('kamienie: skok tylko bez ograniczenia ruchu', () => /prefers-reduced-motion: ?no-preference\)[^@]*\.stone/.test(appCss));
+// Jezioro w nowym stylu (rada/plany/2026-11-20-jezioro-brief.md): kamienie z cieniowaniem, postać na kamieniu, jezioro zależne od numeru, pogoda
+const JP = (...a) => sandbox.PET.path(...a);
+const svgOf = (h) => (h.match(/<svg[\s\S]*<\/svg>/) || [''])[0];
+tryc('jezioro: na kamieniu stoi mała postać właściwego gatunku (nastrój spokój), bez osobnej etykiety obrazka', () => ['gaska', 'kaczka', 'kapibara', 'kotek'].every((k) => {
+  const s = svgOf(JP(3, '', 'Kluska', k)); return (s.match(/class="stonepet pet-[a-z]+/g) || []).length === 1 && s.includes('class="stonepet pet-' + k) && /data-stone="3"/.test(s) && s.includes('class="zw-head"') && !s.includes('zw-shut') && (s.match(/role="img"/g) || []).length === 1;
+}) && JP(3, '', 'A', 'x"><b>').includes('stonepet pet-gaska') && JP(3, '', 'A').includes('stonepet pet-gaska'));
+tryc('jezioro: przebyte kamienie wyraźniejsze (done), kolejne jaśniejsze (next), kamień zwierzaka now; 0 to brzeg, kolejne jezioro od 1. kamienia', () => {
+  const s = svgOf(JP(3, '', 'Kluska', 'kotek')), z = svgOf(JP(0, '', 'Kluska', 'kotek')), e = svgOf(JP(9, '', 'Kluska', 'kotek'));
+  return (s.match(/class="stone done/g) || []).length === 3 && (s.match(/class="stone next/g) || []).length === 4 && (s.match(/class="stone done now/g) || []).length === 1
+    && /data-stone="0"/.test(z) && (z.match(/class="stone next/g) || []).length === 7 && /data-stone="2"/.test(e) && JP(0, '', 'Kluska').includes('Kluska stoi na brzegu');
+});
+tryc('jezioro: kamienie z gradientem z tokenów i konturem, identyfikatory gradientów unikalne na stronie', () => {
+  const a = svgOf(JP(3, '', 'K', 'kotek')), b = svgOf(JP(3, '', 'K', 'kotek')), ids = (s) => [...s.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+  const all = ids(a).concat(ids(b));
+  return all.length >= 2 && new Set(all).size === all.length && /<radialGradient[^>]*>[\s\S]*var\(--zw-stone/.test(a) && /class="stone done[^"]*"[^>]*fill="url\(#/.test(a) && [...a.matchAll(/fill="url\(#([^)]+)\)"/g)].every((m) => ids(a).includes(m[1]));
+});
+tryc('jezioro: wygląd zależy od numeru jeziora (odcień wody i rośliny), trzy warianty po kolei', () => {
+  const v = (n) => (svgOf(JP(n, '', 'K', 'gaska')).match(/class="lake lake-v(\d)"/) || [])[1];
+  const plants = (n) => [...svgOf(JP(n, '', 'K', 'gaska')).matchAll(/class="(trzcina|kaczeniec|grzybien|sitowie|lisc)[ "]/g)].map((m) => m[1]).sort().join();
+  return v(3) === '0' && v(10) === '1' && v(17) === '2' && v(24) === '0' && new Set([plants(3), plants(10), plants(17)]).size === 3 && plants(3).includes('trzcina') && plants(3).includes('kaczeniec');
+});
+tryc('jezioro: wiatr pochyla trzcinę i dodaje smugi, mgła to półprzezroczysta warstwa; w obu zwierzak odpoczywa (zamknięte oczy), kamienie zostają', () => {
+  const w = svgOf(JP(4, 'wiatr', 'K', 'kapibara')), f = svgOf(JP(4, 'mgla', 'K', 'kapibara')), o = svgOf(JP(4, '', 'K', 'kapibara'));
+  return (w.match(/class="wind"/g) || []).length >= 2 && /class="trzcina[^"]*"[^>]*transform="[^"]*rotate\(/.test(w) && !/class="wind"/.test(o) && !/rotate\(/.test((o.match(/<g class="trzcina[^>]*>/) || [''])[0])
+    && /class="fog"/.test(f) && !/class="fog"/.test(o) && w.includes('zw-shut') && f.includes('zw-shut') && !o.includes('zw-shut')
+    && [w, f, o].every((s) => (s.match(/class="stone[ "]/g) || []).length === 7 && (s.match(/class="stone done/g) || []).length === 4);
+});
+tryc('jezioro: podskok na nowym kamieniu tylko z flagą hop; teksty i opis dla czytnika bez zmian', () => {
+  const h = JP(2, '', 'Mruczek', 'kotek', true), n = JP(2, '', 'Mruczek', 'kotek', false);
+  return /class="stonepet pet-kotek hop"/.test(h) && !/ hop"/.test(n) && n.includes('aria-label="Mruczek jest na 2. kamieniu z 7. Jezioro 1."') && n.includes('<p><b>Jezioro 1.</b> Mruczek jest na 2. kamieniu z 7.</p>') && n.includes('Przerwa niczego nie zabiera.');
+});
+tryc('jezioro: ekran zwierzaka przekazuje gatunek; podskok raz po przybyciu kamienia (pathSeen), potem bez', () => {
+  const S = BASE({ pet: { kind: 'kapibara', name: 'A', since: dk(30), stones: ['a', 'b'], pathSeen: 0 } });
+  const a = view('pet', S), seen = T.S().pet.pathSeen, b = view('pet');
+  return a.includes('stonepet pet-kapibara hop') && seen === 2 && b.includes('stonepet pet-kapibara') && !b.includes('stonepet pet-kapibara hop');
+});
+tryc('jezioro: ruch (podskok, fala) tylko przy prefers-reduced-motion: no-preference; tokeny jeziora w obu motywach, kontury co najmniej 3:1', () => {
+  const noPref = [...sysCss.matchAll(/@media \(prefers-reduced-motion: ?no-preference\)\{((?:[^{}]*\{[^}]*\})*)\}/g)].map((m) => m[1]).join(' ');
+  const outside = sysCss.replace(/@media \(prefers-reduced-motion: ?no-preference\)\{(?:[^{}]*\{[^}]*\})*\}/g, '');
+  const moving = [...outside.matchAll(/([^{}]+)\{([^}]*)\}/g)].filter((m) => /\.stone|\.lake|\.wave|\.wind/.test(m[1]) && /animation/.test(m[2]));
+  const b = themeBlocks(), hex = (blk, n) => (blk.match(new RegExp('--' + n + ':(#[0-9A-Fa-f]{6})')) || [])[1];
+  const L = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const cr = (a, c) => { const x = L(a), y = L(c); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const lines = ['zw-stone-ln', 'zw-lake-ln', 'zw-reed-ln'], ok = [b.light, b.dark, b.darkMq].every((blk) => lines.every((n) => hex(blk, n) && cr(hex(blk, n), hex(blk, 'surface')) >= 3));
+  if (moving.length) throw new Error(moving.map((m) => m[1].trim()).join(' | '));
+  return /\.stonepet\.hop/.test(noPref) && /\.wave/.test(noPref) && ok;
+});
 
 // Zgłoszenie 13.11.2026: makro i błonnik bez wchodzenia w posiłek; dane europejskie (Frida 6.1, CoFID), progi z rozporządzenia UE 1924/2006
 const FIBF = () => { const S = T.S(); S.f.carb = '1'; S.f.portion = 1; };
@@ -1591,7 +1687,8 @@ tryc('błonnik: wpis bez danych o błonniku daje „co najmniej”', () => { con
 tryc('błonnik: źródła w spisie (Frida, CoFID, EFSA, UE 1924/2006)', () => ['frida', 'cofid', 'efsaFib', 'eu1924'].every((k) => T.SRC[k] && /^https:\/\//.test(T.SRC[k][0])));
 
 // Zgłoszenie 13.11.2026: jak w CV, słabo widoczne kropki · zamienione na kreskę |, znaczniki w wierszu z czasem
-tryc('separatory: ekran Posiłki bez kropek środkowych, makro w planie rozdzielone kreską', () => { const h = view('meals', BASE()); return !h.includes('·') && /kcal \| B\u00a0\d+\u00a0g \| T\u00a0\d+\u00a0g \| W\u00a0\d+\u00a0g \| Bł\u00a0/.test(h); });
+// Wyjątek (20.11.2026): napis przycisku, który reaguje, „✓ Zjedzone · Cofnij” z briefu przycisków (ten sam wzorzec co „✓ Zapisane · Cofnij” w karcie „Dziś”)
+tryc('separatory: ekran Posiłki bez kropek środkowych poza napisem „✓ … · Cofnij”, makro w planie rozdzielone kreską', () => { const h = view('meals', BASE()).replace(/<button class="btn act[^"]*"[\s\S]*?<\/button>/g, ''); return !h.includes('·') && /kcal \| B\u00a0\d+\u00a0g \| T\u00a0\d+\u00a0g \| W\u00a0\d+\u00a0g \| Bł\u00a0/.test(h); });
 tryc('separatory: znaczniki przepisu w wierszu z czasem, po kresce', () => { view('meals', BASE()); return /<div class="meta">[^<]*\d+ min[^<]*<span class="msep"><span aria-hidden="true"> \| <\/span><span class="sr">, <\/span><\/span><span class="mtag"/.test(els.mlist.innerHTML) && !els.mlist.innerHTML.includes('class="mtags"'); });
 // Sygnały brzucha (sygnaly.js, docs/specs/2026-11-13-sygnaly-brzuch-design.md): moduł liczy z podanego stanu i dnia k.
 const Y = () => sandbox.SYG;
@@ -1757,34 +1854,106 @@ tryc('sygnały dymek: hp_test bez powtórzonego zdania, sam_zoladek bez pustego 
   const z = view('health', GUT({ tab: 'health', gut: g }));
   return b.split('Ustal z lekarzem przerwę').length === 2 && !b.includes('Działanie:') && b2.includes('Śpij z uniesioną głową') && b2.split('Śpij z uniesioną głową').length === 2 && !b2.includes('Działanie:') && z.split('Ustal z lekarzem przerwę').length >= 3;
 });
-// Zjem ze stanem (15.11.2026): po dotknięciu „Zjem” wiersz od razu pokazuje „✓ Zjedzone”; drugie dotknięcie usuwa wpis z „Cofnij”
-const EATEN = (h, id) => h.includes(`data-uneat="${id}" aria-pressed="true"`) && h.includes('✓ Zjedzone');
+// Przyciski, które reagują (20.11.2026, plan „Łatwość” pkt 6): Zjem, trening, wynik badania, zamówione, Według planu.
+// Wspólny automat WPISY.actBtn (ten sam co główny przycisk karty „Dziś”): zapis → „✓ … · Cofnij” w oknie wpGrace → „… jeszcze raz / kolejny”;
+// drugie dotknięcie w 700 ms nic nie robi; Cofnij usuwa dokładnie dodany wpis; licznik na zakładce od razu
 const MCOUNT = (id) => (T.S().days[dk(0)] || []).filter((e) => e.kind === 'm' && e.id === id).length;
-tryc('Zjem: po kliknięciu plan od razu pokazuje „✓ Zjedzone” z aria-pressed', () => {
-  view('meals', BASE({ days: {} })); const id = T.planIds()[0];
-  click({ addmeal: id });
-  return MCOUNT(id) === 1 && EATEN(mainHtml(), id) && !mainHtml().includes(`data-addmeal="${id}"`) && toastHtml().includes('Dodano do dnia');
+const AGO = (key, ms) => { T.acts()[key].at -= ms; };
+const ACLR = () => { const a = T.acts(); Object.keys(a).forEach((k) => delete a[k]); };
+const BADGE = () => { const m = /data-tab="day" aria-label="Mój dzień(?:, (\d+) do zrobienia)?"/.exec((els.tabs || {}).innerHTML || ''); return m ? +(m[1] || 0) : -1; };
+const TRW0 = (o) => ({ ...T.S().tr, wmin: '', wk: '', min: '45', cat: 'silownia', ...o });
+const SR0 = () => String((els.sr || {}).textContent || '').split('. ')[0];
+tryc('przyciski: WPISY.actBtn, wszystkie przejścia (zapis, okno Cofnij, blokada 700 ms, po oknie, „do zamknięcia”)', () => {
+  const A = WP().actBtn, L = { idle: 'Zjem', done: '✓ Zjedzone · Cofnij', again: 'Zjem jeszcze raz', grace: 5000 }, x = (o) => { const r = A({ ...L, ...o }); return r.st + '|' + r.label + '|' + r.tap; };
+  const G = 'grace|✓ Zjedzone · Cofnij|', AG = 'again|Zjem jeszcze raz|save';
+  const c = [[{ ms: null }, 'idle|Zjem|save'], [{ ms: Infinity }, 'idle|Zjem|save'], [{ ms: null, saved: true }, AG], [{ ms: 0 }, G + 'skip'], [{ ms: 699 }, G + 'skip'], [{ ms: 700 }, G + 'undo'],
+    [{ ms: 4999 }, G + 'undo'], [{ ms: 5000 }, AG], [{ ms: 5000, saved: true }, AG], [{ ms: 6000, grace: 8000 }, G + 'undo'], [{ ms: 9e9, grace: Infinity }, G + 'undo'], [{ ms: 100, grace: 0 }, G + 'skip'], [{ ms: 5001, grace: 0 }, AG]];
+  const bad = c.filter(([o, e]) => x(o) !== e); if (bad.length) throw new Error(JSON.stringify(bad.map(([o]) => [o, x(o)])));
+  const src = fs.readFileSync(path.join(root, 'wpisy.js'), 'utf8'), at = (f, n) => src.slice(src.indexOf(f), src.indexOf(f) + n);
+  return /actBtn\(/.test(at('function mainLabel(', 400)) && /actBtn\(/.test(at('function mainClick(', 300)) && !/lastCommit < AGAIN/.test(src) && /actBtn/.test(at('globalThis.WPISY', 600));
 });
-tryc('Zjem: „✓ Zjedzone” usuwa ostatni wpis tego dania z „Cofnij”, Cofnij przywraca', () => {
-  const id = T.planIds()[0], e = (k) => ({ kind: 'm', id, label: 'x', k, p: 0, f: 0, c: 0 });
-  view('meals', BASE({ days: { [dk(0)]: [e(100), { kind: 'm', label: 'inne', k: 50, p: 0, f: 0, c: 0 }, e(200)] } }));
-  click({ uneat: id });
+tryc('przyciski: Zjem → „✓ Zjedzone · Cofnij” → „Zjem jeszcze raz”; drugie dotknięcie w 700 ms nic nie robi; Cofnij usuwa dokładnie dodany wpis', () => {
+  ACLR(); const id = T.planIds()[0], k = 'meal:' + id, old = { kind: 'm', id: 'x9', label: 'inne', k: 50, p: 0, f: 0, c: 0 };
+  view('meals', BASE({ days: { [dk(0)]: [old] } })); els.toast.innerHTML = '';
+  if (ABL(mainHtml(), k) !== 'Zjem') throw new Error('start ' + ABL(mainHtml(), k));
+  click({ addmeal: id, ab: k });
+  if (MCOUNT(id) !== 1 || ABL(mainHtml(), k) !== '✓ Zjedzone · Cofnij' || SR0() !== '✓ Zjedzone · Cofnij') throw new Error('zapis ' + ABL(mainHtml(), k) + ' / ' + SR0());
+  if (toastHtml().includes('Dodano do dnia')) throw new Error('komunikat zamiast przycisku');
+  click({ addmeal: id, ab: k }); if (MCOUNT(id) !== 1) throw new Error('podwójne dotknięcie');
+  AGO(k, 1000); click({ addmeal: id, ab: k });
   const d = T.S().days[dk(0)];
-  if (!(d.length === 2 && d[0].k === 100 && d[1].label === 'inne')) throw new Error('wpisy ' + JSON.stringify(d.map((x) => x.k)));
-  if (!toastHtml().includes('Usunięto z dnia') || !toastHtml().includes('data-undo')) throw new Error('brak Cofnij');
-  click({ uneat: id });
-  if (MCOUNT(id) !== 0 || !mainHtml().includes(`data-addmeal="${id}"`)) throw new Error('drugi');
-  click({ undo: '1' });
-  return MCOUNT(id) === 1;
+  if (MCOUNT(id) !== 0 || d.length !== 1 || d[0] !== old || ABL(mainHtml(), k) !== 'Zjem' || SR0() !== 'Zjem') throw new Error('cofnij ' + JSON.stringify(d) + ' ' + SR0());
+  click({ addmeal: id, ab: k }); AGO(k, 6000); view('meals', {});
+  return MCOUNT(id) === 1 && ABL(mainHtml(), k) === 'Zjem jeszcze raz' && !mainHtml().includes('data-uneat') && !mainHtml().includes('aria-pressed="true">✓');
 });
-tryc('Zjem: przepis i lista dań pokazują „✓ Zjedzone”, gdy danie jest w dzisiejszych wpisach', () => {
-  const id = 'o1', e = { kind: 'm', id, label: 'x', k: 100, p: 0, f: 0, c: 0 };
+tryc('przyciski: Zjem przy dwóch takich samych wpisach cofa tylko nowy; trzeci posiłek od razu zmienia licznik na zakładce', () => {
+  ACLR(); const id = T.planIds()[0], k = 'meal:' + id, e = (kc) => ({ kind: 'm', id, label: 'x', k: kc, p: 0, f: 0, c: 0 }), a = e(100), b = { kind: 'm', label: 'inne', k: 50, p: 0, f: 0, c: 0 };
+  view('meals', BASE({ days: { [dk(0)]: [a, b] }, meas: {} }));
+  if (ABL(mainHtml(), k) !== 'Zjem jeszcze raz') throw new Error('zjedzone wcześniej: ' + ABL(mainHtml(), k));
+  const n0 = BADGE(); click({ addmeal: id, ab: k }); const n1 = BADGE();
+  AGO(k, 1000); click({ addmeal: id, ab: k }); const d = T.S().days[dk(0)];
+  return n1 === n0 - 1 && BADGE() === n0 && d.length === 2 && d[0] === a && d[1] === b && ABL(mainHtml(), k) === 'Zjem jeszcze raz';
+});
+tryc('przyciski: przepis i lista dań: ten sam automat („Zjem, zapisz”, „Dodaj do dnia”), po oknie „Zjem jeszcze raz”', () => {
+  ACLR(); const id = 'o1', k = 'meal:' + id, e = { kind: 'm', id, label: 'x', k: 100, p: 0, f: 0, c: 0 };
   const r0 = view('recipe', BASE({ recipe: id, days: {} })), r1 = view('recipe', BASE({ recipe: id, days: { [dk(0)]: [e] } }));
-  if (!(r0.includes(`data-addmeal="${id}"`) && EATEN(r1, id) && !r1.includes(`data-addmeal="${id}"`))) throw new Error('przepis');
+  if (!(ABL(r0, k) && r0.includes(`data-addmeal="${id}"`) && ABL(r1, k) === 'Zjem jeszcze raz' && r1.includes(`data-addmeal="${id}"`))) throw new Error('przepis ' + ABL(r0, k) + ' / ' + ABL(r1, k));
   view('meals', BASE({ days: {} })); const mid = T.filtered()[0].m.id; click({ toggle: mid });
-  click({ addmeal: mid });
+  if (ABL(els.mlist.innerHTML, 'meal:' + mid) !== 'Dodaj do dnia') throw new Error('lista ' + ABL(els.mlist.innerHTML, 'meal:' + mid));
+  click({ addmeal: mid, ab: 'meal:' + mid });
   click({ toggle: mid }); click({ toggle: mid });
-  return EATEN(els.mlist.innerHTML, mid);
+  return ABL(els.mlist.innerHTML, 'meal:' + mid) === '✓ Zjedzone · Cofnij';
+});
+tryc('przyciski: trening „Dodaj do dnia” → „✓ Zapisano · Cofnij” → „Dodaj kolejny”; licznik na zakładce od razu; Cofnij usuwa dokładnie dodany wpis', () => {
+  ACLR(); WP().reset(); view('train', BASE({ days: {}, meas: {}, tr: TRW0({ min: '45' }) })); els.toast.innerHTML = '';
+  const n0 = BADGE(); if (ABL(mainHtml(), 'train') !== 'Dodaj do dnia') throw new Error('start');
+  click({ addtrain: '1', ab: 'train' });
+  if (nE() !== 1 || ABL(mainHtml(), 'train') !== '✓ Zapisano · Cofnij' || BADGE() !== n0 - 1 || SR0() !== '✓ Zapisano · Cofnij' || toastHtml().includes('Dodano do dnia')) throw new Error('zapis ' + BADGE() + '/' + n0);
+  click({ addtrain: '1', ab: 'train' }); if (nE() !== 1) throw new Error('podwójne dotknięcie');
+  AGO('train', 1000); click({ addtrain: '1', ab: 'train' });
+  if (nE() !== 0 || BADGE() !== n0 || ABL(mainHtml(), 'train') !== 'Dodaj do dnia') throw new Error('cofnij');
+  click({ addtrain: '1', ab: 'train' }); AGO('train', 6000); view('train', {});
+  return nE() === 1 && ABL(mainHtml(), 'train') === 'Dodaj kolejny';
+});
+tryc('przyciski: trening z zegarka → „✓ Zapisano · Cofnij” → „Dodaj kolejny”; nowy zapis kończy okno innego przycisku; Cofnij oddaje wpisane kalorie', () => {
+  ACLR(); WP().reset(); const t0 = { kind: 't', label: 'wcześniej', min: 20, gross: 100, net: 60 };
+  view('train', BASE({ days: { [dk(0)]: [t0] }, tr: TRW0({ min: '45', wmin: '45', wk: '400' }) }));
+  click({ addtrain: '1', ab: 'train' }); click({ addwatch: '1', ab: 'watch' });
+  if (nE() !== 3 || ABL(mainHtml(), 'watch') !== '✓ Zapisano · Cofnij' || ABL(mainHtml(), 'train') !== 'Dodaj kolejny' || T.S().tr.wk !== '') throw new Error('zapis ' + nE() + ' ' + ABL(mainHtml(), 'watch') + ' ' + T.S().tr.wk);
+  AGO('watch', 1000); click({ addwatch: '1', ab: 'watch' }); const d = T.S().days[dk(0)];
+  if (!(d.length === 2 && d[0] === t0 && d[1].label !== 'Trening z zegarka' && T.S().tr.wk === '400' && ABL(mainHtml(), 'watch') === 'Dodaj trening z zegarka')) throw new Error('cofnij ' + JSON.stringify(d));
+  click({ addwatch: '1', ab: 'watch' }); AGO('watch', 6000); view('train', {});
+  return ABL(mainHtml(), 'watch') === 'Dodaj kolejny';
+});
+tryc('przyciski: „Zapisz wynik” → „✓ Zapisano · Cofnij” → „Dodaj następny wynik” z tą samą datą i jednostką; Cofnij usuwa dokładnie ten wynik i oddaje wpisaną wartość', () => {
+  ACLR(); const old = { id: 'a1', test: 'tsh', date: '2026-10-01', val: '2', unit: 'mIU/l' };
+  view('labs', BASE({ labs: [old], labSel: 'tsh' })); els.toast.innerHTML = '';
+  if (ABL(mainHtml(), 'lab') !== 'Zapisz wynik') throw new Error('start');
+  const fill = () => { els.l_val = { value: '2,5' }; els.l_date = { value: '2026-11-10' }; els.l_unit = { value: 'mIU/ml' }; els.l_fast = { checked: false }; els.l_lo = { value: '' }; };
+  fill(); click({ labsave: '1', ab: 'lab' });
+  const h = mainHtml();
+  if (T.S().labs.length !== 2 || ABL(h, 'lab') !== '✓ Zapisano · Cofnij' || toastHtml().includes('Zapisano wynik')) throw new Error('zapis');
+  if (!/id="l_date" value="2026-11-10"/.test(h) || !/id="l_unit" value="mIU\/ml"/.test(h)) throw new Error('data i jednostka');
+  click({ labsave: '1', ab: 'lab' }); if (T.S().labs.length !== 2) throw new Error('podwójne dotknięcie');
+  AGO('lab', 1000); click({ labsave: '1', ab: 'lab' });
+  if (!(T.S().labs.length === 1 && T.S().labs[0] === old && /id="l_val" value="2,5"/.test(mainHtml()) && ABL(mainHtml(), 'lab') === 'Zapisz wynik')) throw new Error('cofnij');
+  fill(); click({ labsave: '1', ab: 'lab' }); AGO('lab', 6000); const h2 = view('labs', {});
+  return ABL(h2, 'lab') === 'Dodaj następny wynik' && /id="l_date" value="2026-11-10"/.test(h2) && !/id="l_val" value=/.test(h2);
+});
+tryc('przyciski: zamówione i „Według planu” z tym samym automatem; Cofnij usuwa dokładnie dodane wpisy', () => {
+  ACLR(); view('meals', ORDB({ days: {} })); T.S().days = {};
+  click({ ordsave: '1', ab: 'ord' }); if (nE() !== 1 || ABL(mainHtml(), 'ord') !== '✓ Zapisano · Cofnij') throw new Error('zamówione ' + ABL(mainHtml(), 'ord'));
+  AGO('ord', 1000); click({ ordsave: '1', ab: 'ord' }); if (nE() !== 0 || ABL(mainHtml(), 'ord') !== 'Zapisz zamówione') throw new Error('zamówione cofnij');
+  const b = { kind: 'm', label: 'inne', k: 50, p: 0, f: 0, c: 0 };
+  view('day', { ...CLEAN(), days: { [dk(0)]: [] }, once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } }); T.S().days[dk(0)].push(b);
+  click({ dayplan: '1', ab: 'plan' }); const n = nE();
+  if (n < 2 || ABL(mainHtml(), 'plan') !== '✓ Zapisano · Cofnij') throw new Error('plan ' + n + ' ' + ABL(mainHtml(), 'plan'));
+  AGO('plan', 1000); click({ dayplan: '1', ab: 'plan' }); const d = T.S().days[dk(0)];
+  return d.length === 1 && d[0] === b;
+});
+tryc('przyciski: stała szerokość (miarka ze wszystkich napisów, ukryta przed czytnikiem), napisy miarki w <i data-l> (btnSel bez zmian)', () => {
+  ACLR(); const h = view('train', BASE({ days: {} })), m = /<button class="btn act"[^>]*data-ab="train"[^>]*>(.*?)<\/button>/.exec(h);
+  return !!m && /<span class="act-z" aria-hidden="true">(<i data-l="[^"]+"><\/i>){3}<\/span>/.test(m[1]) && /\.btn\.act\{[^}]*display:inline-grid/.test(sysCss) && /\.act-z\{[^}]*visibility:hidden/.test(sysCss) && /\.act-z i::before\{content:attr\(data-l\)/.test(sysCss);
 });
 // Rada P2 (15.11.2026): alarm ogłaszany raz dziennie; kolejne przerysowania tego dnia jako region „Pilne”
 tryc('alarm: pierwsze wyświetlenie dnia role=alert, kolejne role=region aria-label=Pilne (ze zwierzakiem)', () => {
@@ -2056,7 +2225,7 @@ tryc('potencjał: FFM powyżej pułapu -> gap 0', () => { view('set', PQ(PN('90'
 tryc('karta potencjału: FFM powyżej pułapu -> zdanie o sprawdzeniu pomiaru', () => { const h = view('health', PQ(PN('90', '12'))); const i = h.indexOf('id="potencjal"'); return i >= 0 && h.slice(i).includes('Powyżej pułapu z badania: sprawdź pomiar lub zapytaj specjalistę.'); });
 tryc('frame w DEF i w NH_DROP', () => JSON.stringify(T.DEF().frame) === '{"wrist":"","ankle":""}' && NH_DROP.includes('frame'));
 tryc('nadgarstek 45 cm -> błąd pola; 17,5 poprawne; 10 i 40 na granicy', () => T.checkNum('frame.wrist', '45').err && T.checkNum('frame.ankle', '9').err && !T.checkNum('frame.wrist', '17,5').err && !T.checkNum('frame.wrist', '10').err && !T.checkNum('frame.ankle', '40').err);
-tryc('potencjał: pola Nadgarstek i Kostka w sekcji obwodów z podpowiedzią najwęższe miejsce', () => { const h = view('day', PQ()); const i = h.indexOf('data-fold="obwody"'), j = h.indexOf('data-fold="tanita"'), s = h.slice(i, j); return s.includes('id="f_frame.wrist"') && s.includes('data-k="frame.wrist"') && s.includes('id="f_frame.ankle"') && s.includes('data-k="frame.ankle"') && s.includes('Nadgarstek') && s.includes('Kostka') && s.includes('najwęższe miejsce'); });
+tryc('potencjał: pola Nadgarstek i Kostka w sekcji obwodów z podpowiedzią najwęższe miejsce', () => { const h = view('day', PQ()); const i = h.indexOf('data-fold="obwody"'), j = h.indexOf('data-fold="tanita"'), s = h.slice(i, j); return /<button class="wp-val[^"]*" id="f_frame\.wrist"/.test(s) && s.includes('data-wpk="wrist"') && /<button class="wp-val[^"]*" id="f_frame\.ankle"/.test(s) && s.includes('data-wpk="ankle"') && s.includes('Nadgarstek') && s.includes('Kostka') && s.includes('najwęższe miejsce'); });
 const PH = (o) => view('health', PQ(o));
 const potCard = (h) => { const i = h.indexOf('id="potencjal"'), j = h.indexOf('id="bialko"'); return i < 0 || j < i ? '' : h.slice(i, j); };
 tryc('potencjał karta: M z danymi ma id=potencjal przed Białkiem, SVG z aria-label i lista tekstowa', () => { const c = potCard(PH(PN('70', '12'))); return c.includes('<svg') && c.includes('role="img"') && /aria-label="[^"]{10,}/.test(c) && ['Teraz', 'Mediana 18-34 lat', 'Pułap FFMI 25 (Kouri 1995)', '95% maksimum (Butt)', 'Maksimum (Butt)'].every((s) => c.includes(s)); });
@@ -2103,7 +2272,7 @@ tryc('karta: szybki wpis zapisuje stepsB (dawny zakres), feel, redz i daje liteF
   liteReset(); view('day', {}); const k = LK();
   click({ lite: 'stepsB:mid' }); click({ lite: 'feel:dobrze' }); const half = !T.liteFull(k); click({ lite: 'redz:0' });
   const m = T.S().meas[k], h = mainHtml();
-  return half && m.stepsB === 'mid' && m.feel === 'dobrze' && m.redz === 0 && T.liteFull(k) === true && h.includes('✓ Dzień zapisany.') && (h.match(/data-lite="[^"]+" aria-pressed="true"/g) || []).length === 2;
+  return half && m.stepsB === 'mid' && m.feel === 'dobrze' && m.redz === 0 && T.liteFull(k) === true && h.includes('✓ Zapisane na dziś:') && !h.includes('data-lite=');
 });
 tryc('karta: ponowne dotknięcie wybranego żetonu zostawia wybór', () => {
   liteReset(); view('day', {}); const k = LK(); click({ lite: 'redz:2' }); click({ lite: 'redz:2' }); click({ lite: 'stepsB:lo' }); click({ lite: 'stepsB:lo' });
@@ -2238,9 +2407,10 @@ tryc('zwierzak w pełnym widoku: po 12:00 bez posiłku nadal czeka na wpis posi�
   const S = T.S(); S.lite = false; S.pet = { kind: 'gaska', name: 'K', since: '2999-01-01' }; S.meas = {}; S.days = {}; S.pain = {};
   const s = T.PET.state(T.petCtx(at15())); S.lite = true; return s.mood === 'hungry' && s.line.includes('czeka na wpis posiłku');
 });
-tryc('karta: przejście do pełnej karty daje komunikat „Dzień zapisany” tylko raz', () => {
-  liteReset(); view('day', {}); els.toast.innerHTML = ''; click({ lite: 'stepsB:mid' }); click({ lite: 'feel:dobrze' }); const a = els.toast.innerHTML.includes('Dzień zapisany');
-  click({ lite: 'redz:0' }); const b = els.toast.innerHTML.includes('Dzień zapisany'); els.toast.innerHTML = ''; click({ lite: 'redz:1' }); const c = els.toast.innerHTML.includes('Dzień zapisany');
+tryc('karta: przejście do pełnej karty daje komunikat „Dzień zapisany” tylko raz, jednym ogłoszeniem (#sr), bez drugiego w komunikacie toast', () => {
+  const sr = () => mk('sr').textContent.includes('Dzień zapisany');
+  liteReset(); T.liteUi().open = ''; view('day', {}); els.toast.innerHTML = ''; mk('sr').textContent = ''; click({ lite: 'stepsB:mid' }); click({ lite: 'feel:dobrze' }); const a = sr();
+  click({ lite: 'redz:0' }); const b = sr() && !els.toast.innerHTML.includes('Dzień zapisany'); mk('sr').textContent = ''; T.liteUi().open = LK(); click({ lite: 'redz:1' }); const c = sr() || els.toast.innerHTML.includes('Dzień zapisany'); T.liteUi().open = '';
   return !a && b && !c;
 });
 tryc('prosty widok: guideActive jest nieaktywne, Dalej nie każe wpisać wagi', () => {
@@ -2319,9 +2489,9 @@ tryc('wpisy: Pomiary dnia: karta z wierszami waga, sen, kroki zamiast pól; cele
   return ['m_w', 'm_sleep', 'm_steps'].every((id) => new RegExp('<button class="wp-val[^"]*" id="' + id + '"').test(h)) && !full.includes('data-sl=') && !full.includes(`data-k="meas.${dk(0)}.w"`) && !full.includes(`data-k="meas.${dk(0)}.steps"`)
     && full.indexOf('<article class="wp-card"') > full.indexOf('<h2>Pomiary dnia</h2>') && full.indexOf('<article class="wp-card"') < full.indexOf('data-imppaste');
 });
-tryc('wpisy: sen suwak 3-12 h co 15 min, kroki 0-20 000 co 500, waga bez suwaka; − i + przy każdym wierszu', () => {
+tryc('wpisy: sen suwak 3-12 h co 5 min, kroki 0-20 000 co 50 (siatka zgrubna 15 min i 500 przy szybkim przesunięciu), waga bez suwaka; − i + przy każdym wierszu', () => {
   const h = card(wpDay({}));
-  return /<input class="wp-range" type="range" id="wp_rs" min="180" max="720" step="15"/.test(h) && /<input class="wp-range" type="range" id="wp_rk" min="0" max="20000" step="500"/.test(h) && !h.includes('id="wp_rw"')
+  return /<input class="wp-range" type="range" id="wp_rs" min="180" max="720" step="5"/.test(h) && /<input class="wp-range" type="range" id="wp_rk" min="0" max="20000" step="50"/.test(h) && !h.includes('id="wp_rw"')
     && ['w', 's', 'k'].every((k) => h.includes(`data-wp="pm:${k}:-1"`) && h.includes(`data-wp="pm:${k}:1"`)) && h.includes('aria-label="0,1 kg więcej"');
 });
 tryc('wpisy: parser snu: 715, 7:15, 7,25 i 7 godzin, 613 to 6:13, 0:45, zły wpis z komunikatem', () => {
@@ -2336,8 +2506,8 @@ tryc('wpisy: parser kroków i wagi: separator tysięcy, ułamek kroków odrzucon
 });
 tryc('wpisy: − i + w siatce kroku i w zakresie, zapis w formacie pól (80,5; 6:13; 8500)', () => {
   wpDay({}); const W = wpS('w'), Sl = wpS('s'), K = wpS('k'), s = WP().step, st = T.wpStore;
-  return s(W, 80.4, 1) === 80.5 && s(W, 80.4, -1, 5) === 79.9 && s(W, 250, 1) === 250 && s(Sl, 435, 1) === 450 && s(Sl, 373, 1) === 375 && s(Sl, 373, -1) === 360 && s(Sl, 0, -1) === 0
-    && s(K, 8250, 1) === 8500 && s(K, 5000, 1) === 5500 && s(K, 0, -1) === 0 && st('w', 80.5) === '80,5' && st('w', 80) === '80' && st('s', 373) === '6:13' && st('s', 45) === '0:45' && st('k', 8500) === '8500';
+  return s(W, 80.4, 1) === 80.5 && s(W, 80.4, -1, 5) === 79.9 && s(W, 250, 1) === 250 && s(Sl, 435, 1) === 440 && s(Sl, 373, 1) === 375 && s(Sl, 373, -1) === 370 && s(Sl, 0, -1) === 0
+    && s(K, 8225, 1) === 8250 && s(K, 5000, 1) === 5050 && s(K, 0, -1) === 0 && st('w', 80.5) === '80,5' && st('w', 80) === '80' && st('s', 373) === '6:13' && st('s', 45) === '0:45' && st('k', 8500) === '8500';
 });
 tryc('wpisy: główny przycisk to automat stanów: Jak wczoraj, Zatwierdź (N), Cofnij 5 s, Zobacz zmiany, Gotowe', () => {
   const L = WP().mainLabel, o = { changed: 0, saved: false, summaryOpen: false, hasYesterday: true, msSinceSave: 0 };
@@ -2475,9 +2645,9 @@ tryc('r2 wpisy: „Cofnij” tak długo jak komunikat, co najmniej 5 s; „do za
 tryc('r2 kafelki: bez obserwatora całego dokumentu; napisy kafelków po render()', () => !/MutationObserver/.test(code) && /tileLabels\(document\.getElementById\('main'\)\)/.test(code));
 tryc('r2 wpisy: kontrast: fokus karty w kolorze lasu, obramowania − i + oraz linia dni wykresu w --edge', () => /\.wp-sq,\.wp-chg\{[^}]*border:1px solid var\(--edge\)/.test(sysCss) && /\.wp-main:focus-visible\{outline:3px solid var\(--green\)/.test(sysCss) && !/wp-[a-z]+:focus-visible[^{]*\{outline:3px solid var\(--brass\)/.test(sysCss) && /stroke="var\(--edge\)"/.test(fs.readFileSync(path.join(root, 'wpisy.js'), 'utf8')));
 // Suwak kroków w szybkim wpisie (prosty widok)
-tryc('r2 szybki wpis: kroki to wiersz z suwakiem 0-20 000 co 500, − i +, wartością do wpisu; bez żetonów zakresu', () => {
+tryc('r2 szybki wpis: kroki to wiersz z suwakiem 0-20 000 co 50 (siatka 500 przy szybkim przesunięciu), − i +, wartością do wpisu; bez żetonów zakresu', () => {
   liteReset(); T.S().meas[dk(1)] = { steps: '7431' }; const h = view('day', {}), i = h.indexOf('id="lite"'), sec = h.slice(i, h.indexOf('</section>', i));
-  return /<input class="wp-range" type="range" id="q_rsteps" min="0" max="20000" step="500"/.test(sec) && sec.includes('data-wp="pm:steps:-1"') && sec.includes('data-wp="pm:steps:1"')
+  return /<input class="wp-range" type="range" id="q_rsteps" min="0" max="20000" step="50"/.test(sec) && sec.includes('data-wp="pm:steps:-1"') && sec.includes('data-wp="pm:steps:1"')
     && /<button class="wp-val wp-y" id="q_steps" data-wp="edit:steps"[^>]*>7.431</.test(sec) && sec.includes('jak ostatnio?') && !sec.includes('data-lite="stepsB:');
 });
 tryc('r2 szybki wpis: dzień liczy się dopiero po dotknięciu kroków; liczba z suwaka to meas.steps, jak w Pomiarach dnia', () => {
@@ -2624,6 +2794,346 @@ tryc('rk kopie: trendy Pomiarów dnia (sen i kroki, średnia z 7 dni) pomijają 
   const h = wpDay({ [dk(1)]: { sleep: '5:00', steps: '2000', cp: ['sleep', 'steps'] }, [dk(2)]: { sleep: '8:00', steps: '9000' } });
   return /Sen, średnia z 7 dni: 8 h\./.test(h) && /Kroki, średnia z 7 dni: 9.?000\./.test(h);
 });
+// Plan łatwości, zadanie 4 (20.11.2026): pełny szybki wpis zwija kartę; „Twój stan” rozwija się w miejscu; same liczby, bez ocen
+const NBS = String.fromCharCode(160);
+const liteUiReset = () => { const u = T.liteUi(); u.open = ''; u.sum = ''; u.focus = ''; u.say = ''; };
+tryc('stan: pełny szybki wpis zwija kartę do „✓ Zapisane na dziś” z Zobacz podsumowanie i Zmień; zwinięcie ogłoszone', () => {
+  liteReset(); liteUiReset(); view('day', {});
+  click({ lite: 'feel:dobrze' }); click({ lite: 'redz:0' }); const open = mainHtml().includes('data-lite="feel:dobrze"'); T.qSet('steps', 5500); T.render();
+  const h = mainHtml(), m = T.S().meas[LK()];
+  return open && h.includes('<b>✓ Zapisane na dziś:</b> Kroki 5' + NBS + '500 · Dobrze · Jedzenie kaloryczne 0') && /id="lite_see" data-litesum="1" aria-expanded="false" aria-controls="lite_stan">Podsumowanie</.test(h) && /<button class="btn ghost" id="lite_see"/.test(h)
+    && /data-liteedit="1"[^>]*>Zmień</.test(h) && !h.includes('data-lite=') && !h.includes('q_rsteps') && m.steps === '5500' && T.liteUi().focus === 'lite_see' && /zwinięt/.test(T.liteUi().say);
+});
+tryc('stan: dawny zakres kroków i „2 lub więcej” w zwiniętej karcie; komunikat w #sr po kliknięciu', () => {
+  liteReset(); liteUiReset(); view('day', {}); mk('sr').textContent = '';
+  click({ lite: 'stepsB:hi' }); click({ lite: 'feel:glowa' }); click({ lite: 'redz:2' }); const h = mainHtml();
+  return h.includes('Kroki powyżej 8' + NBS + '000 · Ból głowy · Jedzenie kaloryczne 2 lub więcej') && /^Dzień zapisany\. Szybki wpis zwinięty: /.test(els.sr.textContent) && !T.liteUi().focus;
+});
+tryc('stan: Zmień rozwija kontrolki z zapisanymi wyborami, dane zostają; Gotowe zwija z fokusem na Zobacz podsumowanie', () => {
+  liteReset(); liteUiReset(); view('day', {}); click({ lite: 'stepsB:mid' }); click({ lite: 'feel:brzuch' }); click({ lite: 'redz:1' });
+  const before = JSON.stringify(T.S().meas[LK()]); click({ liteedit: '1' }); const h = mainHtml();
+  const a = (h.match(/data-lite="[^"]+" aria-pressed="true"/g) || []).length === 2 && h.includes('q_rsteps') && h.includes('data-litedone="1"') && JSON.stringify(T.S().meas[LK()]) === before;
+  click({ lite: 'redz:0' }); const b = mainHtml().includes('data-lite="redz:0" aria-pressed="true"'); mk('sr').textContent = ''; click({ litedone: '1' }); const c = mainHtml();
+  return a && b && c.includes('Jedzenie kaloryczne 0') && !c.includes('data-lite=') && /^Szybki wpis zwinięty: /.test(els.sr.textContent);
+});
+tryc('stan: Zobacz podsumowanie rozwija „Twój stan” w miejscu (ten sam ekran), przycisk Zwiń podsumowanie z aria-expanded', () => {
+  liteReset(); liteUiReset(); view('day', {}); FULL(LK()); T.render(); const tab = T.S().tab; click({ litesum: '1' }); const h = mainHtml();
+  const a = T.S().tab === tab && /aria-expanded="true" aria-controls="lite_stan">Podsumowanie</.test(h) && /<div class="wp-sum lite-stan" id="lite_stan" role="region" aria-labelledby="lite_stan_h">/.test(h) && h.includes('<h3 id="lite_stan_h">Twój stan</h3>');
+  click({ litesum: '1' }); const c = mainHtml(); return a && /id="lite_stan"[^>]*hidden/.test(c) && /aria-expanded="false" aria-controls="lite_stan">Podsumowanie</.test(c);
+});
+tryc('stan: dziś, 7 kropek z inicjałami dni, liczby dni samopoczucia i jedzenia kalorycznego, średnie kroków i snu bez kopii', () => {
+  liteReset(); liteUiReset(); const S = T.S();
+  S.meas = { [dk(0)]: { steps: '6000', feel: 'dobrze', redz: 0, w: '71,4' }, [dk(1)]: { steps: '9000', feel: 'brzuch', redz: 1, sleep: '7:00' }, [dk(2)]: { steps: '2000', feel: 'dobrze', redz: 2, cp: ['steps', 'sleep'], sleep: '5:00' }, [dk(3)]: { stepsB: 'lo', feel: 'dobrze', redz: 0, sleep: '8:00' }, [dk(5)]: { feel: 'inne' }, [dk(9)]: { steps: '20000', feel: 'glowa', redz: 2 } };
+  const h = T.liteStanHtml(dk(0)), IN = ['nd', 'pn', 'wt', 'śr', 'cz', 'pt', 'sb'], ini = [6, 5, 4, 3, 2, 1, 0].map((n) => IN[new Date(dk(n) + 'T12:00:00').getDay()]);
+  const dots = [...h.matchAll(/<li class="lite-dot( on)?"><span class="lite-d" aria-hidden="true"><\/span><span aria-hidden="true">(..)<\/span><span class="wp-sr">[^<]+: (szybki wpis|bez wpisu)<\/span><\/li>/g)];
+  return dots.length === 7 && dots.map((x) => x[2]).join('') === ini.join('') && dots.map((x) => (x[1] ? 1 : 0)).join('') === '0001111'
+    && h.includes('<b>Dziś:</b> Kroki 6' + NBS + '000 · Dobrze · Jedzenie kaloryczne 0 · Waga 71,4 kg') && h.includes('Szybki wpis w 4 z 7 dni')
+    && h.includes('<b>Samopoczucie:</b> Dobrze 3 dni · Brzuch 1 dzień · Inne 1 dzień</p>') && h.includes('<b>Jedzenie kaloryczne:</b> 0 razy 2 dni · 1 raz 1 dzień · 2 lub więcej 1 dzień</p>')
+    && h.includes('Kroki średnio 7' + NBS + '500 (z 2 dni)') && h.includes('Sen średnio 7 h 30 min (z 2 nocy)');
+});
+tryc('stan: wykres wagi przez spark z pasem ±0,35% tylko przy co najmniej 2 ważeniach; jedno ważenie to sama liczba', () => {
+  liteReset(); liteUiReset(); const S = T.S(); S.meas = { [dk(0)]: { steps: '6000', feel: 'dobrze', redz: 0 }, [dk(3)]: { w: '80,0' } };
+  const a = T.liteStanHtml(dk(0)); S.meas[dk(1)] = { w: '80,4' }; const b = T.liteStanHtml(dk(0));
+  return !a.includes('<svg') && a.includes('Waga 80,0 kg (' + dk(3).slice(8, 10) + '.') && /<svg class="wp-spark" viewBox="0 0 320 84" role="img" aria-label="Waga z 14 dni: 2 ważenia[^"]*">[\s\S]*class="wp-zone"/.test(b) && b.includes('PMID 32353079');
+});
+tryc('stan: seria i zwierzak, „co dalej” z propozycją odkrywania albo nic; bez słów oceny i bez kolorów dobrze/źle', () => {
+  liteReset(); liteUiReset(); const S = T.S(); S.unlock = []; S.unlockAt = ''; S.unlockSnooze = ''; S.pet = { kind: 'gaska', name: 'Ala', since: dk(10) };
+  [0, 1, 2, 3].forEach((n) => FULL(dk(n), { steps: '9000' })); const a = T.liteStanHtml(dk(0)); S.unlock = ['waga', 'posilki', 'sen', 'cala']; const b = T.liteStanHtml(dk(0));
+  [0, 1, 2, 3].forEach((n) => FULL(dk(n), { feel: 'glowa', redz: 2, steps: '500' })); const c = T.liteStanHtml(dk(0)); S.pet = null; S.unlock = [];
+  const bad = /świetn|brawo|super|gratul|dobry wynik|słab|źle|za mało|za dużo|ograniczon|brakuje|niekompletn|warn|accent|over|low|clay/i;
+  const shape = (x) => x.replace(/>[^<]*</g, '><').replace(/aria-label="[^"]*"/g, '');
+  return a.includes('Seria: ') && a.includes('Ala: aktywne dni ') && a.includes('<b>Co dalej:</b> ' + T.unlockTxt().waga) && !b.includes('Co dalej') && ![a, b, c].some((x) => bad.test(x)) && shape(b) === shape(c);
+});
+// Białko za złotówkę (20.11.2026): przykładowe ceny jako podpowiedź i placeholder, nigdy jako dane
+const BIAL = () => { const h = view('health', BASE({})); const i = h.indexOf('id="bialko"'); return h.slice(i, h.indexOf('<h2>Źródła</h2>', i) > 0 ? h.indexOf('<h2>Źródła</h2>', i) : undefined); };
+tryc('białko: podpowiedź z przykładową ceną i datą pod nazwą produktu, bez ceny dla produktów bez sprawdzonej', () => {
+  const h = BIAL(); return h.includes('np. 5,88 zł za 250 g (listopad 2026)') && h.includes('np. 16,99 zł za 10 szt. (ok. 600 g) (listopad 2026)') && h.includes('np. 6,89 zł za 300 g (listopad 2026)') && h.includes('np. 44,88 zł za 1 kg (listopad 2026)') && h.includes('np. 5,49 zł za 180 g (listopad 2026)') && (h.match(/np\. [\d,]+ zł za/g) || []).length === 5;
+});
+tryc('białko: placeholder „cena” w każdym polu ceny; przykład tylko w linii podpowiedzi', () => {
+  const h = BIAL(), ph = (id) => (h.match(new RegExp('data-k="prices\.' + id + '\.p"[^>]*placeholder="([^"]*)"')) || [])[1];
+  return ['twarog', 'jajka', 'kurczak', 'tofu', 'skyr', 'soczewica', 'tunczyk', 'wpc'].every((id) => ph(id) === 'cena') && h.includes('np. 5,88 zł za 250 g (listopad 2026)');
+});
+tryc('białko: pary pole+jednostka nierozdzielne, zdanie o przykładowych cenach pod listą', () => {
+  const h = BIAL(); return (h.match(/<span class="pair">/g) || []).length === 16 && h.includes('Przykładowe ceny regularne ze sklepu internetowego dużej sieci, listopad 2026. Wpisz cenę ze swojego sklepu.');
+});
+tryc('białko: placeholder nie trafia do zapisanych cen, ranking pusty bez wpisów i liczy się tylko z wpisanych cen', () => {
+  const S = T.S(); const a = view('health', BASE({})); const clean = Object.values(S.prices).every((r) => r.p === '');
+  const b = view('health', BASE({ prices: { ...S.prices, twarog: { p: '5,88', g: '250' } } }));
+  return clean && !a.includes('<h2>Ranking</h2>') && b.includes('<h2>Ranking</h2>') && /1\. Twaróg półtłusty/.test(b) && !/2\. /.test(b.slice(b.indexOf('<h2>Ranking</h2>'), b.indexOf('<h2>Źródła</h2>')));
+});
+tryc('białko: teksty przykładów to tylko cena, opakowanie i data; nazwy produktów rodzajowe, bez sklepów i marek', () => {
+  const h = BIAL(), hints = [...h.matchAll(/<span class="small muted hint">([^<]*)<\/span>/g)].map((m) => m[1]);
+  const names = T.PROT().map((x) => x[1]);
+  return hints.length === 5 && hints.every((x) => /^np\. \d+,\d\d zł za (\d+ (g|kg)|10 szt\. \(ok\. 600 g\)) \(listopad 2026\)$/.test(x))
+    && JSON.stringify(names) === JSON.stringify(['Twaróg półtłusty', 'Jajka (10 szt. to ok. 600 g)', 'Skyr naturalny', 'Pierś z kurczaka', 'Soczewica czerwona (sucha)', 'Tuńczyk w sosie własnym (masa po odsączeniu)', 'Tofu naturalne', 'Odżywka białkowa WPC (sprawdź etykietę)']);
+});
+tryc('stan: liczby tylko niezerowe w każdej kategorii (także Dobrze), bez wpisów „brak wpisów”', () => {
+  liteReset(); T.liteUi().open = ''; const S = T.S(); S.meas = { [dk(0)]: { steps: '6000', feel: 'glowa' } };
+  const h = T.liteStanHtml(dk(0));
+  return h.includes('<b>Samopoczucie:</b> Ból głowy 1 dzień</p>') && h.includes('<b>Jedzenie kaloryczne:</b> brak wpisów</p>');
+});
+tryc('stan: komunikat i fokus po zwinięciu nie przechodzą na inny ekran (render poza Moim dniem je czyści)', () => {
+  liteReset(); const u = T.liteUi(); u.focus = 'lite_see'; u.say = 'x'; view('pet', {}); const a = !u.focus && !u.say; T.S().tab = 'day'; return a;
+});
+tryc('stan: kropka dnia bez wpisu z obrysem co najmniej 3:1 do tła podsumowania (1.4.11) w obu motywach; wp-sr w kropce z position:relative', () => {
+  const b = themeBlocks(), d = ruleOf('.lite-d'), m = /border:2px solid var\(--([a-z0-9-]+)\)/.exec(d), bg = /background:var\(--([a-z0-9-]+)\)/.exec(ruleOf('.wp-sum'));
+  return !!m && !!bg && [b.light, b.dark].every((blk) => contrast(tok(blk, m[1]), tok(blk, bg[1])) >= 3) && /position:relative/.test(ruleOf('.lite-dot'));
+});
+// Wiersze wartości poza kartą „Dziś” (zadanie 5, 20.11.2026): Trening, obwody, skład ciała, sprawność, profil; ten sam komponent (wpisy.js), zapis od razu
+const RS = (g) => T.rowSpecs(g), RW = (g, k) => RS(g).find((R) => R.key === k), NBR = String.fromCharCode(160);
+const dmy = (k) => k.slice(8, 10) + '.' + k.slice(5, 7) + '.' + k.slice(0, 4);
+const isBtn = (h, id) => new RegExp('<button class="wp-val[^"]*" id="' + id.replace('.', '\\.') + '"').test(h);
+const TRW = (o) => ({ ...T.S().tr, wmin: '', wk: '', min: '45', cat: 'silownia', ...o });
+const ZEG = (n, min, gross) => ({ [dk(n)]: [{ kind: 't', label: 'Trening z zegarka', min, gross, net: gross - 100, src: 'zegarek' }] });
+tryc('wiersze trening: czas szacunku z suwakiem 5-180 min co 1 (siatka 5 przy szybkim przesunięciu), czas i kalorie z zegarka bez suwaka; cele f_tr.* to przyciski wartości, bez gołych pól', () => {
+  WP().reset(); const h = view('train', BASE({ tr: TRW() }));
+  return ['f_tr.min', 'f_tr.wmin', 'f_tr.wk'].every((id) => isBtn(h, id)) && /type="range" id="tr_rmin" min="5" max="180" step="1"/.test(h) && !h.includes('id="tr_rwmin"') && !h.includes('id="tr_rwk"')
+    && !h.includes('data-k="tr.min"') && !h.includes('data-k="tr.wk"') && !h.includes('data-k="tr.wmin"') && h.includes('data-addtrain="1"') && h.includes('data-addwatch="1"')
+    && ['min', 'wmin', 'wk'].every((k) => h.includes(`data-wp="pm:${k}:-1"`) && h.includes(`data-wp="pm:${k}:1"`)) && h.includes('aria-label="Kalorie z zegarka o 10 kcal więcej"');
+});
+tryc('wiersze trening: kalorie z zegarka startują od ostatniego treningu z zegarka wyszarzone z datą; wartość z wiersza trafia tylko do formularza, trening dopiero przyciskiem', () => {
+  WP().reset(); const h = view('train', BASE({ tr: TRW(), days: ZEG(3, 50, 420) })), wk = RW('tr', 'wk');
+  const a = /<button class="wp-val wp-y" id="f_tr\.wk"[^>]*>420 kcal</.test(h) && h.includes('ostatnio: ' + dmy(dk(3))) && wk.start.src === 'last' && wk.today == null;
+  click({ addwatch: '1' }); const b = !(T.S().days[dk(0)] || []).length;
+  wk.put(430); const c = T.S().tr.wk === '430' && !(T.S().days[dk(0)] || []).length;
+  RW('tr', 'wmin').put(55); click({ addwatch: '1' }); const e = (T.S().days[dk(0)] || []).at(-1) || {};
+  return a && b && c && e.gross === 430 && e.min === 55 && e.src === 'zegarek' && T.S().tr.wk === '';
+});
+tryc('wiersze trening: czas szacunku zapisuje S.tr.min; ostatnie kalorie z zegarka po Enter bez zmiany trafiają do formularza z komunikatem, samo wyjście z pola i typowe nigdy', () => {
+  WP().reset(); view('train', BASE({ tr: TRW(), days: ZEG(2, 40, 380) }));
+  RW('tr', 'min').put(60); const a = T.S().tr.min === '60', o = WP().editOutcome(RW('tr', 'wk'), 380, true), q = WP().editOutcome(RW('tr', 'wk'), 380);
+  WP().reset(); view('train', BASE({ tr: TRW(), days: {} })); const d = RW('tr', 'wk'), p = WP().editOutcome(d, d.start.v);
+  return a && o.kind === 'copy' && o.v === 380 && /jak ostatnio/.test(o.msg) && q.kind === 'none' && d.start.src === 'default' && p.kind === 'none';
+});
+tryc('wiersze obwody: talia, biodra, udo, nadgarstek, kostka co 0,5 cm; start od ostatniego pomiaru wyszarzony z datą; cele m_waist, f_frame.wrist to przyciski', () => {
+  WP().reset(); const h = view('day', BASE({ lite: false, meas: { [dk(9)]: { waist: '84,5', hip: '101' } }, frame: { wrist: '17' } }));
+  const i = h.indexOf('data-fold="obwody"'), s = h.slice(i, h.indexOf('data-fold="tanita"'));
+  return ['m_waist', 'm_hip', 'm_thigh', 'f_frame.wrist', 'f_frame.ankle'].every((id) => isBtn(s, id)) && ['waist', 'hip', 'thigh', 'wrist', 'ankle'].every((k) => RW('ms', k).step === 0.5)
+    && /class="wp-val wp-y" id="m_waist"[^>]*>84,5 cm</.test(s) && s.includes('ostatnio: ' + dmy(dk(9))) && /class="wp-val" id="f_frame\.wrist"[^>]*>17,0 cm</.test(s)
+    && /class="wp-val wp-y" id="m_thigh"[^>]*>\d+,\d cm</.test(s) && s.includes('aria-label="Talia o 0,5 cm więcej"') && !/<input type="text"[^>]*data-k="meas\./.test(s) && !s.includes('data-k="frame.wrist"') && s.includes('najwęższe miejsce');
+});
+tryc('wiersze skład ciała i sprawność: tłuszcz, FFM, ECW co 0,1, BMR co 10, VO2max i tętno co 1; start od ostatniej wartości z datą; nazwy pól bez zmian', () => {
+  WP().reset(); const h = view('day', BASE({ lite: false, meas: { [dk(30)]: { ffm: '52,4', fat: '28', bmr: '1490', hrRest: '62' } } })), st = (k) => RW('ms', k).step;
+  return st('fat') === 0.1 && st('ffm') === 0.1 && st('ecw') === 0.1 && st('bmr') === 10 && st('vo2') === 1 && st('hrRest') === 1 && st('hrMax') === 1
+    && /class="wp-val wp-y" id="m_ffm"[^>]*>52,4 kg</.test(h) && new RegExp('id="m_bmr"[^>]*>1' + NBR + '490 kcal<').test(h) && /id="m_hrRest"[^>]*>62 ud\.\/min</.test(h) && h.includes('ostatnio: ' + dmy(dk(30)))
+    && ['fat', 'ffm', 'ecw', 'bmr', 'vo2', 'hrRest', 'hrMax'].every((k) => h.includes('>' + RW('ms', k).label + '<')) // nazwy pól jak dotąd (w wersji publicznej po sanitizerze)
+    && [['fat', /^Tłuszcz \(/], ['ffm', /^FFM \(/], ['ecw', /^ECW\/TBW \(/], ['bmr', /^BMR \(.*kJ ÷ 4,184\)$/], ['vo2', /^VO2max \(zegarek\)$/], ['hrRest', /^Tętno spoczynkowe$/], ['hrMax', /^Tętno maksymalne \(jeśli zmierzone\)$/]].every(([k, re]) => re.test(RW('ms', k).label))
+    && ['m_ecw', 'm_vo2', 'm_hrMax'].every((id) => new RegExp('class="wp-val wp-y" id="' + id + '"[^>]*>\\d').test(h));
+});
+tryc('wiersze: zapis obwodu, FFM i nadgarstka w formacie pól z reakcją Zdrowia (zalecany obwód: serduszka, FFM i nadgarstek: Zanotowane); wartość startowa bez zmiany nic nie zapisuje', () => {
+  WP().reset(); hrFlush(); view('day', BASE({ lite: false, meas: { [dk(20)]: { waist: '84,5' }, [dk(10)]: { ffm: '50' } }, frame: {} }));
+  const w = RW('ms', 'waist'), o = WP().editOutcome(w, w.start.v), a = o.kind === 'none' && !(T.S().meas[dk(0)] || {}).waist;
+  w.put(WP().step(w, w.start.v, 1)); const b = hrFlush();
+  RW('ms', 'ffm').put(50.3); const c = hrFlush(); RW('ms', 'wrist').put(17.5); const d = hrFlush();
+  return a && T.S().meas[dk(0)].waist === '85' && b.cls.includes('react-series') && T.S().meas[dk(0)].ffm === '50,3' && c.cls.includes('react-note') && T.S().frame.wrist === '17,5' && d.cls.includes('react-note');
+});
+tryc('wiersze: wpis z klawiatury przez checkNum i LIM (talia 250 i pusty wpis odrzucone, BMR 1500 przyjęte)', () => {
+  view('day', BASE({ lite: false })); const p = (k, t) => RW('ms', k).parse(t); return !!p('waist', '250').err && !!p('waist', '').err && p('bmr', '1500').v === 1500 && p('ffm', '52,4').v === 52.4;
+});
+tryc('spark: okno 28 dni bez pasa: linia średniej, punkty, podpis „średnia 4 tygodni”, bez prostokąta pasa', () => {
+  const v = Array(84).fill(null); v[10] = 88; v[30] = 87; v[60] = 86; const s = WP().spark(v, null, { win: 28, avgLab: 'średnia 4 tygodni', fromLab: '12 tygodni temu' });
+  return !s.includes('wp-zone') && s.includes('średnia 4 tygodni') && s.includes('12 tygodni temu') && (s.match(/<circle/g) || []).length === 3 && s.includes('stroke="var(--green)"');
+});
+tryc('wiersze: wykres trendu talii i FFM z punktami i średnią 4 tygodni, bez pasa wahania; przy jednym pomiarze bez wykresu', () => {
+  WP().reset(); const h = view('day', BASE({ lite: false, meas: { [dk(40)]: { waist: '88', ffm: '50' }, [dk(26)]: { waist: '87' }, [dk(12)]: { waist: '86', ffm: '50,6' } } }));
+  const svg = (id) => { const i = h.indexOf('id="' + id + '"'); return i < 0 ? '' : h.slice(i, h.indexOf('</svg>', i)); }, a = svg('ms_tw'), b = svg('ms_tf');
+  WP().reset(); const one = view('day', BASE({ lite: false, meas: { [dk(12)]: { waist: '86' } } }));
+  return a.includes('średnia 4 tygodni') && !a.includes('wp-zone') && b.includes('średnia 4 tygodni') && !b.includes('wp-zone') && /aria-label="Talia z 12 tygodni: 3 pomiary/.test(a) && !one.includes('id="ms_tw"');
+});
+tryc('wiersze profil: Ustawienia i ekran startowy: waga co 0,1 i waga docelowa co 0,5 bez suwaka, wzrost suwak 140-210, wiek suwak 16-90; cele f_kg, f_cm, f_age, f_goal to przyciski', () => {
+  WP().reset(); const a = view('set', BASE({ kg: '82', cm: '170', age: '40', goal: '78', touched: { ...TA4 } })); WP().reset(); const b = view('intro', NEWD());
+  return [a, b].every((h) => ['f_kg', 'f_cm', 'f_age', 'f_goal'].every((id) => isBtn(h, id)) && /type="range" id="pf_rcm" min="140" max="210" step="1"/.test(h) && /type="range" id="pf_rage" min="16" max="90" step="1"/.test(h)
+    && !h.includes('id="pf_rkg"') && !h.includes('id="pf_rgoal"') && !h.includes('data-k="kg"') && h.includes('aria-label="Waga o 0,1 kg więcej"') && h.includes('aria-label="Waga docelowa o 0,5 kg więcej"'))
+    && /class="wp-val" id="f_kg"[^>]*>82,0 kg</.test(a) && /class="wp-val" id="f_cm"[^>]*>170 cm</.test(a);
+});
+tryc('wiersze profil: wartość startowa wyszarzona; zmiana zapisuje S.kg i oznacza jako Twoją; wpisana wartość równa startowej ustawia ją jako Twoją, Enter bez wpisu i wyjście z pola nie', () => {
+  WP().reset(); const h = view('intro', NEWD()), kg = RW('pf', 'kg');
+  const a = /class="wp-val wp-y" id="f_kg"[^>]*>70,0 kg</.test(h) && kg.start.src === 'default' && kg.today == null;
+  kg.put(WP().step(kg, kg.start.v, 1)); const b = T.S().kg === '70,1' && T.S().touched.kg === true && !T.S().touched.cm;
+  const cm = RW('pf', 'cm'), blur = WP().editOutcome(cm, cm.start.v), en = WP().editOutcome(cm, cm.start.v, true), o = WP().editOutcome(cm, cm.start.v, true, true); if (o.kind === 'put') cm.put(o.v);
+  return a && b && blur.kind === 'none' && en.kind === 'none' && o.kind === 'put' && o.v === 165 && T.S().touched.cm === true && T.S().cm === '165';
+});
+tryc('wiersze profil: wpis z klawiatury przez checkNum i LIM (wzrost 1720 odrzucony, wiek 15 poza zakresem, waga 82,4 kg przyjęta)', () => {
+  view('set', BASE({ touched: { ...TA4 } })); const p = (k, t) => RW('pf', k).parse(t);
+  return !!p('cm', '1720').err && !!p('age', '15').err && p('kg', '82,4 kg').v === 82.4 && !!p('goal', '').err;
+});
+// Suwaki z krokiem zależnym od prędkości (20.11.2026): krok dokładny (fine = step) przy wolnym przesuwaniu, siatka zgrubna (coarse) przy szybkim
+const SNP = (v, sp, R) => WP().snapBySpeed(v, sp, R);
+tryc('suwak: snapBySpeed: wolno zostaje wartość dokładna, szybko siatka zgrubna; skala 0-10 bez zmian; próg domyślny 300 px/s', () => {
+  const S5 = { step: 5, coarse: 15, range: [180, 720], lim: [0, 960] }, K = { step: 50, coarse: 500, range: [0, 20000], lim: [0, 60000] }, Q = { step: 1, range: [0, 10], lim: [0, 10] };
+  return SNP(425, 100, S5) === 425 && SNP(425, 900, S5) === 420 && SNP(425, -900, S5) === 420 && SNP(6550, 200, K) === 6550 && SNP(6550, 5000, K) === 6500 && SNP(6750, 5000, K) === 7000
+    && SNP(7, 5000, Q) === 7 && SNP(425, 299, S5) === 425 && SNP(425, 301, S5) === 420 && SNP(425, 30, { ...S5, fastPx: 20 }) === 420 && SNP(19990, 1e5, K) === 20000;
+});
+tryc('suwak: krok dokładny i zgrubny w opisach wierszy: sen 5/15 min, kroki 50/500, czas treningu 1/5 min, wzrost 1/5 cm, wiek 1/5, skale 1/1; suwak w kroku dokładnym', () => {
+  WP().reset(); const h = view('day', BASE({ lite: false, meas: {} })), s = wpS('s'), k = wpS('k'), tr = T.rowSpecs('tr').find((R) => R.key === 'min'), pf = T.rowSpecs('pf');
+  const cm = pf.find((R) => R.key === 'cm'), age = pf.find((R) => R.key === 'age');
+  return s.step === 5 && s.coarse === 15 && k.step === 50 && k.coarse === 500 && tr.step === 1 && tr.coarse === 5 && cm.step === 1 && cm.coarse === 5 && age.step === 1 && age.coarse === 5
+    && /id="wp_rs" min="180" max="720" step="5"/.test(h) && /id="wp_rk" min="0" max="20000" step="50"/.test(h) && h.includes('aria-label="Sen o 5 minut więcej"') && h.includes('aria-label="50 kroków więcej"');
+});
+tryc('suwak: przytrzymanie − i + najpierw krokiem dokładnym, po ok. 1 s krokiem zgrubnym (siatka); Page Up i Page Down krokiem zgrubnym', () => {
+  const S5 = { step: 5, coarse: 15, grid: true, lim: [0, 960] }, W = { step: 0.1, grid: false, lim: [35, 250] }, hs = WP().holdStep;
+  return hs(S5, 425, 1, 1) === 430 && hs(S5, 425, 1, 8) === 430 && hs(S5, 425, 1, 9) === 435 && hs(S5, 435, 1, 12) === 450 && hs(S5, 425, -1, 12) === 420
+    && Math.abs(hs(W, 80, 1, 1) - 80.1) < 1e-9 && Math.abs(hs(W, 80, 1, 31) - 80.5) < 1e-9 && WP().pageStep(S5, 425, 1) === 435 && WP().pageStep(S5, 425, -1) === 420;
+});
+// Poprawki po przeglądzie (20.11.2026): wpis równy wartości startowej to zapis, Enter bez wpisu w profilu tylko przechodzi dalej,
+// próg prędkości suwaka w pikselach na sekundę, średnia trendu w dniach pomiarów, waga profilu co 0,1, czas treningu ponad 180 min, pusta waga
+tryc('poprawki: wpisana wartość równa startowej zapisuje się (obwód, skład ciała, tętno, kroki, profil); bez wpisu nie', () => {
+  WP().reset(); view('day', BASE({ lite: false, meas: { [dk(9)]: { waist: '84,5', ffm: '52', hrRest: '60' } } })); const eo = WP().editOutcome;
+  const w = RW('ms', 'waist'), f = RW('ms', 'ffm'), h = RW('ms', 'hrRest'), x = RW('ms', 'vo2');
+  const a = ['waist', 'ffm', 'hrRest', 'vo2'].every((k) => { const R = RW('ms', k); return eo(R, R.start.v, true, true).kind === 'put' && eo(R, R.start.v, true, false).kind === 'none'; });
+  w.put(84.5); const b = T.S().meas[dk(0)].waist === '84,5';
+  const kq = { key: 'steps', today: null, start: { v: 7431, src: 'last' }, copyTap: true, fmt: String }, c = eo(kq, 7431, true, true).kind === 'put' && eo(kq, 7431, true, false).kind === 'copy';
+  WP().reset(); view('intro', NEWD()); const cm = RW('pf', 'cm'), d = eo(cm, cm.start.v, true, false).kind === 'none' && eo(cm, cm.start.v, true, true).kind === 'put';
+  return a && b && c && d && !!f && !!h && !!x;
+});
+tryc('poprawki: profil bez wpisu: Enter nie potwierdza (bez confirmMsg), S.touched bez zmian; podpis „wartość startowa” zostaje', () => {
+  WP().reset(); const h = view('intro', NEWD()), R = T.rowSpecs('pf');
+  return R.every((x) => !x.confirmMsg && WP().editOutcome(x, x.start.v, true, false).kind === 'none') && JSON.stringify(T.S().touched) === '{}' && (h.match(/wartość startowa/g) || []).length === 4;
+});
+tryc('poprawki: snapBySpeed w pikselach na sekundę (domyślnie 300 px/s): wolne przeciągnięcie wzrostu i kroków zostaje dokładne, szybkie na siatce', () => {
+  const CM = { step: 1, coarse: 5, range: [140, 210], lim: [120, 220] }, K = { step: 50, coarse: 500, range: [0, 20000], lim: [0, 60000] }, SNP2 = WP().snapBySpeed;
+  return SNP2(172, 120, CM) === 172 && SNP2(172, 900, CM) === 170 && SNP2(6550, 250, K) === 6550 && SNP2(6550, -900, K) === 6500 && SNP2(172, 200, { ...CM, fastPx: 100 }) === 170 && SNP2(7, 5000, { step: 1, range: [0, 10], lim: [0, 10] }) === 7;
+});
+tryc('poprawki: średnia trendu tylko w dniach pomiarów (bez schodków): tyle punktów linii średniej, ile pomiarów', () => {
+  const v = Array(84).fill(null); v[10] = 88; v[30] = 87; v[60] = 86; v[80] = 85; const s = WP().spark(v, null, { win: 28, avgLab: 'średnia 4 tygodni', lastPt: true });
+  const m = /<polyline points="([^"]+)" fill="none" stroke="var\(--green\)"/.exec(s); return !!m && m[1].split(' ').length === 4;
+});
+tryc('poprawki: waga w profilu co 0,1 kg, waga docelowa co 0,5 kg', () => { WP().reset(); view('set', BASE({ kg: '82', goal: '78', touched: { kg: true, cm: true, age: true, goal: true } })); return RW('pf', 'kg').step === 0.1 && RW('pf', 'goal').step === 0.5 && PFS('kg', 1) === '82,1' && PFS('goal', -1) === '77,5'; });
+tryc('poprawki: pusta waga z dawnych danych nie jest pokazywana jako 0 (wartość startowa wyszarzona)', () => {
+  WP().reset(); const h = view('set', BASE({ kg: '', touched: { kg: true, cm: true, age: true, goal: true } })), R = RW('pf', 'kg');
+  return R.today == null && R.start.v > 0 && !/id="f_kg"[^>]*>0,0 kg</.test(h) && /class="wp-val wp-y" id="f_kg"[^>]*>\d+,\d kg</.test(h);
+});
+tryc('poprawki: czas treningu ponad 180 min: wiersz pokazuje prawdziwą wartość, suwak stoi na końcu zakresu', () => {
+  WP().reset(); const h = view('train', BASE({ tr: TRW({ min: '240' }) })); return /id="f_tr\.min"[^>]*>240 min</.test(h) && /id="tr_rmin" min="5" max="180" step="1" value="180"/.test(h);
+});
+tryc('poprawki: jeden podpis „Dotknij liczby, aby ją wpisać.” na ramkę zamiast w każdym wierszu', () => {
+  WP().reset(); const h = view('day', BASE({ lite: false, meas: {} })), i = h.indexOf('data-fold="obwody"'), s = h.slice(i, h.indexOf('data-fold="tanita"'));
+  return (s.match(/Dotknij liczby, aby ją wpisać\./g) || []).length === 1 && !/class="wp-hint"[^>]*>dotknij/.test(s);
+});
+// ---- Drobne (20.11.2026, plan „Łatwość” pkt 8): A1-A5 przyciski, B1-B4 jezioro, C1-C5 zaległe z rady ----
+const EATD = (id, n) => Array.from({ length: n }, (_, i) => ({ kind: 'm', id, label: 'x' + i, k: 100 + i, p: 1, f: 1, c: 1 }));
+tryc('drobne A1: po oknie Cofnij posiłek zjedzony wcześniej ma „Zjedzone dziś: N× · Usuń”; Usuń kasuje ostatni wpis dania przez Cofnij 8 s', () => {
+  ACLR(); const id = T.planIds()[0], other = { kind: 'm', id: 'x9', label: 'inne', k: 50, p: 0, f: 0, c: 0 }, a = EATD(id, 2);
+  const h0 = view('meals', BASE({ days: { [dk(0)]: [a[0], other, a[1]] }, meas: {} }));
+  if (!h0.includes('Zjedzone dziś: 2×') || !h0.includes(`data-eatrm="${id}"`) || ABL(h0, 'meal:' + id) !== 'Zjem jeszcze raz') throw new Error('linia ' + h0.includes('Zjedzone dziś'));
+  if (/data-eatn="[^"]*"[^>]*hidden/.test(h0)) throw new Error('ukryta po oknie');
+  els.toast.innerHTML = ''; click({ eatrm: id }); const d = T.S().days[dk(0)];
+  if (d.length !== 2 || d[0] !== a[0] || d[1] !== other) throw new Error('usunięto nie ten wpis ' + JSON.stringify(d.map((e) => e.label)));
+  if (!/data-undo="1"/.test(toastHtml()) || !/Cofnij/.test(toastHtml())) throw new Error('bez Cofnij');
+  if (!mainHtml().includes('Zjedzone dziś: 1×')) throw new Error('licznik po usunięciu');
+  click({ undo: '1' }); if (T.S().days[dk(0)].length !== 3 || !mainHtml().includes('Zjedzone dziś: 2×')) throw new Error('cofnięcie');
+  const h1 = view('meals', BASE({ days: {}, meas: {} })); ACLR();
+  const h2 = view('meals', BASE({ days: { [dk(0)]: [] }, meas: {} })); if (h1.includes('Zjedzone dziś') || h2.includes('Zjedzone dziś')) throw new Error('linia bez wpisów');
+  click({ addmeal: id, ab: 'meal:' + id }); const g = mainHtml();
+  return /data-eatn="[^"]*"[^>]*hidden/.test(g) && ABL(g, 'meal:' + id) === '✓ Zjedzone · Cofnij';
+});
+tryc('drobne A1: linia „Zjedzone dziś” także w przepisie; Usuń to osobny przycisk (nie data-ab), przez undoable', () => {
+  ACLR(); const id = 'o1', e = EATD(id, 3), h = view('recipe', BASE({ recipe: id, days: { [dk(0)]: e } }));
+  const src = fs.readFileSync(path.join(root, 'app.js'), 'utf8'), m = /data-eatrm="[^"]*"/.exec(h);
+  return h.includes('Zjedzone dziś: 3×') && !!m && !/data-eatrm="[^"]*"[^>]*data-ab/.test(h) && /d\.eatrm[\s\S]{0,400}undoable\(/.test(src);
+});
+tryc('drobne A2: „Według planu” bez komunikatu poza pierwszymi krokami (przycisk i #sr wystarczą), w pierwszych krokach komunikat z następnym krokiem', () => {
+  ACLR(); view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } }); els.toast.innerHTML = '';
+  click({ dayplan: '1', ab: 'plan' }); const a = toastHtml(), n = nE();
+  ACLR(); view('day', { ...NEWU(), kg: '82', once: true, pet: { ...PETA }, guide: { hidden: false, dataOk: true, seenPet: false } }); els.toast.innerHTML = '';
+  click({ dayplan: '1', ab: 'plan' }); const b = toastHtml();
+  return n >= 2 && !/z planu|Dodano/.test(a) && /Dodano|z planu/.test(b) && /Dalej/.test(b);
+});
+tryc('drobne A5: „Według planu” po oknie pokazuje stan zapisany („✓ Plan zapisany”), nie napis jak na starcie', () => {
+  ACLR(); const h = view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } });
+  const m = /data-ab="plan"[^>]*>(.*?)<\/button>/.exec(h); if (!m) throw new Error('brak przycisku');
+  const labs = [...m[1].matchAll(/data-l="([^"]*)"/g)].map((x) => x[1]);
+  return labs.length === 3 && labs[0] === 'Według planu' && labs[2] === '✓ Plan zapisany' && labs[2] !== labs[0];
+});
+const LABFILL = (o) => { els.l_val = { value: '2,5' }; els.l_date = { value: '2026-11-10' }; els.l_unit = { value: 'mIU/ml' }; els.l_fast = { checked: !!o.fast }; els.l_lo = { value: o.lo || '' }; els.l_bio = { checked: !!o.bio }; els.l_cyc = { value: o.cyc || '' }; els.l_cr = { checked: !!o.cr }; };
+tryc('drobne A3: pamięć daty i jednostki w Badaniach znika po nowym dniu i po wyjściu z zakładki', () => {
+  ACLR(); view('labs', BASE({ labs: [], labSel: 'tsh' })); LABFILL({}); click({ labsave: '1', ab: 'lab' }); AGO('lab', 6000);
+  const keep = view('labs', {}); if (!/id="l_date" value="2026-11-10"/.test(keep)) throw new Error('bez pamięci na tej samej zakładce');
+  T.labKeep().day = dk(1); const nd = view('labs', {}); if (!new RegExp(`id="l_date" value="${T.todayKey()}"`).test(nd) || T.labKeep() !== null) throw new Error("nowy dzień " + JSON.stringify(T.labKeep()));
+  ACLR(); LABFILL({}); click({ labsave: '1', ab: 'lab' }); view('day', {}); const out = T.labKeep();
+  const back = view('labs', {}); return out === null && new RegExp(`id="l_date" value="${T.todayKey()}"`).test(back) && /id="l_unit" value="µIU\/ml"/.test(back);
+});
+tryc('drobne A4: Cofnij wyniku badania oddaje wszystkie wpisane pola (wartość, dolna granica, na czczo, biotyna, cykl; kreatyna)', () => {
+  ACLR(); view('labs', BASE({ labs: [], labSel: 'tsh', sex: 'K' })); LABFILL({ fast: true, lo: '0,4', bio: true, cyc: '2' }); click({ labsave: '1', ab: 'lab' });
+  AGO('lab', 1000); click({ labsave: '1', ab: 'lab' }); const h = mainHtml();
+  const a = /id="l_val" value="2,5"/.test(h) && /id="l_lo"[^>]*value="0,4"/.test(h) && /id="l_fast"[^>]*checked/.test(h) && /id="l_bio"[^>]*checked/.test(h) && /id="l_cyc"[^>]*value="2"/.test(h);
+  ACLR(); view('labs', BASE({ labs: [], labSel: 'kreat', sex: 'M' })); LABFILL({ cr: true }); click({ labsave: '1', ab: 'lab' }); AGO('lab', 1000); click({ labsave: '1', ab: 'lab' });
+  return a && /id="l_cr"[^>]*checked/.test(mainHtml()) && !/id="l_fast"[^>]*checked/.test(mainHtml());
+});
+tryc('drobne B1: bez pathSeen (po aktualizacji) kamienie nie dają fałszywego podskoku; nowy kamień po zapisie pathSeen skacze', () => {
+  const S = BASE({ pet: { kind: 'kapibara', name: 'A', since: dk(30), stones: ['a', 'b'] } });
+  const a = view('pet', S), seen = T.S().pet.pathSeen, S2 = BASE({ pet: { kind: 'kapibara', name: 'A', since: dk(30), stones: ['a', 'b'], pathSeen: 1 } });
+  const b = view('pet', S2);
+  return !a.includes('stonepet pet-kapibara hop') && seen === 2 && b.includes('stonepet pet-kapibara hop') && T.S().pet.pathSeen === 2;
+});
+tryc('drobne B2: strumień i mgła miękkie (gradient zamiast twardej krawędzi), identyfikatory unikalne', () => {
+  const m = svgOf(JP(3, 'mgla', 'K', 'gaska')), o = svgOf(JP(3, '', 'K', 'gaska')), ids = (s) => [...s.matchAll(/\sid="([^"]+)"/g)].map((x) => x[1]);
+  const fogOk = /class="fog"[^>]*fill="url\(#([^)]+)\)"/.exec(m), stOk = /class="stream"[^>]*fill="url\(#([^)]+)\)"/.exec(o);
+  return !!fogOk && !!stOk && ids(m).includes(fogOk[1]) && ids(o).includes(stOk[1]) && new Set(ids(m)).size === ids(m).length && /<linearGradient[^>]*id="[^"]+"[\s\S]*stop-opacity="0"/.test(m) && /<linearGradient[\s\S]*stop-opacity="0"/.test(o);
+});
+tryc('drobne B3-B4: smuga wiatru co najmniej 3:1 do powierzchni w obu motywach; mgła w ciemnym lżejsza niż w jasnym (token --zw-fog-o)', () => {
+  const b = themeBlocks(), hex = (blk, n) => (blk.match(new RegExp('--' + n + ':(#[0-9A-Fa-f]{6})')) || [])[1], num = (blk) => +((blk.match(/--zw-fog-o:\s*([0-9.]+)/) || [])[1]);
+  const bad = []; for (const [n, blk] of [['jasny', b.light], ['ciemny', b.dark], ['ciemny-mq', b.darkMq]]) { const c = contrast(hex(blk, 'zw-wind'), hex(blk, 'surface')); if (c < 3) bad.push(n + ' ' + c.toFixed(2)); }
+  if (bad.length) throw new Error(bad.join('; '));
+  return num(b.dark) > 0 && num(b.dark) < num(b.light) && num(b.darkMq) === num(b.dark) && /\.stones \.fog\{[^}]*opacity:var\(--zw-fog-o\)/.test(sysCss);
+});
+tryc('drobne C1: w prostym widoku arkusz „Dodaj wpis” bez „Brzuch dziś” (jest kafelek w karcie), w pełnym widoku zostaje', () => {
+  liteReset(); T.S().prof = { cond: { gut: true }, pill: '' }; view('day', {}); click({ addsheet: '1' }); const a = sheetH();
+  T.S().lite = false; view('day', {}); click({ addsheet: '1' }); const b = sheetH(); T.S().prof = { cond: {}, pill: '' };
+  return !a.includes('Brzuch dziś') && !a.includes('fold_brzuch') && b.includes('Brzuch dziś');
+});
+tryc('drobne C2: prosty widok przed pierwszym szybkim wpisem dnia: wskaźniki zwierzaka neutralne (nie niskie), po wpisie bez zmian', () => {
+  const c0 = mkCtx({ empty: 3 }), a = st({ ...c0, lite: true, liteFull: () => false }), b = st({ ...c0, lite: true, liteFull: () => true }), n = st(c0);
+  return Object.values(a.meters).every((v) => v >= 50 && v <= 70) && Object.values(b.meters).every((v) => v < 50) && Object.values(n.meters).every((v) => v < 50);
+});
+tryc('drobne C3: podpis „cel w przybliżeniu” przy celu kalorii, gdy waga, wzrost lub wiek są startowe (Dziś i Posiłki); po wpisaniu własnych znika', () => {
+  const m = { kind: 'm', id: 'o1', label: 'x', k: 400, p: 20, f: 10, c: 40 }, T0 = { kg: true, cm: true, age: true, goal: true };
+  const a = view('day', BASE({ touched: {}, days: { [dk(0)]: [m] } })), a2 = view('meals', BASE({ touched: {} }));
+  const b = view('day', BASE({ touched: T0, days: { [dk(0)]: [m] } })), b2 = view('meals', BASE({ touched: T0 }));
+  const c = view('day', BASE({ touched: { kg: true, cm: true }, days: { [dk(0)]: [m] } }));
+  return /cel w przybliżeniu, wpisz wagę, wzrost i wiek/.test(a) && /cel w przybliżeniu, wpisz wagę, wzrost i wiek/.test(a2) && !/w przybliżeniu, wpisz/.test(b) && !/w przybliżeniu, wpisz/.test(b2) && /w przybliżeniu, wpisz/.test(c);
+});
+tryc('drobne C4: ustawienie „Przyciski − i + po lewej” (domyślnie po prawej): S.pmLeft, przełącznik w Ustawieniach, atrybut data-pm na html, kopia bez zdrowia', () => {
+  const D = T.DEF(), h = view('set', BASE()), src = fs.readFileSync(path.join(root, 'app.js'), 'utf8'), css = sysCss;
+  return D.pmLeft === false && h.includes('data-k="pmLeft"') && h.includes('Przyciski − i + po lewej') && T.nhKeep().includes('pmLeft') && /dataset\.pm=S\.pmLeft\?'l':'r'/.test(src) && /html\[data-pm="l"\] \.wp-pm\{[^}]*order:-1/.test(css);
+});
+tryc('drobne C5: krótka wibracja po zapisie (navigator.vibrate(15)), tylko gdy włączona i obsługiwana; przełącznik w Ustawieniach domyślnie włączony', () => {
+  ACLR(); const calls = []; sandbox.navigator.vibrate = (n) => { calls.push(n); return true; };
+  try {
+    const id = T.planIds()[0], D = T.DEF(); view('meals', BASE({ days: {}, vibr: true }));
+    click({ addmeal: id, ab: 'meal:' + id }); const on = calls.length === 1 && calls[0] === 15;
+    ACLR(); view('meals', BASE({ days: {}, vibr: false })); click({ addmeal: id, ab: 'meal:' + id }); const off = calls.length === 1;
+    delete sandbox.navigator.vibrate; ACLR(); view('meals', BASE({ days: {}, vibr: true })); click({ addmeal: id, ab: 'meal:' + id });
+    const h0 = view('set', BASE({ vibr: true })); sandbox.navigator.vibrate = () => true; const h = view('set', BASE({ vibr: true }));
+    // Przełącznik tylko tam, gdzie urządzenie obsługuje wibrację (S.vibr zostaje w danych)
+    return on && off && D.vibr === true && !h0.includes('data-k="vibr"') && h.includes('data-k="vibr"') && h.includes('Wibracja po zapisie') && T.nhKeep().includes('vibr');
+  } finally { delete sandbox.navigator.vibrate; }
+});
+// Przegląd gałęzi (C1): przytrzymanie − i + w wierszu z zapisem od razu zapisuje tylko po puszczeniu na przycisku; pointercancel i zsunięcie to anulowanie
+tryc('przytrzymanie: zapis tylko po pointerup nad przyciskiem; pointercancel, zsunięcie z przycisku i przerwanie bez zdarzenia nic nie zapisują', () => {
+  const o = WP().holdOutcome; return o('pointerup', true) === 'put' && o('pointerup', false) === 'cancel' && o('pointercancel', true) === 'cancel' && o('cancel', false) === 'cancel';
+});
+// Przegląd gałęzi (drobne): zdanie przed kafelkami szybkiego wpisu, widoczny stan „Plan zapisany”, nazwa „Dlaczego: temat”
+tryc('drobne: przed kafelkami szybkiego wpisu widoczne zdanie, że karta zwinie się po odpowiedziach', () => {
+  liteReset(); T.S().meas = {}; const h = view('day', {}), i = h.indexOf('id="lite"'), sec = h.slice(i, h.indexOf('</section>', i)), j = sec.indexOf('Po odpowiedziach karta zwinie się');
+  return j > 0 && j < sec.indexOf('data-lite="feel:');
+});
+tryc('drobne: Według planu przy zapisanym już planie pokazuje widoczny komunikat (nie tylko #sr)', () => {
+  view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } }); click({ dayplan: '1' }); els.toast.innerHTML = ''; click({ dayplan: '1' });
+  return els.toast.innerHTML.includes('Plan na dziś jest już zapisany');
+});
+tryc('drobne: każde „Dlaczego?” ma nazwę „Dlaczego: temat” (aria-label)', () => {
+  const hs = ['set', 'meals', 'health', 'mob'].map((t) => view(t, BASE())).join(''), all = [...hs.matchAll(/<summary([^>]*)>Dlaczego\?<\/summary>/g)];
+  return all.length > 3 && all.every((m) => /aria-label="Dlaczego: [^"]{3,}"/.test(m[1]));
+});
+// Przegląd gałęzi (I2): prędkość, nachylenie i moc w Treningu to wiersze wartości (ten sam komponent, strona − i + jak w Ustawieniach)
+tryc('wiersze trening: prędkość i nachylenie bieżni, moc spinningu jako wiersze; nachylenie 0 to wartość; bez pól z − i +', () => {
+  WP().reset(); const a = view('train', BASE({ tr: { ...T.S().tr, cat: 'bieznia', speed: '6', grade: '0' } })); WP().reset(); const b = view('train', BASE({ tr: { ...T.S().tr, cat: 'spinning', sMode: 'w', watts: '120' } }));
+  const g = T.rowSpecs('tr').find((R) => R.key === 'grade'), sp = T.rowSpecs('tr').find((R) => R.key === 'speed');
+  return /class="wp-val" id="f_tr\.speed"[^>]*>6,0 km\/h</.test(a) && /class="wp-val" id="f_tr\.grade"[^>]*>0,0 %</.test(a) && /class="wp-val" id="f_tr\.watts"[^>]*>120 W</.test(b)
+    && sp.step === 0.5 && g.today === 0 && !a.includes('class="stp"') && !b.includes('data-stp') && !a.includes('data-k="tr.speed"') && b.includes('pokazuje średnią moc z całych zajęć');
+});
+tryc('wiersze: jedna funkcja liczby z krokiem dla zapisu i wyświetlania (82,5 / 82,0 / 1 530)', () => T.stpFmt(82.5, 0.5) === '82,5' && T.stpFmt(82, 0.5) === '82' && T.stpFmt(1530, 10) === '1530' && T.rowSpecs('ms').find((R) => R.key === 'bmr').fmt(1530) === '1' + String.fromCharCode(160) + '530 kcal');
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

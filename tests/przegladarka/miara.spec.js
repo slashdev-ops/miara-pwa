@@ -117,10 +117,12 @@ test('obramowanie pól co najmniej 3:1 względem tła (WCAG 1.4.11)', async ({ p
   expect(errors).toEqual([]);
 });
 
+// Zadanie 5 (20.11.2026): profil i Trening to wiersze wartości, więc zachowanie pola liczbowego sprawdza pole ceny twarogu (wartość 12,5)
+const speedField = (page) => page.evaluate(() => { S.prices = S.prices || {}; S.prices.twarog = { ...(S.prices.twarog || {}), p: '12,5' }; S.tab = 'health'; render(); window.scrollTo(0, 0); });
 test('dotknięcie pola zaznacza wartość, wpis ją zastępuje', async ({ page }) => {
   const errors = await open(page);
-  await show(page, 'set');
-  const kg = page.locator('#f_kg');
+  await speedField(page);
+  const kg = page.locator('[id="f_prices.twarog.p"]');
   await kg.scrollIntoViewIfNeeded();
   // zajęty procesor: klawisz może przyjść przed setTimeout(…, 0); zaznaczenie nie może od niego zależeć (CI 09.11.2026: „8750,1”)
   await page.evaluate(() => { const st = window.setTimeout; window.setTimeout = (f, d, ...a) => (d ? st(f, d, ...a) : 0); });
@@ -132,8 +134,8 @@ test('dotknięcie pola zaznacza wartość, wpis ją zastępuje', async ({ page }
 
 test('drugie dotknięcie ustawia kursor do poprawki jednej cyfry', async ({ page }) => {
   const errors = await open(page);
-  await show(page, 'set');
-  const kg = page.locator('#f_kg');
+  await speedField(page);
+  const kg = page.locator('[id="f_prices.twarog.p"]');
   await kg.scrollIntoViewIfNeeded();
   await kg.click();
   await expect.poll(() => kg.evaluate((el) => el.selectionEnd - el.selectionStart)).toBe(4);
@@ -177,7 +179,7 @@ test('kopia bez danych o zdrowiu ma tylko ustawienia, wczytanie nie kasuje danyc
     document.querySelector('[data-bkapply="1"]').click();
     return { keys, before, after: [S.kg, Object.keys(S.meas).length], discreet: S.discreet };
   });
-  expect(r.keys).toEqual(['discreet', 'lite', 'ord', 'pet', 'prices', 'promos', 'shopDay', 'stores', 'tips', 'toastLen', 'unlock', 'unlockAt', 'unlockSnooze']);
+  expect(r.keys).toEqual(['discreet', 'lite', 'ord', 'pet', 'pmLeft', 'prices', 'promos', 'shopDay', 'stores', 'tips', 'toastLen', 'unlock', 'unlockAt', 'unlockSnooze', 'vibr']);
   expect(r.after).toEqual(r.before);
   expect(r.discreet).toBe(true);
   expect(errors).toEqual([]);

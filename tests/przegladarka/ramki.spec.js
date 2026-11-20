@@ -1,4 +1,4 @@
-// Ramki i stan „Zjem” w przeglądarce (15.11.2026): przyciski nie dotykają krawędzi ramki, „Zjem” od razu pokazuje stan.
+// Ramki w przeglądarce (15.11.2026): przyciski nie dotykają krawędzi ramki; stan „Zjem” w przyciski.spec.js.
 const { test, expect } = require('@playwright/test');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -57,31 +57,16 @@ for (const tab of ['day', 'meals', 'train', 'health', 'set', 'add', 'pet']) {
   });
 }
 
-test('Zjem: wiersz planu od razu pokazuje „✓ Zjedzone” z aria-pressed, co najmniej 44 px; drugie dotknięcie cofa', async ({ page }) => {
-  const errors = await open(page);
-  await page.evaluate(() => { S.tab = 'meals'; S.days[todayKey()] = []; SHEET = false; render(); });
-  const id = await page.locator('.prow [data-addmeal]').first().getAttribute('data-addmeal');
-  await page.locator(`.prow [data-addmeal="${id}"]`).click();
-  const eaten = page.locator(`.prow [data-uneat="${id}"]`);
-  await expect(eaten).toBeVisible();
-  await expect(eaten).toHaveText('✓ Zjedzone');
-  await expect(eaten).toHaveAttribute('aria-pressed', 'true');
-  expect((await eaten.boundingBox()).height).toBeGreaterThanOrEqual(44);
-  await expect(page.locator('#toast')).toContainText('Dodano do dnia');
-  await eaten.click();
-  await expect(page.locator(`.prow [data-addmeal="${id}"]`)).toBeVisible();
-  await expect(page.locator('#toast')).toContainText('Usunięto z dnia');
-  await expect(page.locator('#toast [data-undo]')).toBeVisible();
-  expect(errors).toEqual([]);
-});
+// „Zjem” ze stanem: przyciski.spec.js (20.11.2026, wspólny automat z kartą „Dziś”: „✓ Zjedzone · Cofnij”, potem „Zjem jeszcze raz”)
 
-// 320 px (rada P2, 15.11.2026): etykieta kalorii z zegarka najwyżej w 2 wierszach, jednostka „kcal” co najmniej 8 px od krawędzi ramki
+// 320 px (rada P2, 15.11.2026): etykieta kalorii z zegarka najwyżej w 2 wierszach, jednostka „kcal” co najmniej 8 px od krawędzi ramki.
+// Zadanie 5 (20.11.2026): kalorie to wiersz wartości; jednostka jest w wartości, więc od ramki liczy się − + (ostatni element wiersza)
 test('320 px: Trening, kalorie z zegarka: etykieta najwyżej 2 wiersze, jednostka 8 px od ramki', async ({ page }) => {
   test.skip((page.viewportSize() || {}).width > 359, 'tylko najwęższy ekran');
   const errors = await open(page);
   await page.evaluate(() => { S.tab = 'train'; SHEET = false; render(); });
   const r = await page.evaluate(() => {
-    const el = document.getElementById('f_tr.wk'), f = el.closest('.field'), lab = f.querySelector('label'), unit = f.querySelector('.unit'), fr = f.closest('.panel').getBoundingClientRect();
+    const el = document.getElementById('f_tr.wk'), f = el.closest('.wp-r'), lab = f.querySelector('.wp-lab'), unit = f.querySelector('.wp-pm'), fr = f.closest('.panel').getBoundingClientRect();
     const lh = parseFloat(getComputedStyle(lab).lineHeight) || parseFloat(getComputedStyle(lab).fontSize) * 1.2;
     return { lines: Math.round(lab.getBoundingClientRect().height / lh), unitGap: fr.right - unit.getBoundingClientRect().right, txt: lab.textContent };
   });

@@ -46,12 +46,12 @@ test('prosty: karta bez poziomego przewijania, kafelki co najmniej 48 px, tekst 
   expect(errors).toEqual([]);
 });
 
-test('prosty: kroki to wiersz z suwakiem 0-20 000 co 500; dzień liczy się dopiero po dotknięciu; zapis po puszczeniu suwaka z fokusem na suwaku', async ({ page }) => {
+test('prosty: kroki to wiersz z suwakiem 0-20 000 co 50 (siatka 500 przy szybkim przesunięciu); dzień liczy się dopiero po dotknięciu; zapis po puszczeniu suwaka z fokusem na suwaku', async ({ page }) => {
   const errors = await open(page);
   const v = page.locator('#q_steps'), r = page.locator('#q_rsteps');
   await expect(v).toHaveText(/^5\s000$/);
   await expect(v).toHaveClass(/wp-y/);
-  await expect(r).toHaveAttribute('min', '0'); await expect(r).toHaveAttribute('max', '20000'); await expect(r).toHaveAttribute('step', '500');
+  await expect(r).toHaveAttribute('min', '0'); await expect(r).toHaveAttribute('max', '20000'); await expect(r).toHaveAttribute('step', '50');
   expect(await page.evaluate(() => (S.meas[todayKey()] || {}).steps)).toBeUndefined();
   await r.focus();
   await r.fill('7500');
@@ -73,13 +73,15 @@ test('prosty: propozycja Dodać wagę? widoczna', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('prosty: szybki wpis (kroki suwakiem, samopoczucie, jedzenie) daje Dzień zapisany i aria-pressed', async ({ page }) => {
+test('prosty: szybki wpis (kroki suwakiem, samopoczucie, jedzenie) zwija kartę; Zmień pokazuje Dzień zapisany i aria-pressed', async ({ page }) => {
   const errors = await open(page);
-  await page.getByRole('button', { name: '500 kroków więcej' }).click();
+  await page.getByRole('button', { name: '50 kroków więcej' }).click();
   for (const f of ['feel:dobrze', 'redz:0']) await page.locator(`[data-lite="${f}"]`).click();
+  await expect(page.locator('#lite')).toContainText('✓ Zapisane na dziś:'); // pełna karta zwija się (stan.spec.js); Zmień pokazuje wybory
+  await page.locator('[data-liteedit]').click();
   await expect(page.locator('#lite')).toContainText('✓ Dzień zapisany.');
   for (const f of ['feel:dobrze', 'redz:0']) await expect(page.locator(`[data-lite="${f}"]`)).toHaveAttribute('aria-pressed', 'true');
-  expect(await page.evaluate(() => S.meas[todayKey()].steps)).toBe('5500');
+  expect(await page.evaluate(() => S.meas[todayKey()].steps)).toBe('5050');
   expect(errors).toEqual([]);
 });
 
