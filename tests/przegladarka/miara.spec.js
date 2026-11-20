@@ -213,11 +213,12 @@ test('brzuch i jelita (#demo-jelita): dziennik czytelny, kontrast, bez ramki w r
   await show(page, 'day');
   await page.locator('#fold_brzuch summary').click();
   await expect(page.locator('#fold_brzuch')).toContainText('dni z wzdęciem 5 lub więcej');
-  await page.locator('#fold_brzuch [data-gutb="4"]').click();
+  await page.locator('#q_rgutb').fill('4'); // wzdęcie to suwak 0-10 (runda 2)
   expect(await page.evaluate(() => S.gut[todayKey()].b)).toBe(4);
   await page.evaluate(() => { document.getElementById('fold_brzuch').open = true; });
   expect(await lowContrast(page), 'za słaby kontrast').toEqual([]);
-  const nested = await page.evaluate(() => [...document.querySelectorAll('#fold_brzuch .chip:not(.exc)')].filter((el) => { const s = getComputedStyle(el); return parseFloat(s.borderTopWidth) > 0 || s.boxShadow !== 'none'; }).length);
+  // Kafelek wyboru w kafelku: granica komponentu 1 px (WCAG 1.4.11) dozwolona, cień zewnętrzny nie; obrys inset tylko przy wybranym
+  const nested = await page.evaluate(() => [...document.querySelectorAll('#fold_brzuch .chip:not(.exc)')].filter((el) => { const s = getComputedStyle(el), sel = el.matches('.chip.inc'); return parseFloat(s.borderTopWidth) > 1 || (s.boxShadow !== 'none' && !(sel && /inset/.test(s.boxShadow))); }).length); // wewnętrzny obrys 2 px wybranego kafelka to znak wyboru, nie ramka
   expect(nested, 'ramka w ramce').toBe(0);
   const w = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
   expect(w[0]).toBeLessThanOrEqual(w[1]);
@@ -289,13 +290,16 @@ test('kafelki i przyciski-kafelki mają obramowanie co najmniej 3:1 do tła pod 
     const found = await page.evaluate((src) => {
       const { rgba, ratio, bgOf, visible } = eval(src)();
       const out = [];
-      for (const el of document.querySelectorAll('.panel,.fold,.chip,.seg,.petcard,.note:not(.warn):not(.demo)')) {
+      for (const el of document.querySelectorAll('.panel,.fold,.chip,.seg button,.petcard,.note:not(.warn):not(.demo)')) {
         if (!visible(el)) continue;
         // panel w rozwijanej sekcji albo w innym panelu: obramowanie ma kontener
-        if (el.parentElement.closest('.panel,.fold,.note,.petcard,.card')) continue; // wewnątrz kafelka ramkę ma kafelek
+        const tile = el.matches('.chip,.seg button');
+        if (!tile && el.parentElement.closest('.panel,.fold,.note,.petcard,.card')) continue; // panel w kafelku: ramkę ma kafelek; kafelek wyboru w kafelku też musi mieć granicę 3:1
         const s = getComputedStyle(el), bg = bgOf(el.parentElement);
         if (!bg) continue;
-        const w = parseFloat(s.borderTopWidth), r = ratio(rgba(s.borderTopColor), bg);
+        const sel = el.matches('.chip.inc,.seg button.on');
+        let w = parseFloat(s.borderTopWidth), r = ratio(rgba(s.borderTopColor), bg);
+        if (sel && !(w >= 1 && r >= 3)) { w = 1; r = ratio(rgba(s.backgroundColor), bg); } // wybrany: granicą jest wypełnienie
         if (!(w >= 1) || r < 3) out.push(`${el.className.split(' ')[0]} ${w}px ${r.toFixed(2)}`);
       }
       return out;
@@ -350,7 +354,10 @@ test('bez ramki w ramce: wewnątrz kafelka panel, sekcja, notka, żeton i przeł
         if (!el.parentElement.closest(TILE)) continue;
         const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
         const s = getComputedStyle(el);
-        if (parseFloat(s.borderTopWidth) > 0 || s.boxShadow !== 'none') out.push(el.className.split(' ').slice(0, 2).join('.'));
+        // Kafelek wyboru: granica 1 px (WCAG 1.4.11) dozwolona; obrys inset tylko przy wybranym; inne elementy bez ramki i cienia
+        const tile = el.matches('.chip'), sel = el.matches('.chip.inc,.seg button.on');
+        const bw = parseFloat(s.borderTopWidth), shadowBad = s.boxShadow !== 'none' && !(sel && /inset/.test(s.boxShadow));
+        if ((tile ? bw > 1 : bw > 0) || shadowBad) out.push(el.className.split(' ').slice(0, 2).join('.'));
       }
       return out;
     });
@@ -505,26 +512,32 @@ test('mniej ramek: sąsiadujące sekcje zwinięte to jedna lista na każdym ekra
 });
 
 // Szybkie wpisy: Enter (klawisz Dalej) w polu liczby przenosi do następnego pola; w ostatnim zamyka klawiaturę
-test('szybkie wpisy: Enter w polu wagi przechodzi do kroków, wpis zostaje', async ({ page }) => {
+// Karta „Dziś” (20.11.2026): rano kolejność Waga, Sen, Kroki; Enter przechodzi do następnego wiersza, wpis zostaje i zapisuje go „Zatwierdź”
+test('szybkie wpisy: Enter w polu wagi przechodzi do następnego wiersza, wpis zostaje', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-11-20T08:00:00') });
   await open(page);
   await page.evaluate(() => { S.meas[todayKey()] = {}; S.tab = 'day'; render(); });
   await page.locator('#m_w').click();
   await page.keyboard.type('79,5');
   await page.keyboard.press('Enter');
   await page.waitForTimeout(300);
-  const r = await page.evaluate(() => ({ id: document.activeElement.id, w: S.meas[todayKey()].w }));
-  expect(r.id).toBe('m_steps');
-  expect(r.w).toBe('79,5');
+  const r = await page.evaluate(() => ({ id: document.activeElement.id, v: document.getElementById('m_w').textContent }));
+  expect(r.id).toBe('m_sleep');
+  expect(r.v).toBe('79,5 kg');
+  await page.locator('#wp_main').click();
+  expect(await page.evaluate(() => S.meas[todayKey()].w)).toBe('79,5');
 });
 
 // Szybkie pisanie zaraz po dotknięciu pola: opóźnione zaznaczenie wartości nie może połknąć pierwszego znaku
 test('pole liczby: znak wpisany zaraz po wejściu w pole nie zostaje zaznaczony i nadpisany', async ({ page }) => {
   await open(page);
   await page.evaluate(() => { S.meas[todayKey()] = {}; S.tab = 'day'; render(); });
+  // Karta „Dziś”: dotknięcie wartości wagi otwiera pole wpisu #wp_in z zaznaczeniem; pierwszy znak wpisany od razu po nim zostaje
   const r = await page.evaluate(async () => {
-    const el = document.getElementById('m_w'); el.focus(); el.value = '7'; el.setSelectionRange(1, 1); el.dispatchEvent(new Event('input', { bubbles: true }));
+    document.getElementById('m_w').click();
+    const el = document.getElementById('wp_in'); el.value = '7'; el.setSelectionRange(1, 1); el.dispatchEvent(new Event('input', { bubbles: true }));
     await new Promise((res) => setTimeout(res, 30));
-    const n = document.getElementById('m_w'); return { v: n.value, a: n.selectionStart, b: n.selectionEnd };
+    const n = document.getElementById('wp_in'); return { v: n.value, a: n.selectionStart, b: n.selectionEnd };
   });
   expect(r).toEqual({ v: '7', a: 1, b: 1 });
 });

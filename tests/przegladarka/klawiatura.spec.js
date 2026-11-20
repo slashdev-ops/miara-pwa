@@ -40,6 +40,9 @@ test('wpis wagi z „Zważ się rano”: dolne menu znika na czas wpisu i wraca 
   await expect(nav).toBeVisible();
   await page.locator('.opt.hab[data-goto="m_w"]').click();
   await expect(page.locator('#m_w')).toBeFocused();
+  // Karta „Dziś” (20.11.2026): #m_w to przycisk wartości; Enter albo dotknięcie otwiera pole wpisu w miejscu wartości
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#wp_in')).toBeFocused();
   await expect(nav, 'menu nie zasłania pola nad klawiaturą').toBeHidden();
   await page.evaluate(() => document.activeElement.blur());
   await expect(nav, 'menu wraca po wyjściu z pola').toBeVisible();

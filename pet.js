@@ -3,9 +3,11 @@
 var PET = (function () {
   const LINES = {
     celebrate: '{n} świętuje! Nowa odznaka.', sleep: '{n} śpi. Dobranoc.', sad: '{n} tęskni. Zapisz cokolwiek, a odżyje.',
-    hungry: '{n} czeka na wpis posiłku.', rest: '{n} odpoczywa razem z Tobą. Dziś liczy się odpoczynek.', tired: '{n} jest zmęczona. Sen albo spacer doda jej energii.',
+    hungry: '{n} czeka na wpis posiłku.', rest: '{n} odpoczywa razem z Tobą. Dziś liczy się odpoczynek.', tired: '{n} jest {tired}. Sen albo spacer doda {jej} energii.',
     happy: '{n} jest w świetnej formie.', ok: '{n} ma się dobrze.', goal: '{n} świętuje zaliczony tydzień celu!'
   };
+  // Linia nastroju z imieniem i formą rodzajową gatunku ({tired}, {jej})
+  const say = (t, name, kind) => t.replace('{n}', name).replace(/\{(tired|jej)\}/g, (_, k) => form(kind, k));
   const ACC = { 'Brąz': 'szalik', 'Srebro': 'czapka', 'Złoto': 'okulary', 'Platyna': 'korona' };
   const clamp = (v) => Math.max(10, Math.min(100, Math.round(v)));
 
@@ -51,7 +53,7 @@ var PET = (function () {
     const k = c.key(c.now), h = c.now.getHours(), przerwa = gap(c), ents = c.entries(k), m = c.meas(k) || {};
     const meals = ents.filter((e) => e.kind === 'm').length, train = ents.some((e) => e.kind === 't');
     const sleep = c.num(m.sleep), steps = c.num(m.steps);
-    const lite = !!c.lite, lf = lite && !!c.liteFull(k); // prosty widok: karta „Dziś, 3 dotknięcia” zastępuje posiłki i kroki
+    const lite = !!c.lite, lf = lite && !!c.liteFull(k); // prosty widok: karta „Szybki wpis dnia” zastępuje posiłki i kroki
     let food = (c.once ? h < 19 : h < 9) && meals === 0 ? 50 : [0, 40, 70, 100][Math.min(meals, 3)];
     let energy = Math.min(sleep / 7, 1) * 60 + (train || steps >= 6000 ? 40 : steps >= 3000 ? 20 : 0);
     if (lf) { food = Math.max(food, 70); energy = Math.max(energy, 70); }
@@ -70,61 +72,151 @@ var PET = (function () {
     else if (!lite && h >= (c.once ? 19 : 12) && meals === 0) md = 'hungry';
     else if (!lite && meters.energy < 40) md = 'tired';
     else if (meters.food >= 70 && meters.energy >= 70 && meters.mood >= 70) md = 'happy';
-    const name = (c.pet && String(c.pet.name || '').trim()) || 'Kluska';
+    const name = nameOf(c.pet);
     // Tryb pokazowy: klatka narzuca minę, etap i dodatek; bez kamienia milowego (nic nie trafia do petSeen)
-    if (c.force) return { meters, przerwa, mood: c.force.mood, stage: c.force.stage, acc: c.force.acc || null, active, milestone: null, line: LINES[c.force.mood].replace('{n}', name) };
-    return { meters, przerwa, mood: md, stage, acc: ACC[c.level(c.weekPts())[1]] || null, active, milestone, line: (lite && !lf && md === 'ok' ? '{n} czeka na 3 dotknięcia.' : LINES[milestone === 'cel1' ? 'goal' : rest && md === 'sleep' ? 'rest' : md]).replace('{n}', name) };
+    if (c.force) return { meters, przerwa, mood: c.force.mood, stage: c.force.stage, acc: c.force.acc || null, active, milestone: null, line: say(LINES[c.force.mood], name, c.force.kind || (c.pet && c.pet.kind)) };
+    return { meters, przerwa, mood: md, stage, acc: ACC[c.level(c.weekPts())[1]] || null, active, milestone, line: say(lite && !lf && md === 'ok' ? '{n} czeka na szybki wpis.' : LINES[milestone === 'cel1' ? 'goal' : rest && md === 'sleep' ? 'rest' : md], name, c.pet && c.pet.kind) };
   }
 
-  // ---------- Rysunek: SVG 120×120, kolory z CSS (klasy), animacje w app.css ----------
+  // ---------- Rysunek: SVG 120×120; postacie (gąska, kaczuszka, kapibara, kotek) w siatce 100×100, kolory z tokenów --zw-* (app.css) ----------
   const SCALE = { chick: 0.7, young: 0.85, adult: 1 };
+  const KINDS = ['gaska', 'kaczka', 'kapibara', 'kotek'];
+  const KIND_PL = { gaska: 'Gąska', kaczka: 'Kaczuszka', kapibara: 'Kapibara', kotek: 'Kotek' };
   const MOOD_PL = { celebrate: 'świętuje', sleep: 'śpi', sad: 'tęskni', hungry: 'czeka na wpis', tired: 'zmęczona', happy: 'szczęśliwa', ok: 'zadowolona', alert: 'uwaga' };
-  const KIND_PL = { gaska: 'Gąska', kaczka: 'Kaczuszka' };
-
-  function eyes(x, y, mood) {
-    if (mood === 'sleep') return `<path class="lid" d="M${x - 4} ${y}h8"/><text class="zz" x="${x + 10}" y="${y - 12}">z</text><text class="zz z2" x="${x + 17}" y="${y - 20}">z</text>`;
-    if (mood === 'happy' || mood === 'celebrate') return `<path class="lid" d="M${x - 4} ${y + 1}q4 -6 8 0"/>`;
-    if (mood === 'tired') return `<path class="lid" d="M${x - 4} ${y}h8"/><circle class="eye" cx="${x}" cy="${y + 2}" r="2"/>`;
-    const brow = mood === 'sad' ? `<path class="lid" d="M${x - 5} ${y - 7}l8 3"/>` : '';
-    return `<g class="eyes"><circle class="eye" cx="${x}" cy="${y}" r="3.2"/><circle class="glint" cx="${x + 1}" cy="${y - 1}" r="1"/></g>${brow}`;
+  // Formy rodzajowe: kotek w rodzaju męskim, pozostałe w żeńskim; voc to wołacz w powitaniu
+  const MASC = { tired: 'zmęczony', happy: 'szczęśliwy', ok: 'zadowolony', young: 'Młody', adult: 'Dorosły', jej: 'mu' };
+  const FEM = { young: 'Młoda', adult: 'Dorosła', jej: 'jej' };
+  const VOC = { gaska: 'gąsko', kaczka: 'kaczuszko', kapibara: 'kapibaro', kotek: 'kotku' };
+  const kindOf = (k) => (KINDS.includes(k) ? k : 'gaska'); // rodzaj może pochodzić z importowanej kopii: tylko znane wartości
+  function form(kindIn, key) {
+    const k = kindOf(kindIn);
+    if (key === 'voc') return VOC[k];
+    if (k === 'kotek' && MASC[key]) return MASC[key];
+    return FEM[key] || MOOD_PL[key] || '';
   }
-  function acc(a, hx, hy) {
-    if (a === 'szalik') return `<path class="acc szalik" d="M${hx - 14} ${hy + 16}q14 8 28 0v6q-14 8 -28 0z"/>`;
-    if (a === 'czapka') return `<path class="acc czapka" d="M${hx - 12} ${hy - 10}l12 -20l12 20z"/><circle class="acc czapka" cx="${hx}" cy="${hy - 31}" r="3"/>`;
-    if (a === 'okulary') return `<g class="acc okulary"><circle cx="${hx + 3}" cy="${hy - 3}" r="6"/><path d="M${hx - 3} ${hy - 3}h-6"/></g>`;
-    if (a === 'korona') return `<path class="acc korona" d="M${hx - 12} ${hy - 12}l4 -12l6 7l4 -9l4 9l6 -7l-2 12z"/>`;
+  // Nastrój aplikacji na wyraz postaci (sad: spokój z opuszczonymi powiekami, tired: drzemka bez „z z”)
+  const EXPR = { ok: 'spokoj', happy: 'radosc', celebrate: 'seria', sleep: 'drzemka', sad: 'smutek', tired: 'drzemka', hungry: 'ciekawosc', alert: 'ciekawosc' };
+  const COL = { gaska: 'goose', kaczka: 'duck', kapibara: 'capy', kotek: 'cat' };
+  const v = (n) => `var(--zw-${n})`;
+  let gid = 0; // unikalne id gradientu w każdym rysunku (ukryta kopia nie zabiera gradientu widocznej)
+
+  // Oczy w siatce 100: łuki przy radości, zamknięte przy drzemce, opuszczone powieki przy tęsknocie
+  function zEyes(k, m, lx, rx, y, r) {
+    const out = [lx, rx].map((x) => {
+      if (m === 'radosc' || m === 'seria') return `<path class="zw-arc" d="M${x - r} ${y + 1}Q${x} ${y - r * 1.5} ${x + r} ${y + 1}" fill="none" stroke="${v('eye')}" stroke-width="2.6" stroke-linecap="round"/>`;
+      if (m === 'drzemka') return `<path class="zw-shut" d="M${x - r} ${y}Q${x} ${y + r} ${x + r} ${y}" fill="none" stroke="${v('eye')}" stroke-width="2.4" stroke-linecap="round"/>`;
+      if (m === 'smutek') return `<ellipse cx="${x}" cy="${y + r * 0.25}" rx="${r}" ry="${r * 0.85}" fill="${v('eye')}"/><path class="zw-lid" d="M${x - r * 1.15} ${y - r * 0.3}Q${x} ${y - r * 0.55} ${x + r * 1.15} ${y - r * 0.3}" fill="none" stroke="${v(COL[k] + '-ln')}" stroke-width="2.2" stroke-linecap="round"/>`;
+      const big = m === 'ciekawosc' ? 1.12 : 1;
+      return `<ellipse cx="${x}" cy="${y}" rx="${r * big}" ry="${r * 1.18 * big}" fill="${v('eye')}"/>`
+        + `<circle cx="${x - r * 0.35}" cy="${y - r * 0.45}" r="${r * 0.42}" fill="${v('hi')}"/><circle cx="${x + r * 0.38}" cy="${y + r * 0.4}" r="${r * 0.18}" fill="${v('hi')}"/>`;
+    }).join('');
+    const open = m !== 'radosc' && m !== 'seria' && m !== 'drzemka';
+    return (open ? `<g class="eyes">${out}</g>` : out)
+      + (m === 'ciekawosc' ? `<path d="M${rx - 5} ${y - r - 5}q5 -4 10 -1" fill="none" stroke="${v(COL[k] + '-ln')}" stroke-width="2" stroke-linecap="round"/>` : '');
+  }
+  const blush = (lx, rx, y) => `<ellipse cx="${lx}" cy="${y}" rx="4.6" ry="2.6" fill="${v('blush')}" opacity=".6"/><ellipse cx="${rx}" cy="${y}" rx="4.6" ry="2.6" fill="${v('blush')}" opacity=".6"/>`;
+  function mouth(m, x, y) {
+    if (m === 'radosc') return `<path d="M${x - 4.5} ${y}q4.5 7 9 0z" fill="${v('mouth')}" stroke="${v('mouth')}" stroke-width="1.2" stroke-linejoin="round"/>`;
+    if (m === 'drzemka' || m === 'ciekawosc') return `<ellipse cx="${x}" cy="${y + 1.5}" rx="1.8" ry="2" fill="${v('mouth')}"/>`;
+    return `<path d="M${x - 3.5} ${y}q3.5 3 7 0" fill="none" stroke="${v('mouth')}" stroke-width="1.8" stroke-linecap="round"/>`;
+  }
+  const beak = (d) => `<path class="zw-beak" d="${d}" fill="${v('beak')}" stroke="${v('beak-ln')}" stroke-width="1.6" stroke-linejoin="round"/>`;
+  const feet = (y) => `<ellipse cx="42" cy="${y}" rx="6.5" ry="3" fill="${v('beak')}" stroke="${v('beak-ln')}" stroke-width="1.4"/><ellipse cx="58" cy="${y}" rx="6.5" ry="3" fill="${v('beak')}" stroke="${v('beak-ln')}" stroke-width="1.4"/>`;
+  const wings = (k, y) => { const f = ` fill="${v(COL[k] + '-sh')}" stroke="${v(COL[k] + '-ln')}" stroke-width="1.6" stroke-linejoin="round"`; return `<path d="M30 ${y}q-8 6 -2 14q6 -2 6 -11z"${f}/><path d="M70 ${y}q8 6 2 14q-6 -2 -6 -11z"${f}/>`; };
+  const open = (m) => m === 'radosc';
+
+  // Głowa każdej postaci (do dodatków): środek, góra głowy, oczy, szyja
+  const HEAD = {
+    gaska: { cx: 50, top: 16, ey: 34, lx: 41, rx: 59, r: 4, ny: 54, nw: 20 },
+    kaczka: { cx: 50, top: 20, ey: 44, lx: 39, rx: 61, r: 4.4, ny: 69, nw: 38 },
+    kapibara: { cx: 50, top: 15, ey: 33, lx: 36, rx: 64, r: 3.6, ny: 74, nw: 48 },
+    kotek: { cx: 50, top: 22, ey: 45, lx: 39, rx: 61, r: 4.4, ny: 66, nw: 40 }
+  };
+  // Ciało (pod głową) i głowa w siatce 100×100; fill(k) to gradient z odblaskiem i kontur w ciemniejszym odcieniu
+  const PARTS = {
+    gaska: (m, fill) => [feet(91) + `<path d="M42 64Q40 52 44 44L56 44Q60 52 58 64Z"${fill}/><ellipse cx="50" cy="76" rx="23" ry="15"${fill}/>` + wings('gaska', 69),
+      `<path d="M45 16q-5 -8 0 -10q2 5 0 10M50 15q0 -10 5 -11q1 7 -5 11M55 16q5 -6 8 -5q-2 6 -8 5"${fill} stroke-linejoin="round"/>`
+      + `<ellipse cx="50" cy="36" rx="21" ry="20"${fill}/>` + zEyes('gaska', m, 41, 59, 34, 4) + blush(35, 65, 43)
+      + beak(open(m) ? 'M42 41Q50 37 58 41Q50 45 42 41ZM44 44Q50 54 56 44Q50 47 44 44Z' : 'M42 41Q50 37 58 41Q53 51 50 52Q47 51 42 41Z')],
+    kaczka: (m, fill) => [feet(90) + `<ellipse cx="50" cy="77" rx="21" ry="14"${fill}/>` + wings('kaczka', 70),
+      `<path d="M49 22q-3 -10 7 -10q-6 3 -3 10" fill="var(--duck)" stroke="${v('duck-ln')}" stroke-width="2" stroke-linejoin="round"/>`
+      + `<circle cx="50" cy="46" r="26"${fill}/>` + zEyes('kaczka', m, 39, 61, 44, 4.4) + blush(31, 69, 53)
+      + beak(open(m) ? 'M40 52Q50 46 60 52Q50 55 40 52ZM43 55Q50 62 57 55Q50 57 43 55Z' : 'M40 52Q50 46 60 52Q60 58 50 58Q40 58 40 52Z')],
+    // Kapibara (rada 20.11): dłuższy pyszczek i małe uszka wysoko
+    kapibara: (m, fill) => {
+      const ln = v('capy-ln');
+      return [`<rect x="34" y="84" width="10" height="8" rx="4" fill="${v('capy-sh')}" stroke="${ln}" stroke-width="1.4"/><rect x="56" y="84" width="10" height="8" rx="4" fill="${v('capy-sh')}" stroke="${ln}" stroke-width="1.4"/>`
+        + `<ellipse cx="50" cy="78" rx="27" ry="13"${fill}/>`,
+      `<ellipse cx="33" cy="16" rx="3.6" ry="3.2" fill="${v('capy-sh')}" stroke="${ln}" stroke-width="1.8"/><ellipse cx="67" cy="16" rx="3.6" ry="3.2" fill="${v('capy-sh')}" stroke="${ln}" stroke-width="1.8"/>`
+        + `<rect x="21" y="15" width="58" height="61" rx="22"${fill}/>` + zEyes('kapibara', m, 36, 64, 33, 3.6) + blush(28, 72, 44)
+        + `<rect x="29" y="41" width="42" height="33" rx="15" fill="${v('capy-mz')}"/><path d="M42 49q2 -2.4 4 0M54 49q2 -2.4 4 0M50 53v6" fill="none" stroke="${ln}" stroke-width="2" stroke-linecap="round"/>`
+        + mouth(m, 50, 64)];
+    },
+    kotek: (m, fill) => {
+      const ln = v('cat-ln'), ear = m === 'ciekawosc' ? 'M53 25L70 11L72 36Z' : 'M53 25L69 14L72 36Z';
+      return [`<path d="M68 84q17 -1 14 -18q-1 -6 -7 -6" fill="none" stroke="${ln}" stroke-width="9" stroke-linecap="round"/><path d="M68 84q17 -1 14 -18q-1 -6 -7 -6" fill="none" stroke="${v('cat')}" stroke-width="5.5" stroke-linecap="round"/>`
+        + `<ellipse cx="50" cy="77" rx="19" ry="14"${fill}/><ellipse cx="43" cy="89" rx="5.5" ry="3.5"${fill}/><ellipse cx="57" cy="89" rx="5.5" ry="3.5"${fill}/>`,
+      `<path d="M28 36L31 14L47 25Z${ear}"${fill} stroke-linejoin="round"/><path d="M32 31L33 20L42 26ZM68 31L67 20L58 26Z" fill="${v('pink')}"/>`
+        + `<ellipse cx="50" cy="45" rx="27" ry="23"${fill}/>`
+        + `<path d="M50 23v6M44 24l1.2 5M56 24l-1.2 5" stroke="${v('cat-sh')}" stroke-width="2.4" stroke-linecap="round"/>`
+        + zEyes('kotek', m, 39, 61, 45, 4.4) + blush(32, 68, 53)
+        + `<path d="M47.5 51.5h5l-2.5 2.8z" fill="${v('nose')}" stroke="${v('nose')}" stroke-width="1" stroke-linejoin="round"/>`
+        + (m === 'spokoj' || m === 'seria' || m === 'smutek' ? `<path d="M45.5 56q2.2 2.4 4.5 0q2.3 2.4 4.5 0" fill="none" stroke="${ln}" stroke-width="1.6" stroke-linecap="round"/>` : mouth(m, 50, 56))
+        + `<path d="M26 51l-9 -1.5M26 55l-9 2M74 51l9 -1.5M74 55l9 2" stroke="${ln}" stroke-width="1.2" stroke-linecap="round"/>`];
+    }
+  };
+  // Dodatki za poziomy na głowie każdej postaci (siatka 100)
+  function acc(a, H) {
+    const { cx, top, ey, lx, rx, r, ny, nw } = H;
+    if (a === 'szalik') return `<path class="acc szalik" d="M${cx - nw / 2} ${ny}q${nw / 2} 6 ${nw} 0v6q-${nw / 2} 6 -${nw} 0z"/><path class="acc szalik" d="M${cx + nw / 4} ${ny + 6}l2 13h6l-1 -15z"/>`;
+    if (a === 'czapka') return `<path class="acc czapka" d="M${cx - 11} ${top + 5}L${cx} ${top - 14}L${cx + 11} ${top + 5}Z"/><circle class="acc czapka" cx="${cx}" cy="${top - 16}" r="3"/>`;
+    if (a === 'okulary') { const R = r + 2.6; return `<g class="acc okulary"><circle cx="${lx}" cy="${ey}" r="${R}"/><circle cx="${rx}" cy="${ey}" r="${R}"/><path d="M${lx + R} ${ey}H${rx - R}"/></g>`; }
+    if (a === 'korona') return `<path class="acc korona" d="M${cx - 12} ${top + 3}l-1 -12l7 6l6 -9l6 9l7 -6l-1 12z"/>`;
     return '';
+  }
+  const HEART = 'M0 3.5C-7 -1.5 -4 -8 0 -4.2C4 -8 7 -1.5 0 3.5Z';
+  function fx(mood, m) {
+    if (m === 'seria') return [[18, 30], [82, 24], [70, 8]].map((p, i) => `<g transform="translate(${p[0]} ${p[1]})"><path class="zw-heart zw-f${i + 1}" d="${HEART}" fill="${v('heart')}"/></g>`).join('');
+    if (mood === 'sleep') return '<text class="zz" x="72" y="24">z</text><text class="zz z2" x="81" y="13">z</text>';
+    return '';
+  }
+  function figure(k, mood, a) {
+    const m = EXPR[mood] || 'spokoj', c = COL[k], id = 'zw' + (++gid), fill = ` fill="url(#${id})" stroke="${v(c + '-ln')}" stroke-width="2"`;
+    const defs = `<defs><radialGradient id="${id}" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="${v(c + '-hi')}"/><stop offset=".55" stop-color="${k === 'kaczka' ? 'var(--duck)' : v(c)}"/><stop offset="1" stop-color="${v(c + '-sh')}"/></radialGradient></defs>`;
+    const p = PARTS[k](m, fill);
+    return [defs, `<g transform="translate(10 10)">${p[0]}<g class="zw-head"${m === 'ciekawosc' ? ' transform="rotate(-12 50 62)"' : ''}>${p[1]}${acc(a, HEAD[k])}</g>${fx(mood, m)}</g>`];
+  }
+
+  // Jajo: oczy jak dotąd (śpi: kreska i „z z”)
+  function eggEyes(mood) {
+    if (mood === 'sleep') return '<path class="lid" d="M56 72h8"/><text class="zz" x="70" y="60">z</text><text class="zz z2" x="77" y="52">z</text>';
+    return '<circle class="eye" cx="53" cy="72" r="2.4"/><circle class="eye" cx="67" cy="72" r="2.4"/>';
   }
   // Pęknięcia jajka: liczba (0-4) z Pierwszych kroków; bez liczby jedno pęknięcie jak dotąd
   const CRACKS = ['M42 50l7 5l6 -7l6 7l6 -5l8 5', 'M34 74l8 -4l5 6l7 -5', 'M62 88l6 -6l6 5l8 -4', 'M58 36l4 7l-5 5l6 6'];
   function svg(kindIn, stage, mood, a, big, crack) {
-    const kind = kindIn === 'kaczka' ? 'kaczka' : 'gaska'; // rodzaj może pochodzić z importowanej kopii: tylko znane wartości
-    const cls = `pet pet-${mood} pet-${stage} pet-${kind}${big ? ' big' : ''}`, label = `${KIND_PL[kind] || 'Zwierzak'}: ${MOOD_PL[mood] || ''}${stage === 'egg' && crack != null ? `, jajko, pęknięcia ${crack} z 4` : ''}`;
-    let fig;
+    const kind = kindOf(kindIn);
+    const cls = `pet pet-${mood} pet-${stage} pet-${kind}${big ? ' big' : ''}`, label = `${KIND_PL[kind]}: ${form(kind, mood)}${stage === 'egg' && crack != null ? `, jajko, pęknięcia ${crack} z 4` : ''}`;
+    let fig, defs = '';
     if (stage === 'egg') {
-      fig = `<ellipse class="egg" cx="60" cy="70" rx="28" ry="36"/>` + CRACKS.slice(0, crack == null ? 1 : crack).map((d) => `<path class="crack" d="${d}"/>`).join('')
-        + (mood === 'sleep' ? eyes(60, 72, 'sleep') : `<circle class="eye" cx="53" cy="72" r="2.4"/><circle class="eye" cx="67" cy="72" r="2.4"/>`);
+      fig = `<ellipse class="egg" cx="60" cy="70" rx="28" ry="36"/>` + CRACKS.slice(0, crack == null ? 1 : crack).map((d) => `<path class="crack" d="${d}"/>`).join('') + eggEyes(mood);
     } else {
-      const goose = kind === 'gaska', hx = goose ? 76 : 74, hy = goose ? 36 : 48;
-      const neck = goose ? `<path class="neck-o" d="M66 70C70 58 72 48 74 40"/><path class="neck" d="M66 70C70 58 72 48 74 40"/>` : '';
-      const beak = goose ? `<path class="beak long" d="M${hx + 11} ${hy - 3}l17 4l-17 5z"/>` : `<rect class="beak flat" x="${hx + 13}" y="${hy - 2}" width="16" height="8" rx="4"/>`;
-      const f = `<path class="feet" d="M48 103h10l-5 -6zM64 103h10l-5 -6z"/>`;
-      fig = `${f}<ellipse class="body" cx="58" cy="80" rx="34" ry="25"/>${neck}<circle class="head" cx="${hx}" cy="${hy}" r="${goose ? 13 : 17}"/>`
-        + `<ellipse class="wing" cx="50" cy="80" rx="18" ry="11"/>${beak}${eyes(hx + 3, hy - 3, mood)}${acc(a, hx, hy)}`;
+      [defs, fig] = figure(kind, mood, a);
       const s = SCALE[stage] || 1;
       if (s !== 1) fig = `<g transform="translate(${60 * (1 - s)} ${104 * (1 - s)}) scale(${s})">${fig}</g>`;
     }
-    const bubble = mood === 'hungry' ? '<g class="bubble"><circle cx="24" cy="26" r="14"/><circle cx="38" cy="44" r="3"/><g class="note"><rect x="16" y="16" width="14" height="19" rx="2"/><path d="M19 22h8M19 26h8M19 30h4M27 34l6-10"/></g></g>' : '';
+    const bubble = mood === 'hungry' ? '<g class="bubble" transform="translate(-7 -7)"><circle cx="24" cy="26" r="14"/><circle cx="30" cy="44" r="2.5"/><g class="note"><rect x="16" y="16" width="14" height="19" rx="2"/><path d="M19 22h8M19 26h8M19 30h4M27 34l6-10"/></g></g>' : '';
     const conf = mood === 'celebrate' ? [...Array(12)].map((_, i) => `<rect class="conf c${i % 4}" x="${8 + i * 9}" y="${4 + (i * 7) % 20}" width="5" height="8" style="animation-delay:${(i % 6) * 0.15}s"/>`).join('') : '';
-    return `<svg class="${cls}" viewBox="0 0 120 120" role="img" aria-label="${label}"><ellipse class="shadow" cx="60" cy="106" rx="30" ry="4"/><g class="figure">${fig}</g>${bubble}${conf}</svg>`;
+    return `<svg class="${cls}" viewBox="0 0 120 120" role="img" aria-label="${label}">${defs}<ellipse class="shadow" cx="60" cy="105" rx="28" ry="4"/><g class="figure">${fig}</g>${bubble}${conf}</svg>`;
   }
 
   // ---------- Karta, ekran, odznaki ----------
   const BADGES = [['week1', 'Pierwszy tydzień'], ['streak7', 'Seria 7 dni'], ['streak14', 'Seria 14 dni'], ['streak30', 'Seria 30 dni'],
     ['w2', '-2% wagi'], ['w5', '-5% wagi'], ['review1', 'Pierwszy przegląd'], ['cel1', 'Pierwszy zaliczony cel'],
     ['level-Brąz', 'Tydzień na poziomie Brąz'], ['level-Srebro', 'Tydzień na poziomie Srebro'], ['level-Złoto', 'Tydzień na poziomie Złoto'], ['level-Platyna', 'Tydzień na poziomie Platyna']];
-  const STAGE_PL = { egg: 'Jajo', chick: 'Pisklę', young: 'Młoda', adult: 'Dorosła' };
-  const NEXT_STAGE = { egg: [1, 'Pisklę'], chick: [7, 'Młoda'], young: [30, 'Dorosła'] };
+  // Etapy w formie rodzajowej gatunku (kotek: Młody, Dorosły)
+  const stagePl = (kind, g) => ({ egg: 'Jajo', chick: 'Pisklę' })[g] || form(kind, g);
+  const NEXT_STAGE = { egg: [1, 'chick'], chick: [7, 'young'], young: [30, 'adult'] };
   const ACC_PL = { szalik: 'szalik za Brąz', czapka: 'czapka za Srebro', okulary: 'okulary za Złoto', korona: 'korona za Platynę' };
   const pl1 = (x) => (Math.round(x * 10) / 10).toLocaleString('pl-PL');
   const sign = (x) => (x > 0 ? '+' : x < 0 ? '-' : '') + pl1(Math.abs(x));
@@ -143,7 +235,7 @@ var PET = (function () {
     const nx = NEXT_STAGE[st.stage];
     if (nx && nx[0] > st.active) {
       const n = nx[0] - st.active;
-      out.push({ t: st.stage === 'egg' ? `Jeszcze ${activeDaysPl(n)} (co najmniej 30 pkt) i z jajka wykluje się pisklę.` : `Jeszcze ${activeDaysPl(n)} (co najmniej 30 pkt) i ${name} będzie ${nx[1]}, z nowym wyglądem.` });
+      out.push({ t: st.stage === 'egg' ? `Jeszcze ${activeDaysPl(n)} (co najmniej 30 pkt) i z jajka wykluje się pisklę.` : `Jeszcze ${activeDaysPl(n)} (co najmniej 30 pkt) i ${name} będzie ${stagePl(c.pet && c.pet.kind, nx[1])}, z nowym wyglądem.` });
     }
     const s = c.streak(), lim = [7, 14, 30].find((x) => s < x);
     if (lim) out.push({ t: `Jeszcze ${daysPl(lim - s)} z wpisem z rzędu do odznaki „Seria ${lim} dni”.` });
@@ -156,16 +248,17 @@ var PET = (function () {
     return '<span class="petbars">' + [['Posiłki', m.food], ['Energia', m.energy], ['Humor', m.mood]].map(([l, v]) =>
       `<span class="petbarrow"><span class="petlab">${l}</span><span class="petbar${v < 40 ? ' low' : ''}" role="meter" aria-label="${l} ${v} ze 100" aria-valuenow="${v}" aria-valuemin="0" aria-valuemax="100"><i style="width:${v}%"></i></span></span>`).join('') + '</span>';
   }
-  const nameOf = (pet) => (pet && String(pet.name || '').trim()) || 'Kluska';
+  // Imię: nadane przez osobę, inaczej domyślne (kotek: Mruczek, pozostałe: Kluska)
+  function nameOf(pet) { return (pet && String(pet.name || '').trim()) || (pet && pet.kind === 'kotek' ? 'Mruczek' : 'Kluska'); }
 
   function card(st, pet, esc) {
     return `<button class="petcard" data-tab="pet" aria-label="Mój zwierzak: ${esc(nameOf(pet))}. ${esc(st.line)}">${svg(pet.kind, st.stage, st.mood, st.acc, false, st.crack)}`
-      + `<span class="petinfo"><b>${esc(nameOf(pet))}</b><span class="small">${esc(st.line)}</span>${st.next && st.next.length ? `<span class="small petnext">${esc(st.next[0].t)}</span>` : ''}${st.stage === 'egg' ? `<span class="small muted">${st.crack != null && st.crack < 4 ? `${st.lite ? 'Dni z 3 dotknięciami:' : 'Pierwsze kroki: pęknięcia'} ${st.crack} z 4. ` : ''}${st.lite ? 'Jajo wykluje się po pierwszym dniu z 3 dotknięciami.' : 'Jajo wykluje się po dniu z co najmniej 30 punktami.'}</span>` : ''}${bars(st.meters)}</span></button>`;
+      + `<span class="petinfo"><b>${esc(nameOf(pet))}</b><span class="small">${esc(st.line)}</span>${st.next && st.next.length ? `<span class="small petnext">${esc(st.next[0].t)}</span>` : ''}${st.stage === 'egg' ? `<span class="small muted">${st.crack != null && st.crack < 4 ? `${st.lite ? 'Dni z szybkim wpisem:' : 'Pierwsze kroki: pęknięcia'} ${st.crack} z 4. ` : ''}${st.lite ? 'Jajo wykluje się po pierwszym szybkim wpisie.' : 'Jajo wykluje się po dniu z co najmniej 30 punktami.'}</span>` : ''}${bars(st.meters)}</span></button>`;
   }
   function screen(st, pet, sum, esc) {
     const nx = NEXT_STAGE[st.stage], row = (a, b) => `<div class="entry"><span class="txt">${a}</span><span class="val">${b}</span></div>`;
     let h = `<div class="petstage">${svg(pet.kind, st.stage, st.mood, st.acc, true, st.crack)}<h2>${esc(nameOf(pet))}</h2><p>${esc(st.line)}</p>`
-      + `<p class="small muted">${STAGE_PL[st.stage]}${st.acc ? ', ' + ACC_PL[st.acc] : ''}${nx && nx[0] > st.active ? `. Do etapu ${nx[1]}: ${activeDaysPl(Math.max(0, nx[0] - st.active))} (co najmniej 30 pkt)` : ''}.</p></div>`;
+      + `<p class="small muted">${stagePl(pet.kind, st.stage)}${st.acc ? ', ' + ACC_PL[st.acc] : ''}${nx && nx[0] > st.active ? `. Do etapu ${stagePl(pet.kind, nx[1])}: ${activeDaysPl(Math.max(0, nx[0] - st.active))} (co najmniej 30 pkt)` : ''}.</p></div>`;
     h += `<div class="panel" style="padding:8px 16px">${bars(st.meters)}</div>`;
     const w = sum.week, a = sum.all;
     h += '<h2>Dziś</h2><div class="panel">' + row('Podstawy dnia', `${sum.today.done} z 3`) + row('Punkty', `${sum.today.pts} pkt`) + '</div>';
@@ -209,30 +302,46 @@ var PET = (function () {
   // ---------- Reakcje: akcja kolejkuje, render() odtwarza na widocznej postaci (najpóźniej po 10 min) ----------
   let pending = null;
   function react(type, pts) { pending = { type, pts, t: Date.now() }; }
+  // Napisy reakcji: każdy z własnym id, usuwany dokładnie ten wstawiony (szybkie kolejne reakcje się nie mieszają)
+  const TAG = { note: 'Zanotowane', rest: 'Odpocznij dziś', series: '♥ ♥ ♥' }, SAY = { series: 'Serduszka: pomiar w zalecanym terminie', urge: 'Zapisane' };
+  // Napis stały (tag, still) wraca po przerysowaniu widoku, dopóki nie minie jego czas (bez ponownego wejścia)
+  let fxN = 0, FX = null;
+  // Czytnik ekranu: tekst przez istniejący region na żywo #sr (wstawiony razem z treścią role=status bywa pomijany); napis na karcie ukryty dla czytnika
+  function fxAdd(host, html, cls, ms, keep, say) {
+    const id = 'petfx' + (++fxN), sr = document.getElementById('sr');
+    host.insertAdjacentHTML('beforeend', `<span class="petfx${cls}" id="${id}" aria-hidden="true">${html}</span>`);
+    if (sr && say) sr.textContent = say;
+    FX = keep ? { id, html, cls, until: Date.now() + ms } : null;
+    setTimeout(() => { const f = document.getElementById(id); if (f && f.remove) f.remove(); if (FX && FX.id === id) FX = null; }, ms);
+  }
+  function reshow(now) {
+    if (!FX || (now ? now.getTime() : Date.now()) >= FX.until || document.getElementById(FX.id)) return;
+    const el = document.querySelector('#main .pet'), host = el && el.closest('.petcard, .petstage');
+    if (host) host.insertAdjacentHTML('beforeend', `<span class="petfx${FX.cls} again" id="${FX.id}" aria-hidden="true">${FX.html}</span>`);
+  }
   function flush(now) {
-    if (!pending) return false;
+    if (!pending) { reshow(now); return false; }
     if ((now ? now.getTime() : Date.now()) - pending.t > 10 * 60000) { pending = null; return false; }
     const el = document.querySelector('#main .pet');
     if (!el) return false;
-    const { type, pts } = pending, cls = 'react-' + type;
+    const { type, pts } = pending, cls = 'react-' + type, host = el.closest('.petcard, .petstage');
     pending = null;
-    el.classList.add(cls);
-    setTimeout(() => el.classList.remove(cls), 1600);
-    if (type === 'habit' || type === 'urge') {
-      const host = el.closest('.petcard, .petstage');
-      if (host) {
-        host.insertAdjacentHTML('beforeend', `<span class="petfx">${type === 'urge' ? '♥' : '+' + (pts || 0)}</span>`);
-        setTimeout(() => { const f = host.querySelector('.petfx'); if (f) f.remove(); }, 1500);
-      }
-    }
+    // Ograniczenie ruchu: krótki napis bez animacji zamiast ruchu postaci
+    const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!still) { el.classList.add(cls); setTimeout(() => el.classList.remove(cls), type === 'rest' ? 2400 : 1600); }
+    if (!host) return true;
+    // Reakcje Zdrowia (note, rest, series): napis bez punktów; nie zmieniają punktów, serii ani nastroju
+    if (TAG[type]) fxAdd(host, TAG[type], ' tag' + (still ? ' still' : '') + (type === 'series' ? ' hearts' : ''), 4000, true, SAY[type] || TAG[type]);
+    else if (type === 'habit' || type === 'urge') fxAdd(host, still ? (type === 'urge' ? 'Zapisane' : '+' + (pts || 0) + ' pkt') : (type === 'urge' ? '♥' : '+' + (pts || 0)), still ? ' still' : '', still ? 2500 : 1500, still, type === 'urge' ? SAY.urge : '+' + (pts || 0) + ' pkt');
+    else if (still) fxAdd(host, 'Zanotowane', ' still', 2500, true, 'Zanotowane');
     return true;
   }
 
   // ---------- Tryb pokazowy (#demo): 35 dni danych przykładowych i klatki przeglądu wszystkich stanów ----------
   const FRAMES = [
     { kind: 'kaczka', stage: 'egg', mood: 'ok' }, { kind: 'kaczka', stage: 'chick', mood: 'happy' },
-    { kind: 'kaczka', stage: 'young', mood: 'hungry', acc: 'szalik' }, { kind: 'kaczka', stage: 'adult', mood: 'tired', acc: 'czapka' },
-    { kind: 'gaska', stage: 'adult', mood: 'sad' }, { kind: 'gaska', stage: 'young', mood: 'sleep' },
+    { kind: 'kapibara', stage: 'young', mood: 'hungry', acc: 'szalik' }, { kind: 'kapibara', stage: 'adult', mood: 'tired', acc: 'czapka' },
+    { kind: 'kotek', stage: 'adult', mood: 'sad' }, { kind: 'kotek', stage: 'young', mood: 'sleep' },
     { kind: 'gaska', stage: 'adult', mood: 'celebrate', acc: 'korona' }, { kind: 'gaska', stage: 'adult', mood: 'happy', acc: 'okulary' }
   ];
   function demo(now) {
@@ -268,5 +377,5 @@ var PET = (function () {
       + `<p><b>Jezioro ${lake}.</b> ${where}.</p><p class="small muted">${W[weather] || 'Następny kamień po zaliczonym tygodniu celu. Przerwa niczego nie zabiera.'}</p></div>`;
   }
 
-  return { state, milestones, next, path, svg, card, screen, nameOf, badgeList, body, react, flush, demo };
+  return { state, milestones, next, path, svg, card, screen, nameOf, badgeList, body, react, flush, demo, kinds: () => KINDS.slice(), form };
 })();
