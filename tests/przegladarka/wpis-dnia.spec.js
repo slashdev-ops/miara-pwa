@@ -24,8 +24,10 @@ test('Wpis dnia: „Według planu” czytelny, wygląda jak zwykły przycisk, ob
   expect(st.pad, 'odstęp jak .btn.small').toBe('8px');
   const panel = await page.locator('.step', { has: plan }).boundingBox(), a = await plan.boundingBox(), b = await other.boundingBox();
   expect(b.x + b.width, '„Inaczej” w wierszu, nie przy krawędzi').toBeLessThanOrEqual(panel.x + panel.width + 0.5);
-  expect(a.x + a.width + 4, 'odstęp między przyciskami').toBeLessThanOrEqual(b.x + 0.5);
-  expect(Math.abs((a.y + a.height / 2) - (b.y + b.height / 2)) <= 2 || b.y >= a.y + a.height, 'przyciski obok siebie albo pod sobą, bez nachodzenia').toBe(true);
+  const row = Math.abs((a.y + a.height / 2) - (b.y + b.height / 2)) <= 2; // obok siebie albo (wąski ekran, inne czcionki) „Inaczej” pod spodem
+  if (row) expect(a.x + a.width + 4, 'odstęp między przyciskami w wierszu').toBeLessThanOrEqual(b.x + 0.5);
+  else expect(b.y, '„Inaczej” pod „Według planu”, bez nachodzenia').toBeGreaterThanOrEqual(a.y + a.height + 4 - 0.5);
+  expect(b.x, '„Inaczej” nie wychodzi w lewo poza panel').toBeGreaterThanOrEqual(panel.x - 0.5);
   const o = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
   expect(o.sw).toBeLessThanOrEqual(o.cw);
   await page.locator('.step', { has: plan }).screenshot({ path: test.info().outputPath('wpis-dnia.png') });
