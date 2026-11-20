@@ -12,7 +12,7 @@ tested in GitHub Actions, deployable on Vercel or nginx.
 
 ## Zwierzak i postęp
 
-Gąska albo kaczuszka w stylu Tamagotchi reaguje na wpisy użytkownika. Trzy wskaźniki (Posiłki, Energia, Humor)
+Gąska, kaczuszka, kapibara albo kotek (własne postacie, rysowane w SVG) reaguje na wpisy użytkownika, także na wpisy w Zdrowiu (bez nagradzania bólu i bez oceny wyników badań). Trzy wskaźniki (Posiłki, Energia, Humor)
 wynikają z zapisanych posiłków, snu, ruchu i nawyków, nigdy z wagi ani kalorii. W dni bez wpisów wskaźniki spadają,
 po powrocie odrabiają straty w 1-2 dni; zwierzak nie umiera i nie cofa się w rozwoju (jajo, pisklę, młoda, dorosła).
 Ekran postępu pokazuje dzień, tydzień i całość od startu z odznakami kamieni milowych; sylwetka z obwodów jest opcjonalna.
@@ -26,7 +26,7 @@ więc moduł jest testowany bez przeglądarki (`tests/smoke.js`). Projekt i plan
 ## System wyglądu
 
 Jasny, funkcjonalny, nowoczesny organiczny: paleta z logo jak materiały (szałwiowa zieleń, mosiądz, przygaszony błękit,
-len, glina), siatka 8 px, zaokrąglenia 16 px (karty) i 12 px (pola) oraz pigułki dla przycisków, cienie zamiast ramek,
+len, glina), siatka 8 px, zaokrąglenia 16 px (karty) i 12 px (pola i przyciski), wybory jako kafelki w równej siatce, cienie zamiast ramek,
 krój Fraunces w nagłówkach i liczbach (lokalnie, licencja OFL w `fonts/`), tekst w kroju systemowym.
 
 - Wszystkie kolory to zmienne w `app.css` z wersją jasną i ciemną; `tests/smoke.js` liczy kontrast WCAG AA z wartości
@@ -91,13 +91,13 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 
 | Obszar | Rozwiązanie |
 | --- | --- |
-| Prywatność | dane tylko w `localStorage` telefonu; brak backendu, analityki i zasobów z zewnętrznych domen |
+| Prywatność | dane w `localStorage` telefonu; jedyny element serwerowy to opcjonalna funkcja `api/kopia.js` (zaszyfrowana kopia za zgodą, serwer nie zna klucza); brak analityki i zasobów z zewnętrznych domen |
 | Bezpieczeństwo | CSP z `script-src 'self'` i `connect-src 'self'`, HSTS, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, COOP |
 | Powierzchnia ataku | `.vercelignore` publikuje tylko pliki aplikacji; testy, narzędzia i konfiguracja serwera zwracają 404 |
 | Offline | service worker w strategii „najpierw sieć, potem pamięć podręczna”: zawsze najnowsza wersja, a bez sieci kopia lokalna |
-| Jakość | CI: składnia JS, poprawność JSON konfiguracji, test dymny 13 widoków; Dependabot aktualizuje akcje GitHub |
+| Jakość | CI: składnia JS, poprawność JSON konfiguracji, test dymny w Node (`tests/smoke.js`) i testy w przeglądarce (Playwright: Chromium i WebKit, 320 px, jasny i ciemny); Dependabot aktualizuje akcje GitHub |
 | Dane | eksport i import kopii JSON z podglądem przed zastąpieniem; opcja kopii bez danych zdrowotnych |
-| Zależności | zero: brak `node_modules`, brak łańcucha dostaw do aktualizowania poza akcjami CI |
+| Zależności | aplikacja w przeglądarce bez zależności; jedna zależność funkcji kopii (`@vercel/blob`) oraz Playwright w testach; Dependabot aktualizuje akcje GitHub i zależności testów |
 
 ## Bezpieczeństwo w szczegółach
 
@@ -135,6 +135,7 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 | --- | --- |
 | `index.html` | szkielet strony, manifest, ikony |
 | `app.js`, `app.css` | logika i wygląd aplikacji |
+| `wpisy.js` | karta „Dziś” w Pomiarach dnia i szybki wpis: suwaki snu i kroków, wpis po dotknięciu wartości, waga z wykresem 14 dni i pasem zwykłego wahania; zapis przez `app.js`, testowana w `tests/smoke.js` |
 | `zdarzenia.js` | „Co się wydarzyło” i jeden cel aktywny z mapą wpływów: czyste funkcje bez DOM, testowane w `tests/smoke.js` |
 | `pet.js` | zwierzak: stan, rysunek SVG, reakcje, ekran postępu, tryb pokazowy |
 | `sw.js`, `sw-register.js` | działanie offline; rejestracja tylko na HTTPS lub localhost |

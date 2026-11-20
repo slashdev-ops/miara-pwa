@@ -23,8 +23,9 @@ const where = (page, sel) => page.evaluate((s) => { const el = document.querySel
 
 // Pola, w których wpis zmienia treść nad polem (pomiar 15.11.2026: Waga 319 px, Kroki 170 px, przy 320 px ECW 34 px, Cel 34 px)
 const CASES = [
-  { name: 'Waga w Mój dzień', tab: 'day', sel: '#m_w', id: 'm_w', text: '82' },
-  { name: 'Kroki w Mój dzień', tab: 'day', sel: '#m_steps', id: 'm_steps', text: '8000' },
+  // Karta „Dziś” (20.11.2026): #m_w i #m_steps to przyciski wartości; dotknięcie otwiera pole wpisu #wp_in w tym samym miejscu
+  { name: 'Waga w Mój dzień', tab: 'day', sel: '#m_w', id: 'm_w', text: '82', open: true },
+  { name: 'Kroki w Mój dzień', tab: 'day', sel: '#m_steps', id: 'm_steps', text: '8000', open: true },
   { name: 'ECW/TBW w Skład ciała', tab: 'day', sel: '#m_ecw', id: 'm_ecw', text: '40', fold: true },
   { name: 'Waga docelowa w Ustawieniach', tab: 'set', sel: '#f_goal', id: 'f_goal', text: '75' },
 ];
@@ -40,12 +41,13 @@ for (const c of CASES) {
     await page.evaluate((s) => document.querySelector(s).scrollIntoView({ block: 'center' }), c.sel);
     await page.locator(c.sel).click();
     await page.waitForTimeout(60);
-    const a = await where(page, c.sel);
+    const fsel = c.open ? '#wp_in' : c.sel, fid = c.open ? 'wp_in' : c.id;
+    const a = await where(page, fsel);
     for (const ch of c.text) {
       await page.keyboard.type(ch);
       await page.waitForTimeout(40);
-      const b = await where(page, c.sel);
-      expect(b.act, `fokus po znaku „${ch}”`).toBe(c.id);
+      const b = await where(page, fsel);
+      expect(b.act, `fokus po znaku „${ch}”`).toBe(fid);
       expect(Math.abs(b.top - a.top), `przesunięcie po znaku „${ch}”`).toBeLessThanOrEqual(2);
     }
     await page.evaluate(() => document.activeElement.blur());

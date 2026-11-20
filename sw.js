@@ -1,7 +1,7 @@
 // Service worker: najpierw sieć (zawsze najnowsza wersja), przy braku sieci kopia z pamięci podręcznej.
 // Strategia "najpierw sieć" sama pobiera nowe wersje plików. Zmiana CACHE czyści stare kopie
 // z pamięci podręcznej; zmieniaj ją przy większych wydaniach (patrz README).
-const CACHE = 'miara-v3';
+const CACHE = 'miara-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -10,8 +10,7 @@ const ASSETS = [
   './pet.js',
   './zdarzenia.js',
   './sygnaly.js',
-  './wpisy-demo.js',
-  './zwierzaki-demo.js',
+  './wpisy.js',
   './sw-register.js',
   './manifest.webmanifest',
   './brand/miara-favicon.svg?v=2',

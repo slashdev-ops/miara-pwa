@@ -27,11 +27,9 @@ const zdPath = path.join(root, 'zdarzenia.js');
 if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
 const sygPath = path.join(root, 'sygnaly.js');
 if (fs.existsSync(sygPath)) vm.runInContext(fs.readFileSync(sygPath, 'utf8'), sandbox);
-const wdPath = path.join(root, 'wpisy-demo.js');
-if (fs.existsSync(wdPath)) vm.runInContext(fs.readFileSync(wdPath, 'utf8'), sandbox);
-const zwPath = path.join(root, 'zwierzaki-demo.js');
-if (fs.existsSync(zwPath)) vm.runInContext(fs.readFileSync(zwPath, 'utf8'), sandbox);
-vm.runInContext(code + '\n;globalThis.__T={setDemoN:(v)=>{DEMO_N=v},guideActive:()=>guideActive(),S:()=>S,egfrRows:()=>typeof egfrRows=="undefined"?[]:egfrRows(),nonHdlRows:()=>typeof nonHdlRows=="undefined"?[]:nonHdlRows(),egfrCat:(v)=>typeof egfrCat=="undefined"?"":egfrCat(v),muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),fitNow:()=>typeof fitNow=="undefined"?undefined:fitNow(),potKouri:()=>typeof potKouri=="undefined"?undefined:potKouri(),potButt:()=>typeof potButt=="undefined"?undefined:potButt(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false,SUPP:typeof SUPP=="undefined"?[]:SUPP,SUPP_PARY:typeof SUPP_PARY=="undefined"?[]:SUPP_PARY,promoParse:typeof promoParse=="undefined"?undefined:promoParse,promoMatch:typeof promoMatch=="undefined"?undefined:promoMatch,nextShop:typeof nextShop=="undefined"?undefined:nextShop,promosActive:typeof promosActive=="undefined"?undefined:promosActive,promoDishes:typeof promoDishes=="undefined"?undefined:promoDishes,promoFix:typeof promoFix=="undefined"?undefined:promoFix,promoPending:()=>typeof PROMO_PENDING=="undefined"?undefined:PROMO_PENDING,labStatus:typeof labStatus=="undefined"?undefined:labStatus,load:typeof load=="undefined"?undefined:load,stepsBand:typeof stepsBand=="undefined"?undefined:stepsBand,liteFull:typeof liteFull=="undefined"?undefined:liteFull,liteCardHtml:typeof liteCardHtml=="undefined"?undefined:liteCardHtml,dayOk:typeof dayOk=="undefined"?undefined:dayOk,eggCrack:typeof eggCrack=="undefined"?undefined:eggCrack,liteDays:typeof liteDays=="undefined"?undefined:liteDays,dayLeft:typeof dayLeft=="undefined"?undefined:dayLeft,petCardHtml:typeof petCardHtml=="undefined"?undefined:petCardHtml,unlockNext:typeof unlockNext=="undefined"?undefined:unlockNext,unlockHtml:typeof unlockHtml=="undefined"?undefined:unlockHtml};', sandbox);
+const wpPath = path.join(root, 'wpisy.js');
+if (fs.existsSync(wpPath)) vm.runInContext(fs.readFileSync(wpPath, 'utf8'), sandbox);
+vm.runInContext(code + '\n;globalThis.__T={setDemoN:(v)=>{DEMO_N=v},wpModel:()=>wpCfg(),wpCfg:()=>wpCfg(),wpParse:(k,t)=>wpParse(k,t),wpStore:(k,v)=>wpStore(k,v),wpBand:(w,r)=>wpBand(w,r),wpOnSaved:(k,v)=>wpOnSaved(k,v),wpGrace:()=>wpGrace(),measCp:(m,f)=>measCp(m,f),dataGap:()=>dataGap(),wpCommit:(v,o)=>wpCommit(v,o),wpRestore:(p)=>wpRestore(p),qSet:(a,v,o)=>qSet(a,v,o),sleepAt:(k)=>sleepAt(k),avgAgo:(a,b,k)=>avgAgo(a,b,k),guideActive:()=>guideActive(),S:()=>S,egfrRows:()=>typeof egfrRows=="undefined"?[]:egfrRows(),nonHdlRows:()=>typeof nonHdlRows=="undefined"?[]:nonHdlRows(),egfrCat:(v)=>typeof egfrCat=="undefined"?"":egfrCat(v),muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),fitNow:()=>typeof fitNow=="undefined"?undefined:fitNow(),potKouri:()=>typeof potKouri=="undefined"?undefined:potKouri(),potButt:()=>typeof potButt=="undefined"?undefined:potButt(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,stpApply,SCEN,scenS,mealTags,macros,HOLD_DELAY,holdGap,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,stpApply,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false,SUPP:typeof SUPP=="undefined"?[]:SUPP,SUPP_PARY:typeof SUPP_PARY=="undefined"?[]:SUPP_PARY,promoParse:typeof promoParse=="undefined"?undefined:promoParse,promoMatch:typeof promoMatch=="undefined"?undefined:promoMatch,nextShop:typeof nextShop=="undefined"?undefined:nextShop,promosActive:typeof promosActive=="undefined"?undefined:promosActive,promoDishes:typeof promoDishes=="undefined"?undefined:promoDishes,promoFix:typeof promoFix=="undefined"?undefined:promoFix,promoPending:()=>typeof PROMO_PENDING=="undefined"?undefined:PROMO_PENDING,labStatus:typeof labStatus=="undefined"?undefined:labStatus,load:typeof load=="undefined"?undefined:load,stepsBand:typeof stepsBand=="undefined"?undefined:stepsBand,liteFull:typeof liteFull=="undefined"?undefined:liteFull,liteCardHtml:typeof liteCardHtml=="undefined"?undefined:liteCardHtml,dayOk:typeof dayOk=="undefined"?undefined:dayOk,eggCrack:typeof eggCrack=="undefined"?undefined:eggCrack,liteDays:typeof liteDays=="undefined"?undefined:liteDays,dayLeft:typeof dayLeft=="undefined"?undefined:dayLeft,petCardHtml:typeof petCardHtml=="undefined"?undefined:petCardHtml,healthReact:typeof healthReact=="undefined"?undefined:healthReact,bodyDue:typeof bodyDue=="undefined"?undefined:bodyDue,qSet:typeof qSet=="undefined"?undefined:qSet,unlockNext:typeof unlockNext=="undefined"?undefined:unlockNext,unlockHtml:typeof unlockHtml=="undefined"?undefined:unlockHtml};', sandbox);
 const T = sandbox.__T;
 T.S().lite = false; // dotychczasowe testy zakładają pełny widok
 
@@ -103,12 +101,38 @@ tryc('pet: zdanie stanu z imieniem, rodzaj żeński', () => st(mkCtx({ today: { 
 tryc('pet: nowy zwierzak bez historii nie tęskni (przerwa liczona od startu)', () => { const s = st(mkCtx({ history: 0, empty: 0 })); return s.przerwa === 0 && s.mood !== 'sad'; });
 
 // Zwierzak: wygląd (PET.svg, PET.card, PET.screen, CSS)
-const KINDS = ['gaska', 'kaczka'], STAGES = ['egg', 'chick', 'young', 'adult'], MOODS = ['celebrate', 'sleep', 'sad', 'hungry', 'tired', 'happy', 'ok'];
+const KINDS = ['gaska', 'kaczka', 'kapibara', 'kotek'], STAGES = ['egg', 'chick', 'young', 'adult'], MOODS = ['celebrate', 'sleep', 'sad', 'hungry', 'tired', 'happy', 'ok', 'alert'];
+const KIND_N = { gaska: 'Gąska', kaczka: 'Kaczuszka', kapibara: 'Kapibara', kotek: 'Kotek' };
 const P = () => sandbox.PET;
-tryc('pet.svg: 2 zwierzaki × 4 etapy × 7 min, klasa miny', () => KINDS.every((k) => STAGES.every((s) => MOODS.every((m) => { const v = P().svg(k, s, m, null); return v.startsWith('<svg') && v.includes('pet-' + m); }))));
+tryc('pet.kinds: gąska, kaczuszka, kapibara i kotek', () => P().kinds().join() === 'gaska,kaczka,kapibara,kotek');
+tryc('pet.svg: 4 gatunki × 4 etapy × 8 nastrojów: role=img, etykieta z gatunkiem, klasa miny i gatunku, bez on...=', () => {
+  const bad = [];
+  for (const k of KINDS) for (const s of STAGES) for (const m of MOODS) { const v = P().svg(k, s, m, null); if (!/^<svg[^>]*\srole="img"/.test(v) || !v.includes('aria-label="' + KIND_N[k] + ': ') || !v.includes('pet-' + m) || !v.includes('pet-' + k) || !v.endsWith('</svg>') || /<script|\son[a-z]+=/i.test(v)) bad.push(k + '/' + s + '/' + m); }
+  if (bad.length) throw new Error(bad.slice(0, 5).join(' ')); return true;
+});
 tryc('pet.svg: jajo bez dzioba', () => !P().svg('gaska', 'egg', 'ok', null).includes('class="beak'));
-tryc('pet.svg: kaczka dziób płaski, gąska długi', () => P().svg('kaczka', 'young', 'ok', null).includes('class="beak flat"') && P().svg('gaska', 'young', 'ok', null).includes('class="beak long"'));
-tryc('pet.svg: dodatek korona', () => P().svg('gaska', 'adult', 'ok', 'korona').includes('class="acc korona"'));
+tryc('pet.svg: każdy gatunek ma własny rysunek (cztery różne postacie)', () => new Set(KINDS.map((k) => P().svg(k, 'adult', 'ok', null).replace(/\s(class|id|aria-label|fill)="[^"]*"/g, ''))).size === 4);
+tryc('pet.svg: stara kopia z kind kaczka to kaczuszka, nieznany rodzaj to gąska z poprawną etykietą', () => P().svg('kaczka', 'young', 'ok', null).includes('aria-label="Kaczuszka: zadowolona"') && P().svg('zebra', 'young', 'ok', null).includes('aria-label="Gąska: zadowolona"') && P().svg(undefined, 'chick', 'happy', null).includes('pet-gaska'));
+tryc('pet.svg: dodatki (szalik, czapka, okulary, korona) dla każdego gatunku, na głowie', () => KINDS.every((k) => ['szalik', 'czapka', 'okulary', 'korona'].every((a) => { const v = P().svg(k, 'adult', 'ok', a); return v.includes('class="acc ' + a) && /class="zw-head"[\s\S]*class="acc /.test(v); })));
+tryc('pet.svg: wyraz postaci: happy oczy-łuki, celebrate serduszka i konfetti, sleep „z z”, tired zamknięte oczy bez „z”, sad powieki bez łez, hungry dymek i przechylona główka, alert przechylona główka', () => KINDS.every((k) => {
+  const v = (m) => P().svg(k, 'adult', m, null), n = (s, re) => (s.match(re) || []).length;
+  return v('happy').includes('zw-arc') && !v('ok').includes('zw-arc') && n(v('celebrate'), /class="zw-heart/g) === 3 && v('celebrate').includes('class="conf')
+    && n(v('sleep'), /class="zz/g) === 2 && v('tired').includes('zw-shut') && n(v('tired'), /class="zz/g) === 0 && v('sad').includes('zw-lid') && !/tear|łz/.test(v('sad'))
+    && v('hungry').includes('class="bubble"') && /class="zw-head"[^>]*rotate\(-12/.test(v('hungry')) && /class="zw-head"[^>]*rotate\(-12/.test(v('alert')) && !/rotate\(-12/.test(v('ok'));
+}));
+tryc('pet.svg: etapy skalą 0,7 / 0,85 / 1, jajo bez postaci, pęknięcia jajka', () => KINDS.every((k) => P().svg(k, 'chick', 'ok', null).includes('scale(0.7)') && P().svg(k, 'young', 'ok', null).includes('scale(0.85)') && !P().svg(k, 'adult', 'ok', null).includes('scale(')
+  && !P().svg(k, 'egg', 'ok', null).includes('zw-head')) && (P().svg('gaska', 'egg', 'ok', null, false, 3).match(/class="crack"/g) || []).length === 3 && P().svg('gaska', 'egg', 'ok', null, false, 3).includes('pęknięcia 3 z 4'));
+const SUM0 = () => ({ today: { done: 2, pts: 35 }, week: { pts: 120, level: 'Brąz', next: { name: 'Srebro', need: 60 } }, all: { active: 12, streak: 5, dw: -1.4, waist: -2, pct: 40 }, badges: [] });
+const FEM = /szczęśliwa|zmęczona|zadowolona|Młoda|Dorosła|\bjej\b/;
+tryc('pet.form: kotek w rodzaju męskim (etykiety, etapy, linie, zapowiedź), pozostałe w żeńskim', () => {
+  const lab = MOODS.map((m) => P().svg('kotek', 'adult', m, null)).join(' ');
+  const c = mkCtx({ today: { meals: 2, sleep: 3 } }); c.pet.kind = 'kotek'; const s = st(c);
+  const scr = ['young', 'adult', 'chick'].map((g) => P().screen({ ...s, stage: g, active: g === 'chick' ? 3 : 10 }, { kind: 'kotek', name: 'Mruczek' }, { ...SUM0(), badges: [] }, T.esc)).join(' ');
+  const nx = P().next({ ...s, stage: 'chick', active: 3 }, { ...c, goal: null, nextLevel: null }).map((x) => x.t).join(' ');
+  const g = mkCtx({ today: { meals: 2, sleep: 3 } }), sg = st(g);
+  return s.mood === 'tired' && !FEM.test(lab + s.line + scr + nx) && lab.includes('Kotek: zmęczony') && lab.includes('Kotek: szczęśliwy') && lab.includes('Kotek: zadowolony') && scr.includes('Młody') && scr.includes('Dorosły') && nx.includes('będzie Młody')
+    && sg.line.includes('zmęczona') && P().form('kotek', 'happy') === 'szczęśliwy' && P().form('kapibara', 'happy') === 'szczęśliwa' && P().form('kaczka', 'adult') === 'Dorosła';
+});
 tryc('pet.card: imię escapowane', () => P().card(st(mkCtx({ name: '<b>' })), { kind: 'gaska', name: '<b>' }, T.esc).includes('&lt;b&gt;'));
 const SUM = { today: { done: 2, pts: 35 }, week: { pts: 120, level: 'Brąz', next: { name: 'Srebro', need: 60 } }, all: { active: 12, streak: 5, dw: -1.4, waist: -2, pct: 40 }, badges: [] };
 tryc('pet.badgeList: etykiety i zdobyte', () => { const b = P().badgeList(['streak7', 'level-Brąz']); return b.length === 12 && b.find((x) => x.id === 'streak7').got && b.find((x) => x.id === 'level-Brąz').label === 'Tydzień na poziomie Brąz' && !b.find((x) => x.id === 'w5').got; });
@@ -153,7 +177,7 @@ tryc('odznaka świętowana raz (petSeen)', () => {
 });
 tryc('wprowadzenie: 1 ekran danych, Zaczynam, bez kropek postępu i bez wyboru zwierzaka', () => { const a = view('intro', { introStep: 0 }); return a.includes('Twoje dane') && !a.includes('data-intronext') && a.includes('>Zaczynam<') && !a.includes('Krok 1 z') && !a.includes('data-petkind'); });
 const swSrc = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-check('sw.js: pet.js i krój pisma w pamięci podręcznej, CACHE miara-v3 (duże wydanie)', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v3'") && swSrc.includes("'./fonts/fraunces-latin-ext-600-normal.woff2'"));
+check('sw.js: pet.js i krój pisma w pamięci podręcznej, CACHE miara-v4 (duże wydanie: karta Dziś, suwaki)', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v4'") && swSrc.includes("'./fonts/fraunces-latin-ext-600-normal.woff2'"));
 check('index.html: pet.js przed app.js', /pet\.js[\s\S]*app\.js/.test(html));
 
 // Zwierzak: sylwetka z pomiarów (opcjonalna)
@@ -167,7 +191,7 @@ tryc('ekran pet: sylwetka włączona bez pomiarów => informacja', () => view('p
 tryc('ekran pet: sylwetka wyłączona => brak sekcji', () => !view('pet', { body: false }).includes('Sylwetka'));
 
 // Zwierzak: tryb pokazowy #demo
-tryc('pet.demo: klatki obejmują 7 min, 4 etapy, 2 zwierzaki i dodatek', () => { const f = P().demo(new Date('2026-11-05T12:00:00')).frames; const u = (k) => new Set(f.map((x) => x[k])); return u('mood').size === 7 && u('stage').size === 4 && u('kind').size === 2 && f.some((x) => x.acc); });
+tryc('pet.demo: klatki obejmują 7 min, 4 etapy, 4 gatunki i dodatek', () => { const f = P().demo(new Date('2026-11-05T12:00:00')).frames; const u = (k) => new Set(f.map((x) => x[k])); return u('mood').size === 7 && u('stage').size === 4 && u('kind').size === 4 && f.some((x) => x.acc); });
 tryc('pet.demo: dane przykładowe przechodzą render wszystkich widoków', () => { const d = P().demo(new Date()).S; let err = ''; for (const tab of views) { try { view(tab, JSON.parse(JSON.stringify(d))); } catch (e) { err = err || tab + ': ' + e.message; } } if (err) throw new Error(err); return true; });
 tryc('pet.screen: brak podpowiedzi etapu, gdy nic nie brakuje', () => !P().screen({ ...st(mkCtx()), stage: 'chick', active: 9 }, { kind: 'gaska', name: 'A' }, { ...SUM, badges: [] }, T.esc).includes('Do etapu'));
 tryc('pet.demo: talia i kontur zmieniają się między startem a teraz', () => { const d = P().demo(new Date('2026-11-05T12:00:00')).S; const b = P().body(d.meas, new Date('2026-11-05T12:00:00'), T.num); const m = b.svg.match(/d="([^"]+)"/g); return b.ok && m.length === 2 && m[0] !== m[1]; });
@@ -297,6 +321,11 @@ tryc('wskazówki: Ustawienia przywracają wskazówki', () => { view('set', { ...
 // Rada 06.11.2026 (ekran startowy): dzień z bólem głowy i karty „Co się dzieje”
 const dk = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const BASE = (o) => ({ ...CLEAN(), consent: null, kopia: null, prof: { cond: {}, pill: '' }, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID }, tips: { day: true, health: true, set: true }, pain: {}, cardsOk: {}, discreet: false, once: false, visit: null, ...o });
+// Karta „Dziś” (wpisy.js): pomocnicze do testów karty
+const WP = () => sandbox.WPISY;
+const wpDay = (meas, o) => { WP().reset(); return view('day', BASE({ meas: meas || {}, kg: '82', lite: false, touched: {}, ...(o || {}) })); };
+const wpS = (k) => T.wpCfg().rows.find((R) => R.key === k), wpD = () => WP().draft('wp', T.todayKey()), wpSet = (d) => WP().commitSet(T.wpCfg(), d || {});
+const card = (h) => { const i = h.indexOf('<article class="wp-card"'); return i < 0 ? '' : h.slice(i, h.indexOf('</article>', i) + 10); };
 const cards = (h) => (h.match(/data-card="[a-z_]+"/g) || []).map((x) => x.slice(11, -1));
 const ONCE_OK = () => [{ kind: 'm', id: 's1', label: 'x', k: 400, p: 20, f: 5, c: 30 }];
 tryc('ból: Mój dzień ma przycisk Boli mnie głowa', () => view('day', BASE()).includes('data-pain="today"'));
@@ -544,11 +573,11 @@ tryc('pola: Ustawienia mają przyciski − i + przy wadze i wzroście', () => { 
 tryc('pola: + przy wadze dodaje 0,1 kg', () => { view('set', BASE({ kg: '82' })); click({ stp: 'kg', d: '1' }); return T.S().kg === '82,1'; });
 tryc('pola: − przy wadze odejmuje 0,1 kg', () => { view('set', BASE({ kg: '82' })); click({ stp: 'kg', d: '-1' }); return T.S().kg === '81,9'; });
 tryc('pola: krok nie wychodzi poza limit', () => { view('set', BASE({ cm: '220' })); click({ stp: 'cm', d: '1' }); return T.S().cm === '220'; });
-tryc('pola: puste pole wagi dnia zaczyna od ostatniego ważenia, potem krok', () => {
-  const k = `meas.${dk(0)}.w`; view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } })); click({ stp: k, d: '1' }); const a = T.S().meas[dk(0)].w; click({ stp: k, d: '1' }); return a === '80,4' && T.S().meas[dk(0)].w === '80,5';
+tryc('pola: waga dnia zaczyna od ostatniego ważenia, potem krok (karta Dziś)', () => {
+  WP().reset(); view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } })); const R = wpS('w'), a = R.start.v, b = WP().step(R, a, 1); T.wpCommit({ w: b }); return a === 80.4 && T.S().meas[dk(0)].w === '80,5';
 });
-tryc('pola: sen zaczyna od 7 h i idzie co 15 minut', () => { const k = `meas.${dk(0)}.sleep`; view('day', BASE()); click({ stp: k, d: '1' }); click({ stp: k, d: '1' }); return T.S().meas[dk(0)].sleep === '7:15'; });
-tryc('pola: Pomiary dnia mają przyciski przy wadze, krokach i śnie', () => { const h = view('day', BASE()); return ['w', 'steps', 'sleep'].every((x) => h.includes(`data-stp="meas.${dk(0)}.${x}"`)); });
+tryc('pola: sen zaczyna od 7 h i idzie co 15 minut', () => { WP().reset(); view('day', BASE()); const R = wpS('s'), a = R.start.v; T.wpCommit({ s: WP().step(R, a, 1) }); return a === 420 && T.S().meas[dk(0)].sleep === '7:15'; });
+tryc('pola: Pomiary dnia mają przyciski przy wadze, krokach i śnie', () => { WP().reset(); const h = view('day', BASE()); return ['w', 's', 'k'].every((x) => h.includes(`data-wp="pm:${x}:-1"`) && h.includes(`data-wp="pm:${x}:1"`)); });
 tryc('trening: szybki wybór czasu 30, 45, 60, 90 min', () => { const h = view('train', BASE()); if (![30, 45, 60, 90].every((v) => h.includes(`data-setv="tr.wmin" data-v="${v}"`))) return false; click({ setv: 'tr.wmin', v: '45' }); return T.S().tr.wmin === '45'; });
 tryc('przepis: po „Zjem, zapisz” danie z planu nie pokazuje „W planie na dziś”', () => { const S0 = BASE({ swaps: {}, days: {} }); view('recipe', S0); const id = T.planIds()[0]; T.S().recipe = id; const a = view('recipe'); click({ addmeal: id }); const b = view('recipe'); return a.includes('W planie na dziś') && b.includes('✓ Zjedzone') && !b.includes('W planie na dziś'); });
 tryc('gotuję: przepis ma przycisk Gotuję to dziś', () => { T.S().recipe = 'o10'; return view('recipe', BASE()).includes('data-cook="o10"'); });
@@ -563,7 +592,7 @@ tryc('plan: obiady w dni robocze do 20 min, w weekend większe danie', () => [1,
 const rule = (sel) => { const i = sysCss.indexOf('\n' + sel + '{'); return i < 0 ? '' : sysCss.slice(i + sel.length + 2, sysCss.indexOf('}', i)); };
 tryc('przyciski: działania mają kształt pól (12 px) i tekst w jednej linii', () => /border-radius:var\(--r-s\)/.test(rule('.btn')) && /white-space:nowrap/.test(rule('.btn')));
 tryc('przyciski: − i + w kształcie pól', () => /border-radius:var\(--r-s\)/.test(rule('.stp')));
-tryc('przyciski: pigułka tylko dla chipów', () => { const bad = [...sysCss.matchAll(/([^{}\n]+)\{[^}]*border-radius:var\(--pill\)/g)].map((m) => m[1].trim()).filter((sel) => /\.btn|\.stp|\.tclose|\.hbtn|button/.test(sel) && !/^\.chip\b/.test(sel)); if (bad.length) throw new Error(bad.join(' | ')); return true; });
+tryc('przyciski: brak var(--pill) w regułach wyboru (kafelki 12 px; pigułka tylko dla znaczników .rec .chip, które nie są wyborem)', () => { const bad = [...sysCss.matchAll(/([^{}\n]+)\{[^}]*border-radius:var\(--pill\)/g)].map((m) => m[1].trim()).filter((sel) => /\.btn|\.stp|\.tclose|\.hbtn|button|\.chip|\.seg|\.zw-mood/.test(sel) && !/^\.rec \.chip\b/.test(sel)); if (bad.length) throw new Error(bad.join(' | ')); return true; });
 tryc('przyciski: działania sekcji na pełną szerokość, jedno pod drugim', () => /main p > \.btn:not\(\.small\)\{[^}]*width:100%/.test(sysCss));
 tryc('przyciski: bez szerokości w atrybucie style i bez pływania', () => !/class="btn[^"]*"[^>]*style="width:100%"/.test(code) && !/\.btn\{[^}]*float/.test(sysCss) && !/\.btn[^{]*\{[^}]*float:/.test(sysCss));
 tryc('przyciski: wyłączone powiększanie tekstu przez przeglądarkę', () => /html\{[^}]*(^|;)text-size-adjust:100%/.test(sysCss));
@@ -626,20 +655,19 @@ tryc('kopia bez zdrowia: wczytanie zmienia tylko ustawienia i ceny, dane osoby z
 tryc('kopia bez zdrowia: opis przełącznika mówi, co jest w pliku', () => view('set', BASE()).includes('Tylko ustawienia i ceny: bez wagi, pomiarów, posiłków i odpowiedzi'));
 
 // Zgłoszenie 06.11.2026: sen 6 h 13 min nie da się wpisać przecinkiem; sen jako godziny i minuty, bez dwuznaczności
-const typeSleep = (h, m) => { mk('m_sleep').value = h; mk('m_sleepm').value = m; let bad = false; const t = { dataset: { sl: 'm', day: dk(0) }, value: m, title: '', classList: { toggle: (c, on) => { if (c === 'bad') bad = !!on; } }, setAttribute() {}, getAttribute: () => 'numeric' }; (lis.input || []).forEach((f) => f({ target: t })); return bad; };
-tryc('sen: dwa pola, godziny i minuty, z klawiaturą samych cyfr', () => { const h = view('day', BASE()); return /id="m_sleep"[^>]*inputmode="numeric"|inputmode="numeric"[^>]*id="m_sleep"/.test(h) && /inputmode="numeric"[^>]*id="m_sleepm"/.test(h) && !h.includes('np. 7,5'); });
-tryc('sen: 6 h i 13 min zapisuje 6:13', () => { view('day', BASE()); const bad = typeSleep('6', '13'); return !bad && T.S().meas[dk(0)].sleep === '6:13' && Math.abs(T.num('6:13') - (6 + 13 / 60)) < 1e-9; });
-tryc('sen: same minuty 45 to 0:45', () => { view('day', BASE()); typeSleep('', '45'); return T.S().meas[dk(0)].sleep === '0:45'; });
-tryc('sen: minuty 75 odrzucone, zostaje poprzednia wartość', () => { view('day', BASE({ meas: { [dk(0)]: { sleep: '7:00' } } })); const bad = typeSleep('6', '75'); return bad && T.S().meas[dk(0)].sleep === '7:00'; });
-tryc('sen: 17 godzin odrzucone', () => { view('day', BASE({ meas: { [dk(0)]: { sleep: '7:00' } } })); return typeSleep('17', '0') && T.S().meas[dk(0)].sleep === '7:00'; });
-tryc('sen: przecinek albo litery odrzucone', () => { view('day', BASE()); return typeSleep('6,5', '') && typeSleep('6', 'a'); });
-tryc('sen: stary zapis 7,5 pokazuje 7 h i 30 min w polach', () => { const h = view('day', BASE({ meas: { [dk(0)]: { sleep: '7,5' } } })); return /id="m_sleep"[^>]*value="7"/.test(h) && /id="m_sleepm"[^>]*value="30"/.test(h); });
+const typeSleep = (t) => T.wpParse('s', t);
+tryc('sen: jedno pole wpisu cyframi, bez przełączania klawiatury (613 albo 6:13); bez starej pary pól', () => { WP().reset(); const h = view('day', BASE()); return !h.includes('id="m_sleepm"') && !h.includes('data-sl=') && wpS('s').inputmode === 'decimal' && typeSleep('613').v === 373 && typeSleep('6:13').v === 373 && !h.includes('np. 7,5'); });
+tryc('sen: 6 h i 13 min zapisuje 6:13', () => { WP().reset(); view('day', BASE()); const r = typeSleep('6:13'); T.wpCommit({ s: r.v }); return !r.err && T.S().meas[dk(0)].sleep === '6:13' && Math.abs(T.num('6:13') - (6 + 13 / 60)) < 1e-9; });
+tryc('sen: same minuty 45 to 0:45', () => { WP().reset(); view('day', BASE()); T.wpCommit({ s: typeSleep('0:45').v }); return T.S().meas[dk(0)].sleep === '0:45'; });
+tryc('sen: minuty 75 odrzucone, zostaje poprzednia wartość', () => { WP().reset(); view('day', BASE({ meas: { [dk(0)]: { sleep: '7:00' } } })); const r = WP().edit(T.wpCfg(), 's', '6:75'); return !!r.err && wpD().s === undefined && T.S().meas[dk(0)].sleep === '7:00' && /id="m_sleep"[^>]*>7 h</.test(card(view('day', {}))); });
+tryc('sen: 17 godzin odrzucone', () => { WP().reset(); view('day', BASE({ meas: { [dk(0)]: { sleep: '7:00' } } })); return !!WP().edit(T.wpCfg(), 's', '17').err && T.S().meas[dk(0)].sleep === '7:00'; });
+tryc('sen: litery odrzucone, przecinek to ułamek godziny (6,5 to 6 h 30 min)', () => !!typeSleep('6a').err && !!typeSleep('abc').err && typeSleep('6,5').v === 390);
+tryc('sen: stary zapis 7,5 pokazuje 7 h 30 min', () => { WP().reset(); const h = card(view('day', BASE({ meas: { [dk(0)]: { sleep: '7,5' } } }))); return /id="m_sleep"[^>]*>7 h 30 min</.test(h) && /id="wp_rs"[^>]*value="450"/.test(h); });
 tryc('sen: Stan dziś pokazuje 6 h 13 min', () => stan(view('day', BASE({ meas: { [dk(0)]: { sleep: '6:13' } } }))).includes('6 h 13 min'));
 tryc('sen: błędny wpis wraca do wartości sprzed edycji, nie do cyfry wpisanej po drodze', () => {
-  view('day', BASE({ meas: { [dk(0)]: { sleep: '6:13' } } }));
-  const t = { dataset: { sl: 'm', day: dk(0) }, classList: { contains: () => true }, title: 'Minuty od 0 do 59' };
-  (lis.focusin || []).forEach((f) => f({ target: t })); typeSleep('6', '7'); typeSleep('6', '75'); T.setRedraw(false); (lis.focusout || []).forEach((f) => f({ target: t }));
-  return T.S().meas[dk(0)].sleep === '6:13';
+  WP().reset(); view('day', BASE({ meas: { [dk(0)]: { sleep: '6:13' } } })); const m = T.wpModel();
+  const a = WP().edit(T.wpCfg(), 's', '6:75'), d = wpD();
+  return !!a.err && d.s === undefined && T.S().meas[dk(0)].sleep === '6:13' && /id="m_sleep"[^>]*>6 h 13 min</.test(card(view('day', {})));
 });
 tryc('liczby: kroki 10,500 i 10.500 to dziesięć i pół tysiąca, nie 10,5', () => cn('meas.d.steps', '10,500').s === '10500' && cn('meas.d.steps', '10.500').s === '10500');
 tryc('liczby: pola całkowite odrzucają ułamki z jasnym komunikatem', () => ['8,5', '45.5'].every((v) => /całkowit/.test(cn('meas.d.steps', v).err || '')) && /całkowit/.test(cn('age', '28,5').err || ''));
@@ -655,7 +683,7 @@ tryc('przytrzymanie: obsługa wciśnięcia i puszczenia przycisku', () => /addEv
 tryc('przytrzymanie: po puszczeniu fokus wraca na ten sam przycisk', () => /data-stp="\$\{[^}]+\}"\]\[data-d="\$\{[^}]+\}"\]/.test(code) && /\.focus\(\{preventScroll:true\}\)/.test(code));
 tryc('przytrzymanie: przyciski bez zaznaczania tekstu i z szybkim dotykiem', () => /\.stp\{[^}]*touch-action:manipulation/.test(sysCss) && /\.stp\{[^}]*user-select:none/.test(sysCss));
 tryc('klawiatura: strzałka w górę w polu zwiększa wartość o krok', () => { view('set', BASE({ kg: '82' })); let pd = false; (lis.keydown || []).forEach((f) => f({ key: 'ArrowUp', target: { dataset: { k: 'kg' }, value: '82' }, preventDefault: () => { pd = true; } })); return pd && T.S().kg === '82,1'; });
-tryc('podpowiedź: puste pole wagi dnia pokazuje ostatnie ważenie', () => /id="m_w"[^>]*|placeholder="80,4"/.test(view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } }))) && view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } })).includes('placeholder="80,4"'));
+tryc('podpowiedź: waga dnia bez dzisiejszego ważenia pokazuje ostatnie ważenie', () => { WP().reset(); return /id="m_w"[^>]*>80,4 kg</.test(card(view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } })))); });
 tryc('fokus niezasłonięty: przewijanie z marginesem na dolny pasek', () => /html\{[^}]*scroll-padding-bottom:/.test(sysCss));
 tryc('komunikat dla czytnika: obszar aria-live na wartości pól', () => /id="sr"[^>]*aria-live="polite"|aria-live="polite"[^>]*id="sr"/.test(html));
 tryc('błąd pod polem: komunikat powiązany z polem', () => /aria-describedby/.test(code) && /class="err"|className='err'/.test(code));
@@ -664,7 +692,19 @@ tryc('scenariusze: Pomoc ma przyciski do każdego scenariusza', () => { const h 
 tryc('scenariusz migrena: najpierw przeciwwskazanie, licznik dni z lekiem', () => { const h = view('health', T.scenS('migrena')); return firstAct(h).includes('przeciwwskazanie') && planOf(h).includes('10 dni z lekiem'); });
 tryc('scenariusz minitabletka: bez przeciwwskazania, z kategoriami', () => { const h = view('health', T.scenS('minitabletka')); return !planOf(h).includes('przeciwwskazanie') && planOf(h).includes('UKMEC 2025'); });
 tryc('scenariusz hashimoto: TSH i talia osobno', () => { const h = planOf(view('health', T.scenS('hashimoto'))); return h.includes('TSH 6-8 tygodni') && h.includes('osobno'); });
-tryc('scenariusz wpisy: + przy wadze zaczyna od wczorajszego ważenia', () => { view('day', T.scenS('wpisy')); click({ stp: `meas.${dk(0)}.w`, d: '1' }); return T.S().meas[dk(0)].w === '80,4'; });
+// Rada 20.11.2026, P1-4 (zasada 3 mapy): aplikacja wspiera styl życia, nie leczenie; leki tylko jako „powiedz lekarzowi” / „zapytaj lekarza lub farmaceutę”
+tryc('leki: brak porad o dawkach przy lekach w tekstach aplikacji (zdanie z „dawk” i lekiem musi mieć lekarza lub farmaceutę)', () => {
+  const MED = /\b(lek(u|i|iem|ów|om|ach)?|lewotyroks\w*|tabletk\w*)\b/i;
+  const bad = code.split(/(?<=[.;!?]) |\n/).filter((z) => /dawk/i.test(z) && MED.test(z) && !/lekarz|farmaceut/i.test(z)).map((z) => z.trim().slice(0, 80));
+  if (bad.length) throw new Error(bad.join(' | '));
+  return true;
+});
+tryc('leki: plan i scenariusz Hashimoto bez pory ani odstępu leku podanych jako porada (tylko „zapytaj lekarza”)', () => {
+  const h = planOf(view('health', T.scenS('hashimoto')));
+  const chk = T.SCEN.hashimoto.chk;
+  return !/Lewotyroksyna na czczo|60 minut przed śniadaniem|dawka lewotyroksyny/.test(h + chk) && /zmieniłaś tabletki, i powiedz o tym lekarzowi/.test(h) && /zapytaj lekarza lub farmaceutę/i.test(h);
+});
+tryc('scenariusz wpisy: „Jak wczoraj” kopiuje sen i kroki z wczoraj, wagi nie (pomiar), pochodzenie w meas.cp', () => { WP().reset(); view('day', { ...T.scenS('wpisy'), lite: false }); const o = wpSet(); T.wpCommit(o.vals, o); const m = T.S().meas[dk(0)]; return m.w === undefined && m.sleep === '6:13' && m.steps === '8500' && m.cp.sort().join() === 'sleep,steps'; });
 tryc('scenariusz start: pierwsze wejście', () => T.scenS('start').onb === false);
 
 // Pytanie 06.11.2026: słodkie śniadania przy insulinooporności; oznaczenia przepisów liczone z reguł
@@ -714,11 +754,10 @@ tryc('zamówione: zapamiętany wybór widać jako etykietę, bez zapisu jej nie 
 tryc('zamówione: każde danie ma zdanie dietetyka', () => ['sushi', 'kurczak', 'tofu'].every((d) => /class="why"|class="small muted"/.test(view('meals', ORDB({ dish: d }))) && view('meals', ORDB({ dish: d })).includes('class="ordtip"')));
 tryc('zamówione: szybki wpis prowadzi do Zamówione', () => view('day', BASE()).includes('data-nav="meals#zamowione#zamowione"'));
 tryc('zamówione: bez nazw lokali', () => !/chingu|kfc|sushi\s*master/i.test(code));
-tryc('sen: chipy 6:00-8:00 ustawiają sen', () => { const k = `meas.${dk(0)}.sleep`, h = view('day', BASE()); if (!['6:00', '6:30', '7:00', '7:30', '8:00'].every((v) => h.includes(`data-setv="${k}" data-v="${v}"`))) return false; click({ setv: k, v: '7:30' }); return T.S().meas[dk(0)].sleep === '7:30'; });
-tryc('sen: chip jak wczoraj z wczorajszą wartością', () => view('day', BASE({ meas: { [dk(1)]: { sleep: '6:13' } } })).includes('jak wczoraj (6 h 13 min)'));
-tryc('kroki: chip jak wczoraj, gdy dziś pusto', () => { const k = `meas.${dk(0)}.steps`, h = view('day', BASE({ meas: { [dk(1)]: { steps: '8500' } } })); if (!h.includes(`data-setv="${k}" data-v="8500"`) || !/jak wczoraj \(8\s?500\)/.test(h)) return false; click({ setv: k, v: '8500' }); return T.S().meas[dk(0)].steps === '8500' && !view('day', {}).includes(`data-setv="${k}" data-v="8500"`); });
-tryc('kroki: − i + co 1000', () => { const k = `meas.${dk(0)}.steps`; view('day', BASE({ meas: { [dk(0)]: { steps: '5000' } } })); click({ stp: k, d: '1' }); return T.S().meas[dk(0)].steps === '6000'; });
-
+tryc('sen: suwak 3-12 h co 15 minut ustawia sen', () => { WP().reset(); const h = view('day', BASE()); if (!/id="wp_rs" min="180" max="720" step="15"/.test(h)) return false; wpD().s = 450; const o = wpSet(wpD()); T.wpCommit(o.vals, o); return T.S().meas[dk(0)].sleep === '7:30' && !T.measCp(T.S().meas[dk(0)], 'sleep'); });
+tryc('sen: jak wczoraj z wczorajszą wartością', () => { WP().reset(); const h = card(view('day', BASE({ meas: { [dk(1)]: { sleep: '6:13' } } }))); return /id="m_sleep"[^>]*>6 h 13 min</.test(h) && h.includes('jak wczoraj?') && h.includes('>Jak wczoraj<'); });
+tryc('kroki: jak wczoraj, gdy dziś pusto; po zapisie bez pytania', () => { WP().reset(); const h = card(view('day', BASE({ meas: { [dk(1)]: { steps: '8500' } } }))); if (!/id="m_steps"[^>]*>8.500</.test(h) || !h.includes('>Jak wczoraj<')) return false; const o = wpSet(); T.wpCommit(o.vals, o); const b = card(view('day', {})); return T.S().meas[dk(0)].steps === '8500' && !b.includes('jak wczoraj?') && !b.includes('>Jak wczoraj<'); });
+tryc('kroki: − i + co 500 (siatka suwaka)', () => { WP().reset(); view('day', BASE({ meas: { [dk(0)]: { steps: '5000' } } })); const R = wpS('k'); T.wpCommit({ k: WP().step(R, R.start.v, 1) }); return T.S().meas[dk(0)].steps === '5500'; });
 // Zasada 08.11.2026: dane z badań tylko ze sprawdzonych linków; każda treść zdrowotna ma źródło
 const isUrl = (u) => /^https:\/\/[^\s"'<>]+$/.test(u);
 tryc('źródła: każde źródło to link https z opisem', () => Object.values(T.SRC).every(([u, l]) => isUrl(u) && l && l.length > 3));
@@ -1075,7 +1114,7 @@ tryc('szybkie wpisy: brzuch „jak wczoraj” kopiuje wzdęcie, stolec i wypró�
   return g.b === 4 && g.f === 'uform' && g.n === 1 && g.s === undefined && !mainHtml().includes('data-gutcopy');
 });
 tryc('szybkie wpisy: bez wczorajszego wpisu brzucha nie ma „jak wczoraj”', () => !view('day', MDUE({ prof: { cond: { gut: true }, pill: '' }, gut: {} })).includes('data-gutcopy'));
-tryc('szybkie wpisy: pola pomiarów mają klawisz Dalej', () => { const h = view('day', MDUE()); return /id="m_w"[^>]*enterkeyhint="next"|enterkeyhint="next"[^>]*id="m_w"/.test(h) && /enterkeyhint="next"[^>]*id="m_steps"|id="m_steps"[^>]*enterkeyhint="next"/.test(h); });
+tryc('szybkie wpisy: pola pomiarów mają klawisz Dalej', () => { WP().reset(); const h = view('day', MDUE()), rows = T.wpCfg().rows; return h.includes('id="m_w"') && h.includes('id="m_steps"') && rows.slice(0, -1).every((R) => WP().enterHint(rows, R.key) === 'next') && WP().enterHint(rows, rows[2].key) === 'done'; });
 // Dodaj, braki na zakładce, powtórz wczoraj, skróty ikony (11.11.2026)
 const tabsH = () => els.tabs.innerHTML, sheetH = () => (els.sheet || { innerHTML: '' }).innerHTML;
 const NOW0 = (o) => BASE({ meas: { [dk(1)]: { w: '80,2', sleep: '7' } }, days: {}, ...o });
@@ -1463,7 +1502,7 @@ tryc('plan: odhaczenie ćwiczenia z planu zapisuje dzień; usunięcie ma „Cofn
 });
 tryc('plan: bez planu podpowiedź, że plan wpisuje się z zaleceń fizjoterapeuty lub podiatry', () => view('mob', PLB()).includes('fizjoterapeuty albo podiatry'));
 tryc('wkładki: przy płaskostopiu odhaczenie dnia i ból stopy raz w tygodniu; podsumowanie 28 dni', () => {
-  view('mob', PLB({ prof: { cond: { flat: true }, pill: '' } })); click({ insole: '1' }); click({ footpain: '3' });
+  view('mob', PLB({ prof: { cond: { flat: true }, pill: '' } })); click({ insole: '1' }); T.qSet('footpain', 3);
   const h = view('mob');
   return T.S().insole.days[T.todayKey()] === true && T.S().insole.pain[T.todayKey()] === 3 && h.includes('1 z 28 dni we wkładkach') && h.includes('data-insole="1" aria-pressed="true"');
 });
@@ -1502,10 +1541,10 @@ tryc('jelita: przy Hashimoto odstęp suplementów od lewotyroksyny, przy Yaz ulo
 });
 tryc('jelita: dziennik w Moim dniu (wzdęcie 0-10, stolec, wypróżnienia), zwinięty; bez profilu go nie ma; ukryty w trybie dyskretnym', () => {
   const a = view('day', GUT()), b = view('day', BASE()), c = view('day', GUT({ discreet: true }));
-  return a.includes('id="fold_brzuch"') && a.includes('data-gutb="5"') && a.includes('data-gutf="luzny"') && a.includes('data-gutn="0"') && !b.includes('fold_brzuch') && !c.includes('fold_brzuch');
+  return a.includes('id="fold_brzuch"') && a.includes('id="q_rgutb"') && a.includes('data-gutf="luzny"') && a.includes('data-gutn="0"') && !b.includes('fold_brzuch') && !c.includes('fold_brzuch');
 });
 tryc('jelita: wpis dziennika i podsumowanie 28 dni; lista na wizytę z liczbami i pytaniami o alarmy', () => {
-  view('day', GUT()); click({ gutb: '7' }); click({ gutf: 'twardy' }); click({ gutn: '0' });
+  view('day', GUT()); T.qSet('gutb', 7); click({ gutf: 'twardy' }); click({ gutn: '0' });
   const g = T.S().gut[T.todayKey()];
   if (!(g && g.b === 7 && g.f === 'twardy' && g.n === 0)) throw new Error('wpis ' + JSON.stringify(g));
   const d = view('day'), v = view('visit');
@@ -2048,7 +2087,7 @@ tryc('karta sprawność: brak danych -> podpowiedź, wspólny nagłówek Sylwetk
 tryc('karta sprawność: źródła uth, tanaka, jette, kodama w SRC', () => [['uth', '14624296'], ['tanaka', '11153730'], ['jette', '2204507'], ['kodama', '19454641']].every(([k, p]) => T.SRC[k] && T.SRC[k][0].includes(p)));
 tryc('sprawność: pola VO2max, tętno spoczynkowe i maksymalne w sekcji Sprawność po Tanicie', () => { const h = view('day', FQ({})); const i = h.indexOf('data-fold="tanita"'), j = h.indexOf('data-fold="sprawnosc"'); return i > 0 && j > i && ['m_vo2', 'm_hrRest', 'm_hrMax'].every((x) => h.slice(j).includes('id="' + x + '"')); });
 tryc('sprawność: zakresy pól vo2 10-90, hrRest 30-120, hrMax 120-230', () => T.checkNum('meas.x.hrRest', '25').err && T.checkNum('meas.x.hrMax', '230').err === undefined && T.checkNum('meas.x.hrMax', '231').err && T.checkNum('meas.x.vo2', '9').err && T.checkNum('meas.x.vo2', '91').err && !T.checkNum('meas.x.vo2', '45').err && !T.checkNum('meas.x.hrRest', '60').err);
-// Prosty widok i karta „Dziś, 3 dotknięcia”
+// Prosty widok i karta „Szybki wpis dnia”
 const LK = () => T.todayKey();
 const liteReset = () => { const S = T.S(); S.lite = true; S.meas = {}; S.pain = {}; S.days = {}; S.onb = true; };
 tryc('prosty widok: świeży stan ma lite, zapisany stan bez pola lite go nie dostaje', () => {
@@ -2060,11 +2099,11 @@ tryc('prosty widok: Mój dzień ma tylko kartę, zwierzaka i Pokaż całą Miar�
   liteReset(); const h = view('day', { pet: null });
   return h.includes('id="lite"') && h.includes('data-litefull') && h.includes('Pokaż całą Miarę') && !h.includes('Pierwsze kroki') && !h.includes('data-fold="wiecej"');
 });
-tryc('karta: 3 dotknięcia zapisują stepsB, feel, redz i dają liteFull', () => {
+tryc('karta: szybki wpis zapisuje stepsB (dawny zakres), feel, redz i daje liteFull', () => {
   liteReset(); view('day', {}); const k = LK();
   click({ lite: 'stepsB:mid' }); click({ lite: 'feel:dobrze' }); const half = !T.liteFull(k); click({ lite: 'redz:0' });
   const m = T.S().meas[k], h = mainHtml();
-  return half && m.stepsB === 'mid' && m.feel === 'dobrze' && m.redz === 0 && T.liteFull(k) === true && h.includes('✓ Dzień zapisany.') && (h.match(/data-lite="[^"]+" aria-pressed="true"/g) || []).length === 3;
+  return half && m.stepsB === 'mid' && m.feel === 'dobrze' && m.redz === 0 && T.liteFull(k) === true && h.includes('✓ Dzień zapisany.') && (h.match(/data-lite="[^"]+" aria-pressed="true"/g) || []).length === 2;
 });
 tryc('karta: ponowne dotknięcie wybranego żetonu zostawia wybór', () => {
   liteReset(); view('day', {}); const k = LK(); click({ lite: 'redz:2' }); click({ lite: 'redz:2' }); click({ lite: 'stepsB:lo' }); click({ lite: 'stepsB:lo' });
@@ -2088,7 +2127,7 @@ tryc('karta: zakresy kroków z liczby i z stepsB', () => {
 });
 tryc('karta: bez słów o ograniczeniu, z podpisem jedzenia kalorycznego', () => {
   liteReset(); const h = T.liteCardHtml();
-  return h.includes('Dziś, 3 dotknięcia') && h.includes('słodycze, fast food, słone przekąski, alkohol') && h.includes('2 lub więcej') && !/ograniczon|brakuje|niekompletn/i.test(h) && h.includes('Wstępne badania: krótki zapis codziennie działał podobnie jak pełny.');
+  return h.includes('Szybki wpis dnia') && h.includes('słodycze, fast food, słone przekąski, alkohol') && h.includes('2 lub więcej') && !/ograniczon|brakuje|niekompletn/i.test(h) && h.includes('Wstępne badania: krótki zapis codziennie działał podobnie jak pełny.');
 });
 tryc('kopia bez danych o zdrowiu: lite, unlock, unlockAt, unlockSnooze w BK_NH_KEEP; stepsB, feel, redz poza nią (w meas)', () => {
   liteReset(); const S = T.S(); S.meas[LK()] = { stepsB: 'hi', feel: 'dobrze', redz: 1 };
@@ -2134,11 +2173,11 @@ tryc('ustawienia: przełącznik Prosty widok zmienia S.lite', () => {
   (lis.input || []).forEach((f) => f({ target: el })); const off = T.S().lite === false; el.checked = true; (lis.input || []).forEach((f) => f({ target: el }));
   return setH.includes('data-k="lite"') && off && T.S().lite === true;
 });
-tryc('jajko: podpis w prostym widoku mówi o dniach z 3 dotknięciami, w pełnym o pierwszych krokach', () => {
+tryc('jajko: podpis w prostym widoku mówi o dniach z szybkim wpisem, w pełnym o pierwszych krokach', () => {
   liteReset(); T.S().pet = null; const a = T.petCardHtml(); T.S().lite = false; const b = T.petCardHtml();
   T.S().pet = { kind: 'gaska', name: 'K', since: '2999-01-01' }; T.S().lite = true; const c = T.petCardHtml(); T.S().lite = false; const d = T.petCardHtml();
-  return a.includes('Jajko pęka z każdym dniem z 3 dotknięciami: ') && b.includes('Jajko pęka z każdym pierwszym krokiem: ')
-    && c.includes('Dni z 3 dotknięciami: ') && !c.includes('Pierwsze kroki: pęknięcia') && d.includes('Pierwsze kroki: pęknięcia ');
+  return a.includes('Jajko pęka z każdym dniem z szybkim wpisem: ') && b.includes('Jajko pęka z każdym pierwszym krokiem: ')
+    && c.includes('Dni z szybkim wpisem: ') && !c.includes('Pierwsze kroki: pęknięcia') && d.includes('Pierwsze kroki: pęknięcia ');
 });
 // Stopniowe odkrywanie
 const dAdd = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return T.todayKey().slice(0, 0) + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -2151,7 +2190,7 @@ tryc('odkrywanie: brak propozycji przed 3 dniami z pełną kartą; po 3 dniach p
 });
 tryc('odkrywanie: Dodaj dopisuje waga, pokazuje pole m_w; kolejna propozycja (posilki) dopiero po 3 nowych dniach', () => {
   unlockReset(); fullDays(['2026-01-01', '2026-01-02', '2026-01-03']); view('day', {}); click({ unlock: 'waga' }); const S = T.S(); const k = LK();
-  const h = mainHtml(); const a = S.unlock.join() === 'waga' && S.unlockAt === k && h.includes('id="m_w"') && h.includes('data-k="meas.' + k + '.w"') && !h.includes('Dodać wagę?') && T.unlockNext() === null;
+  const h = mainHtml(); const a = S.unlock.join() === 'waga' && S.unlockAt === k && h.includes('id="m_w"') && h.includes('data-row="w"') && !h.includes('Dodać wagę?') && T.unlockNext() === null;
   S.unlockAt = '2026-01-03'; fullDays(['2026-01-04', '2026-01-05']); const mid = T.unlockNext() === null; FULL('2026-01-06');
   const hp = view('day', {});
   return a && mid && T.unlockNext() === 'posilki' && hp.includes('Dodać posiłki z planu? „Zjem” przy daniu zapisuje posiłek jednym dotknięciem.');
@@ -2159,7 +2198,7 @@ tryc('odkrywanie: Dodaj dopisuje waga, pokazuje pole m_w; kolejna propozycja (po
 tryc('odkrywanie: posilki i sen pokazują wiersz posiłków z licznikiem i pole m_sleep', () => {
   unlockReset(); const S = T.S(); S.unlock = ['waga', 'posilki', 'sen']; S.days[LK()] = [{ kind: 'm', id: 'x', label: 'a', k: 1, p: 1, f: 1, c: 1 }, { kind: 't', label: 't' }];
   const h = view('day', {}); const i = h.indexOf('Posiłki z planu');
-  return i > 0 && h.includes('data-tab="meals"') && h.includes('id="m_sleep"') && h.includes('data-k="meas.' + LK() + '.w"') && /Posiłki z planu[\s\S]{0,200}Zapisane dziś: 1/.test(h.slice(i)) && !/<label>Posiłki z planu/.test(h);
+  return i > 0 && h.includes('data-tab="meals"') && h.includes('id="m_sleep"') && h.includes('data-row="w"') && /Posiłki z planu[\s\S]{0,200}Zapisane dziś: 1/.test(h.slice(i)) && !/<label>Posiłki z planu/.test(h);
 });
 tryc('odkrywanie: Nie teraz chowa propozycję na 7 dni mimo 3 nowych dni z kartą; po 7 dniach wraca', () => {
   unlockReset(); fullDays(['2026-01-01', '2026-01-02', '2026-01-03']); view('day', {}); const S = T.S(); const before = JSON.stringify(S.unlock);
@@ -2183,9 +2222,9 @@ tryc('zwierzak: petCtx niesie lite i liteFull, ekran jajka w prostym widoku rend
 });
 // Poprawki końcowe prostego widoku (19.11.2026)
 const at15 = () => { const n = new Date(); n.setHours(15, 0, 0, 0); return n; };
-tryc('zwierzak w prostym widoku: po 12:00 bez karty nie jest głodny ani zmęczony, mówi „czeka na 3 dotknięcia.”', () => {
+tryc('zwierzak w prostym widoku: po 12:00 bez karty nie jest głodny ani zmęczony, mówi „czeka na szybki wpis.”', () => {
   liteReset(); T.S().pet = { kind: 'gaska', name: 'K', since: '2999-01-01' }; const s = T.PET.state(T.petCtx(at15()));
-  return s.mood !== 'hungry' && s.mood !== 'tired' && s.line.includes('czeka na 3 dotknięcia.') && !s.line.includes('posiłk');
+  return s.mood !== 'hungry' && s.mood !== 'tired' && s.line.includes('czeka na szybki wpis.') && !s.line.includes('posiłk');
 });
 tryc('zwierzak w prostym widoku: po pełnej karcie po 12:00 nie jest głodny ani zmęczony, paski posiłków i energii co najmniej 70', () => {
   liteReset(); T.S().pet = { kind: 'gaska', name: 'K', since: '2999-01-01' }; FULL(LK()); const s = T.PET.state(T.petCtx(at15()));
@@ -2209,7 +2248,7 @@ tryc('prosty widok: guideActive jest nieaktywne, Dalej nie każe wpisać wagi', 
 });
 tryc('arkusz Dodaj wpis w prostym widoku: karta, bez wagi, snu i kroków przed odkryciem', () => {
   liteReset(); T.S().unlock = []; view('day', {}); click({ addsheet: '1' }); const h = sheetH();
-  return h.includes('data-nav="day#lite"') && h.includes('Dziś, 3 dotknięcia') && !h.includes('day#m_w') && !h.includes('day#m_sleep') && !h.includes('day#m_steps') && h.includes('data-tab="meals"') && h.includes('data-tab="train"') && h.includes('data-pain="today"');
+  return h.includes('data-nav="day#lite"') && h.includes('Szybki wpis dnia') && !h.includes('day#m_w') && !h.includes('day#m_sleep') && !h.includes('day#m_steps') && h.includes('data-tab="meals"') && h.includes('data-tab="train"') && h.includes('data-pain="today"');
 });
 tryc('arkusz Dodaj wpis w prostym widoku: waga i sen po odkryciu, kroki nigdy', () => {
   liteReset(); T.S().unlock = ['waga', 'sen']; view('day', {}); click({ addsheet: '1' }); const h = sheetH(); T.S().unlock = [];
@@ -2233,10 +2272,10 @@ tryc('karta: zmiana z Bólu głowy zostawia wpis, gdy ustawiono aurę lub lek', 
   click({ lite: 'feel:glowa' }); T.S().pain[k].aura = true; click({ lite: 'feel:dobrze' }); const a = !!T.S().pain[k];
   delete T.S().pain[k]; click({ lite: 'feel:glowa' }); T.S().pain[k].med = true; click({ lite: 'feel:brzuch' }); return a && !!T.S().pain[k];
 });
-tryc('scenariusz start: ma lite i opis karty „Dziś, 3 dotknięcia”', () => T.scenS('start').lite === true && T.SCEN.start.chk.includes('Dziś, 3 dotknięcia') && !T.SCEN.start.chk.includes('0 z 6'));
-tryc('zwierzak: podpis jajka w prostym widoku o pierwszym dniu z 3 dotknięciami, w pełnym bez zmian', () => {
+tryc('scenariusz start: ma lite i opis karty „Szybki wpis dnia”', () => T.scenS('start').lite === true && T.SCEN.start.chk.includes('Szybki wpis dnia') && !T.SCEN.start.chk.includes('0 z 6'));
+tryc('zwierzak: podpis jajka w prostym widoku o pierwszym szybkim wpisie, w pełnym bez zmian', () => {
   liteReset(); T.S().pet = { kind: 'gaska', name: 'K', since: '2999-01-01' }; const a = T.petCardHtml(); T.S().lite = false; const b = T.petCardHtml(); T.S().lite = true;
-  return a.includes('Jajo wykluje się po pierwszym dniu z 3 dotknięciami.') && !a.includes('30 punktami') && b.includes('Jajo wykluje się po dniu z co najmniej 30 punktami.');
+  return a.includes('Jajo wykluje się po pierwszym szybkim wpisie.') && !a.includes('30 punktami') && b.includes('Jajo wykluje się po dniu z co najmniej 30 punktami.');
 });
 // Scenariusze z danymi testowymi (18.11.2026): sport-m, sport-k, sport-h z danymi zmyślonymi; odczyty startowe tylko w wersji prywatnej, sprawdzane, gdy są
 const SPN = ['sport-m', 'sport-k', 'sport-h'], LAB_ID = ['tsh', 'glu', 'ins', 'hba1c', 'vitd', 'ferr', 'chol', 'ldl', 'hdl', 'tg', 'kreat'];
@@ -2255,66 +2294,335 @@ tryc('scenariusz sport-h: karta potencjału i karta sprawności, poziom „wysok
 tryc('scenariusze sportowe: VO2max i tętno spoczynkowe co tydzień', () => SPN.every((n) => { const s = T.scenS(n); return scenDays(s, 'vo2') >= 4 && scenDays(s, 'hrRest') >= 4; }));
 tryc('scenariusz sport-m w trybie pokazowym: save() nie woła localStorage.setItem', () => { let n = 0; const o = sandbox.localStorage.setItem; sandbox.localStorage.setItem = () => { n++; }; T.setDemo(true); view('health', T.scenS('sport-m')); T.save(); click({ mode: 'utrzymanie' }); T.setDemo(false); sandbox.localStorage.setItem = o; return n === 0; });
 tryc('scenariusze z odczytu startowego (tylko wersja prywatna): K i M z pomiarem, obwodami i badaniami', () => { const P = Object.keys(T.SCEN).filter((n) => T.SCEN[n].t.startsWith('Mój odczyt startowy')); if (!P.length) return true; const ss = P.map((n) => T.scenS(n)); return P.length === 2 && ss.map((s) => s.sex).sort().join() === 'K,M' && ss.every((s) => scenBody(s) && scenLabsOk(s) && T.SCEN[P[0]].chk.length > 30); });
-tryc('ekran startowy w prostym widoku: przycisk Zacznij od 3 dotknięć, bez Pomiń', () => {
-  liteReset(); const a = view('intro', { onb: false }); const lite = a.includes('Zacznij od 3 dotknięć') && /class="btn"[^>]*data-introdone="1"|data-introdone="1"[^>]*class="btn"/.test(a) && !a.includes('>Pomiń<');
+tryc('ekran startowy w prostym widoku: przycisk Zacznij od szybkiego wpisu, bez Pomiń', () => {
+  liteReset(); const a = view('intro', { onb: false }); const lite = a.includes('Zacznij od szybkiego wpisu') && /class="btn"[^>]*data-introdone="1"|data-introdone="1"[^>]*class="btn"/.test(a) && !a.includes('>Pomiń<');
   T.S().lite = false; const b = view('intro', { onb: false });
-  return lite && b.includes('>Pomiń<') && !b.includes('Zacznij od 3 dotknięć');
+  return lite && b.includes('>Pomiń<') && !b.includes('Zacznij od szybkiego wpisu');
 });
 tryc('źródła patel, nezami, harvey, burke z PMID', () => ['patel:36512404', 'nezami:35146942', 'harvey:30801989', 'burke:21185970'].every((x) => { const [k, id] = x.split(':'); return T.SRC[k] && T.SRC[k][0] === 'https://pubmed.ncbi.nlm.nih.gov/' + id + '/'; }));
 tryc('scenariusz prosty: propozycja waga widoczna', () => { const h = view('day', T.scenS('prosty')); return h.includes('id="lite"') && h.includes('Dodać wagę?') && T.S().lite === true; });
-tryc('wpisy-demo: w scenariuszu prosty widok dnia ma sekcję z propozycjami, w zwykłym prostym widoku jej nie ma', () => {
-  liteReset(); const plain = view('day', { pet: null });
-  T.setDemoN('prosty'); let demo; try { liteReset(); demo = view('day', { pet: null }); } finally { T.setDemoN(''); }
-  return !plain.includes('id="wpisydemo"') && demo.includes('<section id="wpisydemo" aria-labelledby="wpisydemo_h">') && demo.includes('Propozycje wpisu do wyboru (demo)') && demo.includes('Dane przykładowe, nic się nie zapisuje.');
+// Karta „Dziś” (wpisy.js, 20.11.2026): sen i kroki z suwakiem, waga od ostatniego ważenia, wpis z klawiatury, jeden główny przycisk
+tryc('wpisy: wartość startowa: dzisiejsza, inaczej ostatnia, waga z Twoich danych tylko po ich ustawieniu, inaczej typowa wyszarzona; nigdy pusta', () => {
+  wpDay({ [dk(1)]: { w: '79' }, [dk(0)]: { w: '80' } }); const a = wpS('w').start; wpDay({ [dk(1)]: { w: '79' } }); const b = wpS('w').start;
+  wpDay({}, { touched: { kg: true } }); const c = wpS('w').start; wpDay({}); const d = wpS('w').start, e = wpS('s').start, f = wpS('k').start, h = card(view('day', {}));
+  return a.v === 80 && a.src === 'today' && b.v === 79 && b.src === 'last' && c.v === 82 && c.src === 'profile' && d.src === 'default' && d.v > 0 && e.v === 420 && e.src === 'default' && f.v === 5000
+    && /<button class="wp-val wp-y" id="m_w"[^>]*>\d+,\d kg</.test(h) && h.includes('wpisz dzisiejszą wagę') && !h.includes('z Twoich danych');
 });
-tryc('wpisy-demo: inny scenariusz nie dostaje sekcji', () => { T.setDemoN('wpisy'); try { liteReset(); return !view('day', { pet: null }).includes('id="wpisydemo"'); } finally { T.setDemoN(''); } });
-tryc('wpisy-demo: html() ma suwaki, główny przycisk, wykres wagi i źródło PMID 32353079, bez kółka i żetonów', () => { const h = sandbox.WPISY_DEMO.html(); return ['id="wd_rs"', 'id="wd_rk"', 'id="wd_spark"', 'role="img"', 'pubmed.ncbi.nlm.nih.gov/32353079/', 'PMID 32353079'].every((x) => h.includes(x)) && !/wd_wh|wd_wm|aria-pressed|class="chip"/.test(h) && h.includes('id="wd_main"') && h.includes('Jak wczoraj') && !h.includes('Zatwierdź') && !/<script|\son[a-z]+=/i.test(h); });
-tryc('wpisy-demo: główny przycisk to automat stanów: Jak wczoraj, Zatwierdź (N), Cofnij 5 s, Zobacz zmiany, Gotowe', () => {
-  const L = sandbox.WPISY_DEMO.mainLabel, o = { changed: 0, saved: false, summaryOpen: false, hasYesterday: true, msSinceSave: 0 };
+tryc('wpisy: Pomiary dnia: wiersz wagi pokazuje ostatnie ważenie wyszarzone z datą i „wpisz dzisiejszą wagę” (waga to pomiar), nie puste pole', () => {
+  const h = card(wpDay({ [dk(2)]: { w: '80,4' } }));
+  return /<button class="wp-val wp-y" id="m_w"[^>]*>80,4 kg<\/button>/.test(h) && h.includes('wpisz dzisiejszą wagę') && h.includes('ostatnio: ' + dk(2).slice(8, 10) + '.' + dk(2).slice(5, 7) + '.' + dk(2).slice(0, 4)) && !/value=""/.test(h) && !h.includes('<input type="text"');
+});
+tryc('wpisy: waga bez żadnego ważenia: waga z ustawionych danych z podpisem „z Twoich danych”', () => { const h = card(wpDay({}, { touched: { kg: true } })); return /id="m_w"[^>]*>82,0 kg</.test(h) && h.includes('z Twoich danych'); });
+tryc('wpisy: dzisiejsza wartość ma pierwszeństwo, bez wyszarzenia; stary zapis snu 7,5 to 7 h 30 min', () => { const h = card(wpDay({ [dk(1)]: { w: '80,4' }, [dk(0)]: { w: '79,9', sleep: '7,5' } })); return /<button class="wp-val" id="m_w"[^>]*>79,9 kg</.test(h) && /id="m_sleep"[^>]*>7 h 30 min</.test(h); });
+tryc('wpisy: Pomiary dnia: karta z wierszami waga, sen, kroki zamiast pól; cele m_w, m_sleep, m_steps to przyciski wartości', () => {
+  const full = wpDay({}), h = card(full);
+  return ['m_w', 'm_sleep', 'm_steps'].every((id) => new RegExp('<button class="wp-val[^"]*" id="' + id + '"').test(h)) && !full.includes('data-sl=') && !full.includes(`data-k="meas.${dk(0)}.w"`) && !full.includes(`data-k="meas.${dk(0)}.steps"`)
+    && full.indexOf('<article class="wp-card"') > full.indexOf('<h2>Pomiary dnia</h2>') && full.indexOf('<article class="wp-card"') < full.indexOf('data-imppaste');
+});
+tryc('wpisy: sen suwak 3-12 h co 15 min, kroki 0-20 000 co 500, waga bez suwaka; − i + przy każdym wierszu', () => {
+  const h = card(wpDay({}));
+  return /<input class="wp-range" type="range" id="wp_rs" min="180" max="720" step="15"/.test(h) && /<input class="wp-range" type="range" id="wp_rk" min="0" max="20000" step="500"/.test(h) && !h.includes('id="wp_rw"')
+    && ['w', 's', 'k'].every((k) => h.includes(`data-wp="pm:${k}:-1"`) && h.includes(`data-wp="pm:${k}:1"`)) && h.includes('aria-label="0,1 kg więcej"');
+});
+tryc('wpisy: parser snu: 715, 7:15, 7,25 i 7 godzin, 613 to 6:13, 0:45, zły wpis z komunikatem', () => {
+  const p = (t) => T.wpParse('s', t);
+  return p('7:15').v === 435 && p('715').v === 435 && p('7,25').v === 435 && p('7').v === 420 && p('613').v === 373 && p('0:45').v === 45 && p('6,5').v === 390
+    && /715 albo 7,25/.test(p('abc').err || '') && !!p('6a').err && /Minuty od 0 do 59/.test(p('6:75').err || '') && /Minuty od 0 do 59/.test(p('675').err || '') && /16 godzin/.test(p('17').err || '') && p('7:15').err === undefined;
+});
+tryc('wpisy: parser kroków i wagi: separator tysięcy, ułamek kroków odrzucony, waga do 0,1 kg, zakres 35-250', () => {
+  const p = (k, t) => T.wpParse(k, t);
+  return p('k', '8 250').v === 8250 && p('k', '10.500').v === 10500 && p('k', '10' + String.fromCharCode(160) + '000').v === 10000 && !!p('k', '8,5').err && !!p('k', '99999').err && !!p('k', 'x').err
+    && p('w', '77,14').v === 77.1 && p('w', '82,4 kg').v === 82.4 && !!p('w', 'w').err && !!p('w', '20').err && !!p('w', '251').err;
+});
+tryc('wpisy: − i + w siatce kroku i w zakresie, zapis w formacie pól (80,5; 6:13; 8500)', () => {
+  wpDay({}); const W = wpS('w'), Sl = wpS('s'), K = wpS('k'), s = WP().step, st = T.wpStore;
+  return s(W, 80.4, 1) === 80.5 && s(W, 80.4, -1, 5) === 79.9 && s(W, 250, 1) === 250 && s(Sl, 435, 1) === 450 && s(Sl, 373, 1) === 375 && s(Sl, 373, -1) === 360 && s(Sl, 0, -1) === 0
+    && s(K, 8250, 1) === 8500 && s(K, 5000, 1) === 5500 && s(K, 0, -1) === 0 && st('w', 80.5) === '80,5' && st('w', 80) === '80' && st('s', 373) === '6:13' && st('s', 45) === '0:45' && st('k', 8500) === '8500';
+});
+tryc('wpisy: główny przycisk to automat stanów: Jak wczoraj, Zatwierdź (N), Cofnij 5 s, Zobacz zmiany, Gotowe', () => {
+  const L = WP().mainLabel, o = { changed: 0, saved: false, summaryOpen: false, hasYesterday: true, msSinceSave: 0 };
   return L(o) === 'Jak wczoraj' && L({ ...o, hasYesterday: false }) === 'Zatwierdź' && L({ ...o, changed: 1 }) === 'Zatwierdź (1)' && L({ ...o, changed: 3 }) === 'Zatwierdź (3)'
     && L({ ...o, saved: true, msSinceSave: 4999 }) === '✓ Zapisane · Cofnij' && L({ ...o, saved: true, msSinceSave: 5000 }) === 'Zobacz, co się zmieniło'
     && L({ ...o, saved: true, msSinceSave: 9000, summaryOpen: true }) === 'Gotowe na dziś' && L({ ...o, saved: true, msSinceSave: 100, changed: 2 }) === 'Zatwierdź (2)';
 });
-tryc('wpisy-demo: kolejność wierszy: do 12:00 Waga, Sen, Kroki; od 18:00 Kroki, Sen, Waga; poza tym Sen, Kroki, Waga', () => {
-  const R = sandbox.WPISY_DEMO.rowOrder; return R(6).join('') === 'wsk' && R(11).join('') === 'wsk' && R(12).join('') === 'skw' && R(17).join('') === 'skw' && R(18).join('') === 'ksw' && R(23).join('') === 'ksw';
+tryc('wpisy: kolejność wierszy: do 12:00 Waga, Sen, Kroki; od 18:00 Kroki, Sen, Waga; poza tym Sen, Kroki, Waga', () => {
+  const R = WP().rowOrder; return R(6).join('') === 'wsk' && R(11).join('') === 'wsk' && R(12).join('') === 'skw' && R(17).join('') === 'skw' && R(18).join('') === 'ksw' && R(23).join('') === 'ksw';
 });
-tryc('wpisy-demo: wpis z klawiatury: sen 7:15, 7,25 i 7 godzin, kroki do 500, waga do 0,1, zły wpis to null', () => {
-  const W = sandbox.WPISY_DEMO; return W.parseSleep('8:30') === 510 && W.parseSleep('7,25') === 435 && W.parseSleep('7') === 420 && W.parseSleep('1') === 180 && W.parseSleep('20') === 720 && W.parseSleep('abc') === null && W.parseSleep('7:75') === null
-    && W.parseSteps('8 250') === 8500 && W.parseSteps('99999') === 20000 && W.parseSteps('x') === null && W.parseWeight('77,14') === 77.1 && W.parseWeight('w') === null;
+tryc('wpisy: pas wahania ±0,35% wokół średniej 7 dni, to samo zdanie przy wzroście i spadku, „średnio w badaniu”', () => {
+  const b = T.wpBand, up = b(77, 76.8), dn = b(76.6, 76.8), hi = b(77.1, 76.8), lo = b(76.5, 76.8), tail = (x) => x.text.slice(x.ds.length);
+  return up.inside && dn.inside && !hi.inside && !lo.inside && up.ds === '+0,2 kg od średniej 7 dni' && dn.ds === '−0,2 kg od średniej 7 dni' && tail(up) === tail(dn) && tail(hi) === tail(lo) && tail(up) !== tail(hi)
+    && /w badaniu wynosiło średnio/.test(up.text) && /w badaniu wynosiło średnio/.test(hi.text) && b(76.8, 76.8).inside;
 });
-tryc('wpisy-demo: pasmo wagi, do 0,35% wczorajszej mieści się w wahaniu, powyżej nie', () => {
-  const b = sandbox.WPISY_DEMO.bandText; return b(77, 76.8).includes('mieści się w zwykłym wahaniu') && b(76.8, 76.8).includes('mieści się w zwykłym wahaniu') && !b(77.1, 76.8).includes('mieści się') && b(77.1, 76.8).includes('więcej niż zwykłe wahanie');
+tryc('wpisy: wykres 14 dni z pasem i źródłem PMID 32353079 tylko przy co najmniej 2 ważeniach', () => {
+  const two = card(wpDay({ [dk(1)]: { w: '80,4' }, [dk(3)]: { w: '80,8' } })), one = card(wpDay({ [dk(1)]: { w: '80,4' } }));
+  return /<svg class="wp-spark" id="wp_spark"[^>]*role="img"[^>]*aria-label="Waga z 14 dni/.test(two) && two.includes('class="wp-zone"') && two.includes('pubmed.ncbi.nlm.nih.gov/32353079/') && two.includes('id="wp_band"') && !one.includes('wp_spark') && !one.includes('id="wp_band"');
 });
-tryc('wpisy-demo: sw.js i index.html znają wpisy-demo.js, skrypt przed app.js', () => /wpisy-demo\.js/.test(fs.readFileSync(path.join(root, 'sw.js'), 'utf8')) && html.indexOf('wpisy-demo.js') > 0 && html.indexOf('wpisy-demo.js') < html.indexOf('app.js'));
-// Galeria nowych zwierzaków (zwierzaki-demo.js, 20.11.2026): tylko w #demo-prosty, pod propozycjami wpisu
-const ZW_K = { gaska: 'Gąska', kaczuszka: 'Kaczuszka', kapibara: 'Kapibara', kotek: 'Kotek' };
-const ZW_M = { spokoj: 'spokój', radosc: 'radość', zapis: 'zapis', seria: 'seria', drzemka: 'drzemka', ciekawosc: 'ciekawość' };
-tryc('zwierzaki-demo: w scenariuszu prosty sekcja pod propozycjami wpisu, w zwykłym prostym widoku i innym scenariuszu jej nie ma', () => {
-  liteReset(); const plain = view('day', { pet: null });
-  T.setDemoN('wpisy'); let other; try { liteReset(); other = view('day', { pet: null }); } finally { T.setDemoN(''); }
+tryc('wpisy: „Jak wczoraj” zapisuje tylko sen i kroki z ostatnią wartością; onSaved woła PET.react; Cofnij przywraca', () => {
+  wpDay({ [dk(1)]: { w: '80,4', sleep: '6:13', steps: '8500' } }); const o = wpSet();
+  if (Object.keys(o.vals).sort().join() !== 'k,s' || o.vals.s !== 373 || o.vals.k !== 8500 || o.copied.sort().join() !== 'k,s') throw new Error('set ' + JSON.stringify(o));
+  const P = sandbox.PET, r0 = P.react, seen = []; P.react = (x) => { seen.push(x); };
+  try { T.wpOnSaved('w', 80.5); T.wpOnSaved('s', 373); const a = seen.join(); T.wpOnSaved('s', 450); if (a !== 'weigh' || !seen.includes('sleepok')) throw new Error(seen.join()); } finally { P.react = r0; }
+  const prev = T.wpCommit(o.vals, o), t = T.S().meas[dk(0)], ok = t.sleep === '6:13' && t.steps === '8500' && t.w === undefined && t.cp.length === 2;
+  T.wpRestore(prev); const r = T.S().meas[dk(0)];
+  return ok && r.sleep === undefined && r.steps === undefined && r.cp === undefined;
+});
+tryc('wpisy: nic nie jest zgadywane: bez zmiany ani waga z Twoich danych, ani typowa nie trafia do zapisu; zapisuje się tylko zmieniony wiersz', () => {
+  wpDay({}); const a = wpSet().vals; wpDay({}, { touched: { kg: true } }); const a2 = wpSet().vals;
+  wpDay({ [dk(1)]: { w: '80,4' } }); const b = wpSet({ k: 9000 }).vals, c = wpSet().vals;
+  return Object.keys(a).length === 0 && Object.keys(a2).length === 0 && Object.keys(b).join() === 'k' && b.k === 9000 && Object.keys(c).length === 0;
+});
+tryc('wpisy: wartości robocze przeżywają przerysowanie ekranu, zmiana dnia je czyści', () => {
+  wpDay({ [dk(1)]: { w: '80,4' } }); wpD().w = 81.2; const a = card(view('day', {}));
+  const b = WP().card({ ...T.wpCfg(), day: '2000-01-01' }), c = card(view('day', {}));
+  return /id="m_w"[^>]*>81,2 kg</.test(a) && a.includes('>Zatwierdź (1)<') && !b.includes('81,2 kg') && !c.includes('81,2 kg');
+});
+tryc('wpisy: pole wpisu: waga z przecinkiem, sen i kroki z cyfr; Dalej w każdym wierszu poza ostatnim', () => {
+  wpDay({}); const rows = T.wpCfg().rows, last = rows[rows.length - 1].key;
+  return wpS('w').inputmode === 'decimal' && wpS('s').inputmode === 'decimal' && wpS('k').inputmode === 'numeric' && rows.slice(0, -1).every((R) => WP().enterHint(rows, R.key) === 'next') && WP().enterHint(rows, last) === 'done';
+});
+tryc('wpisy: prosty widok: karta tylko z odkrytymi wierszami, kroki zostają żetonami', () => {
+  liteReset(); WP().reset(); const S = T.S(); S.unlock = []; const a = view('day', {}); S.unlock = ['waga']; const b = card(view('day', {})); S.unlock = ['waga', 'sen']; const c = card(view('day', {})); S.unlock = [];
+  return !a.includes('wp-card') && b.includes('id="m_w"') && !b.includes('id="m_sleep"') && !b.includes('id="m_steps"') && c.includes('id="m_w"') && c.includes('id="m_sleep"') && !c.includes('id="m_steps"') && !c.includes('wp_rk');
+});
+tryc('wpisy: scenariusz prosty: po „Dodaj” przy wadze wiersz wagi ma ostatnie ważenie i wykres 14 dni', () => {
+  WP().reset(); view('day', T.scenS('prosty')); click({ unlock: 'waga' }); const h = card(mainHtml()), y = T.S().meas[dk(1)] || {};
+  const w14 = Array.from({ length: 14 }, (_, i) => (T.S().meas[dk(i + 1)] || {}).w).filter(Boolean).length;
+  return !!y.w && new RegExp('id="m_w"[^>]*>' + y.w.replace('.', ',') + ' kg<').test(h) && h.includes('wpisz dzisiejszą wagę') && h.includes('id="wp_spark"') && w14 === 14 && !!y.sleep;
+});
+tryc('wpisy: scenariusz wpisy: waga startuje od wczorajszych 80,4 kg, + dodaje 0,1 kg; opis scenariusza mówi o karcie', () => {
+  WP().reset(); const h = card(view('day', { ...T.scenS('wpisy'), lite: false })), R = wpS('w'), v = R.start.v;
+  return /id="m_w"[^>]*>80,4 kg</.test(h) && WP().step(R, v, 1) === 80.5 && /karta „Dziś”/.test(T.SCEN.wpisy.chk) && !/pod polem/.test(T.SCEN.wpisy.chk);
+});
+tryc('wpisy: sw.js i index.html znają wpisy.js przed app.js; wpisy-demo.js usunięty', () => /'\.\/wpisy\.js'/.test(fs.readFileSync(path.join(root, 'sw.js'), 'utf8')) && html.indexOf('wpisy.js') > 0 && html.indexOf('wpisy.js') < html.indexOf('app.js')
+  && !/wpisy-demo/.test(html + fs.readFileSync(path.join(root, 'sw.js'), 'utf8') + code) && !fs.existsSync(path.join(root, 'wpisy-demo.js')) && !code.includes('wpisydemo'));
+tryc('wpisy: html() bez skryptów i on...=, przyciski − i + bez zaznaczania tekstu i z szybkim dotykiem', () => { const h = card(wpDay({ [dk(1)]: { w: '80,4' }, [dk(2)]: { w: '80,6' } })); return h.length > 0 && !/<script|\son[a-z]+=/i.test(h) && /\.wp-sq(,[^{]*)?\{[^}]*touch-action:manipulation/.test(sysCss) && /\.wp-sq(,[^{]*)?\{[^}]*user-select:none/.test(sysCss); });
+// Nowe zwierzaki w aplikacji (20.11.2026): galeria demo usunięta, postacie w pet.js, wybór 4 gatunków z podpisem
+tryc('zwierzaki: zwierzaki-demo.js usunięty (plik, index.html, sw.js, app.js, CSS galerii), w scenariuszu prosty brak sekcji galerii', () => {
+  const swS = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
   T.setDemoN('prosty'); let demo; try { liteReset(); demo = view('day', { pet: null }); } finally { T.setDemoN(''); }
-  const i = demo.indexOf('<section id="zwdemo" aria-labelledby="zwdemo_h">');
-  return !plain.includes('id="zwdemo"') && !other.includes('id="zwdemo"') && i > demo.indexOf('id="wpisydemo"') && demo.indexOf('id="wpisydemo"') > 0
-    && demo.includes('<h2 id="zwdemo_h">Nowe zwierzaki do wyboru (demo)</h2>') && demo.includes('Własne postacie w stylu popularnych uroczych zwierzaków. Dotknij nastroju, żeby zobaczyć reakcję.');
+  return !fs.existsSync(path.join(root, 'zwierzaki-demo.js')) && !/zwierzaki-demo/.test(html + swS + code) && !/ZW_DEMO|zwdemo/.test(code) && !/zw-moods|zw-card|#zwdemo/.test(sysCss) && typeof sandbox.ZW_DEMO === 'undefined' && !demo.includes('zwdemo');
 });
-tryc('zwierzaki-demo: svg(gatunek, nastrój) dla 4 gatunków i 6 nastrojów ma role="img" i właściwy aria-label', () => {
-  const Z = sandbox.ZW_DEMO, bad = [];
-  for (const k of Object.keys(ZW_K)) for (const m of Object.keys(ZW_M)) { const s = Z.svg(k, m); if (!/^<svg[^>]*\srole="img"/.test(s) || !s.includes('aria-label="' + ZW_K[k] + ': ' + ZW_M[m] + '"') || !s.endsWith('</svg>') || /<script|\son[a-z]+=/i.test(s)) bad.push(k + '/' + m); }
-  if (bad.length) throw new Error(bad.join(' ')); return true;
+tryc('zwierzaki: wybór pokazuje 4 gatunki w kafelkach z podpisem, podgląd każdego, zatwierdzenie „Wybieram: …”', () => {
+  for (const tab of ['pet', 'set']) {
+    const h0 = view(tab, BASE({ pet: null }));
+    if (!KINDS.every((k) => h0.includes('data-petprev="' + k + '"') && h0.includes('>' + KIND_N[k] + '</button>')) || !/<div class="seg[^"]*" role="group" aria-label="Rodzaj towarzysza">/.test(h0)) throw new Error(tab + ': brak 4 kafelków');
+    for (const k of KINDS) { click({ petprev: k }); const h = view(tab); if (T.S().pet !== null || !h.includes('Wybieram: ' + KIND_N[k]) || !h.includes('aria-label="' + KIND_N[k] + ': ')) throw new Error(tab + ': podgląd ' + k); }
+    click({ petok: '1' }); if (!T.S().pet || T.S().pet.kind !== 'kotek' || !toastHtml().includes('Witaj, kotku!')) throw new Error(tab + ': zatwierdzenie kotka');
+    const h1 = view(tab); if (tab === 'set' && !KINDS.every((k) => h1.includes('data-petkind="' + k + '"'))) throw new Error('zmiana rodzaju: brak 4 kafelków');
+  }
+  return true;
 });
-tryc('zwierzaki-demo: seria ma 3 serduszka, drzemka „z z”, ciekawość przechyla główkę, radość oczy-łuki', () => {
-  const S = sandbox.ZW_DEMO.svg; return Object.keys(ZW_K).every((k) => (S(k, 'seria').match(/class="zw-heart/g) || []).length === 3 && (S(k, 'spokoj').match(/class="zw-heart/g) || []).length === 0
-    && (S(k, 'drzemka').match(/class="zw-z/g) || []).length === 2 && /class="zw-head"[^>]*rotate\(-12/.test(S(k, 'ciekawosc')) && S(k, 'radosc').includes('zw-arc') && !S(k, 'spokoj').includes('zw-arc'));
+tryc('zwierzaki: zmiana rodzaju na kapibarę działa, nieznany rodzaj z kliknięcia jest ignorowany', () => { view('set', BASE({})); click({ petkind: 'kapibara' }); const a = T.S().pet.kind; click({ petkind: 'zebra' }); return a === 'kapibara' && T.S().pet.kind === 'kapibara'; });
+tryc('zwierzaki: kopia z kind kaczka zostaje kaczuszką, nieznany rodzaj z kopii to gąska (load)', () => {
+  const g = sandbox.localStorage.getItem, at = (kind) => { sandbox.localStorage.getItem = () => JSON.stringify({ onb: true, pet: { kind, name: 'A', since: '2026-11-01' } }); try { return T.load().pet.kind; } finally { sandbox.localStorage.getItem = g; } };
+  return at('kaczka') === 'kaczka' && at('kotek') === 'kotek' && at('x"><img>') === 'gaska' && at(7) === 'gaska';
 });
-tryc('zwierzaki-demo: html() ma 4 karty, 6 nastrojów z aria-pressed, ogłoszenie aria-live, bez skryptów i on...=', () => {
-  const h = sandbox.ZW_DEMO.html(), moods = ['Spokój', 'Radość', 'Zapis!', 'Seria', 'Drzemka', 'Ciekawość'];
-  return (h.match(/class="zw-card"/g) || []).length === 4 && (h.match(/aria-pressed="/g) || []).length === 6 && (h.match(/aria-pressed="true"/g) || []).length === 1
-    && moods.every((m) => h.includes('>' + m + '</button>')) && /aria-live="polite"/.test(h) && !/<script|\son[a-z]+=/i.test(h) && Object.values(ZW_K).every((n) => h.includes(n + ': spokój'));
-});
-tryc('zwierzaki-demo: sw.js i index.html znają zwierzaki-demo.js, skrypt przed app.js; CSS z prefers-reduced-motion i kolorami w obu motywach', () => {
+tryc('zwierzaki: teksty wyboru wymieniają 4 gatunki, bez „obu” i „drugiego”', () => { const h = view('pet', BASE({ pet: null })); return h.includes('Gąska, kaczuszka, kapibara albo kotek') && !/porównać oba|Dotknij drugiego/.test(h) && T.guideSteps().find((x) => x.id === 'pet').hint.includes('kapibara'); });
+tryc('zwierzaki: CSS kolorów postaci w obu motywach, ruch wyłączony przy prefers-reduced-motion (postać i napis reakcji)', () => {
   const b = themeBlocks(), zw = (blk) => [...blk.matchAll(/--zw-[a-z0-9-]+(?=:)/g)].map((m) => m[0]).sort().join();
-  return /\.\/zwierzaki-demo\.js/.test(fs.readFileSync(path.join(root, 'sw.js'), 'utf8')) && html.indexOf('zwierzaki-demo.js') > 0 && html.indexOf('zwierzaki-demo.js') < html.indexOf('app.js')
-    && /prefers-reduced-motion:\s*reduce\)\{[^}]*\.zw-svg/.test(sysCss) && zw(b.light).length > 0 && zw(b.light) === zw(b.dark) && zw(b.light) === zw(b.darkMq);
+  return zw(b.light).length > 0 && zw(b.light) === zw(b.dark) && zw(b.light) === zw(b.darkMq) && /prefers-reduced-motion:\s*reduce\)\{[^}]*\.pet,\.pet \*\{animation:none/.test(sysCss) && /prefers-reduced-motion:\s*reduce\)\{[^@]*\.petfx\{[^}]*animation:none/.test(sysCss);
+});
+tryc('zwierzaki: przy ograniczeniu ruchu reakcja to krótki napis zamiast ruchu (bez klasy react-*)', () => {
+  const mm = sandbox.matchMedia; sandbox.matchMedia = (q) => ({ matches: /reduce/.test(q) }); fx.cls.length = 0; fx.fx.length = 0;
+  try { P().react('weigh'); withPet(true, () => P().flush()); P().react('habit', 10); withPet(true, () => P().flush()); P().react('urge'); withPet(true, () => P().flush()); } finally { sandbox.matchMedia = mm; }
+  return !fx.cls.some((c) => /^react-/.test(c)) && fx.fx.some((h) => /class="petfx still"[^>]*aria-hidden="true"[^>]*>Zanotowane</.test(h)) && !fx.fx.some((h) => /role="status"/.test(h)) && fx.fx.some((h) => />\+10 pkt</.test(h)) && fx.fx.some((h) => />Zapisane</.test(h));
+});
+// Runda 2 (20.11.2026): poprawki z przeglądu karty „Dziś”, suwak kroków w szybkim wpisie, suwaki skal 0-10, bez liczby dotknięć w tekstach, kafelki
+const fakeSS = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); }, _m: m }; };
+tryc('r2 wpisy: „Zatwierdź (N)” zapisuje tylko zmienione wiersze, N to liczba zapisywanych; reakcja wagi tylko przy zapisie wagi', () => {
+  wpDay({ [dk(1)]: { w: '80,4', sleep: '6:13', steps: '8500' } }); wpD().k = 9000; const o = wpSet(wpD()), lab = card(view('day', {}));
+  T.wpCommit(o.vals, o); const t = T.S().meas[dk(0)];
+  return Object.keys(o.vals).join() === 'k' && o.vals.k === 9000 && o.copied.length === 0 && lab.includes('>Zatwierdź (1)<') && t.steps === '9000' && t.w === undefined && t.sleep === undefined && !t.cp;
+});
+tryc('r2 wpisy: „Jak wczoraj” zapisuje tylko wiersze z ostatnią wartością, nigdy wagi (ani ostatniej, ani z profilu)', () => {
+  wpDay({ [dk(1)]: { sleep: '7:00', w: '80,1' } }, { touched: { kg: true } }); const o = wpSet(), h = card(view('day', {}));
+  return Object.keys(o.vals).join() === 's' && h.includes('>Jak wczoraj<');
+});
+tryc('r2 wpisy: „jak wczoraj?” i „Jak wczoraj” tylko dla wartości z wczoraj, starsza to „jak ostatnio?” i „Jak ostatnio”', () => {
+  const a = card(wpDay({ [dk(1)]: { sleep: '7:00' } })), b = card(wpDay({ [dk(3)]: { sleep: '7:00' } })), c = card(wpDay({ [dk(1)]: { sleep: '7:00' }, [dk(4)]: { steps: '8000' } }));
+  const L = WP().mainLabel, o = { changed: 0, saved: false, summaryOpen: false, hasYesterday: true, msSinceSave: 0 };
+  return a.includes('jak wczoraj?') && a.includes('>Jak wczoraj<') && b.includes('jak ostatnio?') && !b.includes('jak wczoraj?') && b.includes('>Jak ostatnio<')
+    && c.includes('jak wczoraj?') && c.includes('jak ostatnio?') && c.includes('>Jak ostatnio<') && L({ ...o, yday: false }) === 'Jak ostatnio' && L(o) === 'Jak wczoraj';
+});
+tryc('r2 wpisy: wartości robocze w sessionStorage z kluczem dnia, odtworzone po przeładowaniu, czyszczone po zapisie i przy zmianie dnia', () => {
+  const ss = fakeSS(), o = sandbox.sessionStorage; sandbox.sessionStorage = ss;
+  try {
+    wpDay({ [dk(1)]: { w: '80,4' } }); WP().edit(T.wpCfg(), 'w', '81,2');
+    const raw = JSON.parse(ss.getItem('miara-wpisy:wp') || 'null');
+    WP().reset(true); const back = card(view('day', {}));
+    WP().markSaved('wp', T.todayKey(), { w: 81.2 }); const cleared = ss.getItem('miara-wpisy:wp') === null;
+    WP().edit(T.wpCfg(), 'w', '81,6'); const kept = !!ss.getItem('miara-wpisy:wp'); WP().reset(true); WP().card({ ...T.wpCfg(), day: '2000-01-01' }); const other = ss.getItem('miara-wpisy:wp');
+    return raw && raw.day === T.todayKey() && raw.draft.w === 81.2 && /id="m_w"[^>]*>81,2 kg</.test(back) && cleared && kept && other === null;
+  } finally { sandbox.sessionStorage = o; WP().reset(); }
+});
+tryc('r2 wpisy: bez sessionStorage (albo z wyjątkiem) karta działa', () => {
+  const o = sandbox.sessionStorage; sandbox.sessionStorage = { getItem() { throw new Error('x'); }, setItem() { throw new Error('x'); }, removeItem() { throw new Error('x'); } };
+  try { wpDay({}); WP().edit(T.wpCfg(), 'w', '81'); return /id="m_w"[^>]*>81,0 kg</.test(card(view('day', {}))); } finally { sandbox.sessionStorage = o; WP().reset(); }
+});
+tryc('r2 wpisy: świeża wartość z importu (Skrót) czyści wartość roboczą tego wiersza, inne zostają', () => {
+  wpDay({ [dk(1)]: { w: '80,4', steps: '8500' } }); const d = wpD(); WP().edit(T.wpCfg(), 'w', '81,2'); WP().edit(T.wpCfg(), 'k', '9000');
+  T.S().imp = { date: T.todayKey(), vals: { w: '79,0' }, bad: [] }; click({ impsave: '1' }); const h = card(view('day', {}));
+  return /id="m_w"[^>]*>79,0 kg</.test(h) && d.w === undefined && /id="m_steps"[^>]*>9.000</.test(h);
+});
+tryc('r2 wpisy: wartość skopiowana (meas.cp) nie liczy się jako pomiar w dataGap i measuredTdee; zmiana wiersza zdejmuje znacznik kopii', () => {
+  wpDay({}); const S = T.S(); S.meas[dk(2)] = { w: '80', cp: ['w'] }; S.meas[dk(3)] = { w: '80' }; const g = T.dataGap().w;
+  wpDay({ [dk(1)]: { sleep: '7:00' } }); const o = wpSet(); T.wpCommit(o.vals, o); const a = T.S().meas[dk(0)].cp.join(); T.wpCommit({ s: 480 }, { copied: [] });
+  return g === 1 && a === 'sleep' && T.S().meas[dk(0)].cp === undefined && T.measCp({ cp: ['sleep'] }, 'sleep') && !T.measCp({}, 'sleep') && /measCp\(m,'w'\)/.test(code.slice(code.indexOf('function measuredTdee('), code.indexOf('function measuredTdee(') + 400));
+});
+tryc('r2 wpisy: „Cofnij” tak długo jak komunikat, co najmniej 5 s; „do zamknięcia” do następnej zmiany; drugie dotknięcie zaraz po zapisie ignorowane', () => {
+  const S = T.S(), o = S.toastLen; try { S.toastLen = 'std'; const a = T.wpGrace(); S.toastLen = 'long'; const b = T.wpGrace(); S.toastLen = 'stay'; const c = T.wpGrace(); return a === 5000 && b >= 6000 && c === Infinity && /AGAIN = 700/.test(fs.readFileSync(path.join(root, 'wpisy.js'), 'utf8')); } finally { S.toastLen = o; }
+});
+tryc('r2 kafelki: bez obserwatora całego dokumentu; napisy kafelków po render()', () => !/MutationObserver/.test(code) && /tileLabels\(document\.getElementById\('main'\)\)/.test(code));
+tryc('r2 wpisy: kontrast: fokus karty w kolorze lasu, obramowania − i + oraz linia dni wykresu w --edge', () => /\.wp-sq,\.wp-chg\{[^}]*border:1px solid var\(--edge\)/.test(sysCss) && /\.wp-main:focus-visible\{outline:3px solid var\(--green\)/.test(sysCss) && !/wp-[a-z]+:focus-visible[^{]*\{outline:3px solid var\(--brass\)/.test(sysCss) && /stroke="var\(--edge\)"/.test(fs.readFileSync(path.join(root, 'wpisy.js'), 'utf8')));
+// Suwak kroków w szybkim wpisie (prosty widok)
+tryc('r2 szybki wpis: kroki to wiersz z suwakiem 0-20 000 co 500, − i +, wartością do wpisu; bez żetonów zakresu', () => {
+  liteReset(); T.S().meas[dk(1)] = { steps: '7431' }; const h = view('day', {}), i = h.indexOf('id="lite"'), sec = h.slice(i, h.indexOf('</section>', i));
+  return /<input class="wp-range" type="range" id="q_rsteps" min="0" max="20000" step="500"/.test(sec) && sec.includes('data-wp="pm:steps:-1"') && sec.includes('data-wp="pm:steps:1"')
+    && /<button class="wp-val wp-y" id="q_steps" data-wp="edit:steps"[^>]*>7.431</.test(sec) && sec.includes('jak ostatnio?') && !sec.includes('data-lite="stepsB:');
+});
+tryc('r2 szybki wpis: dzień liczy się dopiero po dotknięciu kroków; liczba z suwaka to meas.steps, jak w Pomiarach dnia', () => {
+  liteReset(); const k = LK(); T.S().meas[dk(1)] = { steps: '7431' }; view('day', {}); click({ lite: 'feel:dobrze' }); click({ lite: 'redz:0' });
+  const before = T.liteFull(k); T.qSet('steps', 7500); const m = T.S().meas[k];
+  return !before && m.steps === '7500' && T.liteFull(k) && T.stepsBand(k) === 'mid' && T.num(m.steps) === 7500;
+});
+tryc('r2 szybki wpis: 0 kroków to też wpis (zakres lo); stare dni z stepsB działają', () => {
+  liteReset(); const k = LK(); T.qSet('steps', 0); const a = T.stepsBand(k); const S = T.S(); S.meas.x = { stepsB: 'hi' };
+  return T.S().meas[k].steps === '0' && a === 'lo' && T.stepsBand('x') === 'hi';
+});
+// Suwaki skal 0-10
+const scaleOf = (h, id) => { const i = h.indexOf('data-wpk="' + id + '"'); return i < 0 ? '' : h.slice(h.lastIndexOf('<div', i), h.indexOf('</div></div>', i) + 12); };
+tryc('r2 skale: ból i ciężkość nóg to suwaki 0-10 co 1 z podpisami końców i aria-valuetext „X z 10”; bez 22 żetonów', () => {
+  const S0 = BASE({ lite: false, sex: 'K', lip: true, legs: { [dk(9)]: { b: 5, c: 4 } } }), h = view('day', S0), b = scaleOf(h, 'legb');
+  return /<input class="wp-range" type="range" id="q_rlegb" min="0" max="10" step="1" value="5"[^>]*aria-valuetext="5 z 10[",]/.test(h) && h.includes('id="q_rlegc"')
+    && b.includes('0 brak') && b.includes('10 najgorszy') && /class="wp-val[^"]* wp-y"[^>]*>5</.test(b) && b.includes('ostatnio: 5') && !h.includes('data-leg="b:');
+});
+tryc('r2 skale: zapis po dotknięciu w tym samym formacie (nogi, brzuch, kolano, stopa)', () => {
+  view('day', BASE({ sex: 'K', lip: true, legs: {} })); T.qSet('leg:b', 4); T.qSet('leg:c', 6); const L = T.S().legs[dk(0)];
+  T.qSet('gutb', 7); const g = T.S().gut[dk(0)]; T.S().knee = T.S().knee || {}; T.qSet('kpain', 3); T.qSet('footpain', 2);
+  return L.b === 4 && L.c === 6 && g.b === 7 && T.S().knee.tmpPain === 3 && T.S().insole.pain[dk(0)] === 2;
+});
+tryc('r2 skale: wzdęcie, ból kolana i ból stopy też jako suwaki', () => {
+  const g = view('day', BASE({ lite: false, prof: { cond: { gut: true }, pill: '' }, gut: { [dk(1)]: { b: 3 } } }));
+  const f = view('mob', BASE({ prof: { cond: { flat: true }, pill: '' }, insole: { days: {}, pain: {} } }));
+  return g.includes('id="q_rgutb"') && !g.includes('data-gutb="') && g.includes('ostatnio: 3') && g.includes('10 najgorsze') && f.includes('id="q_rfootpain"') && !f.includes('data-footpain="')
+    && /scaleHtml\('kpain'/.test(code) && !/data-kpain="\$\{v\}"/.test(code);
+});
+// Bez liczby dotknięć w tekstach karty
+tryc('r2 teksty: w repozytorium nie ma liczby dotknięć karty (cyfrą ani słowem, także w testach i komentarzach)', () => {
+  const bad = [], walk = (d) => { for (const f of fs.readdirSync(d, { withFileTypes: true })) { if (['node_modules', '.git', 'test-results', 'playwright-report', '.superpowers'].includes(f.name)) continue; const p = path.join(d, f.name); if (f.isDirectory()) walk(p); else if (/\.(js|html|css|md|json)$/.test(f.name) && new RegExp('(3|trzy) dotkni' + 'ę', 'i').test(fs.readFileSync(p, 'utf8'))) bad.push(path.relative(root, p)); } };
+  walk(root); if (bad.length) throw new Error(bad.join(', ')); return true;
+});
+tryc('r2 teksty: karta „Szybki wpis dnia”, scenariusz „Prosty start: szybki wpis”, ekran startowy „Zacznij od szybkiego wpisu”', () => {
+  liteReset(); const h = view('day', {}), i = view('intro', { onb: false }); T.S().onb = true;
+  return h.includes('Szybki wpis dnia') && T.SCEN.prosty.t === 'Prosty start: szybki wpis' && !/dotknię/.test(T.SCEN.prosty.chk) && i.includes('Zacznij od szybkiego wpisu');
+});
+// Kafelki: zawijanie po polsku, wyrównanie długich opcji, ramka kafelka w kafelku, zapas bez :has()
+tryc('r2 kafelki: <html lang="pl">, napisy kafelków z hyphens:auto, długie opcje (.chip.opt) wyrównane do lewej', () => /<html lang="pl">/.test(html) && /\.chip \.lbl,\.seg button \.lbl\{[^}]*hyphens:auto/.test(sysCss) && /\.chip \.lbl,\.seg button \.lbl\{[^}]*-webkit-hyphens:auto/.test(sysCss)
+  && /\.chip\.opt \.lbl\{[^}]*justify-items:start[^}]*text-align:start/.test(sysCss));
+tryc('r2 kafelki: niewybrany kafelek w kafelku ma obramowanie --edge (WCAG 1.4.11), wybrany obrys inset', () => /:is\(\.panel,\.fold,\.note,\.petcard,\.card\) :is\(\.chip,\.seg button\):not\(\.inc\):not\(\.exc\):not\(\.on\)(:not\(#_\))?\{[^}]*border:1px solid var\(--edge\)/.test(sysCss));
+tryc('r2 kafelki: bez obsługi :has() 2 opcje bez pustej kolumny (auto-fit)', () => /@supports not selector\(:has\(\*\)\)\{[^@]*\.chips,\.seg\{grid-template-columns:repeat\(auto-fit,/.test(sysCss));
+tryc('r2 kafelki: liczba kolumn zmniejsza się, gdy najdłuższe słowo nie mieści się w kafelku (bez dzielenia słowa)', () => /function tileFit\(/.test(code) && /--cols/.test(code.slice(code.indexOf('function tileFit('), code.indexOf('function tileFit(') + 1500)));
+// Runda 3 (20.11.2026): dotknięcie suwaka bez przesunięcia nigdy nie zapisuje wartości typowej
+tryc('r3 suwak: dotknięcie bez przesunięcia zapisuje tylko ostatnią wartość kroków (jako kopię z komunikatem), nigdy typowej ani skali', () => {
+  const t = WP().tapSave, base = { key: 'steps', label: 'Kroki', fmt: (v) => String(v), copyTap: true };
+  const a = t({ ...base, start: { v: 5000, src: 'default' } }), b = t({ ...base, start: { v: 7431, src: 'last' } }), c = t({ ...base, start: { v: 7, src: 'today' } }), d = t({ key: 'legb', label: 'Ból nóg', fmt: String, start: { v: 4, src: 'last' } });
+  return !a.save && a.hint === 'przesuń, żeby wpisać' && b.save && b.v === 7431 && b.copied && b.msg === 'Zapisano jak ostatnio: 7431' && !c.save && !c.hint && !d.save && d.hint === 'przesuń, żeby wpisać';
+});
+tryc('r3 szybki wpis: kopia kroków ma znacznik meas.cp, prawdziwa wartość go zdejmuje', () => {
+  liteReset(); const k = LK(); T.qSet('steps', 7431, { copied: true }); const a = (T.S().meas[k].cp || []).join(); T.qSet('steps', 8000); const m = T.S().meas[k];
+  return a === 'steps' && m.steps === '8000' && !T.measCp(m, 'steps') && m.cp === undefined;
+});
+tryc('r3 kafelki: kolumny liczone ponownie po załadowaniu czcionek', () => /document\.fonts&&document\.fonts\.ready/.test(code) && /fonts\.ready\.then\(\(\)=>tileFit\(/.test(code));
+// Zadanie 2 (20.11.2026): zwierzak reaguje na wpisy w Zdrowiu (rada): bez nagradzania bólu, bez oceny wyników badań, tryb dyskretny
+const HR = (...a) => T.healthReact(...a);
+tryc('healthReact: skład ciała, obwody, nadgarstek, kostka, VO2max i tętno to „note”; ten sam wpis albo puste pole to brak reakcji', () => ['ffm', 'fat', 'waist', 'hip', 'thigh', 'frame.wrist', 'frame.ankle', 'vo2', 'hrRest', 'hrMax'].every((k) => HR(k, '50', '', {}) === 'note')
+  && HR('meas.' + dk(0) + '.ffm', '55,2', '54', {}) === 'note' && HR('meas.' + dk(0) + '.waist', '80', '80', {}) === null && HR('meas.' + dk(0) + '.fat', '', '20', {}) === null && HR('meas.' + dk(0) + '.w', '80', '', {}) === null);
+tryc('healthReact: pomiar obwodów lub składu ciała, gdy był zalecany, to „series”; VO2max, tętno i nadgarstek zostają „note”', () => ['ffm', 'fat', 'waist', 'hip', 'thigh'].every((k) => HR('meas.' + dk(0) + '.' + k, '60', '', { due: true }) === 'series') && HR('vo2', '40', '', { due: true }) === 'note' && HR('frame.wrist', '16', '', { due: true }) === 'note');
+tryc('healthReact: wynik badania w zakresie „note”, poza zakresem brak reakcji', () => HR('lab', '2,1', null, { out: false }) === 'note' && HR('lab', '9', null, { out: true }) === null);
+tryc('healthReact: ból głowy „rest”, w trybie dyskretnym brak reakcji; cykl w trybie dyskretnym i odznaczony brak reakcji', () => HR('pain', 'today', null, {}) === 'rest' && HR('pain', 'today', null, { discreet: true }) === null && HR('cyc', '2', '', { discreet: true }) === null && HR('cyc', '', '2', {}) === null && HR('cyc', '2', '', {}) === 'note');
+tryc('healthReact: wzdęcie, ból i ciężkość nóg od 5 to „rest”, poniżej 5 i ponowny wpis od 5 bez reakcji; pieczenie w nadbrzuszu „rest”, objawy alarmowe bez reakcji', () => HR('gutb', 5, 3, {}) === 'rest' && HR('gutb', 4, 2, {}) === null && HR('gutb', 7, 6, {}) === null
+  && HR('leg:b', 6, null, {}) === 'rest' && HR('leg:c', 5, 1, {}) === 'rest' && HR('leg:b', 2, null, {}) === null && HR('gutu', 'piecze', null, {}) === 'rest' && HR('gutu', 'zgaga', null, {}) === null && HR('guta', 'krew', null, {}) === null);
+tryc('bodyDue: obwody zalecane bez pomiaru w 13 poprzednich dniach, skład ciała bez pomiaru w 27 dniach; dzisiejszy wpis się nie liczy', () => {
+  const S = T.S(), at = (meas, key) => { S.meas = meas; return T.bodyDue('meas.' + dk(0) + '.' + key); };
+  return at({}, 'waist') === true && at({ [dk(5)]: { hip: '100' } }, 'waist') === false && at({ [dk(15)]: { waist: '80' } }, 'thigh') === true && at({ [dk(0)]: { waist: '80' } }, 'waist') === true
+    && at({ [dk(20)]: { fat: '25' } }, 'ffm') === false && at({ [dk(30)]: { ffm: '50' } }, 'ffm') === true && at({}, 'vo2') === false;
+});
+const hrFlush = () => { fx.cls.length = 0; fx.fx.length = 0; withPet(true, () => P().flush()); return { cls: fx.cls.slice(), fx: fx.fx.join(' ') }; };
+tryc('reakcje Zdrowia: „Boli mnie głowa” daje przytulenie i napis „Odpocznij dziś”, bez serduszek i punktów, bez zmiany serii i odznak; w trybie dyskretnym nic', () => {
+  hrFlush(); view('day', BASE({ pain: {} })); click({ pain: 'today' }); const k = dk(0), c0 = T.petCtx(), pts = c0.dayPts(k), sk = c0.streak(), seen = JSON.stringify(T.S().petSeen), r = hrFlush(), c1 = T.petCtx();
+  const okA = r.cls.includes('react-rest') && />Odpocznij dziś</.test(r.fx) && !/♥|\+\d/.test(r.fx) && c1.dayPts(k) === pts && c1.streak() === sk && JSON.stringify(T.S().petSeen) === seen;
+  view('day', BASE({ pain: {}, discreet: true })); click({ pain: 'today' }); const d = hrFlush();
+  return okA && d.cls.length === 0 && !d.fx.includes('Odpocznij');
+});
+tryc('reakcje Zdrowia: „rest” nie dodaje punktów (dayPts jak przy tym samym wpisie bez reakcji)', () => {
+  hrFlush(); view('day', BASE({ pain: {} })); const k = dk(0); click({ pain: 'today' }); const a = T.petCtx().dayPts(k); hrFlush(); const b = T.petCtx().dayPts(k);
+  view('day', BASE({ pain: { [k]: { aura: false, med: false } } })); const c = T.petCtx().dayPts(k); return a === b && b === c;
+});
+tryc('reakcje Zdrowia: cykl poza trybem dyskretnym „Zanotowane”, w dyskretnym bez reakcji', () => { hrFlush(); view('health', BASE({ sex: 'K', discreet: false })); T.S().meas[dk(0)] = {}; click({ cyc: '2' }); const a = hrFlush(); view('health', BASE({ sex: 'K', discreet: true })); T.S().meas[dk(0)] = {}; click({ cyc: '3' }); const b = hrFlush(); return a.fx.includes('Zanotowane') && b.cls.length === 0 && b.fx === ''; });
+tryc('reakcje Zdrowia: wzdęcie 6 suwakiem daje „Odpocznij dziś”, wzdęcie 2 nic', () => { hrFlush(); view('day', BASE({ gut: {} })); T.qSet('gutb', 6); const a = hrFlush(); T.S().gut = {}; T.qSet('gutb', 2); const b = hrFlush(); return a.fx.includes('Odpocznij dziś') && b.fx === '' && b.cls.length === 0; });
+tryc('reakcje Zdrowia: ból nóg 7 suwakiem daje „Odpocznij dziś”', () => { hrFlush(); view('day', BASE({ legs: {} })); T.qSet('leg:b', 7); return hrFlush().fx.includes('Odpocznij dziś'); });
+tryAsync('reakcje Zdrowia: wpis FFM w polu daje „Zanotowane”, zalecany pomiar obwodu daje serduszka', async () => {
+  const k = dk(0); hrFlush(); view('health', BASE({ meas: { [dk(3)]: { ffm: '50', fat: '25' } } }));
+  T.S().meas[k] = {}; const el = inp('m_ffm', 'meas.' + k + '.ffm', '', 'decimal'); fire('focusin', el); el.value = '51,5'; fire('input', el); fire('focusout', el); await tick(); const a = hrFlush();
+  const w = inp('m_waist', 'meas.' + k + '.waist', '', 'decimal'); fire('focusin', w); w.value = '82'; fire('input', w); fire('focusout', w); await tick(); const b = hrFlush();
+  if (!a.fx.includes('Zanotowane') || !a.cls.includes('react-note')) throw new Error('ffm: ' + JSON.stringify(a));
+  return b.cls.includes('react-series') && /♥/.test(b.fx) && (els.sr || {}).textContent === 'Serduszka: pomiar w zalecanym terminie';
+});
+tryc('reakcje Zdrowia: zapis wyniku badania w zakresie „Zanotowane”, poza zakresem bez reakcji', () => {
+  const save = (val) => { hrFlush(); view('labs', BASE({ labs: [], labSel: 'tsh' })); Object.entries({ l_val: val, l_date: dk(0), l_unit: 'mIU/l' }).forEach(([id, v]) => { sandbox.document.getElementById(id).value = v; }); sandbox.document.getElementById('l_fast').checked = false; click({ labsave: '1' }); return hrFlush(); };
+  const a = save('2'), b = save('40'); if (!a.fx.includes('Zanotowane')) throw new Error('w zakresie: ' + JSON.stringify(a)); return T.S().labs.length === 1 && b.fx === '' && b.cls.length === 0;
+});
+// Poprawki po przeglądzie zadania 1
+tryc('pet: dla kotka bez imienia domyślnie „Mruczek”, pozostałe „Kluska”, nadane imię zostaje', () => P().nameOf({ kind: 'kotek', name: '' }) === 'Mruczek' && P().nameOf({ kind: 'kapibara', name: '' }) === 'Kluska' && P().nameOf({ kind: 'kotek', name: 'Kluska' }) === 'Kluska'
+  && (() => { const c = mkCtx({ name: '' }); c.pet.kind = 'kotek'; return st(c).line.startsWith('Mruczek'); })());
+tryc('pet.flush: każdy napis ma własne id i usuwa dokładnie siebie', () => { const h = []; const host = { insertAdjacentHTML: (_, x) => h.push(x), querySelector: () => null }; const el = { classList: { add() {}, remove() {} }, closest: () => host }; const q = sandbox.document.querySelector; sandbox.document.querySelector = (s) => (s === '#main .pet' ? el : null); try { P().react('habit', 5); P().flush(); P().react('habit', 6); P().flush(); } finally { sandbox.document.querySelector = q; } const ids = h.map((x) => (x.match(/id="(petfx\d+)"/) || [])[1]); return ids.length === 2 && !!ids[0] && !!ids[1] && ids[0] !== ids[1] && !/querySelector\('\.petfx'\)/.test(fs.readFileSync(path.join(root, 'pet.js'), 'utf8')); });
+tryc('pet.svg: bez EXPR.zapis i bez zmiennych --goose/--goose-line w CSS; obrys gąski w jasnym motywie co najmniej 3:1 do powierzchni', () => {
+  const pet = fs.readFileSync(path.join(root, 'pet.js'), 'utf8'), b = themeBlocks(), hex = (blk, n) => (blk.match(new RegExp('--' + n + ':(#[0-9A-Fa-f]{6})')) || [])[1];
+  const L = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const cr = (a, c) => { const x = L(a), y = L(c); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  return !/zapis:/.test(pet) && !/--goose(-line)?[:)]/.test(sysCss) && cr(hex(b.light, 'zw-goose-ln'), hex(b.light, 'surface')) >= 3;
+});
+// Poprawki po przeglądzie zadania 2
+const srText = () => (els.sr || {}).textContent || '';
+tryc('reakcje Zdrowia: suwaki 0-10 nóg i wzdęcia (zapis qSet) dają „Odpocznij dziś”, ponowne od 5 i poniżej 5 nic', () => {
+  hrFlush(); view('day', BASE({ legs: {}, gut: {} })); T.qSet('leg:b', 6); const a = hrFlush(); T.qSet('leg:b', 8); const b = hrFlush(); T.qSet('leg:c', 2); const c = hrFlush();
+  T.qSet('gutb', 7); const g = hrFlush(); T.qSet('gutb', 9); const g2 = hrFlush(); T.S().gut = {}; T.qSet('gutb', 3); const g3 = hrFlush();
+  return a.fx.includes('Odpocznij dziś') && b.fx === '' && c.fx === '' && g.fx.includes('Odpocznij dziś') && g2.fx === '' && g3.fx === '' && T.S().legs[dk(0)].b === 8 && T.S().gut[dk(0)].b === 3;
+});
+tryc('reakcje: tekst ogłaszany przez istniejący region na żywo #sr, napis na karcie bez role=status i ukryty dla czytnika', () => {
+  hrFlush(); els.sr && (els.sr.textContent = ''); view('day', BASE({ pain: {} })); click({ pain: 'today' }); const r = hrFlush();
+  const ok1 = srText() === 'Odpocznij dziś' && !/role="status"/.test(r.fx) && /aria-hidden="true"/.test(r.fx);
+  P().react('series'); const s2 = hrFlush(); return ok1 && srText() === 'Serduszka: pomiar w zalecanym terminie' && !/role="status"/.test(s2.fx);
+});
+tryc('reakcje Zdrowia: „Boli mnie głowa” drugi raz tego samego dnia bez ponownej reakcji', () => { hrFlush(); view('day', BASE({ pain: {} })); click({ pain: 'today' }); const a = hrFlush(); click({ pain: 'today' }); const b = hrFlush(); return a.fx.includes('Odpocznij dziś') && b.fx === '' && b.cls.length === 0; });
+tryAsync('reakcje Zdrowia: ta sama wartość w innym zapisie (52.4 i 52,4) bez reakcji', async () => {
+  const k = dk(0); hrFlush(); view('day', BASE({ meas: { [k]: { ffm: '52.4' } } }));
+  const el = inp('m_ffm', 'meas.' + k + '.ffm', '52.4', 'decimal'); fire('focusin', el); el.value = '52,4'; fire('input', el); fire('focusout', el); await tick(); const a = hrFlush();
+  return a.fx === '' && a.cls.length === 0;
+});
+tryc('bodyDue: komentarz wskazuje rytm z podsumowania (obwody co 2 tygodnie, skład ciała co 4 tygodnie)', () => /co 2 tygodnie[^\n]*co 4[^\n]*\n(\/\/[^\n]*\n)*function bodyDue\(/.test(code));
+// Runda końcowa (20.11.2026): pole wpisu bez zmiany nie zgaduje, kopie pomijane w średnich, martwe obsługi usunięte
+tryc('rk wpisy: pole wpisu zamknięte bez zmiany: typowa nic, ostatnia kroków jako kopia, zmiana zapisuje, dzisiejsza bez zmiany nic', () => {
+  const o = WP().editOutcome, B = { key: 'steps', copyTap: true, fmt: String };
+  return o({ ...B, today: null, start: { v: 5000, src: 'default' } }, 5000).kind === 'none' && o({ ...B, today: null, start: { v: 7431, src: 'last' } }, 7431).kind === 'copy'
+    && o({ ...B, today: null, start: { v: 7431, src: 'last' } }, 8000).kind === 'put' && o({ ...B, today: 6000, start: { v: 6000, src: 'today' } }, 6000).kind === 'none'
+    && o({ key: 'legb', fmt: String, today: null, start: { v: 4, src: 'last' } }, 4).kind === 'none' && o({ ...B, today: null, start: { v: 5000, src: 'default' } }, 5500).kind === 'put';
+});
+tryc('rk kopie: sen i kroki skopiowane (meas.cp) pomijane w sleepAt i średnich 7 dni; import ze Skrótu zdejmuje znacznik', () => {
+  wpDay({}); const S = T.S(); S.meas[dk(1)] = { sleep: '5:00', steps: '2000', cp: ['sleep', 'steps'] }; S.meas[dk(2)] = { sleep: '8:00', steps: '9000' };
+  const a = T.sleepAt(dk(1)), b = T.avgAgo(0, 7, 'sleep'), c = T.avgAgo(0, 7, 'steps');
+  S.meas[dk(0)] = { sleep: '6:00', cp: ['sleep'] }; S.imp = { date: dk(0), vals: { sleep: '7,5' }, bad: [] }; click({ impsave: '1' }); const m = T.S().meas[dk(0)];
+  return a === null && b === 8 && c === 9000 && m.sleep === '7:30' && !T.measCp(m, 'sleep');
+});
+tryc('rk skale: suwak 0-10 opisany podpowiedzią i ukrytym tekstem końców; niezapisana ostatnia wartość ogłaszana jako „ostatnio, niezapisane”', () => {
+  const h = view('day', BASE({ lite: false, sex: 'K', lip: true, legs: { [dk(9)]: { b: 5, c: 4 } } }));
+  return /id="q_rlegb"[^>]*aria-describedby="q_hlegb q_dlegb q_nlegb"/.test(h) && /<span class="wp-sr" id="q_nlegb">0 brak, 10 najgorszy<\/span>/.test(h) && /id="q_rlegb"[^>]*aria-valuetext="5 z 10, ostatnio, niezapisane"/.test(h);
+});
+tryc('rk martwy kod: bez obsług d.leg, d.kpain, d.footpain, d.gutb i gałęzi snu w stpApply/stpDone', () => !/d\.leg\b|d\.kpain|d\.footpain|d\.gutb/.test(code) && !/setPath\(k,f==='sleep'/.test(code) && !/\^meas\\.\[\^\.\]\+\\.sleep\$\/\.test\(k\)&&v>=7/.test(code));
+tryc('rk wersja publiczna: rytm składu ciała co 4 tygodnie raz w tekście podsumowania (z nazwą wagi w wersji prywatnej albo „pomiar BIA” w publicznej), komentarze przy bodyDue bez nazwy wagi', () => { const BR = 'Tani' + 'ta', i = code.indexOf('function bodyDue('); return code.split(BR + ' co 4').length - 1 + code.split('pomiar BIA co 4').length - 1 === 1 && !code.slice(i - 400, i).includes(BR); });
+tryc('rk kopie: trendy Pomiarów dnia (sen i kroki, średnia z 7 dni) pomijają wartości skopiowane (meas.cp)', () => {
+  const h = wpDay({ [dk(1)]: { sleep: '5:00', steps: '2000', cp: ['sleep', 'steps'] }, [dk(2)]: { sleep: '8:00', steps: '9000' } });
+  return /Sen, średnia z 7 dni: 8 h\./.test(h) && /Kroki, średnia z 7 dni: 9.?000\./.test(h);
 });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
