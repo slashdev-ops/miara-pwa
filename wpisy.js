@@ -532,5 +532,11 @@
     return !!(a && a.closest && a.closest('[data-wps]'));
   }
 
-  globalThis.WPISY = { card, rows, mount, tapSave, snapBySpeed, holdOutcome, lastDrag: () => LAST, holdStep, pageStep, editOutcome, busy, reset, draft, edit, markSaved, persistOn, commitSet, enterHint, step, mainLabel, actBtn, rowOrder, spark, FMT, HOLD_DELAY, holdGap };
+  // Stan ostatniego zapisu karty (diagnostyka i testy niezależne od szybkości komputera): czas zapisu, wiek, okno Cofnij, osłona drugiego dotknięcia
+  function commitInfo(scope) {
+    const cfg = CARDS[scope]; if (!cfg) return null;
+    const s = state(scope, cfg.day);
+    return { lastCommit: s.lastCommit, age: s.lastCommit ? Date.now() - s.lastCommit : null, again: AGAIN, inGrace: inGrace(cfg, s) };
+  }
+  globalThis.WPISY = { card, rows, mount, tapSave, commitInfo, snapBySpeed, holdOutcome, lastDrag: () => LAST, holdStep, pageStep, editOutcome, busy, reset, draft, edit, markSaved, persistOn, commitSet, enterHint, step, mainLabel, actBtn, rowOrder, spark, FMT, HOLD_DELAY, holdGap };
 })();

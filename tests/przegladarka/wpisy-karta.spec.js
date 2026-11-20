@@ -64,6 +64,15 @@ test('karta: 320 px bez poziomego przewijania, cele co najmniej 44 px, kolory z 
   expect(errors).toEqual([]);
 });
 
+// Czekanie na koniec osłony drugiego dotknięcia (700 ms od zapisu) według zegara strony, nie stałym czasem testu;
+// okno Cofnij musi jeszcze trwać (inaczej wolny komputer zmieniłby, co sprawdza test)
+// CI 21.11.2026 (WebKit): prawdziwe kliknięcie czekało na gotowość przycisku do 4,5 s, więc trafiało już po oknie Cofnij (5 s);
+// dlatego Cofnij jest dotknięciem w zadaniu strony, w którym sprawdzamy, że okno jeszcze trwa
+async function pastGuard(page) {
+  await expect.poll(() => page.evaluate(() => { const i = WPISY.commitInfo('wp'); return i.age >= i.again; }), { timeout: 10000 }).toBe(true);
+}
+const undoTap = (page) => page.evaluate(() => { const i = WPISY.commitInfo('wp'); if (!i.inGrace) return 'okno Cofnij minęło po ' + i.age + ' ms'; document.getElementById('wp_main').click(); return 'ok'; });
+
 test('karta: „Jak wczoraj” od razu, zmiana wiersza daje „Zatwierdź (1)”, zapis do meas dnia, przycisk bez przesunięcia, Cofnij', async ({ page }) => {
   const errors = await open(page);
   const main = page.locator('#wp_main');
@@ -83,8 +92,8 @@ test('karta: „Jak wczoraj” od razu, zmiana wiersza daje „Zatwierdź (1)”
   await expect(main).toBeFocused();
   await expect(page.locator('#sr')).toHaveText('✓ Zapisane · Cofnij');
   expect(await today(page), 'zapisuje się tylko zmieniony wiersz').toEqual({ w: undefined, sleep: '6:15', steps: undefined });
-  await page.waitForTimeout(800); // drugie dotknięcie zaraz po zapisie jest ignorowane
-  await main.click(); // Cofnij
+  await pastGuard(page); // drugie dotknięcie zaraz po zapisie jest ignorowane
+  expect(await undoTap(page)).toBe('ok'); // Cofnij
   await expect(main).toHaveText('Zatwierdź (1)');
   await expect(page.locator('#m_sleep')).toHaveText('6 h 15 min');
   expect(await today(page)).toEqual({ w: undefined, sleep: undefined, steps: undefined });
@@ -280,13 +289,29 @@ test('karta: drugie dotknięcie głównego przycisku zaraz po zapisie nie cofa z
   const main = page.locator('#wp_main');
   await page.getByRole('button', { name: 'Sen o 5 minut więcej' }).click();
   // Dwa dotknięcia jedno po drugim (bez czekania przeglądarki na stabilność przycisku między nimi)
-  await page.evaluate(() => { document.getElementById('wp_main').click(); document.getElementById('wp_main').click(); });
+  // Dwa dotknięcia w tym samym zadaniu strony: drugie zawsze w osłonie 700 ms (bez zależności od szybkości komputera)
+  const dt = await page.evaluate(() => { const b = document.getElementById('wp_main'); b.click(); b.click(); return Date.now() - WPISY.commitInfo('wp').lastCommit; });
+  expect(dt).toBeLessThan(700);
   await expect(main).toHaveText('✓ Zapisane · Cofnij');
   expect((await today(page)).sleep).toBe('6:15');
-  await page.waitForTimeout(800);
-  await main.click();
+  await pastGuard(page);
+  expect(await undoTap(page)).toBe('ok');
   await expect(main).toHaveText('Zatwierdź (1)');
   expect((await today(page)).sleep).toBeUndefined();
+  expect(errors).toEqual([]);
+});
+
+test('karta: dwa prawdziwe dotknięcia głównego przycisku: drugie w osłonie 700 ms (zmierzonej zegarem strony) nie cofa zapisu', async ({ page }) => {
+  const errors = await open(page);
+  const main = page.locator('#wp_main');
+  await page.getByRole('button', { name: 'Sen o 5 minut więcej' }).click();
+  await page.evaluate(() => { window.CLK = []; document.getElementById('main').addEventListener('click', (e) => { if (e.target.closest && e.target.closest('#wp_main')) CLK.push(Date.now()); }, true); });
+  await main.click();
+  await main.click({ force: true });
+  const r = await page.evaluate(() => ({ t: CLK[1] - WPISY.commitInfo('wp').lastCommit, label: document.getElementById('wp_main').textContent }));
+  // Gdy wolny komputer dostarczył drugie dotknięcie po osłonie, było ono zwykłym Cofnij: wtedy ten wariant nic nie rozstrzyga
+  if (r.t < 700) { expect(r.label, `drugie dotknięcie po ${r.t} ms`).toBe('✓ Zapisane · Cofnij'); expect((await today(page)).sleep).toBe('6:15'); }
+  else test.info().annotations.push({ type: 'pominięte', description: `drugie dotknięcie po ${r.t} ms, poza osłoną 700 ms` });
   expect(errors).toEqual([]);
 });
 

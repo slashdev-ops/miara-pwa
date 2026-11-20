@@ -69,9 +69,22 @@ jobs:
             while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done
           done
           exit 1
-      - name: Testy w przeglądarce
-        timeout-minutes: 40
-        run: npx playwright test --workers=4
+      # Chromium w 4 procesach; WebKit w 2 (na ubuntu przy 4 procesach zdarzało się przerwanie uruchomienia przeglądarki z braku pamięci,
+      # „browserType.launch: Target page, context or browser has been closed”) z jednym ponowieniem tylko na taki przypadek;
+      # test, który przejdzie dopiero przy ponowieniu, raport oznacza jako „flaky”. Osobne katalogi raportu, żeby drugi krok nie nadpisał pierwszego.
+      - name: Testy w przeglądarce (Chromium)
+        timeout-minutes: 20
+        env:
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/chromium
+          PLAYWRIGHT_HTML_REPORT: playwright-report/chromium
+        run: npx playwright test --project=chromium-jasny --project=chromium-ciemny --project=chromium-320 --workers=4
+      - name: Testy w przeglądarce (WebKit)
+        if: ${{ !cancelled() }}
+        timeout-minutes: 25
+        env:
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/webkit
+          PLAYWRIGHT_HTML_REPORT: playwright-report/webkit
+        run: npx playwright test --project=webkit-jasny --project=webkit-ciemny --project=webkit-320 --workers=2 --retries=1
       - name: Raport po błędzie
         if: failure()
         uses: actions/upload-artifact@v7
