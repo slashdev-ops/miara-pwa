@@ -2949,6 +2949,12 @@ tryc('daty: w kodzie brak kluczy dni liczonych co 24 h od teraz (keyOf/mondayOf 
   if (hits.length) console.log('  klucze dni co 24 h:', hits.join(' | '));
   return new RegExp(bad.source).test(old) && hits.length === 0;
 });
+// Wspólne wyzwanie ukryte tam, gdzie nie działa (decyzja użytkownika 21.11.2026, pytanie rady 4): bez bazy artefaktu brak przycisku i zaproszenia
+tryc('wyzwanie: bez bazy (CH.state off) brak przycisku w Moim dniu i zaproszenia w tekście Udostępnij; po włączeniu oba są', () => {
+  const CH = vm.runInContext('CH', sandbox), st = CH.state, sh = vm.runInContext('typeof shareText==="function"?shareText:null', sandbox);
+  try { CH.state = 'off'; const off = view('day', BASE()), tOff = sh && sh(); CH.state = 'on'; const on = view('day', BASE()), tOn = sh && sh();
+    return !!sh && !off.includes('data-tab="challenge"') && on.includes('data-tab="challenge"') && !/wyzwanie/i.test(tOff) && /wspólne wyzwanie/.test(tOn) && /^Mój tydzień w aplikacji Miara: /.test(tOff); } finally { CH.state = st; }
+});
 tryc('wiersze: wykres trendu talii i FFM z punktami i średnią 4 tygodni, bez pasa wahania; przy jednym pomiarze bez wykresu', () => {
   WP().reset(); const h = view('day', BASE({ lite: false, meas: { [dk(40)]: { waist: '88', ffm: '50' }, [dk(26)]: { waist: '87' }, [dk(12)]: { waist: '86', ffm: '50,6' } } }));
   const svg = (id) => { const i = h.indexOf('id="' + id + '"'); return i < 0 ? '' : h.slice(i, h.indexOf('</svg>', i)); }, a = svg('ms_tw'), b = svg('ms_tf');
