@@ -1223,7 +1223,7 @@ document.addEventListener('click',e=>{const s=e.target&&e.target.closest&&e.targ
 // ---------- Kopia danych: eksport i import pliku (np. przez iCloud Drive) ----------
 const BK_SKIP=['imp','tab','introStep','sosStep','sosTrig','recipe','recipeBack','labSel'];
 // Kopia bez danych o zdrowiu: lista tego, co zostaje; każde nowe pole stanu jest domyślnie pomijane (rada 09.11.2026, kopia bez danych o zdrowiu)
-const BK_NH_KEEP=['toastLen','tips','discreet','pet','prices','ord','shopDay','stores','promos','lite','unlock','unlockAt','unlockSnooze','pmLeft','vibr'];
+const BK_NH_KEEP=['toastLen','tips','discreet','pet','prices','ord','shopDay','stores','promos','lite','unlock','unlockAt','unlockSnooze','pmLeft','vibr','petNames'];
 let BK_PENDING=null;
 function bkBuild(noHealth){let d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.kopia)delete d.kopia.token;if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){const o={};BK_NH_KEEP.forEach(k=>{if(k in d)o[k]=d[k]});d=o}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
 function bkParse(text){try{const o=JSON.parse(text);if(!o||o.app!=='talerz-i-trening'||o.v!==1||!o.data||typeof o.data!=='object'||Array.isArray(o.data))return null;return o}catch(e){return null}}
@@ -1247,7 +1247,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
-const DEF={frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
+const DEF={petNames:1,frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,lite:false,unlock:[],unlockAt:'',unlockSnooze:'',body:false,once:false,toastLen:'std',pmLeft:false,vibr:true,ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},shopDay:null,stores:[],promos:[],sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
@@ -1350,6 +1350,8 @@ function muscleSync(){const r=muscleRec();if(S.muscleAuto===false||!r||S.muscleA
   return 'Masa beztłuszczowa poniżej mediany: wyłączono „Dużo mięśni”. Sposób liczenia celu sprawdź w Ustawieniach.'}
 function muscleToast(){const m=muscleSync();if(m)toast(m);return !!m}
 // Stare dane bez muscleAuto: zapisane „włączone” to wybór ręczny, „wyłączone” albo brak to automat (przegląd 17.11.2026)
+// Imiona według gatunku (21.11.2026): zwierzak zapisany wcześniej bez imienia (poza kotkiem, który miał już Mruczka) zachowuje dotychczasową Kluskę
+function petNameFix(raw,s){if(raw&&typeof raw==='object'&&!('petNames' in raw)){const p=s.pet;if(p&&typeof p==='object'&&!String(p.name||'').trim()&&p.kind!=='kotek')p.name='Kluska';s.petNames=1}return s}
 function muscleFix(raw,s){if(raw&&typeof raw==='object'&&!('muscleAuto' in raw))s.muscleAuto=!s.muscle;return s}
 function muscleHtml(){const r=muscleRec(),on=!!S.muscle,a=num(S.age);
   let h=`<div class="panel"><div class="field"><label for="muscle">Dużo mięśni: oceniaj cel talią, nie samym BMI</label><input type="checkbox" class="switch" id="muscle" data-k="muscle" ${on?'checked':''}></div><div style="padding:0 16px 12px">`;
@@ -1364,7 +1366,7 @@ function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>
 // Rodzaj zwierzaka z kopii: tylko znane gatunki (stare kaczka zostaje kaczuszką), nieznany to gąska
 function petFix(s){if(s&&s.pet&&typeof s.pet==='object'&&!PET.kinds().includes(s.pet.kind))s.pet.kind='gaska';return s}
 function syFix(s){s=petFix(suppFix(s));s=promoFix(s,todayKey());try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
-function load(){let r=null;try{r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(muscleFix(o,merge(clone(DEF),fixTouched(o))))}}catch(e){}const f=clone(DEF);if(!r)f.lite=true;return f}
+function load(){let r=null;try{r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(petNameFix(o,muscleFix(o,merge(clone(DEF),fixTouched(o)))))}}catch(e){}const f=clone(DEF);if(!r)f.lite=true;return f}
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
 // ---------- Scenariusze do sprawdzania: dane przykładowe pod #demo-<nazwa>, nic się nie zapisuje ----------
@@ -2383,7 +2385,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.cyc){const k=todayKey();S.meas[k]=S.meas[k]||{};const pv=S.meas[k].cyc||'';S.meas[k].cyc=pv===d.cyc?'':d.cyc;petHealth('cyc',S.meas[k].cyc,pv)}
   else if(d.bkexp){bkExport();return}
   else if(d.bkpaste){const o=bkParse(document.getElementById('bk_text').value.trim());if(!o){BK_PENDING=null;toast('To nie jest kopia tej aplikacji');return}BK_PENDING=o}
-  else if(d.bkapply){if(!BK_PENDING)return;if(BK_PENDING.noHealth)BK_NH_KEEP.forEach(k=>{if(!(k in BK_PENDING.data))return;const v=clone(BK_PENDING.data[k]);S[k]=v&&typeof v==='object'&&!Array.isArray(v)?merge(clone(DEF[k]||{}),v):v});else S=muscleFix(BK_PENDING.data,merge(clone(DEF),fixTouched(BK_PENDING.data)));S=syFix(S);S.onb=true;S.tab='set';BK_PENDING=null;const mm=muscleSync();undoable('Wczytano kopię'+(mm?'. '+mm:''))}
+  else if(d.bkapply){if(!BK_PENDING)return;if(BK_PENDING.noHealth)BK_NH_KEEP.forEach(k=>{if(!(k in BK_PENDING.data))return;const v=clone(BK_PENDING.data[k]);S[k]=v&&typeof v==='object'&&!Array.isArray(v)?merge(clone(DEF[k]||{}),v):v});else S=muscleFix(BK_PENDING.data,merge(clone(DEF),fixTouched(BK_PENDING.data)));S=syFix(petNameFix(BK_PENDING.data,S));S.onb=true;S.tab='set';BK_PENDING=null;const mm=muscleSync();undoable('Wczytano kopię'+(mm?'. '+mm:''))}
   else if(d.bkcancel){BK_PENDING=null}
   else if(d.chmode){S.chMode=d.chmode}
   else if(d.wi){const [a,b]=d.wi.split(':');S.wi=S.wi||{snack:0,steps:0,train:0};S.wi[a]=+b}

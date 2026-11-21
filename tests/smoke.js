@@ -167,7 +167,7 @@ const mainHtml = () => els.main.innerHTML;
 const click = (data) => (lis.click || []).forEach((f) => f({ target: { closest: () => ({ dataset: data }) } }));
 const view = (tab, set) => { const S = T.S(); S.onb = true; S.tab = tab; Object.assign(S, set || {}); T.render(); return mainHtml(); };
 tryc('stare dane bez zwierzaka: karta zaprasza do wyboru', () => view('day', { pet: null }).includes('data-petpick'));
-tryc('karta: puste imię to Kluska', () => view('day', { pet: { kind: 'gaska', name: '', since: '2026-11-01' } }).includes('Kluska'));
+tryc('karta: puste imię gąski to Pianka', () => view('day', { pet: { kind: 'gaska', name: '', since: '2026-11-01' } }).includes('Pianka'));
 tryc('karta: imię escapowane', () => { const h = view('day', { pet: { kind: 'kaczka', name: '<i>x</i>', since: '2026-11-01' } }); return h.includes('&lt;i&gt;x&lt;/i&gt;') && !h.includes('<i>x</i>'); });
 tryc('ekran pet: obie postaci bez błędu', () => ['gaska', 'kaczka'].every((k) => view('pet', { pet: { kind: k, name: 'A', since: '2026-11-01' } }).includes('class="badges"')));
 tryc('odznaka świętowana raz (petSeen)', () => {
@@ -639,7 +639,7 @@ tryc('12 tygodni: tabela 12 tygodni z wagą w przedziale', () => { const h = vie
 tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h = view('health', BASE({ ...PROF(['hashi', 'mig'], 'yaz'), kg: '80', goal: '70' })), m = (h.match(/<table class="weeks"[\s\S]*?<\/table>/) || [''])[0]; return !/TSH (spadnie|wyniesie)|samopoczucie (wzro|popraw)/.test(m) && h.includes('nie prognozuje'); });
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
-const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord', 'shopDay', 'stores', 'promos', 'lite', 'unlock', 'unlockAt', 'unlockSnooze', 'pmLeft', 'vibr'];
+const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord', 'shopDay', 'stores', 'promos', 'lite', 'unlock', 'unlockAt', 'unlockSnooze', 'pmLeft', 'vibr', 'petNames'];
 const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'muscleAuto', 'muscleAutoLast', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'suppTake', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut', 'frame'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
@@ -2259,6 +2259,17 @@ tryc('sprawność: zakresy pól vo2 10-90, hrRest 30-120, hrMax 120-230', () => 
 // Prosty widok i karta „Szybki wpis dnia”
 const LK = () => T.todayKey();
 const liteReset = () => { const S = T.S(); S.lite = true; S.meas = {}; S.pain = {}; S.days = {}; S.onb = true; };
+// Imiona według gatunku (21.11.2026): zwierzak zapisany przed zmianą, bez nadanego imienia, zachowuje dotychczasową „Kluskę” (kotek miał już „Mruczka”)
+tryc('imiona: zapisany stan bez petNames: gąska i kapibara bez imienia dostają na stałe Kluska, kotek i nadane imię bez zmian; nowy stan i kopia z petNames bez migracji', () => {
+  const g = sandbox.localStorage.getItem, L = (o) => { sandbox.localStorage.getItem = () => JSON.stringify(o); return T.load(); }; let r;
+  try { const fresh = (sandbox.localStorage.getItem = g, T.load());
+    const a = L({ pet: { kind: 'gaska', name: '', since: '2026-11-01' } }), b = L({ pet: { kind: 'kapibara', name: '  ', since: '2026-11-01' } }), c = L({ pet: { kind: 'kotek', name: '', since: '2026-11-01' } }),
+      d = L({ pet: { kind: 'gaska', name: 'Gęgusia', since: '2026-11-01' } }), e = L({ petNames: 1, pet: { kind: 'gaska', name: '', since: '2026-11-21' } }), f = L({ days: {} });
+    r = fresh.petNames === 1 && a.pet.name === 'Kluska' && a.petNames === 1 && b.pet.name === 'Kluska' && c.pet.name === '' && d.pet.name === 'Gęgusia' && e.pet.name === '' && (f.pet == null || !f.pet.name)
+      && vm.runInContext('BK_NH_KEEP', sandbox).includes('petNames');
+  } finally { sandbox.localStorage.getItem = g; }
+  return r;
+});
 tryc('prosty widok: świeży stan ma lite, zapisany stan bez pola lite go nie dostaje', () => {
   const g = sandbox.localStorage.getItem; let a, b;
   try { a = T.load().lite; sandbox.localStorage.getItem = () => '{"days":{"2026-01-01":[]}}'; b = T.load().lite; } finally { sandbox.localStorage.getItem = g; }
@@ -2743,7 +2754,7 @@ tryc('reakcje Zdrowia: zapis wyniku badania w zakresie „Zanotowane”, poza za
   const a = save('2'), b = save('40'); if (!a.fx.includes('Zanotowane')) throw new Error('w zakresie: ' + JSON.stringify(a)); return T.S().labs.length === 1 && b.fx === '' && b.cls.length === 0;
 });
 // Poprawki po przeglądzie zadania 1
-tryc('pet: dla kotka bez imienia domyślnie „Mruczek”, pozostałe „Kluska”, nadane imię zostaje', () => P().nameOf({ kind: 'kotek', name: '' }) === 'Mruczek' && P().nameOf({ kind: 'kapibara', name: '' }) === 'Kluska' && P().nameOf({ kind: 'kotek', name: 'Kluska' }) === 'Kluska'
+tryc('pet: domyślne imię według gatunku (gąska Pianka, kaczuszka Kluska, kapibara Kapi, kotek Mruczek), nieznany jak gąska, nadane imię zostaje', () => P().nameOf({ kind: 'kotek', name: '' }) === 'Mruczek' && P().nameOf({ kind: 'kaczka', name: '' }) === 'Kluska' && P().nameOf({ kind: 'gaska', name: ' ' }) === 'Pianka' && P().nameOf({ kind: 'kapibara', name: '' }) === 'Kapi' && P().nameOf({ kind: 'smok', name: '' }) === 'Pianka' && P().nameOf({ kind: 'kotek', name: 'Kluska' }) === 'Kluska'
   && (() => { const c = mkCtx({ name: '' }); c.pet.kind = 'kotek'; return st(c).line.startsWith('Mruczek'); })());
 tryc('pet.flush: każdy napis ma własne id i usuwa dokładnie siebie', () => { const h = []; const host = { insertAdjacentHTML: (_, x) => h.push(x), querySelector: () => null }; const el = { classList: { add() {}, remove() {} }, closest: () => host }; const q = sandbox.document.querySelector; sandbox.document.querySelector = (s) => (s === '#main .pet' ? el : null); try { P().react('habit', 5); P().flush(); P().react('habit', 6); P().flush(); } finally { sandbox.document.querySelector = q; } const ids = h.map((x) => (x.match(/id="(petfx\d+)"/) || [])[1]); return ids.length === 2 && !!ids[0] && !!ids[1] && ids[0] !== ids[1] && !/querySelector\('\.petfx'\)/.test(fs.readFileSync(path.join(root, 'pet.js'), 'utf8')); });
 tryc('pet.svg: bez EXPR.zapis i bez zmiennych --goose/--goose-line w CSS; obrys gąski w jasnym motywie co najmniej 3:1 do powierzchni', () => {
