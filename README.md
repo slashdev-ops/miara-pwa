@@ -59,9 +59,8 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 - **Przytrzymanie − i +** zmienia wartość coraz szybciej; po puszczeniu fokus zostaje na przycisku, przycisk nie przesuwa
   się pod palcem, a nowa wartość trafia do czytnika ekranu. Strzałki w górę i w dół działają w polu, błąd widać od razu
   pod polem (WCAG 2.2: 2.4.3, 2.4.11, 3.3.1, 3.3.7, 4.1.3).
-- **Scenariusze do sprawdzania** (Pomoc → Sprawdź działanie, albo adres `#demo-migrena`, `#demo-wpisy`,
-  `#demo-hashimoto`, `#demo-minitabletka`, `#demo-start`): gotowe dane przykładowe z opisem, co powinno się pokazać;
-  nic się nie zapisuje.
+- **Scenariusze do sprawdzania** (Pomoc → Sprawdź działanie, albo adres np. `#demo-wpisy` lub `#demo-start`): gotowe
+  dane przykładowe z opisem, co powinno się pokazać; nic się nie zapisuje.
 - **Zamówione:** sushi, kurczak po koreańsku i tofu z ilością i dodatkami jednym dotknięciem; szacunek kalorii z przedziałem
   ±30% i białka, ostatni wybór zapamiętany. Sen i kroki mają chipy typowych wartości i „jak wczoraj”.
 - **Gotuję to dziś** w przepisie wstawia danie do planu dnia; plan tygodnia ma dwa rytmy: obiady do 20 min
@@ -69,14 +68,12 @@ Dla osób, które nie chcą wpisywać danych kilka razy dziennie:
 
 ## Profil zdrowia i plan działań
 
-- W Zdrowiu osoba zaznacza choroby (Hashimoto, lipodemia, migrena z aurą, migrena, insulinooporność) i tabletki
-  antykoncepcyjne z listy 13 popularnych preparatów; profil zostaje w telefonie, kopia bez danych zdrowotnych go pomija.
-- „Twój plan” to reguły z dowodami i liczbami z wpisów, np. migrena z aurą i tabletka z estrogenem jako pierwsze
-  działanie (kategoria 4 w kryteriach WHO), licznik dni z lekiem (ICHD-3), TSH po zmianie tabletek przy Hashimoto.
-  Każde działanie podaje siłę dowodów.
-- „Dla mnie” w Posiłkach i plan tygodnia według profilu: przy insulinooporności danie spoza reguły zamienia się na danie
-  tego samego rodzaju i rytmu, które ją spełnia; zdania „Razem: …” łączą zalecenia dla par schorzeń (np. bez postu
-  przerywanego przy IO i migrenie); karta „Długa przerwa w jedzeniu” przy migrenie.
+- W Zdrowiu osoba zaznacza kilka chorób przewlekłych i stosowane leki hormonalne; profil zostaje w telefonie,
+  kopia bez danych zdrowotnych go pomija.
+- „Twój plan” to reguły z dowodami i liczbami z wpisów, np. połączenie choroby i leku, którego wytyczne (kryteria WHO)
+  nie zalecają, jako pierwsze działanie z prośbą o rozmowę z lekarzem. Każde działanie podaje siłę dowodów.
+- „Dla mnie” w Posiłkach i plan tygodnia według profilu: danie spoza reguł profilu zamienia się na danie tego samego
+  rodzaju i rytmu, które je spełnia; zdania „Razem: …” łączą zalecenia dla par schorzeń.
 - „12 tygodni”: waga w przedziale z deficytu planu i kamienie milowe; aplikacja celowo nie prognozuje wyników badań,
   bólu ani samopoczucia, tylko pokazuje je z wpisów.
 
