@@ -2941,6 +2941,14 @@ tryc('daty: lastKeys podaje kolejne dni kalendarza bez powtórzeń i luk przez z
   try { return [[23, 30], [0, 30]].every(([h, m]) => { const n = new Date(); n.setHours(h, m, 0, 0); Date.now = () => n.getTime(); const a = lk(400);
     return a[0] === dk0(n) && a.every((k, i) => i === 0 || k === prev(a[i - 1])); }); } finally { Date.now = real; }
 });
+// Strażnik (21.11.2026): klucz dnia nigdy z „teraz minus n × 24 h” (przy zmianie czasu dzień się powtarza albo znika); tylko keyAgo(i) albo od południa (T12:00)
+tryc('daty: w kodzie brak kluczy dni liczonych co 24 h od teraz (keyOf/mondayOf z Date.now() minus 864e5), strażnik łapie dawny zapis', () => {
+  const bad = /(keyOf|mondayOf)\(new Date\(Date\.now\(\)\s*-[^)]*864e5/g, old = 'function lastKeys(n){const a=[];for(let i=0;i<n;i++)a.push(keyOf(new Date(Date.now()-i*864e5)));return a}';
+  const files = ['app.js', 'wpisy.js', 'pet.js', 'zdarzenia.js', 'sygnaly.js'].filter((f) => fs.existsSync(path.join(root, f)));
+  const hits = files.flatMap((f) => (fs.readFileSync(path.join(root, f), 'utf8').match(bad) || []).map((m) => f + ': ' + m));
+  if (hits.length) console.log('  klucze dni co 24 h:', hits.join(' | '));
+  return new RegExp(bad.source).test(old) && hits.length === 0;
+});
 tryc('wiersze: wykres trendu talii i FFM z punktami i średnią 4 tygodni, bez pasa wahania; przy jednym pomiarze bez wykresu', () => {
   WP().reset(); const h = view('day', BASE({ lite: false, meas: { [dk(40)]: { waist: '88', ffm: '50' }, [dk(26)]: { waist: '87' }, [dk(12)]: { waist: '86', ffm: '50,6' } } }));
   const svg = (id) => { const i = h.indexOf('id="' + id + '"'); return i < 0 ? '' : h.slice(i, h.indexOf('</svg>', i)); }, a = svg('ms_tw'), b = svg('ms_tf');
