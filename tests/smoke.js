@@ -2966,6 +2966,25 @@ tryc('wyzwanie: bez bazy (CH.state off) brak przycisku w Moim dniu i zaproszenia
   try { CH.state = 'off'; const off = view('day', BASE()), tOff = sh && sh(); CH.state = 'on'; const on = view('day', BASE()), tOn = sh && sh();
     return !!sh && !off.includes('data-tab="challenge"') && on.includes('data-tab="challenge"') && !/wyzwanie/i.test(tOff) && /wspólne wyzwanie/.test(tOn) && /^Mój tydzień w aplikacji Miara: /.test(tOff); } finally { CH.state = st; }
 });
+// F0 planu ADHD (22.11.2026): kontrast wzmocniony WCAG 1.4.6 (AAA) 7:1 dla każdej pary tekst/tło w obu motywach; oba bloki ciemnego motywu zgodne
+tryc('kontrast AAA: tekst 7:1 na tłach w jasnym i ciemnym motywie, napisy na przyciskach 7:1, bloki ciemnego motywu zgodne', () => {
+  const grab = (b) => { const o = {}; (b.match(/--[a-z0-9-]+:#[0-9a-fA-F]{6}/g) || []).forEach((s) => { const [k, v] = s.split(':'); o[k] = v.toUpperCase(); }); return o; };
+  const blk = (start) => { const i = sysCss.indexOf(start); return i < 0 ? '' : sysCss.slice(i, sysCss.indexOf('}', i)); };
+  const light = grab(sysCss.slice(sysCss.indexOf(':root{'), sysCss.indexOf('@media (prefers-color-scheme: dark)'))), dark = grab(blk(':root:not([data-theme="light"])')), dark2 = grab(blk(':root[data-theme="dark"]'));
+  const lum = (h) => [1, 3, 5].map((i) => parseInt(h.substr(i, 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4))).reduce((a, v, i) => a + v * [0.2126, 0.7152, 0.0722][i], 0);
+  const R = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const P = [['--ink', ['--bg', '--surface', '--surface2', '--tint']], ['--muted', ['--bg', '--surface', '--surface2', '--tint']], ['--green', ['--bg', '--surface', '--surface2', '--tint']],
+    ['--brass-ink', ['--bg', '--surface', '--surface2']], ['--warn-ink', ['--bg', '--surface', '--warn-bg']], ['--accent', ['--bg', '--surface']], ['--clay', ['--bg', '--surface']], ['--on-green', ['--green']], ['--on-accent', ['--accent']]];
+  const bad = [];
+  for (const [n, t] of [['jasny', light], ['ciemny', dark]]) for (const [fg, bgs] of P) for (const bg of bgs) { const r = t[fg] && t[bg] ? R(t[fg], t[bg]) : 0; if (r < 7) bad.push(`${n} ${fg}/${bg} ${r.toFixed(2)}`); }
+  const diff = Object.keys(dark).filter((k) => dark[k] !== dark2[k]);
+  if (bad.length || diff.length) throw new Error(bad.concat(diff.map((k) => 'ciemny ≠ data-theme: ' + k)).join('; '));
+  return Object.keys(dark).length > 10;
+});
+tryc('fokus AAA (2.4.13): każdy :focus-visible ma obrys co najmniej 2 px w kolorze tokenu, nigdzie outline:none ani outline:0', () => {
+  const rules = sysCss.match(/[^{}]*:focus-visible[^{}]*\{[^}]*\}/g) || [];
+  return rules.length > 0 && rules.every((r) => { const m = /outline:\s*(\d+)px solid var\(--[a-z-]+\)/.exec(r); return m && +m[1] >= 2; }) && !/outline:\s*(none|0)\b/.test(sysCss);
+});
 tryc('wiersze: wykres trendu talii i FFM z punktami i średnią 4 tygodni, bez pasa wahania; przy jednym pomiarze bez wykresu', () => {
   WP().reset(); const h = view('day', BASE({ lite: false, meas: { [dk(40)]: { waist: '88', ffm: '50' }, [dk(26)]: { waist: '87' }, [dk(12)]: { waist: '86', ffm: '50,6' } } }));
   const svg = (id) => { const i = h.indexOf('id="' + id + '"'); return i < 0 ? '' : h.slice(i, h.indexOf('</svg>', i)); }, a = svg('ms_tw'), b = svg('ms_tf');
