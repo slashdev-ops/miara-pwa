@@ -27,6 +27,8 @@ const zdPath = path.join(root, 'zdarzenia.js');
 if (fs.existsSync(zdPath)) vm.runInContext(fs.readFileSync(zdPath, 'utf8'), sandbox);
 const sygPath = path.join(root, 'sygnaly.js');
 if (fs.existsSync(sygPath)) vm.runInContext(fs.readFileSync(sygPath, 'utf8'), sandbox);
+const skPath = path.join(root, 'skupienie.js');
+if (fs.existsSync(skPath)) vm.runInContext(fs.readFileSync(skPath, 'utf8'), sandbox);
 const wpPath = path.join(root, 'wpisy.js');
 if (fs.existsSync(wpPath)) vm.runInContext(fs.readFileSync(wpPath, 'utf8'), sandbox);
 vm.runInContext(code + '\n;globalThis.__T={acts:()=>ACTS,setDemoN:(v)=>{DEMO_N=v},wpModel:()=>wpCfg(),wpCfg:()=>wpCfg(),wpParse:(k,t)=>wpParse(k,t),wpStore:(k,v)=>wpStore(k,v),wpBand:(w,r)=>wpBand(w,r),wpOnSaved:(k,v)=>wpOnSaved(k,v),wpGrace:()=>wpGrace(),measCp:(m,f)=>measCp(m,f),dataGap:()=>dataGap(),wpCommit:(v,o)=>wpCommit(v,o),wpRestore:(p)=>wpRestore(p),qSet:(a,v,o)=>qSet(a,v,o),sleepAt:(k)=>sleepAt(k),avgAgo:(a,b,k)=>avgAgo(a,b,k),guideActive:()=>guideActive(),S:()=>S,egfrRows:()=>typeof egfrRows=="undefined"?[]:egfrRows(),nonHdlRows:()=>typeof nonHdlRows=="undefined"?[]:nonHdlRows(),egfrCat:(v)=>typeof egfrCat=="undefined"?"":egfrCat(v),muscleRec:()=>typeof muscleRec=="undefined"?undefined:muscleRec(),muscleSync:()=>muscleSync(),fitNow:()=>typeof fitNow=="undefined"?undefined:fitNow(),potKouri:()=>typeof potKouri=="undefined"?undefined:potKouri(),potButt:()=>typeof potButt=="undefined"?undefined:potButt(),muscleFix:(r,x)=>muscleFix(r,x),CHIPS,MOB:()=>typeof MOB=="undefined"?[]:MOB,modeSuggest:()=>modeSuggest(),targetKcal:()=>targetKcal(),protTarget:()=>protTarget(),PROT:()=>PROT,DEF:()=>DEF,nhKeep:()=>typeof BK_NH_KEEP=="undefined"?null:BK_NH_KEEP,setPending:(v)=>{BK_PENDING=v},render,MEALS,STEPS,PLAN,ING,LABS,num,checkNum,level,esc,save,setDemo:(v)=>{DEMO=v},setRedraw:(v)=>{REDRAW=v},ch:()=>CH,chSync,petCtx,dayPts,todayKey,guideSteps:()=>guideSteps(),guideToast:(b)=>guideToast(b),streak,bkBuild,kopiaDerive,kopiaEncrypt,kopiaDecrypt,kopiaSetup,KS,kopiaDue,kopiaSend,kopiaAuto,toast,toastMs,filtered,planIds,SCEN,scenS,mealTags,macros,planFor,ioFit,migGap,shopLines,ordCalc,CARDS,SRC,ORD,ORD_ADD,KROKI,kProg,krokMeals,mondayOf,reviewKey,ZAP,helpRes,PET,fixTouched,bmiCutFor,parseImport,impFromHash,setSygAl:(v)=>{SYG_AL=v},quickFromHash:(h)=>typeof quickFromHash=="function"?quickFromHash(h):false,SUPP:typeof SUPP=="undefined"?[]:SUPP,SUPP_PARY:typeof SUPP_PARY=="undefined"?[]:SUPP_PARY,promoParse:typeof promoParse=="undefined"?undefined:promoParse,promoMatch:typeof promoMatch=="undefined"?undefined:promoMatch,nextShop:typeof nextShop=="undefined"?undefined:nextShop,promosActive:typeof promosActive=="undefined"?undefined:promosActive,promoDishes:typeof promoDishes=="undefined"?undefined:promoDishes,promoFix:typeof promoFix=="undefined"?undefined:promoFix,promoPending:()=>typeof PROMO_PENDING=="undefined"?undefined:PROMO_PENDING,labStatus:typeof labStatus=="undefined"?undefined:labStatus,load:typeof load=="undefined"?undefined:load,stepsBand:typeof stepsBand=="undefined"?undefined:stepsBand,liteFull:typeof liteFull=="undefined"?undefined:liteFull,liteCardHtml:typeof liteCardHtml=="undefined"?undefined:liteCardHtml,liteUi:()=>typeof LITE_UI=="undefined"?{}:LITE_UI,liteStanHtml:(k)=>typeof liteStanHtml=="undefined"?"":liteStanHtml(k),unlockTxt:()=>UNLOCK_TXT,dayOk:typeof dayOk=="undefined"?undefined:dayOk,eggCrack:typeof eggCrack=="undefined"?undefined:eggCrack,liteDays:typeof liteDays=="undefined"?undefined:liteDays,dayLeft:typeof dayLeft=="undefined"?undefined:dayLeft,petCardHtml:typeof petCardHtml=="undefined"?undefined:petCardHtml,healthReact:typeof healthReact=="undefined"?undefined:healthReact,bodyDue:typeof bodyDue=="undefined"?undefined:bodyDue,qSet:typeof qSet=="undefined"?undefined:qSet,unlockNext:typeof unlockNext=="undefined"?undefined:unlockNext,unlockHtml:typeof unlockHtml=="undefined"?undefined:unlockHtml,labKeep:()=>LAB_KEEP,rowSpecs:(g)=>typeof rowSpecs=="undefined"?[]:rowSpecs(g),stpFmt:(v,st)=>stpFmt(v,st)};', sandbox);
@@ -278,7 +280,7 @@ tryc('P1-2z: panel z zegarka jest nad szacunkiem z rodzaju', () => { const h = v
 tryc('P1-3: tryb raz dziennie: o 14:00 bez posiłku zwierzak nie czeka na wpis', () => { const s = st(mkCtx({ today: { sleep: 7, steps: 7000 }, once: true })); return s.mood !== 'hungry' && s.meters.food === 50; });
 tryc('P1-3: tryb raz dziennie: o 19:30 bez posiłku czeka na wpis', () => st(mkCtx({ now: '19:30', today: { sleep: 7, steps: 7000 }, once: true })).mood === 'hungry');
 tryc('P1-3: petCtx przekazuje tryb raz dziennie', () => { T.S().once = true; const r = T.petCtx().once === true; T.S().once = false; return r; });
-tryc('P1-3: Ustawienia mają przełącznik raz dziennie', () => view('set', CLEAN()).includes('data-k="once"'));
+tryc('P1-3 (F1a, 22.11.2026): Ustawienia mają wybór Skupienie, który zastąpił przełącznik raz dziennie', () => { const h = view('set', CLEAN()); return h.includes('data-view="skup"') && !h.includes('data-k="once"'); });
 tryc('P1-3: Dziś w trybie raz dziennie: wpis dnia z Według planu i Inaczej', () => { const h = view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } }); return h.includes('Wpis dnia') && h.includes('data-dayplan') && h.includes('data-dayother'); });
 tryc('P1-3: Według planu dodaje posiłki z planu tylko raz', () => {
   view('day', { ...CLEAN(), once: true, pet: { ...PETA }, petSeen: [...SEEN_ALL], guide: { ...HID } }); click({ dayplan: '1' }); click({ dayplan: '1' });
@@ -639,7 +641,7 @@ tryc('12 tygodni: tabela 12 tygodni z wagą w przedziale', () => { const h = vie
 tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h = view('health', BASE({ ...PROF(['hashi', 'mig'], 'yaz'), kg: '80', goal: '70' })), m = (h.match(/<table class="weeks"[\s\S]*?<\/table>/) || [''])[0]; return !/TSH (spadnie|wyniesie)|samopoczucie (wzro|popraw)/.test(m) && h.includes('nie prognozuje'); });
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
-const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord', 'shopDay', 'stores', 'promos', 'lite', 'unlock', 'unlockAt', 'unlockSnooze', 'pmLeft', 'vibr', 'petNames'];
+const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord', 'shopDay', 'stores', 'promos', 'lite', 'unlock', 'unlockAt', 'unlockSnooze', 'pmLeft', 'vibr', 'petNames', 'focus', 'still'];
 const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'muscleAuto', 'muscleAutoLast', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'suppTake', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut', 'frame'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
@@ -999,7 +1001,7 @@ tryc('ekran główny: kroki każdego telefonu w zwiniętej sekcji ze źródłem'
   return /<details class="fold"[^>]*><summary>iPhone \(Safari\)<\/summary>(?:(?!<\/details>)[\s\S])*Do ekranu głównego(?:(?!<\/details>)[\s\S])*support\.apple\.com/.test(h)
     && /<details class="fold"[^>]*><summary>Android \(Chrome\)<\/summary>(?:(?!<\/details>)[\s\S])*Zainstaluj i utwórz skrót(?:(?!<\/details>)[\s\S])*support\.google\.com/.test(h);
 });
-tryc('Ustawienia: opisy pod przełącznikami po jednym zdaniu', () => { const h = whyOut(view('set', BASE())); return ['Mój dzień pokazuje szybki wpis i to, co dodasz', 'Jak długo widać dymek po zapisie.'].every((t) => h.includes(t)) && !h.includes('dodasz. Dane zostają'); });
+tryc('Ustawienia: opisy pod przełącznikami po jednym zdaniu', () => { const h = whyOut(view('set', BASE())); return ['Skupienie pokazuje jedną rzecz naraz, bez wskazówek i ruchu; dane zostają przy każdym widoku.', 'Bez animacji w całej Miarze, a w Skupieniu zawsze.', 'Jak długo widać dymek po zapisie.'].every((t) => h.includes(t)); });
 tryc('ekran główny: Pomoc znajduje instrukcję po słowie „ekran”', () => view('help', BASE({ helpQ: 'ekran główny' })).includes('set#ekran'));
 tryc('źródła: ścieżka ma linki do badań zachowania', () => ['michie', 'lally', 'harkin', 'gollw', 'wolfson', 'reicks'].every((k) => T.SRC[k]));
 
@@ -2348,10 +2350,9 @@ tryc('Pokaż całą Miarę wyłącza lite i pokazuje pełny widok', () => {
   liteReset(); const pre = view('day', {}); click({ litefull: '1' }); const h = mainHtml();
   return pre.includes('data-litefull') && T.S().lite === false && h.includes('data-fold="wiecej"');
 });
-tryc('ustawienia: przełącznik Prosty widok zmienia S.lite', () => {
-  liteReset(); const setH = view('set', {}); const el = { dataset: { k: 'lite' }, type: 'checkbox', checked: false, value: '', getAttribute() { return null; }, setAttribute() {}, classList: { toggle() {} } };
-  (lis.input || []).forEach((f) => f({ target: el })); const off = T.S().lite === false; el.checked = true; (lis.input || []).forEach((f) => f({ target: el }));
-  return setH.includes('data-k="lite"') && off && T.S().lite === true;
+tryc('ustawienia (F1a): wybór Prosty i Cała Miara zmienia S.lite', () => {
+  liteReset(); const setH = view('set', {}); click({ view: 'cala' }); const off = T.S().lite === false; click({ view: 'prosty' });
+  return setH.includes('data-view="prosty"') && off && T.S().lite === true && T.S().focus === false;
 });
 tryc('jajko: podpis w prostym widoku mówi o dniach z szybkim wpisem, w pełnym o pierwszych krokach', () => {
   liteReset(); T.S().pet = null; const a = T.petCardHtml(); T.S().lite = false; const b = T.petCardHtml();
@@ -2985,6 +2986,65 @@ tryc('fokus AAA (2.4.13): każdy :focus-visible ma obrys co najmniej 2 px w kolo
   const rules = sysCss.match(/[^{}]*:focus-visible[^{}]*\{[^}]*\}/g) || [];
   return rules.length > 0 && rules.every((r) => { const m = /outline:\s*(\d+)px solid var\(--[a-z-]+\)/.exec(r); return m && +m[1] >= 2; }) && !/outline:\s*(none|0)\b/.test(sysCss);
 });
+// F1a planu ADHD (22.11.2026, wersja B): tryb skupienia w Moim dniu, jeden wybór widoku, migracja „raz dziennie”, bez ruchu i bez przerywania
+const SK = () => sandbox.SKUP, SKV = (n) => vm.runInContext(n, sandbox), mainNow = () => sandbox.document.getElementById('main').innerHTML;
+const skR = () => vm.runInContext("Object.assign(SKUP_UI,{day:'',skip:[],mine:[],cur:'',rest:'',say:''})", sandbox); // stan widoku kolejki, nie dane
+tryc('skupienie: SKUP.queue: zrobione osobno, „Później” przesuwa na koniec w kolejności odkładania', () => {
+  const q = SK().queue([{ id: 'a', done: false }, { id: 'b', done: true }, { id: 'c', done: false }, { id: 'd', done: false }], ['a', 'c']);
+  const e = SK().queue([], []), f = SK().later(['a', 'c'], 'a');
+  return JSON.stringify(q) === JSON.stringify({ todo: ['d', 'a', 'c'], done: ['b'] }) && e.todo.length === 0 && JSON.stringify(f) === JSON.stringify(['c', 'a']);
+});
+tryc('skupienie: zadania z szybkiego wpisu i odkrytych elementów; kroki ze Skrótu od razu zrobione z wartością', () => {
+  skR();
+  const k = dk(0); view('day', BASE({ lite: true, focus: true, unlock: [], meas: {}, days: {} }));
+  const a = SKV('skupItems')(k).map((x) => x.id);
+  view('day', BASE({ lite: true, focus: true, unlock: ['waga', 'posilki', 'sen'], meas: { [k]: { steps: '8214' } }, days: {} }));
+  const I = SKV('skupItems')(k), ids = I.map((x) => x.id), kr = I.find((x) => x.id === 'k');
+  return JSON.stringify(a.slice().sort()) === JSON.stringify(['feel', 'k', 'redz']) && ['w', 's', 'k', 'feel', 'redz', 'posilki'].every((x) => ids.includes(x))
+    && ids.indexOf('feel') < ids.indexOf('redz') && ids.indexOf('redz') < ids.indexOf('posilki') && kr.done === true && /Kroki/.test(kr.label) && /8\s?214/.test(kr.val) && I.filter((x) => x.done).length === 1;
+});
+tryc('skupienie: Mój dzień pokazuje jedną kartę „1 z N”, „Później”, listę zrobionych; bez karty zwierzaka, wskazówek i propozycji odkrywania', () => {
+  skR();
+  const k = dk(0), h = view('day', BASE({ lite: true, focus: true, unlock: ['waga'], unlockAt: '', meas: { [k]: { steps: '8214' } }, days: {} }));
+  const cards = (h.match(/class="[^"]*skup-card/g) || []).length, d = h.indexOf('skup-done');
+  return cards === 1 && /1 z 3/.test(h) && h.includes('data-skuplater') && d > -1 && /Kroki/.test(h.slice(d)) && !h.includes('class="petcard') && !h.includes('data-unlock=') && !h.includes('class="tip');
+});
+tryc('skupienie: po wszystkich zadaniach „Gotowe na dziś”, zdanie zwierzaka bez ruchu, „Pokaż resztę dnia”, propozycja odkrywania dopiero tu', () => {
+  skR();
+  const k = dk(0), m = { [k]: { steps: '8214', feel: 'dobrze', redz: 0 } };
+  for (let i = 1; i <= 4; i++) m[dk(i)] = { stepsB: 'mid', feel: 'dobrze', redz: 0 };
+  const h = view('day', BASE({ lite: true, focus: true, unlock: [], unlockAt: '', unlockSnooze: '', pet: { kind: 'kaczka', name: '', since: dk(9) }, meas: m, days: {} }));
+  return h.includes('Gotowe na dziś') && h.includes('data-skuprest') && h.includes('Kluska') && h.includes('data-unlock="waga"') && !h.includes('skup-card');
+});
+tryc('skupienie: „Później” nie zmienia danych i przesuwa zadanie; „Pokaż resztę dnia” daje pełny prosty widok bez zmiany ustawienia', () => {
+  skR();
+  const S0 = T.S(); view('day', BASE({ lite: true, focus: true, unlock: [], meas: {}, days: {} }));
+  const first = SKV('skupView')().todo[0], before = JSON.stringify(S0); click({ skuplater: first }); const h1 = mainNow(), second = SKV('skupView')().todo[0];
+  const same = JSON.stringify(S0) === before; click({ skuprest: '1' }); const h2 = mainNow();
+  return same && second !== first && /1 z 3/.test(h1) && h2.includes('id="lite"') && S0.focus === true;
+});
+tryc('widok: jeden wybór „Mój dzień” (Prosty, Skupienie, Cała Miara) zamiast przełączników; wybór ustawia lite i focus', () => {
+  const h = view('set', BASE({ lite: false, focus: false })), S0 = T.S();
+  const ok1 = /role="group" aria-label="Mój dzień"/.test(h) && ['prosty', 'skup', 'cala'].every((v) => h.includes(`data-view="${v}"`)) && !h.includes('id="once"') && !h.includes('id="lite"');
+  click({ view: 'skup' }); const a = [S0.lite, S0.focus]; click({ view: 'prosty' }); const b = [S0.lite, S0.focus]; click({ view: 'cala' }); const c = [S0.lite, S0.focus];
+  return ok1 && a.join() === 'true,true' && b.join() === 'true,false' && c.join() === 'false,false';
+});
+tryc('widok: migracja zapisanego „raz dziennie” (once bez pola focus) → Skupienie; nowy stan i stan z focus bez zmian', () => {
+  const g = sandbox.localStorage.getItem, L = (o) => { sandbox.localStorage.getItem = () => JSON.stringify(o); return T.load(); }; let r;
+  try { const a = L({ once: true }), b = L({ once: true, focus: false, lite: false }), c = L({ days: {} });
+    r = a.focus === true && a.lite === true && a.once === false && b.focus === false && b.once === true && c.focus === false; } finally { sandbox.localStorage.getItem = g; }
+  return r;
+});
+tryc('bez ruchu: przełącznik still dla wszystkich; w Skupieniu zawsze bez ruchu; CSS wyłącza animacje i przejścia; focus i still w kopii bez zdrowia', () => {
+  const de = sandbox.document.documentElement || (sandbox.document.documentElement = { dataset: {} }), h = view('set', BASE({ still: false }));
+  view('day', BASE({ still: true, focus: false })); const a = de.dataset.still;
+  view('day', BASE({ still: false, focus: true, lite: true })); const b = de.dataset.still;
+  view('day', BASE({ still: false, focus: false })); const c = de.dataset.still;
+  return h.includes('id="still"') && a === '1' && b === '1' && c === '' && /html\[data-still="1"\] \*[^{]*\{[^}]*animation:none!important[^}]*transition:none!important/.test(sysCss)
+    && ['focus', 'still'].every((x) => vm.runInContext('BK_NH_KEEP', sandbox).includes(x));
+});
+tryc('skupienie: PET.drop kasuje oczekującą reakcję', () => { sandbox.PET.react('weigh', 5); if (typeof sandbox.PET.drop !== 'function') return false; sandbox.PET.drop(); return sandbox.PET.flush() === false; });
+tryc('skupienie: sw.js i index.html znają skupienie.js przed app.js', () => /'\.\/skupienie\.js'/.test(fs.readFileSync(path.join(root, 'sw.js'), 'utf8')) && (() => { const h = fs.readFileSync(path.join(root, 'index.html'), 'utf8'); return h.indexOf('skupienie.js') > 0 && h.indexOf('skupienie.js') < h.indexOf('app.js'); })());
 tryc('wiersze: wykres trendu talii i FFM z punktami i średnią 4 tygodni, bez pasa wahania; przy jednym pomiarze bez wykresu', () => {
   WP().reset(); const h = view('day', BASE({ lite: false, meas: { [dk(40)]: { waist: '88', ffm: '50' }, [dk(26)]: { waist: '87' }, [dk(12)]: { waist: '86', ffm: '50,6' } } }));
   const svg = (id) => { const i = h.indexOf('id="' + id + '"'); return i < 0 ? '' : h.slice(i, h.indexOf('</svg>', i)); }, a = svg('ms_tw'), b = svg('ms_tf');
