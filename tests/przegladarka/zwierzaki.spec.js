@@ -205,3 +205,16 @@ test('jezioro: fala i podskok tylko bez ograniczenia ruchu', async ({ page }) =>
   expect(await anim(p2)).toBe(0);
   expect(errors).toEqual([]);
 });
+
+// Imiona według gatunku (21.11.2026): bez nadanego imienia karta i pole „Imię” w Ustawieniach pokazują przykład gatunku; wybór innego gatunku zmienia przykład
+test('imiona: gąska Pianka, kaczuszka Kluska, kapibara Kapi, kotek Mruczek na karcie i w podpowiedzi pola Imię', async ({ page }) => {
+  const errors = await open(page, {});
+  for (const [k, n] of [['gaska', 'Pianka'], ['kaczka', 'Kluska'], ['kapibara', 'Kapi'], ['kotek', 'Mruczek']]) {
+    await page.evaluate((kk) => { SHEET = false; S.lite = false; S.petNames = 1; S.pet = { kind: kk, name: '', since: '2026-10-01', peak: 40 }; S.tab = 'day'; render(); }, k);
+    await expect(page.locator('#main .petcard .petinfo b')).toHaveText(n);
+    await page.evaluate(() => { S.tab = 'set'; render(); });
+    await expect(page.locator('#petname')).toHaveAttribute('placeholder', n);
+    await expect(page.locator('#petname')).toHaveValue('');
+  }
+  expect(errors).toEqual([]);
+});

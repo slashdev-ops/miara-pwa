@@ -249,8 +249,9 @@ var PET = (function () {
     return '<span class="petbars">' + [['Posiłki', m.food], ['Energia', m.energy], ['Humor', m.mood]].map(([l, v]) =>
       `<span class="petbarrow"><span class="petlab">${l}</span><span class="petbar${v < 40 ? ' low' : ''}" role="meter" aria-label="${l} ${v} ze 100" aria-valuenow="${v}" aria-valuemin="0" aria-valuemax="100"><i style="width:${v}%"></i></span></span>`).join('') + '</span>';
   }
-  // Imię: nadane przez osobę, inaczej domyślne (kotek: Mruczek, pozostałe: Kluska)
-  function nameOf(pet) { return (pet && String(pet.name || '').trim()) || (pet && pet.kind === 'kotek' ? 'Mruczek' : 'Kluska'); }
+  // Imię: nadane przez osobę, inaczej przykładowe dla gatunku (21.11.2026); nieznany gatunek jak gąska
+  const NAMES = { gaska: 'Pianka', kaczka: 'Kluska', kapibara: 'Kapi', kotek: 'Mruczek' };
+  function nameOf(pet) { return (pet && String(pet.name || '').trim()) || NAMES[pet && pet.kind] || NAMES.gaska; }
 
   function card(st, pet, esc) {
     return `<button class="petcard" data-tab="pet" aria-label="Mój zwierzak: ${esc(nameOf(pet))}. ${esc(st.line)}">${svg(pet.kind, st.stage, st.mood, st.acc, false, st.crack)}`
