@@ -570,3 +570,21 @@ html[data-pm="l"] .wp-f .wp-hint{grid-column:auto}
 @keyframes zwbob{50%{transform:translateY(-3px)}}
 @keyframes zwfloat{0%{transform:translateY(6px) scale(.6);opacity:0}25%{opacity:1}100%{transform:translateY(-16px) scale(1);opacity:0}}
 @media (prefers-reduced-motion:reduce){.pet,.pet *{animation:none!important}.petfx{animation:none;transform:translate(-50%,0)}}
+/* Tryb skupienia (F1a planu ADHD, 22.11.2026): jedna karta zadania, lista zrobionych, bez ruchu */
+.skup-n{margin:12px 0 0;font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.skup-card,.skup-fin{padding:4px 16px 12px}
+.skup-card h2,.skup-fin h2{margin:4px 0 12px}
+/* Wiersz karty „Dziś” w karcie zadania: bez drugiej ramki; jej nagłówek (to samo pytanie) tylko jako nazwa dla czytnika */
+.skup-card .wp-card{background:transparent;box-shadow:none;padding:0;margin:0}
+.skup-card .wp-card>h3{display:none}
+.skup-act,.skup-two{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.skup-two .btn{flex:1 1 0}
+.skup-done{list-style:none;margin:12px 0;padding:4px 16px}
+.skup-done li{display:flex;align-items:center;gap:12px;min-height:44px;font-size:15px;color:var(--muted);border-top:1px solid var(--line)}
+.skup-done li:first-child{border-top:0}
+.skup-done b{color:var(--ink);font-weight:600}
+.skup-tick{width:24px;height:24px;border-radius:50%;background:var(--green);color:var(--on-green);display:grid;place-items:center;font-size:13px;flex:none}
+.skup-pet{display:flex;align-items:center;gap:12px;margin:0 0 12px}
+.skup-pet svg{width:56px;height:56px;flex:none}
+/* Bez ruchu (WCAG 2.3.3): przełącznik dla wszystkich, w Skupieniu zawsze */
+html[data-still="1"] *,html[data-still="1"] *::before,html[data-still="1"] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}

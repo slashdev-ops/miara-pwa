@@ -1225,7 +1225,7 @@ document.addEventListener('click',e=>{const s=e.target&&e.target.closest&&e.targ
 // ---------- Kopia danych: eksport i import pliku (np. przez iCloud Drive) ----------
 const BK_SKIP=['imp','tab','introStep','sosStep','sosTrig','recipe','recipeBack','labSel'];
 // Kopia bez danych o zdrowiu: lista tego, co zostaje; każde nowe pole stanu jest domyślnie pomijane (rada 09.11.2026, kopia bez danych o zdrowiu)
-const BK_NH_KEEP=['toastLen','tips','discreet','pet','prices','ord','shopDay','stores','promos','lite','unlock','unlockAt','unlockSnooze','pmLeft','vibr','petNames'];
+const BK_NH_KEEP=['toastLen','tips','discreet','pet','prices','ord','shopDay','stores','promos','lite','unlock','unlockAt','unlockSnooze','pmLeft','vibr','petNames','focus','still'];
 let BK_PENDING=null;
 function bkBuild(noHealth){let d=JSON.parse(JSON.stringify(S));BK_SKIP.forEach(k=>delete d[k]);if(d.kopia)delete d.kopia.token;if(d.knee){d.knee.tmpPain=null;d.knee.tmpCramp=null}if(noHealth){const o={};BK_NH_KEEP.forEach(k=>{if(k in d)o[k]=d[k]});d=o}return JSON.stringify({app:'talerz-i-trening',v:1,created:new Date().toISOString(),noHealth:!!noHealth,data:d})}
 function bkParse(text){try{const o=JSON.parse(text);if(!o||o.app!=='talerz-i-trening'||o.v!==1||!o.data||typeof o.data!=='object'||Array.isArray(o.data))return null;return o}catch(e){return null}}
@@ -1249,7 +1249,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
-const DEF={petNames:1,frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
+const DEF={petNames:1,focus:false,still:false,frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,lite:false,unlock:[],unlockAt:'',unlockSnooze:'',body:false,once:false,toastLen:'std',pmLeft:false,vibr:true,ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},shopDay:null,stores:[],promos:[],sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
@@ -1354,6 +1354,8 @@ function muscleToast(){const m=muscleSync();if(m)toast(m);return !!m}
 // Stare dane bez muscleAuto: zapisane „włączone” to wybór ręczny, „wyłączone” albo brak to automat (przegląd 17.11.2026)
 // Imiona według gatunku (21.11.2026): zwierzak zapisany wcześniej bez imienia (poza kotkiem, który miał już Mruczka) zachowuje dotychczasową Kluskę
 function petNameFix(raw,s){if(raw&&typeof raw==='object'&&!('petNames' in raw)){const p=s.pet;if(p&&typeof p==='object'&&!String(p.name||'').trim()&&p.kind!=='kotek')p.name='Kluska';s.petNames=1}return s}
+// Jeden wybór „Mój dzień” (22.11.2026): zapisane „raz dziennie” (once bez pola focus) przechodzi w Skupienie
+function viewFix(raw,s){if(raw&&typeof raw==='object'&&raw.once===true&&!('focus' in raw)){s.focus=true;s.lite=true;s.once=false}return s}
 function muscleFix(raw,s){if(raw&&typeof raw==='object'&&!('muscleAuto' in raw))s.muscleAuto=!s.muscle;return s}
 function muscleHtml(){const r=muscleRec(),on=!!S.muscle,a=num(S.age);
   let h=`<div class="panel"><div class="field"><label for="muscle">Dużo mięśni: oceniaj cel talią, nie samym BMI</label><input type="checkbox" class="switch" id="muscle" data-k="muscle" ${on?'checked':''}></div><div style="padding:0 16px 12px">`;
@@ -1368,7 +1370,7 @@ function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>
 // Rodzaj zwierzaka z kopii: tylko znane gatunki (stare kaczka zostaje kaczuszką), nieznany to gąska
 function petFix(s){if(s&&s.pet&&typeof s.pet==='object'&&!PET.kinds().includes(s.pet.kind))s.pet.kind='gaska';return s}
 function syFix(s){s=petFix(suppFix(s));s=promoFix(s,todayKey());try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
-function load(){let r=null;try{r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(petNameFix(o,muscleFix(o,merge(clone(DEF),fixTouched(o)))))}}catch(e){}const f=clone(DEF);if(!r)f.lite=true;return f}
+function load(){let r=null;try{r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(viewFix(o,petNameFix(o,muscleFix(o,merge(clone(DEF),fixTouched(o))))))}}catch(e){}const f=clone(DEF);if(!r)f.lite=true;return f}
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
 // ---------- Scenariusze do sprawdzania: dane przykładowe pod #demo-<nazwa>, nic się nie zapisuje ----------
@@ -1486,7 +1488,7 @@ const TIPS={day:'Tu jest Twój dzień: co zrobić dziś i jak idzie. Naciśnij k
   set:'Twoje dane liczą kalorie: sprawdź je i naciśnij Zapisz i sprawdź. Tu też włączysz wpisywanie raz dziennie.',
   krok:'Odpowiedz na 5 pytań jednym dotknięciem. Miara pokaże możliwy łańcuch przyczyn i jeden mały krok na ten tydzień.',
   pet:'Zwierzak rośnie z dni z wpisami. Nie umiera i nie cofa się w rozwoju, nawet po przerwie.'};
-function tipHtml(tab){if(DEMO||!TIPS[tab]||(S.tips||{})[tab]||(tab==='day'&&guideActive()))return '';return `<div class="tip panel" role="note"><p><b>Pierwszy raz tutaj?</b> ${TIPS[tab]}</p><button class="btn small" data-tipok="${tab}">Rozumiem</button></div>`}
+function tipHtml(tab){if(DEMO||S.focus||!TIPS[tab]||(S.tips||{})[tab]||(tab==='day'&&guideActive()))return '';return `<div class="tip panel" role="note"><p><b>Pierwszy raz tutaj?</b> ${TIPS[tab]}</p><button class="btn small" data-tipok="${tab}">Rozumiem</button></div>`}
 // Dzień aktywny: 30 pkt albo, w trybie raz dziennie, zapisany wpis dnia (posiłki oraz trening albo kroki)
 function onceDone(k){const e=S.days[k]||[];return e.some(x=>x.kind==='m')&&(e.some(x=>x.kind==='t')||num((S.meas[k]||{}).steps)>0)}
 function dayOk(k){return dayPts(k)>=30||(!!S.once&&onceDone(k))||liteFull(k)}
@@ -1584,8 +1586,42 @@ function unlockHtml(){const k=todayKey(),m=(S.meas||{})[k]||{},u=S.unlock||[];le
   h+=wpCardHtml();
   if(u.includes('posilki')){const n=(S.days[k]||[]).filter(e=>e.kind==='m').length;h+=`<div class="panel"><div class="field"><span>Posiłki z planu</span><span class="small">Zapisane dziś: ${n}</span><button class="btn ghost small" data-tab="meals">Posiłki</button></div></div>`}
   const nx=unlockNext();
-  if(nx)h+=`<div class="note"><p style="margin:0 0 8px">${UNLOCK_TXT[nx]}</p><p style="margin:0"><button class="btn small" data-unlock="${nx}">${nx==='cala'?'Pokaż':'Dodaj'}</button> <button class="btn ghost small" data-unlocklater="1">Nie teraz</button></p></div>`;
+  if(nx)h+=unlockPropHtml(nx);
   return h}
+// ---------- Tryb skupienia (F1a planu ADHD, 22.11.2026, wersja B): jedno zadanie naraz w Moim dniu ----------
+// Kolejka: wiersze szybkiego wpisu i odkryte elementy; wpisane już (np. kroki ze Skrótu) od razu zrobione. „Później” i „Pokaż resztę dnia”
+// to stan widoku (bez zapisu); mine = zadania zrobione na tej karcie, do licznika „N z M”. Bez reakcji zwierzaka, wskazówek i ruchu.
+function unlockPropHtml(nx){return `<div class="note"><p style="margin:0 0 8px">${UNLOCK_TXT[nx]}</p><p style="margin:0"><button class="btn small" data-unlock="${nx}">${nx==='cala'?'Pokaż':'Dodaj'}</button> <button class="btn ghost small" data-unlocklater="1">Nie teraz</button></p></div>`}
+const SKUP_UI={day:'',skip:[],mine:[],cur:'',rest:'',say:''};
+const SKUP_Q={k:'Ile kroków dziś?',feel:'Jak się czujesz?',redz:'Jedzenie kaloryczne dziś',w:'Ile ważysz rano?',s:'Ile spałaś lub spałeś?',posilki:'Jak wyglądało dziś jedzenie?'};
+function skupChips(f,cur,opts,lab){return `<div class="chips" role="group" aria-label="${lab}">`+opts.map(([v,l])=>`<button class="chip${String(cur)===String(v)?' inc':''}" data-lite="${f}:${v}" aria-pressed="${String(cur)===String(v)}">${l}</button>`).join('')+'</div>'}
+function skupItems(k){const m=(S.meas||{})[k]||{},u=S.unlock||[],ms=(S.days[k]||[]).filter(e=>e.kind==='m').length,lv=liteVals(k),wcfg=f=>({scope:'wp',day:k,title:SKUP_Q[f],rows:[wpSpec(f)],api:WP_API});
+  const wv=measCp(m,'w')?null:wpVal('w',m.w),sl=sleepAt(k),wp=typeof WPISY!=='undefined';
+  const R={k:{label:'Kroki',done:stepsBand(k)!=='',val:lv[0].replace(/^Kroki /,''),html:()=>'<div class="wp-qbox">'+stepsRowHtml(m,k)+'</div>'},
+    w:{label:'Waga',done:wv!=null,val:wv!=null?WF.w(wv)+' kg':'',html:()=>wp?WPISY.card(wcfg('w')):''},
+    s:{label:'Sen',done:sl!=null,val:sl!=null?WF.sleep(sl*60):'',html:()=>wp?WPISY.card(wcfg('s')):''}};
+  const top=(wp?WPISY.rowOrder(new Date().getHours()):['w','s','k']).filter(x=>x==='k'||(x==='w'&&u.includes('waga'))||(x==='s'&&u.includes('sen')));
+  const L=top.map(id=>({id,...R[id]}));
+  L.push({id:'feel',label:'Samopoczucie',done:!!m.feel,val:lv[1],html:()=>skupChips('feel',m.feel||'',LITE_FEEL,'Jak się czujesz?')});
+  L.push({id:'redz',label:'Jedzenie kaloryczne',done:[0,1,2].includes(m.redz),val:(LITE_REDZ.find(x=>x[0]===m.redz)||[,''])[1],html:()=>'<p class="small muted" style="margin:0 0 8px">słodycze, fast food, słone przekąski, alkohol</p>'+skupChips('redz',m.redz==null?'':m.redz,LITE_REDZ.map(([v,l])=>[v,l]),'Jedzenie kaloryczne dziś')});
+  if(u.includes('posilki'))L.push({id:'posilki',label:'Posiłki',done:ms>0,val:ms?ms+' zapisane':'',html:()=>'<p class="skup-two">'+actHtml('plan','data-dayplan="1"',ACT_L.plan,false,'')+'<button class="btn ghost" data-tab="meals">Inaczej</button></p>'});
+  return L}
+function skupView(){const k=todayKey();if(SKUP_UI.day!==k)Object.assign(SKUP_UI,{day:k,skip:[],mine:[],cur:'',rest:''});
+  const items=skupItems(k),q=SKUP.queue(items,SKUP_UI.skip),dn=new Set(q.done);
+  if(SKUP_UI.cur&&dn.has(SKUP_UI.cur)&&!SKUP_UI.mine.includes(SKUP_UI.cur))SKUP_UI.mine.push(SKUP_UI.cur);
+  SKUP_UI.mine=SKUP_UI.mine.filter(x=>dn.has(x));
+  return {k,items,todo:q.todo,done:q.done}}
+function skupDoneHtml(v){const D=v.items.filter(x=>x.done);if(!D.length)return '';
+  return '<ul class="skup-done panel" aria-label="Zrobione dziś">'+D.map(x=>`<li><span class="skup-tick" aria-hidden="true">✓</span><span><b>${x.label}</b>${x.val?' · '+esc(x.val):''}</span></li>`).join('')+'</ul>'}
+function skupDayHtml(){const v=skupView();if(SKUP_UI.rest===v.k)return null;
+  if(!v.todo.length){SKUP_UI.cur='';const p=S.pet?`<p class="skup-pet">${PET.svg(S.pet.kind,'young','happy',null)}<span>${esc(PET.nameOf(S.pet))}: dzień zapisany.</span></p>`:'',nx=unlockNext();
+    return `<section class="panel skup-fin" id="skup" aria-labelledby="skup_h"><h2 id="skup_h" tabindex="-1">Gotowe na dziś</h2>${p}<p><button class="btn ghost" data-skuprest="1">Pokaż resztę dnia</button></p></section>`+(nx?unlockPropHtml(nx):'')+skupDoneHtml(v)}
+  const id=v.todo[0],it=v.items.find(x=>x.id===id),n=v.todo.length+SKUP_UI.mine.length,pos=SKUP_UI.mine.length+1;
+  if(SKUP_UI.cur!==id){if(SKUP_UI.cur)SKUP_UI.say=`${pos} z ${n}: ${SKUP_Q[id]}`;SKUP_UI.cur=id}
+  return `<section class="panel skup-card" id="skup" aria-labelledby="skup_h"><p class="skup-n">${pos} z ${n}</p><h2 id="skup_h" tabindex="-1">${SKUP_Q[id]}</h2>${it.html()}`
+    +`<p class="skup-act"><button class="btn ghost" data-skuplater="${id}">Później</button></p></section>`+skupDoneHtml(v)}
+// Po zmianie zadania: fokus na nagłówku nowej karty i jedno ogłoszenie w #sr (WCAG 2.4.3, 4.1.3); bez przewijania strony
+function skupAfter(){const t=SKUP_UI.say;if(!t||typeof document==='undefined'||!document.querySelector)return;SKUP_UI.say='';const sr=document.getElementById('sr');if(sr)sr.textContent=t;const h=document.getElementById('skup_h');if(h&&h.focus)h.focus({preventScroll:true})}
 // Podsumowanie po szybkim wpisie (plan łatwości 20.11.2026, zadanie 4): pełny dzień zwija kartę w miejscu do „✓ Zapisane na dziś”;
 // „Twój stan” rozwija się w miejscu, bez zmiany ekranu (WCAG 3.2.2). Same liczby, ten sam neutralny wygląd dla każdej wartości.
 // LITE_UI to stan widoku, nie dane: open = dzień rozwinięty przez „Zmień”, sum = podsumowanie otwarte, focus i say = fokus i komunikat po przerysowaniu
@@ -1978,7 +2014,7 @@ const TABS=[
 ];
 function renderTabs(){const tb=document.getElementById('tabs');if(tb&&tb.style)tb.style.display=S.tab==='intro'?'none':'';
   const SV=ic=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic}</svg>`,SH={day:'Dzień',set:'Ustaw.'},left=dayLeft();
-  document.getElementById('tabs').innerHTML=TABS.map(([k,l,ic])=>{const n=k==='day'?left:0;return `<button class="${S.tab===k?'on':''}" data-tab="${k}" aria-label="${l}${n?`, ${n} do zrobienia`:''}">${SV(ic)}<span class="l${SH[k]?' hs':''}">${l}</span>${SH[k]?`<span class="s">${SH[k]}</span>`:''}${n?`<span class="badge" aria-hidden="true">${n}</span>`:''}</button>`
+  document.getElementById('tabs').innerHTML=TABS.map(([k,l,ic])=>{const n=k==='day'&&!S.focus?left:0;return `<button class="${S.tab===k?'on':''}" data-tab="${k}" aria-label="${l}${n?`, ${n} do zrobienia`:''}">${SV(ic)}<span class="l${SH[k]?' hs':''}">${l}</span>${SH[k]?`<span class="s">${SH[k]}</span>`:''}${n?`<span class="badge" aria-hidden="true">${n}</span>`:''}</button>`
     +(k==='day'?`<button class="add${SHEET?' on':''}" data-addsheet="1" aria-label="Dodaj wpis" aria-haspopup="dialog" aria-expanded="${SHEET}">${SV('<path d="M12 5v14M5 12h14"/>')}<span class="l">Dodaj</span></button>`:'')}).join('');
   document.getElementById('title').textContent=(TABS.find(x=>x[0]===S.tab)||[0,{help:'Pomoc',sos:'Ochota na przekąskę',labs:'Moje badania',visit:'Lista na wizytę',intro:'Wprowadzenie',review:'Przegląd tygodnia',krok:'Krok po kroku',import:'Dane ze Skrótu',recipe:'Przepis',knee:'Program kolana',mob:'Mobilność',impact:'Mój wpływ',challenge:'Wspólne wyzwanie',pet:'Mój zwierzak'}[S.tab]||''])[1];
   document.getElementById('who').textContent=new Date().toLocaleDateString('pl-PL',{weekday:'short',day:'numeric',month:'numeric'});
@@ -2105,7 +2141,7 @@ function zdHtml(){
   return h+'</section>';
 }
 function renderDay(){
-  if(S.lite){document.getElementById('main').innerHTML=liteCardHtml()+unlockHtml()+petCardHtml()+'<p><button class="btn ghost" data-litefull="1">Pokaż całą Miarę</button></p>';return}
+  if(S.lite){if(S.focus){const sh=skupDayHtml();if(sh!=null){document.getElementById('main').innerHTML=sh;skupAfter();return}}document.getElementById('main').innerHTML=liteCardHtml()+unlockHtml()+petCardHtml()+'<p><button class="btn ghost" data-litefull="1">Pokaż całą Miarę</button></p>';return}
   const d=day(),tr=d.filter(e=>e.kind==='t'),ml=d.filter(e=>e.kind==='m');
   const net=tr.reduce((a,e)=>a+e.net,0),eat={k:0,p:0,f:0,c:0};ml.forEach(e=>{eat.k+=e.k;eat.p+=e.p;eat.f+=e.f;eat.c+=e.c});
   const R=rmr(),target=targetKcal(),pT=protTarget();
@@ -2149,8 +2185,8 @@ function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
   let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+rwHtml('pf',['kg','cm','age','goal'])+RW_TIP+'</div>'+goalWayHtml()+bmiSetHtml();
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex','','Płeć')+dataHtml();
-  h+=`<h2 id="wpisy">Wpisy</h2><div class="panel"><div class="field"><label for="once">Wpisuję raz dziennie, wieczorem</label><input type="checkbox" class="switch" id="once" data-k="once" ${S.once?'checked':''}></div></div><p class="small muted">Mój dzień pokaże jeden wpis dnia, a zwierzak przypomni o posiłkach dopiero od 19:00.</p>`;
-  h+=`<div class="panel"><div class="field"><label for="lite">Prosty widok</label><input type="checkbox" class="switch" id="lite" data-k="lite" ${S.lite?'checked':''}></div></div><p class="small muted">Mój dzień pokazuje szybki wpis i to, co dodasz, a dane zostają przy każdym widoku.</p>`;
+  h+='<h2 id="wpisy">Wpisy</h2>'+seg([['prosty','Prosty'],['skup','Skupienie'],['cala','Cała Miara']],S.focus?'skup':S.lite?'prosty':'cala','view','','Mój dzień')+'<p class="small muted">Skupienie pokazuje jedną rzecz naraz, bez wskazówek i ruchu; dane zostają przy każdym widoku.</p>';
+  h+=`<div class="panel"><div class="field"><label for="still">Bez ruchu</label><input type="checkbox" class="switch" id="still" data-k="still" ${S.still?'checked':''}></div></div><p class="small muted">Bez animacji w całej Miarze, a w Skupieniu zawsze.</p>`;
   h+='<h2 id="komunikaty">Komunikaty</h2>'+seg([['std','Zwykły czas'],['long','Dłużej'],['stay','Do zamknięcia']],S.toastLen||'std','toastlen','','Czas wyświetlania komunikatów')+'<p class="small muted">Jak długo widać dymek po zapisie.</p>';
   h+=`<div class="panel"><div class="field"><label for="discreet">Tryb dyskretny: karty o migrenie i antykoncepcji tylko w Zdrowiu</label><input type="checkbox" class="switch" id="discreet" data-k="discreet" ${S.discreet?'checked':''}></div></div>`;
   h+=`<div class="panel"><div class="field"><label for="pmLeft">Przyciski − i + po lewej</label><input type="checkbox" class="switch" id="pmLeft" data-k="pmLeft" ${S.pmLeft?'checked':''}></div>${typeof navigator!=='undefined'&&typeof navigator.vibrate==='function'?`<div class="field"><label for="vibr">Wibracja po zapisie</label><input type="checkbox" class="switch" id="vibr" data-k="vibr" ${S.vibr!==false?'checked':''}></div>`:''}</div>`;
@@ -2250,7 +2286,7 @@ function tileFit(root){if(!root||typeof root.querySelectorAll!=='function'||type
 // Po załadowaniu czcionek szerokość słów jest inna: kolumny kafelków liczone ponownie
 if(typeof document!=='undefined'&&document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>tileFit(document.getElementById('main'))).catch(()=>{});
 if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('resize',()=>tileFit(document.getElementById('main')));document.addEventListener('toggle',()=>tileFit(document.getElementById('main')),true)}
-function render(){if(S.tab!=='day'){LITE_UI.focus='';LITE_UI.say=''}if(S.tab!=='labs')LAB_KEEP=null;if(typeof document!=='undefined'&&document.documentElement&&document.documentElement.dataset)document.documentElement.dataset.pm=S.pmLeft?'l':'r';startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():''}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');if(typeof WPISY!=='undefined')WPISY.mount(document.getElementById('main'),{done:id=>{save();renderKeep((id&&document.getElementById(id))||document.activeElement);liteAfter()},say:t=>{const sr=document.getElementById('sr');if(sr)sr.textContent=t}});tileLabels(document.getElementById('main'));tileLabels(document.getElementById('sheet'));PET.flush()}
+function render(){if(S.tab!=='day'){LITE_UI.focus='';LITE_UI.say=''}if(S.tab!=='labs')LAB_KEEP=null;if(typeof document!=='undefined'&&document.documentElement&&document.documentElement.dataset){document.documentElement.dataset.pm=S.pmLeft?'l':'r';document.documentElement.dataset.still=(S.still||S.focus)?'1':''}if(S.focus&&typeof PET!=='undefined'&&PET.drop)PET.drop();startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():''}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');if(typeof WPISY!=='undefined')WPISY.mount(document.getElementById('main'),{done:id=>{save();renderKeep((id&&document.getElementById(id))||document.activeElement);liteAfter()},say:t=>{const sr=document.getElementById('sr');if(sr)sr.textContent=t}});tileLabels(document.getElementById('main'));tileLabels(document.getElementById('sheet'));PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -2387,7 +2423,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.cyc){const k=todayKey();S.meas[k]=S.meas[k]||{};const pv=S.meas[k].cyc||'';S.meas[k].cyc=pv===d.cyc?'':d.cyc;petHealth('cyc',S.meas[k].cyc,pv)}
   else if(d.bkexp){bkExport();return}
   else if(d.bkpaste){const o=bkParse(document.getElementById('bk_text').value.trim());if(!o){BK_PENDING=null;toast('To nie jest kopia tej aplikacji');return}BK_PENDING=o}
-  else if(d.bkapply){if(!BK_PENDING)return;if(BK_PENDING.noHealth)BK_NH_KEEP.forEach(k=>{if(!(k in BK_PENDING.data))return;const v=clone(BK_PENDING.data[k]);S[k]=v&&typeof v==='object'&&!Array.isArray(v)?merge(clone(DEF[k]||{}),v):v});else S=muscleFix(BK_PENDING.data,merge(clone(DEF),fixTouched(BK_PENDING.data)));S=syFix(petNameFix(BK_PENDING.data,S));S.onb=true;S.tab='set';BK_PENDING=null;const mm=muscleSync();undoable('Wczytano kopię'+(mm?'. '+mm:''))}
+  else if(d.bkapply){if(!BK_PENDING)return;if(BK_PENDING.noHealth)BK_NH_KEEP.forEach(k=>{if(!(k in BK_PENDING.data))return;const v=clone(BK_PENDING.data[k]);S[k]=v&&typeof v==='object'&&!Array.isArray(v)?merge(clone(DEF[k]||{}),v):v});else S=muscleFix(BK_PENDING.data,merge(clone(DEF),fixTouched(BK_PENDING.data)));S=syFix(viewFix(BK_PENDING.data,petNameFix(BK_PENDING.data,S)));S.onb=true;S.tab='set';BK_PENDING=null;const mm=muscleSync();undoable('Wczytano kopię'+(mm?'. '+mm:''))}
   else if(d.bkcancel){BK_PENDING=null}
   else if(d.chmode){S.chMode=d.chmode}
   else if(d.wi){const [a,b]=d.wi.split(':');S.wi=S.wi||{snack:0,steps:0,train:0};S.wi[a]=+b}
@@ -2447,6 +2483,9 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.tipsreset){S.tips={};toast('Wskazówki pokażą się ponownie')}
   else if(d.guidehide){S.guide.hidden=true}
   else if(d.guideshow){S.guide=S.guide||{};S.guide.hidden=false;S.tab='day';window.scrollTo(0,0);if(!guideActive())toast('Wszystkie pierwsze kroki są już zrobione')}
+  else if(d.view){S.lite=d.view!=='cala';S.focus=d.view==='skup';S.once=false;SKUP_UI.rest=''}
+  else if(d.skuplater){SKUP_UI.skip=SKUP.later(SKUP_UI.skip,d.skuplater)}
+  else if(d.skuprest){SKUP_UI.rest=todayKey()}
   else if(d.toastlen){S.toastLen=d.toastlen;toast(d.toastlen==='stay'?'Komunikat zostanie, dopóki go nie zamkniesz.':'Tak długo będzie widać komunikat.')}
   else if(d.setv){setPath(d.setv,d.v)}
   else if(d.pace){S.f.pace=d.pace}

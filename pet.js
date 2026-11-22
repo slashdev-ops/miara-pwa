@@ -304,6 +304,8 @@ var PET = (function () {
   // ---------- Reakcje: akcja kolejkuje, render() odtwarza na widocznej postaci (najpóźniej po 10 min) ----------
   let pending = null;
   function react(type, pts) { pending = { type, pts, t: Date.now() }; }
+  // Tryb skupienia: oczekująca reakcja przepada (bez przerywania, WCAG 2.2.4)
+  function drop() { pending = null; }
   // Napisy reakcji: każdy z własnym id, usuwany dokładnie ten wstawiony (szybkie kolejne reakcje się nie mieszają)
   const TAG = { note: 'Zanotowane', rest: 'Odpocznij dziś', series: '♥ ♥ ♥' }, SAY = { series: 'Serduszka: pomiar w zalecanym terminie', urge: 'Zapisane' };
   // Napis stały (tag, still) wraca po przerysowaniu widoku, dopóki nie minie jego czas (bez ponownego wejścia)
@@ -406,5 +408,5 @@ var PET = (function () {
       + `<p><b>Jezioro ${lake}.</b> ${where}.</p><p class="small muted">${W[weather] || 'Następny kamień po zaliczonym tygodniu celu. Przerwa niczego nie zabiera.'}</p></div>`;
   }
 
-  return { state, milestones, next, path, svg, card, screen, nameOf, badgeList, body, react, flush, demo, kinds: () => KINDS.slice(), form };
+  return { state, milestones, next, path, svg, card, screen, nameOf, badgeList, body, react, drop, flush, demo, kinds: () => KINDS.slice(), form };
 })();
