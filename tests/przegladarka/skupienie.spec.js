@@ -70,3 +70,43 @@ test('skupienie: bez ruchu, 320 px bez przewijania w poziomie, cele dotyku co na
     await page.locator('[data-skuplater]').click();
   }
 });
+
+// F1b (23.11.2026): główna karta zakładki w Skupieniu, reszta w zwiniętym „Więcej na tym ekranie”; Cała Miara bez zmian
+async function tab(page, t, focus, prof) {
+  await page.evaluate(([tt, f, pr]) => { SHEET = false; S.lite = f; S.focus = f; S.tab = tt; S.guide = { hidden: true, dataOk: true, seenPet: true }; OPEN_F.delete('skupmore-' + tt); if (pr != null) S.prof = { cond: pr ? { hashi: true } : {}, pill: '' }; render(); window.scrollTo(0, 0); }, [t, focus, prof == null ? null : prof]);
+}
+const shown = (page) => page.evaluate(() => { const m = document.querySelector('#main'); return { words: (m.innerText.match(/\S+/g) || []).length, h2: [...m.querySelectorAll('h2')].filter((h) => (h.checkVisibility ? h.checkVisibility() : h.getClientRects().length > 0)).map((h) => h.textContent.trim()) }; });
+
+for (const [t, title, prof] of [['meals', 'Dziś według planu', null], ['train', 'Trening z zegarka', null], ['health', 'Twój plan', true], ['health', 'Mój profil zdrowia', false]]) {
+  test(`skupienie F1b: ${t}${prof === false ? ' bez profilu' : ''}: na wierzchu „${title}”, reszta w „Więcej na tym ekranie”, Cała Miara bez zmian`, async ({ page }) => {
+    const errors = await open(page);
+    await tab(page, t, false, prof); const full = await shown(page);
+    await expect(page.locator('.skup-more')).toHaveCount(0);
+    await tab(page, t, true, prof); const foc = await shown(page);
+    expect(foc.h2).toEqual([title]);
+    console.log(`F1b ${t}${prof === false ? ' bez profilu' : ''}: słowa ${full.words} → ${foc.words}`);
+    expect(foc.words, `słowa: Skupienie ${foc.words}, Cała Miara ${full.words}`).toBeLessThanOrEqual(full.words * 0.55);
+    const more = page.locator('details.skup-more');
+    await expect(more).toHaveCount(1);
+    await expect(more).not.toHaveAttribute('open', '');
+    await more.locator(':scope > summary').click();
+    const opened = await shown(page);
+    expect(opened.h2.length).toBe(full.h2.length);
+    await page.evaluate(() => render());
+    await expect(page.locator('details.skup-more')).toHaveAttribute('open', '');
+    const o = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
+    expect(o.sw).toBeLessThanOrEqual(o.cw);
+    expect(errors).toEqual([]);
+  });
+}
+
+test('skupienie F1b: przejście do miejsca w zwiniętej sekcji otwiera ją i daje fokus', async ({ page }) => {
+  await open(page);
+  await tab(page, 'health', true, true);
+  const id = await page.evaluate(() => { const el = document.querySelector('details.skup-more [id]:not(details):not(summary)'); return el && el.id; });
+  expect(id).toBeTruthy();
+  await page.evaluate((x) => { const b = document.createElement('button'); b.dataset.goto = x; b.id = 'tgo'; b.textContent = 'idź'; document.querySelector('#main').prepend(b); }, id);
+  await page.locator('#tgo').click();
+  await expect(page.locator('details.skup-more')).toHaveAttribute('open', '');
+  await expect(page.locator('#' + id)).toBeVisible();
+});

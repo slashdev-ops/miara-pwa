@@ -3045,6 +3045,21 @@ tryc('bez ruchu: przełącznik still dla wszystkich; w Skupieniu zawsze bez ruch
 });
 tryc('skupienie: PET.drop kasuje oczekującą reakcję', () => { sandbox.PET.react('weigh', 5); if (typeof sandbox.PET.drop !== 'function') return false; sandbox.PET.drop(); return sandbox.PET.flush() === false; });
 tryc('skupienie: sw.js i index.html znają skupienie.js przed app.js', () => /'\.\/skupienie\.js'/.test(fs.readFileSync(path.join(root, 'sw.js'), 'utf8')) && (() => { const h = fs.readFileSync(path.join(root, 'index.html'), 'utf8'); return h.indexOf('skupienie.js') > 0 && h.indexOf('skupienie.js') < h.indexOf('app.js'); })());
+// F1b planu ADHD (23.11.2026, zweryfikowana wersja): główna karta zakładki w Skupieniu, reszta w „Więcej na tym ekranie”; przejście do celu otwiera zwiniętą sekcję
+tryc('skupienie F1b: główna karta: Posiłki „Dziś według planu”, Trening „Trening z zegarka”, Zdrowie „Twój plan” albo bez profilu „Mój profil zdrowia”, inne bez zmian', () => {
+  const m = vm.runInContext('skupMain', sandbox); view('health', BASE({ prof: { cond: {}, pill: '' } })); const noProf = m('health');
+  view('health', BASE({ prof: { cond: { hashi: true }, pill: '' } })); const prof = m('health');
+  return m('meals') === 'Dziś według planu' && m('train') === 'Trening z zegarka' && noProf === 'Mój profil zdrowia' && prof === 'Twój plan' && m('set') === '' && m('day') === '';
+});
+tryc('skupienie F1b: SKUP.reveal otwiera wszystkie zamknięte sekcje nad celem przejścia', () => {
+  const d1 = { tagName: 'DETAILS', open: false }, d2 = { tagName: 'DETAILS', open: false }, div = { tagName: 'DIV' };
+  d1.parentElement = null; div.parentElement = d1; d2.parentElement = div; const el = { tagName: 'BUTTON', parentElement: d2 };
+  const n = sandbox.SKUP.reveal(el); return n === 2 && d1.open === true && d2.open === true && sandbox.SKUP.reveal(null) === 0;
+});
+tryc('skupienie F1b: render w Skupieniu zwija zakładkę (SKUP.fold z tytułem głównej karty), przejścia goto i nav odsłaniają cel', () => {
+  const src = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  return /if\(S\.focus\)\{const mt=skupMain\(S\.tab\);if\(mt\)SKUP\.fold\(/.test(src) && /d\.goto\)\{const el=document\.getElementById\(d\.goto\);if\(el\)\{SKUP\.reveal\(el\);/.test(src) && /const el=id&&document\.getElementById\(id\);\s*if\(el\)\{SKUP\.reveal\(el\);/.test(src);
+});
 tryc('wiersze: wykres trendu talii i FFM z punktami i średnią 4 tygodni, bez pasa wahania; przy jednym pomiarze bez wykresu', () => {
   WP().reset(); const h = view('day', BASE({ lite: false, meas: { [dk(40)]: { waist: '88', ffm: '50' }, [dk(26)]: { waist: '87' }, [dk(12)]: { waist: '86', ffm: '50,6' } } }));
   const svg = (id) => { const i = h.indexOf('id="' + id + '"'); return i < 0 ? '' : h.slice(i, h.indexOf('</svg>', i)); }, a = svg('ms_tw'), b = svg('ms_tf');
