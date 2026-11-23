@@ -588,3 +588,14 @@ html[data-pm="l"] .wp-f .wp-hint{grid-column:auto}
 .skup-pet svg{width:56px;height:56px;flex:none}
 /* Bez ruchu (WCAG 2.3.3): przełącznik dla wszystkich, w Skupieniu zawsze */
 html[data-still="1"] *,html[data-still="1"] *::before,html[data-still="1"] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+/* Mniej ramek, więcej miejsca (prośba 23.11.2026): kontenery bez obramowania i cienia, oddziela je tło;
+   zwijane sekcje to kontrolki, więc zachowują linię 3:1 (WCAG 1.4.11). Na telefonie sekcje sięgają krawędzi ekranu. */
+.panel,.note:not(.warn):not(.demo){border:0;box-shadow:none}
+details.fold{box-shadow:none}
+@media (max-width:600px){
+  main .panel,main details.fold,main .note{margin-left:-16px;margin-right:-16px;border-radius:0}
+  main details.fold{border-left:0;border-right:0}
+  main .fold .panel,main .panel .panel,main .fold .note,main .panel .note{margin-left:0;margin-right:0}
+}
+/* Pole zgody: cel dotyku 44 px także wtedy, gdy zdanie mieści się w jednej linii (szersze sekcje na telefonie) */
+p>label:has(>input[type="checkbox"]){display:flex;align-items:center;gap:8px;min-height:44px}

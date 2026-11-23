@@ -28,7 +28,7 @@ test('pasek następnego kroku nie wychodzi poza zaokrąglony róg ramki', async 
   expect(b, 'wiersz „następny krok” w ramce').not.toBeNull();
   expect(b.top, 'pasek jest widoczny').not.toBeNull();
   // Pasek leży przy lewej krawędzi (x = 1 px od zewnętrznej krawędzi ramki): łuk rogu kończy się tam r - sqrt(r² - (r - 1)²) px od góry
-  const edge = b.r - Math.sqrt(b.r * b.r - (b.r - 1) * (b.r - 1));
+  const edge = b.r >= 1 ? b.r - Math.sqrt(b.r * b.r - (b.r - 1) * (b.r - 1)) : 0; // ramka bez zaokrąglenia (telefon, 23.11.2026): łuku nie ma
   expect(b.top - b.pTop, 'od góry ramki').toBeGreaterThanOrEqual(edge);
   expect(b.pBottom - b.bottom, 'od dołu ramki').toBeGreaterThanOrEqual(edge);
   expect(errors).toEqual([]);
