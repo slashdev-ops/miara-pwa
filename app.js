@@ -2343,7 +2343,9 @@ function focusEl(el){if(!el||!el.focus)return;if(!/^(BUTTON|INPUT|SELECT|TEXTARE
 function actDone(at){if(!document.querySelector)return;
   if(S.tab!==at.tab){window.scrollTo(0,0);focusEl(document.querySelector('header h1'));return}
   if(at.rev&&typeof SYG!=='undefined'){const x=SYG.visible(S,todayKey())[0],l=x&&x.lvl==='112'&&document.querySelector('#main a[href="tel:112"]'),al=l&&l.closest('.petsay.syg,.note.warn');if(al&&al.scrollIntoView){al.scrollIntoView({block:'center',behavior:'auto'});focusEl(l);return}}
-  if(at.own||window.scrollY!==at.sy)return;
+  // Strona krótsza po usunięciu wiersza przy końcu: przeglądarka sama cofa przewinięcie do nowego końca. To nie jest przewinięcie przez akcję, fokus wraca (F2c, 23.11.2026).
+  const de=document.documentElement,clamp=de&&window.scrollY<at.sy&&Math.abs(window.scrollY-(de.scrollHeight-window.innerHeight))<=1;
+  if(at.own||(window.scrollY!==at.sy&&!clamp))return;
   const b=at.sel&&document.querySelector(at.sel);
   // Przewinięcie o pełne piksele (połowa zawsze od zera), drugi przebieg poprawia resztę, gdy przeglądarka przewinęła inaczej (WebKit)
   if(b&&b.getBoundingClientRect&&at.y!=null){for(let i=0;i<2;i++){const dy=b.getBoundingClientRect().top-at.y;if(Math.abs(dy)>=0.5)window.scrollTo(0,window.scrollY+Math.sign(dy)*Math.round(Math.abs(dy)))}focusEl(b);return}
