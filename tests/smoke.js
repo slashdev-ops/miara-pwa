@@ -3060,6 +3060,29 @@ tryc('skupienie F1b: render w Skupieniu zwija zakładkę (SKUP.fold z tytułem g
   const src = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   return /if\(S\.focus\)\{const mt=skupMain\(S\.tab\);if\(mt\)SKUP\.fold\(/.test(src) && /d\.goto\)\{const el=document\.getElementById\(d\.goto\);if\(el\)\{SKUP\.reveal\(el\);/.test(src) && /const el=id&&document\.getElementById\(id\);\s*if\(el\)\{SKUP\.reveal\(el\);/.test(src);
 });
+// F1c (23.11.2026, rada: projektant wpisu na telefonie): w Skupieniu karta planu posiłków pokazuje jedno danie, reszta i podsumowanie dnia w zwiniętym „Reszta planu dnia”
+const planTopExp = () => vm.runInContext("(()=>{const ids=planIds(),now=slotNow();return ids.find(id=>MEALS.find(m=>m.id===id).t===now)||ids[0]})()", sandbox);
+const planSplit = (h) => { const i = h.indexOf('data-fold="skupplan"'); return { top: i < 0 ? h : h.slice(0, i), rest: i < 0 ? '' : h.slice(i), i }; };
+const prows = (s) => (s.match(/class="entry prow/g) || []).length;
+const planKeep = (fn) => () => { const S0 = T.S(), l0 = S0.lite, f0 = S0.focus; try { return fn(); } finally { Object.assign(T.S(), { lite: l0, focus: f0 }); } }; // widok Skupienia nie przecieka do kolejnych testów
+tryc('skupienie F1c: Posiłki w Skupieniu: na wierzchu jedno danie (polecane teraz albo pierwsze), reszta i podsumowanie dnia w „Reszta planu dnia”; Cała Miara bez zmian', planKeep(() => {
+  const n = vm.runInContext('planIds().length', sandbox), exp = planTopExp(), ids = vm.runInContext('planIds()', sandbox);
+  const h = view('meals', BASE({ lite: true, focus: true, days: {} })), s = planSplit(h);
+  const full = view('meals', BASE({ lite: false, focus: false, days: {} }));
+  return s.i > 0 && prows(s.top) === 1 && s.top.includes(`data-addmeal="${exp}"`) && s.top.includes(`data-swap="${ids.indexOf(exp)}"`) && prows(s.rest) === n - 1
+    && s.rest.includes(`Reszta planu dnia (${n - 1})`) && s.rest.includes('Plan dnia:') && !s.top.includes('Plan dnia:')
+    && !full.includes('skupplan') && prows(full) === n && full.includes('Plan dnia:');
+}));
+tryc('skupienie F1c: wszystkie dania z planu zapisane: na wierzchu tylko komunikat, cały plan w „Cały plan dnia”', planKeep(() => {
+  const ids = vm.runInContext('planIds()', sandbox), d = { [dk(0)]: ids.map((id) => ({ kind: 'm', id, label: 'test ' + id, k: 1, p: 0, f: 0, c: 0 })) };
+  const s = planSplit(view('meals', BASE({ lite: true, focus: true, days: d })));
+  return prows(s.top) === 0 && s.top.includes('Wszystkie posiłki z planu są zapisane') && s.rest.includes(`Cały plan dnia (${ids.length})`) && prows(s.rest) === ids.length;
+}));
+tryc('skupienie F1c: danie zapisane przez „Zjem” zostaje na wierzchu w oknie „Cofnij”, następne czeka', planKeep(() => {
+  const exp = planTopExp(); view('meals', BASE({ lite: true, focus: true, days: {} })); click({ addmeal: exp });
+  const s = planSplit(mainHtml());
+  return prows(s.top) === 1 && s.top.includes(`data-addmeal="${exp}"`) && s.top.includes('Zjedzone');
+}));
 tryc('wiersze: wykres trendu talii i FFM z punktami i średnią 4 tygodni, bez pasa wahania; przy jednym pomiarze bez wykresu', () => {
   WP().reset(); const h = view('day', BASE({ lite: false, meas: { [dk(40)]: { waist: '88', ffm: '50' }, [dk(26)]: { waist: '87' }, [dk(12)]: { waist: '86', ffm: '50,6' } } }));
   const svg = (id) => { const i = h.indexOf('id="' + id + '"'); return i < 0 ? '' : h.slice(i, h.indexOf('</svg>', i)); }, a = svg('ms_tw'), b = svg('ms_tf');
