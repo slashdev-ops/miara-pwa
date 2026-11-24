@@ -85,7 +85,7 @@ for (const [t, title, prof] of [['meals', 'Dziś według planu', null], ['train'
     await tab(page, t, true, prof); const foc = await shown(page);
     expect(foc.h2).toEqual([title]);
     console.log(`F1b ${t}${prof === false ? ' bez profilu' : ''}: słowa ${full.words} → ${foc.words}`);
-    expect(foc.words, `słowa: Skupienie ${foc.words}, Cała Miara ${full.words}`).toBeLessThanOrEqual(full.words * 0.55);
+    expect(foc.words, `słowa: Skupienie ${foc.words}, Cała Miara ${full.words}`).toBeLessThan(full.words / 2);
     const more = page.locator('details.skup-more');
     await expect(more).toHaveCount(1);
     await expect(more).not.toHaveAttribute('open', '');
@@ -109,4 +109,30 @@ test('skupienie F1b: przejście do miejsca w zwiniętej sekcji otwiera ją i daj
   await page.locator('#tgo').click();
   await expect(page.locator('details.skup-more')).toHaveAttribute('open', '');
   await expect(page.locator('#' + id)).toBeVisible();
+});
+
+// F1c (23.11.2026, rada: projektant wpisu na telefonie): w Skupieniu karta planu posiłków ma jedno danie, reszta w „Reszta planu dnia”
+test('skupienie F1c: Posiłki: jedno danie na wierzchu, „Zjem” zostawia je z „Cofnij”, reszta planu zwinięta i pamięta otwarcie', async ({ page }) => {
+  const errors = await open(page);
+  await page.evaluate(() => { S.days[todayKey()] = []; OPEN_F.delete('skupplan'); });
+  await tab(page, 'meals', true, null);
+  const vis = () => page.evaluate(() => [...document.querySelectorAll('#main .prow')].filter((r) => r.checkVisibility()).map((r) => r.querySelector('[data-addmeal]').dataset.addmeal));
+  const n = await page.evaluate(() => planIds().length);
+  const first = await vis();
+  expect(first.length).toBe(1);
+  const rest = page.locator('details[data-fold="skupplan"]');
+  await expect(rest).not.toHaveAttribute('open', '');
+  await expect(rest.locator(':scope > summary')).toHaveText(`Reszta planu dnia (${n - 1})`);
+  const sb = await rest.locator(':scope > summary').boundingBox();
+  expect(sb.height).toBeGreaterThanOrEqual(44);
+  await page.locator(`[data-addmeal="${first[0]}"]`).click();
+  expect(await vis()).toEqual(first);
+  await expect(page.locator(`[data-addmeal="${first[0]}"]`)).toContainText('Cofnij');
+  await rest.locator(':scope > summary').click();
+  await page.evaluate(() => render());
+  await expect(page.locator('details[data-fold="skupplan"]')).toHaveAttribute('open', '');
+  expect((await vis()).length).toBe(n);
+  const o = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
+  expect(o.sw).toBeLessThanOrEqual(o.cw);
+  expect(errors).toEqual([]);
 });
