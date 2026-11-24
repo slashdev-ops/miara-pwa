@@ -1612,6 +1612,11 @@ const MOBE = { kind: 't', label: 'Mobilność (rutyna)', min: 10, gross: 0, net:
 tryc('Mobilność nie jest ruchem dnia: karta Dziś nie odhacza „Ruch”', () => !ruchOn(view('day', BASE({ days: { [dk(0)]: [MOBE] }, meas: {} }))));
 tryc('Mobilność nie jest ruchem dnia: punkty dnia jak bez wpisu', () => { view('day', BASE({ days: { [dk(0)]: [] }, meas: {}, hab: {} })); const p0 = T.dayPts(dk(0)); view('day', BASE({ days: { [dk(0)]: [MOBE] }, meas: {}, hab: {} })); return T.dayPts(dk(0)) === p0; });
 tryc('Mobilność: po zapisie sesji ekran nie mówi, że liczy się jako ruch dnia', () => { const h = view('mob', MOBB({ days: { [dk(0)]: [MOBE] } })); return h.includes('Dzisiejsza sesja zapisana') && !h.includes('Liczy się w Moim dniu') && h.includes('nie zalicza ruchu dnia'); });
+// Decyzja 24.11.2026: zmiana liczenia działa wstecz, więc karta zwierzaka mówi o niej raz (tylko osobom z wpisem rozgrzewki lub mobilności) i znika po „Rozumiem”
+const RNOTE = 'Od 24.11 Mobilność i rozgrzewka nie liczą się jako ruch dnia';
+tryc('Notka o ruchu dnia: widoczna przy zwierzaku, gdy był wpis mobilności', () => view('day', BASE({ days: { [dk(1)]: [MOBE] }, meas: {}, ruchNote: 0 })).includes(RNOTE));
+tryc('Notka o ruchu dnia: „Rozumiem” chowa ją na stałe', () => { view('day', BASE({ days: { [dk(1)]: [WRM] }, meas: {}, ruchNote: 0 })); click({ ruchnote: '1' }); return !!T.S().ruchNote && !view('day', {}).includes(RNOTE); });
+tryc('Notka o ruchu dnia: bez wpisów rozgrzewki i mobilności jej nie ma', () => !view('day', BASE({ days: { [dk(1)]: [TRN] }, meas: {}, ruchNote: 0 })).includes(RNOTE));
 const GUT = (o) => BASE({ prof: { cond: { gut: true }, pill: '' }, gut: {}, ...o });
 tryc('jelita: profil ma „Wzdęcia i jelita”; Zdrowie: alarmy NHS, co robić teraz, środki z dawką i źródłem', () => {
   if (!view('health', BASE()).includes('data-cond="gut"')) throw new Error('profil');

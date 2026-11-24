@@ -1735,7 +1735,9 @@ function liteCardHtml(){const k=todayKey(),m=(S.meas||{})[k]||{};
     +row('Jedzenie kaloryczne dziś','słodycze, fast food, słone przekąski, alkohol','redz',m.redz==null?'':m.redz,[[0,'0'],[1,'1'],[2,'2 lub więcej']])
     +(liteFull(k)?'<div class="note lite-ok"><span>✓ Dzień zapisany.</span><button class="btn ghost small" data-litedone="1">Gotowe</button></div>':'')
     +'<p class="small muted" style="margin:12px 0 0">Wstępne badania: krótki zapis codziennie działał podobnie jak pełny.</p>'+srcHtml(['patel','nezami'])+'</section>'}
-function petCardHtml(){const c=eggCrack();if(!S.pet)return `<button class="petcard" data-petpick="1">${PET.svg('gaska','egg','ok',null,false,c)}<span class="petinfo"><b>Wybierz towarzysza</b><span class="small">${c>=4?'Jajko gotowe do wyklucia: wybierz, kto z niego wyjdzie.':`Jajko pęka z każdym ${S.lite?'dniem z szybkim wpisem':'pierwszym krokiem'}: ${c} z 4. Wybierz, kto się wykluje.`}</span></span></button>`;const st=petState();st.crack=c;st.lite=!!S.lite;st.next=PET.next(st,petCtx());return PET.card(st,S.pet,esc)}
+function petCardHtml(){const c=eggCrack();if(!S.pet)return `<button class="petcard" data-petpick="1">${PET.svg('gaska','egg','ok',null,false,c)}<span class="petinfo"><b>Wybierz towarzysza</b><span class="small">${c>=4?'Jajko gotowe do wyklucia: wybierz, kto z niego wyjdzie.':`Jajko pęka z każdym ${S.lite?'dniem z szybkim wpisem':'pierwszym krokiem'}: ${c} z 4. Wybierz, kto się wykluje.`}</span></span></button>`;const st=petState();st.crack=c;st.lite=!!S.lite;st.next=PET.next(st,petCtx());return PET.card(st,S.pet,esc)+ruchNoteHtml()}
+// Jednorazowa notka o zmianie liczenia ruchu dnia (24.11.2026, działa wstecz): tylko gdy był wpis rozgrzewki lub mobilności
+function ruchNoteHtml(){if(S.ruchNote||!Object.values(S.days||{}).some(d=>(d||[]).some(e=>e&&e.kind==='t'&&(e.warm||e.mob))))return '';return '<p class="small muted ruch-note" role="note">Od 24.11 Mobilność i rozgrzewka nie liczą się jako ruch dnia: to dodatek do treningu albo kroków. <button class="btn ghost" data-ruchnote="1">Rozumiem</button></p>'}
 // Pierwszy wybór: dotknięcie rodzaju to tylko podgląd (PET_PREV, bez zapisu); zatwierdza przycisk „Wybieram: …”.
 // Przy istniejącym zwierzaku zmiana rodzaju to zwykłe ustawienie, które da się od razu zmienić z powrotem.
 let PET_PREV='';
@@ -2541,6 +2543,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.warmpause){WARM_UI.paused=!WARM_UI.paused}
   else if(d.warmexit){WARM_UI.step=null;warmTimer(false);warmLock(false)}
   else if(d.warmdone){const full=!!(S.warm||{}).full;if(!warmDone())day().push({kind:'t',label:'Rozgrzewka',min:full?10:6,gross:0,net:0,warm:1});WARM_UI.step=null;warmTimer(false);warmLock(false);toast('Rozgrzewka zapisana')}
+  else if(d.ruchnote){S.ruchNote=1}
   else if(d.mobsave){if(!day().some(e=>e.kind==='t'&&e.mob)){day().push({kind:'t',label:'Mobilność (rutyna)',min:10,gross:0,net:0,mob:1});PET.react('train')}toast('Zapisano sesję mobilności')}
   else if(d.planday!=null){const t=S.tmpPlan=S.tmpPlan||{n:'',dose:'',days:[]},v=+d.planday;t.days=(t.days||[]).includes(v)?t.days.filter(x=>x!==v):(t.days||[]).concat(v)}
   else if(d.planadd){const t=S.tmpPlan||{},n=String(t.n||'').trim();if(!n){toast('Wpisz nazwę ćwiczenia',{focus:'pl_n'});return}if(!(t.days||[]).length){toast('Wybierz co najmniej jeden dzień');return}S.plan=S.plan||{items:[],done:{}};S.plan.items.push({id:'p'+Date.now().toString(36)+S.plan.items.length,n,dose:String(t.dose||'').trim(),days:t.days.slice()});S.tmpPlan={n:'',dose:'',days:[1,2,3,4,5,6,0]};toast('Dodano do planu')}
