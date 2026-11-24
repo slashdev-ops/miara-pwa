@@ -2338,7 +2338,7 @@ document.addEventListener('keydown',e=>{if(!SHEET)return;if(e.key==='Escape'){SH
 function btnSel(b){const a=[...(b.attributes||[])].filter(x=>/^data-/.test(x.name)).map(x=>`[${x.name}="${String(x.value).replace(/["\\]/g,'\\$&')}"]`).join('');return a?'button'+a:null}
 function headOf(el){const m=document.getElementById('main');if(!m||!m.querySelectorAll||!el.compareDocumentPosition)return '';let t='';
   for(const h of m.querySelectorAll('h2,h3'))if(h.compareDocumentPosition(el)&4)t=h.textContent;return t}
-function actAt(b){return {tab:S.tab,sel:btnSel(b),y:b.getBoundingClientRect?b.getBoundingClientRect().top:null,sy:window.scrollY,head:headOf(b),own:!!(b.dataset.goto||b.dataset.nav)}}
+function actAt(b){return {tab:S.tab,sel:btnSel(b),y:b.getBoundingClientRect?b.getBoundingClientRect().top:null,sy:window.scrollY,head:headOf(b),fold:(()=>{const d=b.closest&&b.closest('details[data-fold]');return d&&d.dataset?d.dataset.fold:''})(),own:!!(b.dataset.goto||b.dataset.nav)}}
 function focusEl(el){if(!el||!el.focus)return;if(!/^(BUTTON|INPUT|SELECT|TEXTAREA|A|SUMMARY)$/.test(el.tagName))el.setAttribute('tabindex','-1');el.focus({preventScroll:true})}
 function actDone(at){if(!document.querySelector)return;
   if(S.tab!==at.tab){window.scrollTo(0,0);focusEl(document.querySelector('header h1'));return}
@@ -2349,7 +2349,10 @@ function actDone(at){if(!document.querySelector)return;
   const b=at.sel&&document.querySelector(at.sel);
   // Przewinięcie o pełne piksele (połowa zawsze od zera), drugi przebieg poprawia resztę, gdy przeglądarka przewinęła inaczej (WebKit)
   if(b&&b.getBoundingClientRect&&at.y!=null){for(let i=0;i<2;i++){const dy=b.getBoundingClientRect().top-at.y;if(Math.abs(dy)>=0.5)window.scrollTo(0,window.scrollY+Math.sign(dy)*Math.round(Math.abs(dy)))}focusEl(b);return}
-  const hs=typeof document.querySelectorAll==='function'?[...(document.querySelectorAll('#main h2,#main h3')||[])]:[],h=(at.head&&hs.find(x=>x.textContent===at.head))||hs[0];
+  const hs=typeof document.querySelectorAll==='function'?[...(document.querySelectorAll('#main h2,#main h3')||[])]:[],hh=at.head&&hs.find(x=>x.textContent===at.head);
+  // Sekcja z przyciskiem zniknęła razem z ostatnim wpisem: fokus na nagłówek zwijanej sekcji, w której była akcja, nie na górę strony (rada 24.11.2026, WCAG 2.4.3)
+  if(!hh&&at.fold){const s=document.querySelector(`#main details[data-fold="${at.fold}"] > summary`);if(s&&s.getBoundingClientRect){const r=s.getBoundingClientRect();if((r.top<0||r.bottom>innerHeight)&&s.scrollIntoView)s.scrollIntoView({block:'nearest'});focusEl(s);return}}
+  const h=hh||hs[0];
   if(h){if(h.scrollIntoView){const r=h.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)h.scrollIntoView({block:'start'})}focusEl(h)}}
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;const at=actAt(b);if(d.guta&&['krew','wymkrew','bol'].includes(d.guta)&&!(((S.gut||{})[todayKey()]||{}).a||[]).includes(d.guta))at.rev=1;

@@ -33,3 +33,25 @@ test('po usunięciu ochoty fokus zostaje w liście, a „Cofnij” przywraca wpi
   await expect(page.locator('[data-delurge]')).toHaveCount(2);
   expect(await page.evaluate(() => S.urges[todayKey()].map((u) => u.trig))).toEqual(['stres', 'nuda']);
 });
+
+// Rada gotowości 24.11.2026 (P1): po usunięciu jedynej ochoty sekcja „Ochoty” znika; fokus ma zostać w „Zapisane dziś”,
+// a strona nie może przeskoczyć na górę (przewinięcie zmienia się najwyżej o tyle, o ile skróciła się strona po zniknięciu bloku „Ochoty”).
+test('po usunięciu ostatniej ochoty fokus zostaje w „Zapisane dziś”, bez skoku na górę strony', async ({ page }) => {
+  await page.goto('/index.html#demo-pokaz');
+  await page.waitForFunction(() => typeof render === 'function' && typeof S === 'object');
+  await page.evaluate(() => {
+    SHEET = false; S.lite = false; S.guide = { hidden: true, dataOk: true, seenPet: true };
+    S.urges[todayKey()] = [{ h: 21, trig: 'nuda', out: 'minela' }]; S.tab = 'day'; render();
+    document.querySelector('[data-fold="zapisane"]').open = true;
+  });
+  const del = page.locator('[data-delurge="0"]');
+  await del.focus();
+  await del.evaluate((b) => b.scrollIntoView({ block: 'center' }));
+  const przed = await page.evaluate(() => ({ y: window.scrollY, h: document.documentElement.scrollHeight }));
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-delurge]')).toHaveCount(0);
+  const po = await page.evaluate(() => { const a = document.activeElement; return { y: window.scrollY, h: document.documentElement.scrollHeight, txt: (a.textContent || '').trim(), tag: a.tagName }; });
+  expect(po.tag).toBe('SUMMARY');
+  expect(po.txt.startsWith('Zapisane dziś')).toBe(true);
+  expect(Math.abs(przed.y - po.y)).toBeLessThanOrEqual(przed.h - po.h + 1);
+});
