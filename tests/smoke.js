@@ -1607,6 +1607,11 @@ const WRM = { kind: 't', label: 'Rozgrzewka', min: 6, gross: 0, net: 0, warm: 1 
 const ruchOn = (h) => /<button class="opt hab on"[^>]*>(?:(?!<\/button>)[\s\S])*Ruch: trening/.test(h);
 tryc('Rozgrzewka nie jest ruchem dnia: karta Dziś nie odhacza „Ruch”, zwykły trening odhacza', () => { const a = ruchOn(view('day', BASE({ days: { [dk(0)]: [WRM] }, meas: {} }))); const b = ruchOn(view('day', BASE({ days: { [dk(0)]: [TRN] }, meas: {} }))); return !a && b; });
 tryc('Rozgrzewka nie jest ruchem dnia: punkty dnia jak bez wpisu, zwykły trening daje punkty', () => { view('day', BASE({ days: { [dk(0)]: [] }, meas: {}, hab: {} })); const p0 = T.dayPts(dk(0)); view('day', BASE({ days: { [dk(0)]: [WRM] }, meas: {}, hab: {} })); const p1 = T.dayPts(dk(0)); view('day', BASE({ days: { [dk(0)]: [TRN] }, meas: {}, hab: {} })); return p1 === p0 && T.dayPts(dk(0)) > p0; });
+// Decyzja 24.11.2026: mobilność też nie liczy się jako ruch dnia; ekran Mobilności nie obiecuje „liczy się w Moim dniu”
+const MOBE = { kind: 't', label: 'Mobilność (rutyna)', min: 10, gross: 0, net: 0, mob: 1 };
+tryc('Mobilność nie jest ruchem dnia: karta Dziś nie odhacza „Ruch”', () => !ruchOn(view('day', BASE({ days: { [dk(0)]: [MOBE] }, meas: {} }))));
+tryc('Mobilność nie jest ruchem dnia: punkty dnia jak bez wpisu', () => { view('day', BASE({ days: { [dk(0)]: [] }, meas: {}, hab: {} })); const p0 = T.dayPts(dk(0)); view('day', BASE({ days: { [dk(0)]: [MOBE] }, meas: {}, hab: {} })); return T.dayPts(dk(0)) === p0; });
+tryc('Mobilność: po zapisie sesji ekran nie mówi, że liczy się jako ruch dnia', () => { const h = view('mob', MOBB({ days: { [dk(0)]: [MOBE] } })); return h.includes('Dzisiejsza sesja zapisana') && !h.includes('Liczy się w Moim dniu') && h.includes('nie zalicza ruchu dnia'); });
 const GUT = (o) => BASE({ prof: { cond: { gut: true }, pill: '' }, gut: {}, ...o });
 tryc('jelita: profil ma „Wzdęcia i jelita”; Zdrowie: alarmy NHS, co robić teraz, środki z dawką i źródłem', () => {
   if (!view('health', BASE()).includes('data-cond="gut"')) throw new Error('profil');

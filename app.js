@@ -1041,8 +1041,8 @@ const STEPS={
 };
 function eqOf(m){const s=(STEPS[m.id]||[m.how]).join(' '),e=[];if(/°C/.test(s))e.push('piekarnik');if(/mikrofal/i.test(s))e.push('mikrofala');if(/blender/i.test(s))e.push('blender');return e.length?e:['bez gotowania']}
 function hhm(id,g){const r=Math.round(g/5)*5,half=v=>Math.round(v*2)/2,f=n=>String(n).replace('.',','),pl=(n,a,b)=>n===1?a:b;if(id==='jajko'){const n=Math.max(1,half(g/60));return `${f(n)} szt. (${r} g)`}if(id==='oliwa'){const n=Math.max(0.5,half(g/10));return `${f(n)} ${pl(n,'łyżka','łyżki')} (${r} g)`}if(id==='chleb'){const n=Math.max(0.5,half(g/40));return `${f(n)} ${pl(n,'kromka','kromki')} (${r} g)`}return `${r} g`}
-// Ruch dnia: wpis treningu, ale nie rozgrzewka (decyzja 24.11.2026: rozgrzewka poprzedza trening, nie zastępuje go)
-function isMove(e){return !!e&&e.kind==='t'&&!e.warm}
+// Ruch dnia: wpis treningu bez rozgrzewki i mobilności (decyzje 24.11.2026: obie są dodatkiem do treningu albo kroków, nie zastępują ich)
+function isMove(e){return !!e&&e.kind==='t'&&!e.warm&&!e.mob}
 function postTrain(){const dw=new Date().getDay();return day().some(isMove)||dw===2||dw===4}
 function tipsHtml(m,x){
   const oven=eqOf(m).includes('piekarnik'),s=(STEPS[m.id]||[m.how]).join(' '),t=[];
@@ -1199,7 +1199,7 @@ function renderMob(){
     h+=`<h3 class="rh" style="margin:16px 4px 8px">${pt}</h3><div class="panel">`+MOB.filter(x=>x.part===pk).map(x=>{const on=dn.includes(x.id);return `<button class="opt hab ${on?'on':''}" data-mobex="${x.id}" aria-pressed="${on}"><span class="box">${on?'✓':''}</span><span class="lab"><b>${x.n}</b><span class="small">${x.how}</span><span class="small muted">${x.dose}</span></span></button>`}).join('')+'</div>';
   }
   h+=whyFold('mobzrodla','<p>Źródło nie podaje liczby powtórzeń przy ćwiczeniach z dawką „powoli, bez bólu”.</p>'+srcHtml(['csp','nhsstr','nhsflex']));
-  h+=saved?'<div class="note">Dzisiejsza sesja zapisana. Liczy się w Moim dniu i u zwierzaka.</div>':'<p><button class="btn" data-mobsave="1">Zapisz sesję</button></p>';
+  h+=saved?'<div class="note">Dzisiejsza sesja zapisana. Mobilność nie zalicza ruchu dnia: to dodatek do treningu albo kroków.</div>':'<p><button class="btn" data-mobsave="1">Zapisz sesję</button></p>';
   document.getElementById('main').innerHTML=h;
 }
 
