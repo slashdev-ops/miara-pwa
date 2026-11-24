@@ -1106,6 +1106,63 @@ const MOB=[
   {id:'m_obrot',part:'flex',n:'Obrót szyi',src:'nhsflex',dose:'5 s, 3 razy na stronę',how:'Siedząc prosto, ramiona w dół, powoli obróć głowę w stronę ramienia, na ile wygodnie, zatrzymaj i wróć. Potem druga strona.'},
   {id:'m_szyja',part:'flex',n:'Rozciąganie szyi',src:'nhsflex',dose:'5 s, 3 razy na stronę',how:'Siedząc prosto, dłonią przytrzymaj przeciwne ramię w dół i powoli przechyl głowę w bok. Potem druga strona.'}];
 const MOB_PART={hip:'Biodra i miednica, leżąc',str:'Siła bioder i pośladków, przy krześle',flex:'Rozciąganie'};
+// ---------- Rozgrzewka w Treningu (plan rada/plany/2026-11-24-rozgrzewka-plan.md; mapa powiązań 59-62) ----------
+// Opisy własnymi słowami stron źródłowych; dawka tylko tam, gdzie podaje ją źródło. short = tryb krótki (domyślny).
+const WARM_SRC={nhsw:{t:'NHS, rozgrzewka',u:'https://www.nhs.uk/live-well/exercise/how-to-warm-up-before-exercising/',map:59},
+  borders:{t:'NHS Borders, rozejście mięśni brzucha',u:'https://www.rightdecisions.scot.nhs.uk/patient-information-leaflets/primary-community-services/physiotherapy/separation-of-the-abdominal-muscles-in-pregnancy-and-beyond',map:60},
+  bmc:{t:'BMC Musculoskelet Disord 2024; czas: ACSM 2011 jak w Mobilności',u:'https://doi.org/10.1186/s12891-024-07988-9',map:62}};
+const WARM=[
+  {id:'w_marsz',part:1,short:1,src:'nhsw',fig:'march',sec:180,n:'Marsz w miejscu',dose:'3 min',how:'Maszeruj w miejscu, potem kilka kroków do przodu i do tyłu.'},
+  {id:'w_pieta',part:1,short:1,src:'nhsw',fig:'heel',sec:60,n:'Pięta do przodu',dose:'60 razy w 60 s',how:'Na zmianę stawiaj piętę przed sobą, palce stopy w górę; dłonie wysuwaj lekko do przodu.'},
+  {id:'w_kolano',part:1,short:1,src:'nhsw',fig:'knee',sec:30,n:'Kolano w górę',dose:'30 razy w 30 s',how:'Na zmianę unoś kolano do przeciwnej dłoni.'},
+  {id:'w_barki',part:1,short:1,src:'nhsw',fig:'roll',n:'Krążenie barków',dose:'2 × 10',how:'5 razy do przodu i 5 razy do tyłu.'},
+  {id:'w_przysiad',part:1,short:1,src:'nhsw',fig:'bend',n:'Lekki przysiad',dose:'10 razy, najwyżej 10 cm w dół',how:'Ugnij kolana tylko trochę i wróć.'},
+  {id:'w_brzuch',part:2,short:1,src:'borders',fig:'belly',n:'Wciągnięcie dołu brzucha',dose:'5–10 s, 5–10 razy',how:'Leżąc z ugiętymi kolanami, przy wydechu delikatnie wciągnij dół brzucha w stronę kręgosłupa; możesz też napiąć dno miednicy. Plecy i miednica bez ruchu, oddychaj normalnie.'},
+  {id:'w_miednica',part:2,short:0,src:'borders',mob:'m_mied',fig:'tilt',n:'Przechylenie miednicy',dose:'5–10 s, 5–10 razy',how:'Bez wstrzymywania oddechu przechyl miednicę, dociskając dół pleców do podłogi, i napnij przy tym dół brzucha; powoli wróć.'},
+  {id:'w_kolana',part:2,short:0,src:'borders',fig:'rock',n:'Kołysanie kolan',dose:'powoli, w wygodnym zakresie',how:'Leżąc z ugiętymi kolanami, powoli przechylaj kolana na boki, tylko tak daleko, jak jest wygodnie.'},
+  {id:'w_biodro',part:3,short:0,src:'bmc',fig:'hip',n:'Rozciąganie przodu biodra w klęku',dose:'bez bólu; łącznie ok. 60 s na stronę',how:'W klęku jednonóż napnij pośladek tylnej nogi i podwiń miednicę (dół pleców się spłaszcza), zamiast przesuwać biodra do przodu. Czujesz rozciąganie z przodu biodra tylnej nogi.'}];
+const WARM_PART={1:'Rozgrzanie, co najmniej 6 min',2:'Głębokie mięśnie brzucha',3:'Biodro i miednica'};
+// Stan tylko w pamięci (nie w S, nie w kopii): krok, pominięcie dziś, zatrzymany ruch, licznik, blokada wygaszania ekranu
+const WARM_UI={step:null,skip:'',paused:false,left:0,timer:0,lock:null,locked:false,focus:false};
+// Postać: SVG w kodzie (CSP bez zmian); ruch tylko z klasą an (tryb krok po kroku), bez ruchu przy prefers-reduced-motion
+function warmFig(f,an,lab){const A=(o,n,ex)=>`<g class="${an?'an ':''}mv" style="transform-origin:${o};animation-name:${n}${ex||''}">`,st='<line class="fl" x1="20" y1="94" x2="100" y2="94"/><circle cx="60" cy="14" r="7"/><line x1="60" y1="22" x2="60" y2="54"/>',ly='<line class="fl" x1="8" y1="78" x2="112" y2="78"/><circle cx="16" cy="70" r="7"/>';
+  const B={march:st+'<line x1="60" y1="28" x2="48" y2="46"/><line x1="60" y1="28" x2="72" y2="46"/>'+A('60px 54px','wsw')+'<line x1="60" y1="54" x2="60" y2="92"/></g>'+A('60px 54px','wsw',';animation-delay:-1.6s')+'<line x1="60" y1="54" x2="60" y2="92"/></g>',
+    heel:st+'<line x1="60" y1="28" x2="46" y2="42"/><line x1="60" y1="28" x2="74" y2="42"/><line x1="60" y1="54" x2="60" y2="92"/>'+A('60px 54px','wheel')+'<line x1="60" y1="54" x2="60" y2="92"/></g>',
+    knee:st+'<line x1="60" y1="28" x2="48" y2="46"/><line x1="60" y1="28" x2="70" y2="50"/><line x1="60" y1="54" x2="60" y2="92"/>'+A('60px 54px','wlift')+'<line x1="60" y1="54" x2="60" y2="74"/><line x1="60" y1="74" x2="60" y2="92"/></g>',
+    roll:st+'<line x1="60" y1="54" x2="52" y2="92"/><line x1="60" y1="54" x2="68" y2="92"/>'+A('60px 30px','wroll')+'<line x1="60" y1="27" x2="46" y2="48"/><line x1="60" y1="27" x2="74" y2="48"/></g>',
+    bend:'<line class="fl" x1="20" y1="94" x2="100" y2="94"/>'+A('60px 14px','wbob')+'<circle cx="60" cy="14" r="7"/><line x1="60" y1="22" x2="60" y2="54"/><line x1="60" y1="28" x2="76" y2="36"/></g><line x1="60" y1="54" x2="66" y2="74"/><line x1="66" y1="74" x2="60" y2="92"/>',
+    belly:ly+'<line x1="24" y1="72" x2="62" y2="72"/><line x1="62" y1="72" x2="80" y2="52"/><line x1="80" y1="52" x2="94" y2="74"/>'+A('44px 72px','wbelly')+'<path d="M32 72 Q44 60 58 72"/></g>',
+    tilt:ly+'<line x1="24" y1="72" x2="50" y2="72"/>'+A('62px 72px','wtilt')+'<line x1="50" y1="72" x2="62" y2="72"/><line x1="62" y1="72" x2="80" y2="52"/><line x1="80" y1="52" x2="94" y2="74"/></g>',
+    rock:ly+'<line x1="24" y1="72" x2="62" y2="72"/>'+A('62px 72px','wrock')+'<line x1="62" y1="72" x2="80" y2="52"/><line x1="80" y1="52" x2="94" y2="74"/></g>',
+    hip:'<line class="fl" x1="8" y1="90" x2="112" y2="90"/>'+A('56px 56px','wtuck')+'<circle cx="56" cy="16" r="7"/><line x1="56" y1="24" x2="56" y2="56"/></g><line x1="56" y1="56" x2="80" y2="58"/><line x1="80" y1="58" x2="80" y2="88"/><line x1="56" y1="56" x2="40" y2="88"/><line x1="40" y1="88" x2="22" y2="88"/>'};
+  return `<svg class="wf" viewBox="0 0 120 100" role="img" aria-label="${esc(lab)}">${B[f]||''}</svg>`}
+function warmList(){const full=!!(S.warm||{}).full;return WARM.filter(x=>full||x.short)}
+function warmDone(k){return ((S.days||{})[k||todayKey()]||[]).some(e=>e.warm)}
+function warmSec(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function warmLock(on){try{if(on&&navigator.wakeLock&&navigator.wakeLock.request){navigator.wakeLock.request('screen').then(l=>{WARM_UI.lock=l;WARM_UI.locked=true;const n=document.getElementById('warm_lock');if(n)n.hidden=false}).catch(()=>{WARM_UI.locked=false})}else if(!on){if(WARM_UI.lock&&WARM_UI.lock.release)WARM_UI.lock.release().catch(()=>{});WARM_UI.lock=null;WARM_UI.locked=false}}catch(_){WARM_UI.locked=false}}
+function warmTimer(on){if(WARM_UI.timer){clearInterval(WARM_UI.timer);WARM_UI.timer=0}const x=warmList()[WARM_UI.step];if(!on||!x||!x.sec||typeof setInterval!=='function')return;WARM_UI.left=x.sec;
+  WARM_UI.timer=setInterval(()=>{if(WARM_UI.left>0)WARM_UI.left--;const t=document.getElementById('warm_t');if(t)t.textContent=warmSec(WARM_UI.left);
+    if(!WARM_UI.left){clearInterval(WARM_UI.timer);WARM_UI.timer=0;const L=warmList(),nx=L[WARM_UI.step+1],sr=document.getElementById('sr');if(sr)sr.textContent='Koniec ćwiczenia. '+(nx?'Następne: '+nx.n:'To ostatnie ćwiczenie.')}},1000)}
+function warmStepHtml(){const L=warmList(),i=Math.min(WARM_UI.step,L.length-1),x=L[i],last=i===L.length-1,nx=L[i+1];
+  return `<section class="warm warm-step" data-warm="step"><p class="warm-n">Rozgrzewka · ${i+1} z ${L.length}</p><div class="warm-prog" aria-hidden="true"><i style="width:${Math.round((i+1)*100/L.length)}%"></i></div>`
+    +`<div class="warm-big${WARM_UI.paused?' paused':''}">${warmFig(x.fig,true,x.n)}</div><h2 id="warm_h" tabindex="-1">${esc(x.n)}</h2><p class="warm-d">${esc(x.dose)}</p><p>${esc(x.how)}</p>`
+    +(x.sec?`<p class="warm-timer"><span id="warm_t">${warmSec(WARM_UI.left||x.sec)}</span> <span class="small muted">zostało</span></p>`:'')
+    +`<div class="warm-ctl"><button class="btn ghost" data-warmprev="1"${i?'':' disabled'}>Wstecz</button><button class="btn ghost" data-warmpause="1" aria-pressed="${WARM_UI.paused}">${WARM_UI.paused?'Wznów ruch':'Zatrzymaj ruch'}</button>`
+    +(last?'<button class="btn" data-warmdone="1">Zakończ</button>':'<button class="btn" data-warmnext="1">Dalej</button>')+'</div>'
+    +`<p class="small muted">${nx?'Dalej: '+esc(nx.n)+'.':'To ostatnie ćwiczenie.'} <span id="warm_lock"${WARM_UI.locked?'':' hidden'}>Ekran nie gaśnie w trakcie rozgrzewki.</span></p><p><button class="linkbtn small" data-warmexit="1">Przerwij rozgrzewkę</button></p></section>`}
+function warmHtml(){const k=todayKey();if(WARM_UI.step!=null)return warmStepHtml();
+  if(warmDone(k))return '<section class="warm warm-line" data-warm="card"><span>Rozgrzewka zrobiona</span><button class="btn ghost small" data-warmagain="1">Powtórz</button></section>';
+  if(WARM_UI.skip===k)return '<section class="warm warm-line" data-warm="card"><span>Rozgrzewka pominięta dziś</span><button class="btn ghost small" data-warmshow="1">Pokaż</button></section>';
+  const full=!!(S.warm||{}).full,L=warmList();let h=`<section class="warm" data-warm="card"><h2>Rozgrzewka</h2><p class="small muted warm-meta">ok. ${full?10:6} min · ${L.length} ćwiczeń</p>`
+    +`<div class="warm-mode" role="group" aria-label="Długość rozgrzewki"><button data-warmmode="short" aria-pressed="${!full}">Krótka, 6 min</button><button data-warmmode="full" aria-pressed="${full}">Pełna, 10 min</button></div>`
+    +'<p class="small muted">Przed treningiem. Ruch bez bólu; jeśli coś boli, pomiń to ćwiczenie.</p>';
+  let p=0;L.forEach(x=>{if(x.part!==p){p=x.part;h+=`<h3 class="warm-part">${p}. ${WARM_PART[p]}</h3>`}const s=WARM_SRC[x.src];
+    h+=`<div class="warm-ex" data-warmex="${x.id}">${warmFig(x.fig,false,x.n)}<div><b>${esc(x.n)}</b><p class="warm-d">${esc(x.dose)}</p><p class="small">${esc(x.how)}</p><p class="small muted">Źródło: <a href="${s.u}" target="_blank" rel="noopener">${esc(s.t)}</a></p></div></div>`});
+  if(!full)h+='<p class="small muted">W pełnej dochodzą: przechylenie miednicy, kołysanie kolan, rozciąganie przodu biodra.</p>';
+  h+='<p class="warm-warn"><b>Bez brzuszków.</b> Przy rozejściu mięśni brzucha unikaj ćwiczeń, przy których brzuch uwypukla się do przodu, np. brzuszków; wstawaj z leżenia przez bok. Plan ćwiczeń przy rozejściu ustala fizjoterapeuta.</p>'
+    +fold('warmlim','Czego Miara nie obiecuje','<ul class="small"><li>Nie ma badania, które pokazuje, że te ćwiczenia korygują przodopochylenie miednicy; zestaw rozgrzewa i uczy ustawienia miednicy.</li><li>Ćwiczenia brzucha po porodzie zmniejszają odstęp między mięśniami w niewielkim stopniu, a pewność dowodów jest niska.</li><li>W ciąży albo niedługo po porodzie zapytaj najpierw o ruch.</li></ul>')
+    +'<div class="warm-go"><button class="btn ghost" data-warmskip="1">Pomiń dziś</button><button class="btn" data-warmgo="1">Zaczynam rozgrzewkę</button></div></section>';
+  return h}
 // Mój plan od specjalisty: ćwiczenia wpisane z zaleceń; Miara przypomina i odhacza, niczego nie zaleca
 const DAYS_PL=[[1,'pn','poniedziałek'],[2,'wt','wtorek'],[3,'śr','środa'],[4,'cz','czwartek'],[5,'pt','piątek'],[6,'sb','sobota'],[0,'nd','niedziela']];
 function specPlanHtml(){const P=S.plan||{items:[],done:{}},wd=new Date().getDay(),dn=(P.done||{})[todayKey()]||[],t=S.tmpPlan||{n:'',dose:'',days:[]},td=P.items.filter(x=>(x.days||[]).includes(wd));
@@ -2064,7 +2121,7 @@ function renderMealList0(){
 
 function renderTrain(){
   const t=S.tr;
-  let h=''
+  let h=warmHtml()
     +'<h2>Trening z zegarka</h2><div class="panel">'+rwHtml('tr',['wmin'])+'<div class="chips quick">'+[30,45,60,90].map(v=>`<button class="chip${String(t.wmin)===String(v)?' inc':''}" data-setv="tr.wmin" data-v="${v}" aria-pressed="${String(t.wmin)===String(v)}">${v} min</button>`).join('')+'</div>'+rwHtml('tr',['wk'])+RW_TIP+'<p>'+actHtml('watch','data-addwatch="1"',ACT_L.watch,false)+'</p></div>'
     +'<p class="small muted">Zegarek też szacuje kalorie, zwykle z tętna, a błąd bywa większy niż 20%. Do bilansu liczy się netto: kalorie z zegarka minus spoczynek w tym czasie.</p><h2>Albo oszacuj z rodzaju treningu</h2>'+seg([['silownia','Siłownia'],['plywanie','Pływanie'],['bieznia','Bieżnia'],['spinning','Spinning'],['inne','Inne']],t.cat,'cat','scroll','Rodzaj treningu');
   if(t.cat==='bieznia'){
@@ -2088,6 +2145,7 @@ function renderTrain(){
   h+=`<p class="small muted">Źródło wartości: ${sp.src}${sp.met?`, MET ${fmt1(sp.met)}`:''}. Wynik jest szacunkiem dla przeciętnej osoby; rzeczywiste spalanie może różnić się o kilkadziesiąt procent.</p>`;
   h+='<p><button class="btn ghost" data-tab="knee">Program kolana, 12 tygodni</button></p><p><button class="btn ghost" data-tab="mob">Mobilność, ok. 10 min</button></p>';
   document.getElementById('main').innerHTML=h;
+  if(WARM_UI.focus){WARM_UI.focus=false;const wh=document.getElementById('warm_h');if(wh&&wh.focus)wh.focus()}
 }
 
 // Stan dziś: punkt centralny Mojego dnia; każda wartość ze źródłem i liczbą danych, brak danych pokazany wprost
@@ -2472,6 +2530,15 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.petprev){if(!PET.kinds().includes(d.petprev))return;PET_PREV=d.petprev;render();return}
   else if(d.petok){if(!PET_PREV)return;S.pet={kind:PET_PREV,name:'',since:todayKey()};PET_PREV='';S.petSeen=[...new Set([...(S.petSeen||[]),...PET.milestones(petCtx())])];toast('Witaj, '+PET.form(S.pet.kind,'voc')+'! Imię nadasz w Ustawieniach.')}
   else if(d.mobex){S.mob=S.mob||{done:{}};S.mob.done=S.mob.done||{};const k=todayKey(),L=S.mob.done[k]||[];S.mob.done[k]=L.includes(d.mobex)?L.filter(x=>x!==d.mobex):L.concat(d.mobex)}
+  // Rozgrzewka: tryb, pominięcie (tylko w pamięci), krok po kroku; zapis jednej sesji 0 kcal na dziś
+  else if(d.warmmode){S.warm=S.warm||{};S.warm.full=d.warmmode==='full'}
+  else if(d.warmskip){WARM_UI.skip=todayKey()}
+  else if(d.warmshow){WARM_UI.skip=''}
+  else if(d.warmgo||d.warmagain){WARM_UI.step=0;WARM_UI.paused=false;WARM_UI.focus=true;at.own=true;warmLock(true);warmTimer(true)}
+  else if(d.warmnext||d.warmprev){WARM_UI.step=Math.max(0,Math.min(warmList().length-1,WARM_UI.step+(d.warmnext?1:-1)));WARM_UI.focus=true;at.own=true;warmTimer(true)}
+  else if(d.warmpause){WARM_UI.paused=!WARM_UI.paused}
+  else if(d.warmexit){WARM_UI.step=null;warmTimer(false);warmLock(false)}
+  else if(d.warmdone){const full=!!(S.warm||{}).full;if(!warmDone())day().push({kind:'t',label:'Rozgrzewka',min:full?10:6,gross:0,net:0,warm:1});WARM_UI.step=null;warmTimer(false);warmLock(false);toast('Rozgrzewka zapisana')}
   else if(d.mobsave){if(!day().some(e=>e.kind==='t'&&e.mob)){day().push({kind:'t',label:'Mobilność (rutyna)',min:10,gross:0,net:0,mob:1});PET.react('train')}toast('Zapisano sesję mobilności')}
   else if(d.planday!=null){const t=S.tmpPlan=S.tmpPlan||{n:'',dose:'',days:[]},v=+d.planday;t.days=(t.days||[]).includes(v)?t.days.filter(x=>x!==v):(t.days||[]).concat(v)}
   else if(d.planadd){const t=S.tmpPlan||{},n=String(t.n||'').trim();if(!n){toast('Wpisz nazwę ćwiczenia',{focus:'pl_n'});return}if(!(t.days||[]).length){toast('Wybierz co najmniej jeden dzień');return}S.plan=S.plan||{items:[],done:{}};S.plan.items.push({id:'p'+Date.now().toString(36)+S.plan.items.length,n,dose:String(t.dose||'').trim(),days:t.days.slice()});S.tmpPlan={n:'',dose:'',days:[1,2,3,4,5,6,0]};toast('Dodano do planu')}
