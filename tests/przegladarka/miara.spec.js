@@ -284,6 +284,7 @@ test('tło z charakterem: plamy w body::before (najwyżej 0,08), body z jednolit
   expect(errors).toEqual([]);
 });
 
+// 23.11.2026 (mniej ramek): WCAG 1.4.11 wymaga granicy 3:1 tylko od elementów do obsługi; bloki treści (.panel, .note) oddziela tło
 test('kafelki i przyciski-kafelki mają obramowanie co najmniej 3:1 do tła pod nimi', async ({ page }) => {
   const errors = await open(page);
   const bad = [];
@@ -292,7 +293,7 @@ test('kafelki i przyciski-kafelki mają obramowanie co najmniej 3:1 do tła pod 
     const found = await page.evaluate((src) => {
       const { rgba, ratio, bgOf, visible } = eval(src)();
       const out = [];
-      for (const el of document.querySelectorAll('.panel,.fold,.chip,.seg button,.petcard,.note:not(.warn):not(.demo)')) {
+      for (const el of document.querySelectorAll('.fold,.chip,.seg button,.petcard')) {
         if (!visible(el)) continue;
         // panel w rozwijanej sekcji albo w innym panelu: obramowanie ma kontener
         const tile = el.matches('.chip,.seg button');
