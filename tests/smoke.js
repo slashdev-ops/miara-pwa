@@ -1266,6 +1266,20 @@ for (const [n, mk, act, back] of UNDO_CASES) {
     return back(T.S());
   });
 }
+// F2c (plan ADHD §9, 23.11.2026): ochoty z „Mam ochotę coś przekąsić” mają drogę usunięcia w „Zapisane dziś”
+const UR = () => BASE({ urges: { [dk(0)]: [{ h: 9, trig: 'stres', out: 'plan' }, { h: 21, trig: 'nuda', out: 'minela' }], [dk(1)]: [{ h: 8, trig: 'glod', out: 'plan' }] } });
+tryc('F2c: Zapisane dziś pokazuje dzisiejsze ochoty z przyciskiem usuwania', () => {
+  const h = view('day', UR());
+  return h.includes('ochoty 2') && (h.match(/data-delurge="\d+"/g) || []).length === 2 && h.includes('aria-label="Usuń ochotę: 21:00, Nuda"');
+});
+tryc('F2c: usunięcie ochoty zmienia tylko wskazany dzisiejszy wpis', () => {
+  view('day', UR()); click({ delurge: '1' }); const S = T.S();
+  return S.urges[dk(0)].length === 1 && S.urges[dk(0)][0].trig === 'stres' && S.urges[dk(1)].length === 1 && els.toast.innerHTML.includes('Cofnij');
+});
+tryc('F2c: ochota bez godziny (stare dane) ma czytelny opis', () => {
+  const h = view('day', BASE({ urges: { [dk(0)]: [{ out: 'plan' }] } }));
+  return h.includes('aria-label="Usuń ochotę: bez godziny"') && !/undefined|NaN/.test(h.split('data-fold="zapisane"')[1] || '');
+});
 // Strażnik: każda obsługa kliknięcia, która usuwa dane (splice, delete, filter na liście, czyszczenie, reset), musi iść przez undoable()
 tryc('strażnik: usuwanie danych w obsłudze kliknięć zawsze z „Cofnij”', () => {
   const ALLOW = {

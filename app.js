@@ -2161,8 +2161,11 @@ function renderDay(){
   more+=fold('nawyki','Nawyki i punkty: '+fmt(dayPts(todayKey()))+' pkt dziś',habitsHtml(tr.length>0));
   more+=fold('prognoza','Prognoza i Twój priorytet',projHtml()+sexHtml());
   more+=relHtml();
-  h+='<details class="fold" data-fold="zapisane"'+(OPEN_F.has('zapisane')?' open':'')+'><summary>Zapisane dziś: posiłki '+ml.length+', treningi '+tr.length+'</summary>'+(tr.length?'<h3 class="rh" style="margin:4px 16px 8px">Treningi</h3><div class="panel">'+tr.map(e=>`<div class="entry"><span class="txt">${e.label}, ${fmt(e.min)} min</span><span class="val">${fmt(e.gross)} kcal</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join('')+'</div>':'<p style="margin:4px 16px"><button class="btn ghost small" data-tab="train">Przejdź do Treningu</button></p>');
-  h+='<h3 class="rh" style="margin:12px 16px 8px">Posiłki</h3><div class="panel">'+(ml.length?ml.map(e=>`<div class="entry"><span class="txt">${e.label}</span><span class="val">${fmt(e.k)} kcal, B ${fmt(e.p)} g</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join(''):'<div class="empty">Brak posiłków. <button class="btn ghost small" data-tab="meals">Przejdź do Posiłków</button></div>')+'</div></details>';
+  // F2c: ochoty z „Mam ochotę coś przekąsić” dają się usunąć tak jak posiłki (stare wpisy bez godziny i wyzwalacza: „bez godziny”)
+  const ur=(S.urges||{})[todayKey()]||[],urLab=u=>(isFinite(u.h)&&u.h!==null?String(u.h).padStart(2,'0')+':00':'bez godziny')+((TRIG.find(x=>x[0]===u.trig)||[])[1]?', '+TRIG.find(x=>x[0]===u.trig)[1]:'');
+  const urH=ur.length?'<h3 class="rh" style="margin:12px 16px 8px">Ochoty</h3><div class="panel">'+ur.map((u,i)=>`<div class="entry"><span class="txt">${esc(urLab(u))}</span><span class="val"></span><button class="del" data-delurge="${i}" aria-label="Usuń ochotę: ${esc(urLab(u))}">×</button></div>`).join('')+'</div>':'';
+  h+='<details class="fold" data-fold="zapisane"'+(OPEN_F.has('zapisane')?' open':'')+'><summary>Zapisane dziś: posiłki '+ml.length+', treningi '+tr.length+(ur.length?', ochoty '+ur.length:'')+'</summary>'+(tr.length?'<h3 class="rh" style="margin:4px 16px 8px">Treningi</h3><div class="panel">'+tr.map(e=>`<div class="entry"><span class="txt">${e.label}, ${fmt(e.min)} min</span><span class="val">${fmt(e.gross)} kcal</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join('')+'</div>':'<p style="margin:4px 16px"><button class="btn ghost small" data-tab="train">Przejdź do Treningu</button></p>');
+  h+='<h3 class="rh" style="margin:12px 16px 8px">Posiłki</h3><div class="panel">'+(ml.length?ml.map(e=>`<div class="entry"><span class="txt">${e.label}</span><span class="val">${fmt(e.k)} kcal, B ${fmt(e.p)} g</span><button class="del" data-del="${d.indexOf(e)}" aria-label="Usuń">×</button></div>`).join(''):'<div class="empty">Brak posiłków. <button class="btn ghost small" data-tab="meals">Przejdź do Posiłków</button></div>')+'</div>'+urH+'</details>';
   h+=`<details class="fold" data-fold="szybki"${OPEN_F.has('szybki')?' open':''}><summary>Szybki wpis albo powtórz wczoraj</summary><div class="panel"><div class="field"><label for="q_n">Co</label><input type="text" id="q_n" style="width:170px;text-align:left" placeholder="np. kawa z mlekiem"></div><div class="field"><label for="q_k">Ile</label><input type="text" inputmode="numeric" enterkeyhint="done" id="q_k" placeholder="0"><span class="unit">kcal</span></div>${kcalChips('q_k')}</div><p><button class="btn" data-quick="1">Zapisz</button> <button class="btn ghost" data-repeat="1">Powtórz wczorajsze posiłki</button><button class="btn ghost" data-nav="meals#zamowione#zamowione">Zamówione jedzenie</button></p><p class="small muted">Wpis przybliżony wystarczy. W badaniach z wynikiem redukcji wiązała się częstość zapisywania, nie jego dokładność.</p></details>`;
   more+='<div class="navrow"><button class="btn ghost" data-tab="impact">Mój wpływ</button>'+(CH.state==='on'?'<button class="btn ghost" data-tab="challenge">Wspólne wyzwanie</button>':'')+'<button class="btn ghost" data-tab="review">Przegląd tygodnia</button></div>';
   if(d.length)more+='<p><button class="btn ghost" data-clear="1">Wyczyść dzień</button></p>';
@@ -2340,16 +2343,21 @@ document.addEventListener('keydown',e=>{if(!SHEET)return;if(e.key==='Escape'){SH
 function btnSel(b){const a=[...(b.attributes||[])].filter(x=>/^data-/.test(x.name)).map(x=>`[${x.name}="${String(x.value).replace(/["\\]/g,'\\$&')}"]`).join('');return a?'button'+a:null}
 function headOf(el){const m=document.getElementById('main');if(!m||!m.querySelectorAll||!el.compareDocumentPosition)return '';let t='';
   for(const h of m.querySelectorAll('h2,h3'))if(h.compareDocumentPosition(el)&4)t=h.textContent;return t}
-function actAt(b){return {tab:S.tab,sel:btnSel(b),y:b.getBoundingClientRect?b.getBoundingClientRect().top:null,sy:window.scrollY,head:headOf(b),own:!!(b.dataset.goto||b.dataset.nav)}}
+function actAt(b){return {tab:S.tab,sel:btnSel(b),y:b.getBoundingClientRect?b.getBoundingClientRect().top:null,sy:window.scrollY,head:headOf(b),fold:(()=>{const d=b.closest&&b.closest('details[data-fold]');return d&&d.dataset?d.dataset.fold:''})(),own:!!(b.dataset.goto||b.dataset.nav)}}
 function focusEl(el){if(!el||!el.focus)return;if(!/^(BUTTON|INPUT|SELECT|TEXTAREA|A|SUMMARY)$/.test(el.tagName))el.setAttribute('tabindex','-1');el.focus({preventScroll:true})}
 function actDone(at){if(!document.querySelector)return;
   if(S.tab!==at.tab){window.scrollTo(0,0);focusEl(document.querySelector('header h1'));return}
   if(at.rev&&typeof SYG!=='undefined'){const x=SYG.visible(S,todayKey())[0],l=x&&x.lvl==='112'&&document.querySelector('#main a[href="tel:112"]'),al=l&&l.closest('.petsay.syg,.note.warn');if(al&&al.scrollIntoView){al.scrollIntoView({block:'center',behavior:'auto'});focusEl(l);return}}
-  if(at.own||window.scrollY!==at.sy)return;
+  // Strona krótsza po usunięciu wiersza przy końcu: przeglądarka sama cofa przewinięcie do nowego końca. To nie jest przewinięcie przez akcję, fokus wraca (F2c, 23.11.2026).
+  const de=document.documentElement,clamp=de&&window.scrollY<at.sy&&Math.abs(window.scrollY-(de.scrollHeight-window.innerHeight))<=1;
+  if(at.own||(window.scrollY!==at.sy&&!clamp))return;
   const b=at.sel&&document.querySelector(at.sel);
   // Przewinięcie o pełne piksele (połowa zawsze od zera), drugi przebieg poprawia resztę, gdy przeglądarka przewinęła inaczej (WebKit)
   if(b&&b.getBoundingClientRect&&at.y!=null){for(let i=0;i<2;i++){const dy=b.getBoundingClientRect().top-at.y;if(Math.abs(dy)>=0.5)window.scrollTo(0,window.scrollY+Math.sign(dy)*Math.round(Math.abs(dy)))}focusEl(b);return}
-  const hs=typeof document.querySelectorAll==='function'?[...(document.querySelectorAll('#main h2,#main h3')||[])]:[],h=(at.head&&hs.find(x=>x.textContent===at.head))||hs[0];
+  const hs=typeof document.querySelectorAll==='function'?[...(document.querySelectorAll('#main h2,#main h3')||[])]:[],hh=at.head&&hs.find(x=>x.textContent===at.head);
+  // Sekcja z przyciskiem zniknęła razem z ostatnim wpisem: fokus na nagłówek zwijanej sekcji, w której była akcja, nie na górę strony (rada 24.11.2026, WCAG 2.4.3)
+  if(!hh&&at.fold){const s=document.querySelector(`#main details[data-fold="${at.fold}"] > summary`);if(s&&s.getBoundingClientRect){const r=s.getBoundingClientRect();if((r.top<0||r.bottom>innerHeight)&&s.scrollIntoView)s.scrollIntoView({block:'nearest'});focusEl(s);return}}
+  const h=hh||hs[0];
   if(h){if(h.scrollIntoView){const r=h.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)h.scrollIntoView({block:'start'})}focusEl(h)}}
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;const at=actAt(b);if(d.guta&&['krew','wymkrew','bol'].includes(d.guta)&&!(((S.gut||{})[todayKey()]||{}).a||[]).includes(d.guta))at.rev=1;
@@ -2389,6 +2397,7 @@ document.addEventListener('click',e=>{
   else if(d.dayother){OPEN_F.add('szybki')}
   else if(d.addtrain){const sp=spec(),m=num(S.tr.min);if(m<=0){toast('Wpisz czas w minutach');return}const k=kcal(sp,m),e={kind:'t',label:sp.label,min:m,gross:k.gross,net:k.net};day().push(e);PET.react('train');actDay('train',todayKey(),[e],at);actGuide('Dodano do dnia');return}
   else if(d.del!=null){undoable('Usunięto wpis');day().splice(+d.del,1)}
+  else if(d.delurge!=null){const k=todayKey(),L=(S.urges||{})[k]||[],i=+d.delurge;if(L[i]){undoable('Usunięto ochotę');L.splice(i,1);if(!L.length)delete S.urges[k]}}
   else if(d.clear){undoable('Wyczyszczono wpisy z dziś');S.days[todayKey()]=[]}
   else if(d.lite){const [f,v]=String(d.lite).split(':'),k=todayKey(),wf=liteFull(k);if(!({stepsB:['lo','mid','hi'],feel:['dobrze','glowa','brzuch','inne'],redz:['0','1','2']}[f]||[]).includes(v))return;buzz();const m=(S.meas[k]=S.meas[k]||{});
     if(f==='stepsB'){if(num(m.steps)>0){toast('Kroki są już wpisane liczbą');return}m.stepsB=v}
