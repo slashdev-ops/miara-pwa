@@ -1123,7 +1123,7 @@ const WARM=[
   {id:'w_biodro',part:3,short:0,src:'bmc',fig:'hip',n:'Rozciąganie przodu biodra w klęku',dose:'bez bólu; łącznie ok. 60 s na stronę',how:'W klęku jednonóż napnij pośladek tylnej nogi i podwiń miednicę (dół pleców się spłaszcza), zamiast przesuwać biodra do przodu. Czujesz rozciąganie z przodu biodra tylnej nogi.'}];
 const WARM_PART={1:'Rozgrzanie, co najmniej 6 min',2:'Głębokie mięśnie brzucha',3:'Biodro i miednica'};
 // Stan tylko w pamięci (nie w S, nie w kopii): krok, pominięcie dziś, zatrzymany ruch, licznik, blokada wygaszania ekranu
-const WARM_UI={step:null,skip:'',paused:false,left:0,timer:0,lock:null,locked:false,focus:false};
+const WARM_UI={step:null,skip:'',paused:false,left:null,timer:0,lock:null,locked:false,focus:false};
 // Postać: SVG w kodzie (CSP bez zmian); ruch tylko z klasą an (tryb krok po kroku), bez ruchu przy prefers-reduced-motion
 function warmFig(f,an,lab){const A=(o,n,ex)=>`<g class="${an?'an ':''}mv" style="transform-origin:${o};animation-name:${n}${ex||''}">`,st='<line class="fl" x1="20" y1="94" x2="100" y2="94"/><circle cx="60" cy="14" r="7"/><line x1="60" y1="22" x2="60" y2="54"/>',ly='<line class="fl" x1="8" y1="78" x2="112" y2="78"/><circle cx="16" cy="70" r="7"/>';
   const B={march:st+'<line x1="60" y1="28" x2="48" y2="46"/><line x1="60" y1="28" x2="72" y2="46"/>'+A('60px 54px','wsw')+'<line x1="60" y1="54" x2="60" y2="92"/></g>'+A('60px 54px','wsw',';animation-delay:-1.6s')+'<line x1="60" y1="54" x2="60" y2="92"/></g>',
@@ -1140,14 +1140,14 @@ function warmList(){const full=!!(S.warm||{}).full;return WARM.filter(x=>full||x
 function warmDone(k){return ((S.days||{})[k||todayKey()]||[]).some(e=>e.warm)}
 function warmSec(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 function warmLock(on){try{if(on&&navigator.wakeLock&&navigator.wakeLock.request){navigator.wakeLock.request('screen').then(l=>{WARM_UI.lock=l;WARM_UI.locked=true;const n=document.getElementById('warm_lock');if(n)n.hidden=false}).catch(()=>{WARM_UI.locked=false})}else if(!on){if(WARM_UI.lock&&WARM_UI.lock.release)WARM_UI.lock.release().catch(()=>{});WARM_UI.lock=null;WARM_UI.locked=false}}catch(_){WARM_UI.locked=false}}
-function warmTimer(on){if(WARM_UI.timer){clearInterval(WARM_UI.timer);WARM_UI.timer=0}const x=warmList()[WARM_UI.step];if(!on||!x||!x.sec||typeof setInterval!=='function')return;WARM_UI.left=x.sec;
+function warmTimer(on){if(WARM_UI.timer){clearInterval(WARM_UI.timer);WARM_UI.timer=0}WARM_UI.left=null;const x=warmList()[WARM_UI.step];if(!on||!x||!x.sec||typeof setInterval!=='function')return;WARM_UI.left=x.sec;
   WARM_UI.timer=setInterval(()=>{if(WARM_UI.left>0)WARM_UI.left--;const t=document.getElementById('warm_t');if(t)t.textContent=warmSec(WARM_UI.left);
     if(!WARM_UI.left){clearInterval(WARM_UI.timer);WARM_UI.timer=0;const L=warmList(),nx=L[WARM_UI.step+1],sr=document.getElementById('sr');if(sr)sr.textContent='Koniec ćwiczenia. '+(nx?'Następne: '+nx.n:'To ostatnie ćwiczenie.')}},1000)}
 function warmStepHtml(){const L=warmList(),i=Math.min(WARM_UI.step,L.length-1),x=L[i],last=i===L.length-1,nx=L[i+1];
   return `<section class="warm warm-step" data-warm="step"><p class="warm-n">Rozgrzewka · ${i+1} z ${L.length}</p><div class="warm-prog" aria-hidden="true"><i style="width:${Math.round((i+1)*100/L.length)}%"></i></div>`
     +`<div class="warm-big${WARM_UI.paused?' paused':''}">${warmFig(x.fig,true,x.n)}</div><h2 id="warm_h" tabindex="-1">${esc(x.n)}</h2><p class="warm-d">${esc(x.dose)}</p><p>${esc(x.how)}</p>`
-    +(x.sec?`<p class="warm-timer"><span id="warm_t">${warmSec(WARM_UI.left||x.sec)}</span> <span class="small muted">zostało</span></p>`:'')
-    +`<div class="warm-ctl"><button class="btn ghost" data-warmprev="1"${i?'':' disabled'}>Wstecz</button><button class="btn ghost" data-warmpause="1" aria-pressed="${WARM_UI.paused}">${WARM_UI.paused?'Wznów ruch':'Zatrzymaj ruch'}</button>`
+    +(x.sec?`<p class="warm-timer"><span id="warm_t">${warmSec(WARM_UI.left!=null?WARM_UI.left:x.sec)}</span> <span class="small muted">zostało</span></p>`:'')
+    +`<div class="warm-ctl"><button class="btn ghost" data-warmprev="1"${i?'':' disabled'}>Wstecz</button><button class="btn ghost" data-warmpause="1" aria-pressed="${WARM_UI.paused}">Zatrzymaj ruch</button>`
     +(last?'<button class="btn" data-warmdone="1">Zakończ</button>':'<button class="btn" data-warmnext="1">Dalej</button>')+'</div>'
     +`<p class="small muted">${nx?'Dalej: '+esc(nx.n)+'.':'To ostatnie ćwiczenie.'} <span id="warm_lock"${WARM_UI.locked?'':' hidden'}>Ekran nie gaśnie w trakcie rozgrzewki.</span></p><p><button class="linkbtn small" data-warmexit="1">Przerwij rozgrzewkę</button></p></section>`}
 function warmHtml(){const k=todayKey();if(WARM_UI.step!=null)return warmStepHtml();

@@ -68,3 +68,16 @@ test('krok po kroku: „Dalej” widoczne bez przewijania nad dolnym menu (telef
   const r = await page.evaluate(() => { const b = document.querySelector('[data-warmnext]').getBoundingClientRect(), n = document.querySelector('nav.tabs').getBoundingClientRect(); return { b: b.bottom, n: n.top }; });
   expect(r.b).toBeLessThanOrEqual(r.n);
 });
+
+test('przegląd kodu: licznik po upływie czasu zostaje na 0:00 po przerysowaniu; „Zatrzymaj ruch” ma stałą nazwę i stan w aria-pressed', async ({ page }) => {
+  await page.clock.install();
+  await trening(page);
+  await page.locator('[data-warmgo]').click();
+  await page.clock.runFor(185000);
+  await expect(page.locator('#warm_t')).toHaveText('0:00');
+  const p = page.locator('[data-warmpause]');
+  await p.click();
+  await expect(page.locator('#warm_t')).toHaveText('0:00');
+  await expect(p).toHaveText('Zatrzymaj ruch');
+  await expect(p).toHaveAttribute('aria-pressed', 'true');
+});
