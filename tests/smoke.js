@@ -1602,6 +1602,21 @@ tryc('Rozgrzewka 3: każde ćwiczenie ma źródło z mapy (59, 60, 62) albo id z
 tryc('Rozgrzewka 4: ukończenie zapisuje jedną sesję 0 kcal bez zmiany celu; pominięcie nic nie zapisuje', () => { view('train', WB()); const t0 = T.targetKcal(); click({ warmskip: '1' }); const sk = !(T.S().days[dk(0)] || []).length; click({ warmdone: '1' }); click({ warmdone: '1' }); const d = T.S().days[dk(0)] || []; click({ warmshow: '1' }); return sk && d.length === 1 && d[0].warm === 1 && d[0].gross === 0 && d[0].net === 0 && T.targetKcal() === t0; });
 tryc('Rozgrzewka 5: ostrzeżenie „Bez brzuszków” w trybie krótkim i pełnym', () => { const a = view('train', WB()).includes('Bez brzuszków'); return a && view('train', WB({ warm: { full: true } })).includes('Bez brzuszków'); });
 tryc('Rozgrzewka 6: po dzisiejszej rozgrzewce jedna linia „Rozgrzewka zrobiona” z „Powtórz”; wczorajsza nie zwija karty', () => { const h = view('train', WB({ days: WDONE(dk(0)) })); const a = h.includes('Rozgrzewka zrobiona') && h.includes('data-warmagain') && nWarm(h) === 0; return a && nWarm(view('train', WB({ days: WDONE(dk(1)) }))) === 6; });
+// Decyzja 24.11.2026: rozgrzewka nie liczy się jako ruch dnia (karta Dziś, nawyk „trening”, punkty, liczba treningów, „po treningu”)
+const WRM = { kind: 't', label: 'Rozgrzewka', min: 6, gross: 0, net: 0, warm: 1 }, TRN = { kind: 't', label: 'Siłownia', min: 45, gross: 300, net: 200 };
+const ruchOn = (h) => /<button class="opt hab on"[^>]*>(?:(?!<\/button>)[\s\S])*Ruch: trening/.test(h);
+tryc('Rozgrzewka nie jest ruchem dnia: karta Dziś nie odhacza „Ruch”, zwykły trening odhacza', () => { const a = ruchOn(view('day', BASE({ days: { [dk(0)]: [WRM] }, meas: {} }))); const b = ruchOn(view('day', BASE({ days: { [dk(0)]: [TRN] }, meas: {} }))); return !a && b; });
+tryc('Rozgrzewka nie jest ruchem dnia: punkty dnia jak bez wpisu, zwykły trening daje punkty', () => { view('day', BASE({ days: { [dk(0)]: [] }, meas: {}, hab: {} })); const p0 = T.dayPts(dk(0)); view('day', BASE({ days: { [dk(0)]: [WRM] }, meas: {}, hab: {} })); const p1 = T.dayPts(dk(0)); view('day', BASE({ days: { [dk(0)]: [TRN] }, meas: {}, hab: {} })); return p1 === p0 && T.dayPts(dk(0)) > p0; });
+// Decyzja 24.11.2026: mobilność też nie liczy się jako ruch dnia; ekran Mobilności nie obiecuje „liczy się w Moim dniu”
+const MOBE = { kind: 't', label: 'Mobilność (rutyna)', min: 10, gross: 0, net: 0, mob: 1 };
+tryc('Mobilność nie jest ruchem dnia: karta Dziś nie odhacza „Ruch”', () => !ruchOn(view('day', BASE({ days: { [dk(0)]: [MOBE] }, meas: {} }))));
+tryc('Mobilność nie jest ruchem dnia: punkty dnia jak bez wpisu', () => { view('day', BASE({ days: { [dk(0)]: [] }, meas: {}, hab: {} })); const p0 = T.dayPts(dk(0)); view('day', BASE({ days: { [dk(0)]: [MOBE] }, meas: {}, hab: {} })); return T.dayPts(dk(0)) === p0; });
+tryc('Mobilność: po zapisie sesji ekran nie mówi, że liczy się jako ruch dnia', () => { const h = view('mob', MOBB({ days: { [dk(0)]: [MOBE] } })); return h.includes('Dzisiejsza sesja zapisana') && !h.includes('Liczy się w Moim dniu') && h.includes('nie zalicza ruchu dnia'); });
+// Decyzja 24.11.2026: zmiana liczenia działa wstecz, więc karta zwierzaka mówi o niej raz (tylko osobom z wpisem rozgrzewki lub mobilności) i znika po „Rozumiem”
+const RNOTE = 'Od 24.11 Mobilność i rozgrzewka nie liczą się jako ruch dnia';
+tryc('Notka o ruchu dnia: widoczna przy zwierzaku, gdy był wpis mobilności', () => view('day', BASE({ days: { [dk(1)]: [MOBE] }, meas: {}, ruchNote: 0 })).includes(RNOTE));
+tryc('Notka o ruchu dnia: „Rozumiem” chowa ją na stałe', () => { view('day', BASE({ days: { [dk(1)]: [WRM] }, meas: {}, ruchNote: 0 })); click({ ruchnote: '1' }); return !!T.S().ruchNote && !view('day', {}).includes(RNOTE); });
+tryc('Notka o ruchu dnia: bez wpisów rozgrzewki i mobilności jej nie ma', () => !view('day', BASE({ days: { [dk(1)]: [TRN] }, meas: {}, ruchNote: 0 })).includes(RNOTE));
 const GUT = (o) => BASE({ prof: { cond: { gut: true }, pill: '' }, gut: {}, ...o });
 tryc('jelita: profil ma „Wzdęcia i jelita”; Zdrowie: alarmy NHS, co robić teraz, środki z dawką i źródłem', () => {
   if (!view('health', BASE()).includes('data-cond="gut"')) throw new Error('profil');
