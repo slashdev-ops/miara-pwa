@@ -1,14 +1,37 @@
 <p><img src="brand/miara-logo.svg" alt="Miara" width="280"></p>
 
+[![CI](https://github.com/slashdev-ops/miara-pwa/actions/workflows/ci.yml/badge.svg)](https://github.com/slashdev-ops/miara-pwa/actions/workflows/ci.yml)
+
+## Engineering overview
+
+Offline-first Progressive Web App in plain JavaScript: no framework and no runtime dependencies in the browser.
+User data stays on the device. The rest of this README is in Polish and describes the application itself.
+
+| Area | What is in the repository | Where |
+| --- | --- | --- |
+| CI pipeline | GitHub Actions on every push and pull request: JavaScript syntax check, validation of the JSON configuration, smoke test in Node, then the browser suite | [.github/workflows/ci.yml](.github/workflows/ci.yml) |
+| Browser tests | Playwright, over 1,000 tests in 6 configurations: Chromium and WebKit, light and dark mode, 320 px width. Covers page and CSP errors, contrast, backup and offline work | [tests/przegladarka/](tests/przegladarka/) |
+| CI resilience | Browser cache, time limits and retries for system packages, separate worker counts for Chromium and WebKit, HTML report uploaded on failure | [.github/workflows/ci.yml](.github/workflows/ci.yml) |
+| Security headers | CSP with `script-src 'self'`, HSTS, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, COOP. The same set for both deployment targets | [vercel.json](vercel.json), [deploy/nginx.conf](deploy/nginx.conf) |
+| nginx | HTTP to HTTPS redirect, TLS 1.2 and 1.3, `server_tokens off`, cache rules per file type, headers repeated in every `location` that sets its own | [deploy/nginx.conf](deploy/nginx.conf) |
+| Published surface | Only application files are deployed; tests, tools and server configuration return 404 | [.vercelignore](.vercelignore) |
+| Dependencies | Dependabot for GitHub Actions and test dependencies; one server-side dependency pinned to an exact version with a lock file and an override for a vulnerable transitive package | [.github/dependabot.yml](.github/dependabot.yml), [package.json](package.json) |
+| Encrypted backup | Optional and consent-based: AES-GCM 256 in the browser (WebCrypto, PBKDF2-SHA-256, 600,000 iterations); the serverless function accepts ciphertext only, compares the device token in constant time and limits size and daily uploads | [api/kopia.js](api/kopia.js) |
+| Deployment guide | Vercel and self-hosted nginx, with a header check after deployment | [WDROZENIE.md](WDROZENIE.md) |
+
+Check the headers on the live deployment:
+
+```bash
+curl -sI https://miara-pwa.vercel.app | grep -iE 'content-security|strict-transport|x-content-type|referrer|permissions|x-frame|x-robots'
+```
+
+## O aplikacji
+
 Aplikacja webowa (PWA) wspierająca redukcję masy ciała: plan posiłków z przepisami, kalkulator treningów,
 pomiary, wyniki badań, 12-tygodniowy program ćwiczeń kolana, przegląd tygodnia i widok „Mój wpływ”.
 Działa offline, instaluje się na ekranie początkowym telefonu i nie wysyła danych poza urządzenie.
 
 **Wersja na żywo:** [miara-pwa.vercel.app](https://miara-pwa.vercel.app) (najlepiej na telefonie: Safari, „Dodaj do ekranu początkowego”)
-
-**EN summary:** offline-first Progressive Web App in plain JavaScript (no framework, no npm dependencies).
-Health data never leaves the device. Hardened with a strict Content Security Policy and security headers,
-tested in GitHub Actions, deployable on Vercel or nginx.
 
 ## Zwierzak i postęp
 
