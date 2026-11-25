@@ -236,7 +236,9 @@ test('karta: waga zaczyna od wczorajszych 80,4 kg, + dodaje 0,1 kg; wykres 14 dn
 });
 
 test('karta: przytrzymanie + przy wadze zmienia wartość coraz szybciej', async ({ page }) => {
-  const errors = await open(page, { time: null });
+  // Zegar Playwright zamiast prawdziwego czasu: pod obciążeniem (pełny przebieg, WebKit) timery spóźniały się i krok liczył się źle
+  const errors = await open(page);
+  await page.clock.pauseAt(await page.evaluate(() => Date.now()) + 1000);
   const plus = page.getByRole('button', { name: '0,1 kg więcej' });
   await plus.scrollIntoViewIfNeeded();
   const b = await plus.boundingBox();
@@ -244,16 +246,16 @@ test('karta: przytrzymanie + przy wadze zmienia wartość coraz szybciej', async
   const w0 = await w();
   await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
   await page.mouse.down();
-  await page.waitForTimeout(700);
+  await page.clock.runFor(700);
   const w1 = await w();
-  await page.waitForTimeout(700);
+  await page.clock.runFor(700);
   const w2 = await w();
   await page.mouse.up();
   const a = Math.round((w1 - w0) * 10), c = Math.round((w2 - w1) * 10);
   expect(a, 'kroki w pierwszych 0,7 s').toBeGreaterThanOrEqual(3);
   expect(c, 'kroki w kolejnych 0,7 s').toBeGreaterThan(a);
   const w3 = await w();
-  await page.waitForTimeout(300);
+  await page.clock.runFor(300);
   expect(await w(), 'po puszczeniu wartość stoi').toBe(w3);
   expect(errors).toEqual([]);
 });

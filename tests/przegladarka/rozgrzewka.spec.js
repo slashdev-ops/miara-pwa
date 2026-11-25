@@ -81,3 +81,24 @@ test('przegląd kodu: licznik po upływie czasu zostaje na 0:00 po przerysowaniu
   await expect(p).toHaveText('Zatrzymaj ruch');
   await expect(p).toHaveAttribute('aria-pressed', 'true');
 });
+
+// Notka o zmianie liczenia ruchu dnia (24.11.2026) przy zwierzaku: „Rozumiem” to cel dotyku ≥ 44 px (WCAG 2.5.8 z zapasem do 44 px, jak w całej Miarze),
+// po dotknięciu notka znika na stałe, fokus zostaje na ekranie (nie na body)
+test('notka o ruchu dnia: „Rozumiem” ma co najmniej 44 px i chowa notkę', async ({ page }) => {
+  await page.goto('/index.html#demo-pokaz');
+  await page.waitForFunction(() => typeof render === 'function' && typeof S === 'object');
+  await page.evaluate(() => { SHEET = false; S.lite = false; S.focus = false; S.guide = { hidden: true, dataOk: true, seenPet: true }; S.ruchNote = 0;
+    const d = new Date(); d.setDate(d.getDate() - 1); const k = d.toISOString().slice(0, 10);
+    (S.days[k] = S.days[k] || []).push({ kind: 't', label: 'Mobilność (rutyna)', min: 10, gross: 0, net: 0, mob: 1 }); S.tab = 'day'; render(); });
+  const b = page.locator('[data-ruchnote]');
+  await b.scrollIntoViewIfNeeded();
+  await expect(page.locator('.ruch-note')).toContainText('Od 24.11 Mobilność i rozgrzewka nie liczą się jako ruch dnia');
+  const r = await b.boundingBox();
+  expect(r.height, 'wysokość „Rozumiem”').toBeGreaterThanOrEqual(44);
+  expect(r.width, 'szerokość „Rozumiem”').toBeGreaterThanOrEqual(44);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), 'bez przewijania w bok').toBe(true);
+  await b.click();
+  await expect(page.locator('.ruch-note')).toHaveCount(0);
+  expect(await page.evaluate(() => S.ruchNote)).toBeTruthy();
+  expect(await page.evaluate(() => document.activeElement !== document.body), 'fokus nie ucieka na body').toBe(true);
+});

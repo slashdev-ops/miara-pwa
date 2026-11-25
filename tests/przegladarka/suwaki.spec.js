@@ -64,16 +64,22 @@ test('suwak snu, prawdziwa mysz: szybkie machnięcie 200 px kończy na siatce 15
   const errors = await open(page, 390, 'light');
   const r = page.locator('#wp_rs');
   await r.scrollIntoViewIfNeeded();
-  await r.focus();
-  await page.keyboard.press('Home');
-  let t = await thumb(page, '#wp_rs');
-  await page.mouse.move(t.x, t.y);
-  await page.mouse.down();
-  await page.mouse.move(t.x + 260, t.y); // prawie cały tor jednym ruchem: ponad 300 px/s nawet przy ok. 0,8 s opóźnienia
-  await page.mouse.up();
-  let v = await val(page, '#wp_rs'), L = await page.evaluate(() => WPISY.lastDrag());
-  expect(L.speed, 'machnięcie szybsze niż próg 300 px/s').toBeGreaterThan(300);
-  expect(v % 15, 'szybko: siatka 15 min').toBe(0);
+  // Prędkość liczy aplikacja z czasu zdarzeń wskaźnika (prawdziwy czas). Pod obciążeniem (pełny przebieg, WebKit) zdarzenia potrafią przyjść
+  // ponad 0,9 s po sobie i machnięcie wychodzi wolne: wtedy powtórka gestu (do 5 razy). Każda próba sprawdza zgodność: siatka 15 min tylko przy szybkim.
+  // Progi i przyciąganie bez zależności od czasu sprawdzają testy zdarzeń syntetycznych wyżej.
+  let t, v, L, fast = 0;
+  for (let i = 0; i < 5 && !fast; i++) {
+    await r.focus();
+    await page.keyboard.press('Home');
+    t = await thumb(page, '#wp_rs');
+    await page.mouse.move(t.x, t.y);
+    await page.mouse.down();
+    await page.mouse.move(t.x + 260, t.y); // prawie cały tor jednym ruchem
+    await page.mouse.up();
+    v = await val(page, '#wp_rs'); L = await page.evaluate(() => WPISY.lastDrag());
+    if (L.speed > 300) { fast = 1; expect(v % 15, 'szybko: siatka 15 min').toBe(0); } else expect(L.v, `próba ${i + 1}: wolne machnięcie (${Math.round(L.speed)} px/s) bez przyciągania`).toBe(L.raw);
+  }
+  expect(fast, 'w 5 próbach co najmniej jedno machnięcie szybsze niż próg 300 px/s').toBe(1);
   t = await thumb(page, '#wp_rs');
   await page.mouse.move(t.x, t.y);
   await page.mouse.down();

@@ -12,7 +12,7 @@ async function open(page, tab, prep) {
   await page.clock.install({ time: new Date('2026-11-20T13:00:00') });
   await page.goto('/index.html#demo-wpisy');
   await page.waitForFunction(() => typeof render === 'function' && typeof S === 'object' && typeof WPISY === 'object');
-  await page.clock.pauseAt(new Date('2026-11-20T13:00:10')); // czas stoi: dwa dotknięcia trafiają w to samo okno 700 ms
+  await page.clock.pauseAt(await page.evaluate(() => Date.now()) + 1000); // względem czasu strony: pod obciążeniem ładowanie trwa czasem ponad 10 s (pauseAt w przeszłość = błąd) // czas stoi: dwa dotknięcia trafiają w to samo okno 700 ms
   await page.evaluate((t) => { SHEET = false; S.lite = false; S.once = false; S.toastLen = 'std'; S.guide = { hidden: true, dataOk: true, seenPet: true }; S.tab = t; }, tab);
   if (prep) await page.evaluate(prep);
   await page.evaluate(() => document.fonts.ready.then(() => render())); // czcionki wczytane: kafelki i napisy nie zmieniają już szerokości
