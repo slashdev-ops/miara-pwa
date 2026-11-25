@@ -30,24 +30,23 @@ for (const font of FONTS) {
     expect(errors).toEqual([]);
   });
 
-  test(`krój ${font || 'domyślny'}: wpis w wierszu wartości nie przesuwa etykiety ani wartości (390 i 320 px)`, async ({ page }) => {
-    const errors = await open(page, 390, font);
-    for (const w of [390, 320]) {
-      await page.setViewportSize({ width: w, height: 844 });
-      await page.evaluate(() => { S.tab = 'day'; S.lite = false; SHEET = false; OPEN_F.add('obwody'); OPEN_F.add('tanita'); OPEN_F.add('sprawnosc'); render(); });
-      const ids = await page.evaluate(() => [...document.querySelectorAll('#main .wp-f button.wp-val')].map((b) => b.id));
-      expect(ids.length).toBeGreaterThan(10);
-      for (const id of ids) {
-        const pos = (sel) => page.evaluate((s) => { const e = document.querySelector(s), row = e.closest('.wp-r'), l = row.querySelector('.wp-lab'); return { v: Math.round(e.getBoundingClientRect().top), l: Math.round(l.getBoundingClientRect().top), h: Math.round(row.getBoundingClientRect().height) }; }, sel);
-        await page.evaluate((i) => document.getElementById(i).scrollIntoView({ block: 'center' }), id);
-        const a = await pos(`[id="${id}"]`);
-        await page.locator(`[id="${id}"]`).click();
-        const b = await pos('.wp-in');
-        await page.keyboard.press('Escape');
-        expect(Math.abs(b.v - a.v), `${w} px ${id}: wartość po otwarciu wpisu`).toBeLessThanOrEqual(2);
-        expect(Math.abs(b.l - a.l), `${w} px ${id}: etykieta po otwarciu wpisu`).toBeLessThanOrEqual(2);
-        expect(Math.abs(b.h - a.h), `${w} px ${id}: wysokość wiersza`).toBeLessThanOrEqual(2);
-      }
+  // Osobny test na szerokość i jedno wywołanie strony na pomiar: przy pełnym przebiegu WebKit jeden test na obie szerokości przekraczał 60 s
+  for (const w of [390, 320]) test(`krój ${font || 'domyślny'}: wpis w wierszu wartości nie przesuwa etykiety ani wartości (${w} px)`, async ({ page }) => {
+    const errors = await open(page, w, font);
+    await page.evaluate(() => { S.tab = 'day'; S.lite = false; SHEET = false; OPEN_F.add('obwody'); OPEN_F.add('tanita'); OPEN_F.add('sprawnosc'); render(); });
+    const ids = await page.evaluate(() => [...document.querySelectorAll('#main .wp-f button.wp-val')].map((b) => b.id));
+    expect(ids.length).toBeGreaterThan(10);
+    await page.evaluate(() => { window.__pos = (e) => { const row = e.closest('.wp-r'), l = row.querySelector('.wp-lab'); return { v: Math.round(e.getBoundingClientRect().top), l: Math.round(l.getBoundingClientRect().top), h: Math.round(row.getBoundingClientRect().height) }; }; });
+    for (const id of ids) {
+      const a = await page.evaluate((i) => { const e = document.getElementById(i); e.scrollIntoView({ block: 'center' }); return window.__pos(e); }, id);
+      // force: element jest już przewinięty i zmierzony; pod obciążeniem WebKit potrafi nie dać klatki przez ponad 5 s (sonda 25.11.2026:
+      // 0 wywołań requestAnimationFrame przy visibilityState „visible”), a sprawdzanie stabilności Playwright czeka na klatki. Test mierzy układ, nie klikalność.
+      await page.locator(`[id="${id}"]`).click({ force: true });
+      const b = await page.evaluate(() => window.__pos(document.querySelector('.wp-in')));
+      await page.keyboard.press('Escape');
+      expect(Math.abs(b.v - a.v), `${w} px ${id}: wartość po otwarciu wpisu`).toBeLessThanOrEqual(2);
+      expect(Math.abs(b.l - a.l), `${w} px ${id}: etykieta po otwarciu wpisu`).toBeLessThanOrEqual(2);
+      expect(Math.abs(b.h - a.h), `${w} px ${id}: wysokość wiersza`).toBeLessThanOrEqual(2);
     }
     expect(errors).toEqual([]);
   });
