@@ -1714,12 +1714,16 @@ tryc('jezioro: ruch (podskok, fala) tylko przy prefers-reduced-motion: no-prefer
 });
 
 // Zgłoszenie 13.11.2026: makro i błonnik bez wchodzenia w posiłek; dane europejskie (Frida 6.1, CoFID), progi z rozporządzenia UE 1924/2006
+// Karty planu dnia (krok 9b): od początku karty do następnej karty albo podsumowania planu
+const PROW9 = (h) => h.match(/<div class="entry prow[^]*?(?=<div class="entry prow|<p class="small muted" style="padding:0 16px 12px">)/g) || [];
+const ZJEM9 = (r) => { const m = r.match(/<small class="act-s">([^<]*)<\/small>/); return m ? m[1].replace(/[\s\u00a0]+/g, ' ') : null; };
+const MAC9b = /class="mml"><span aria-hidden="true"><span class="mc" style="--c:var\(--mB\)">B\u00a0<b>\d+<\/b><\/span>/;
 const FIBF = () => { const S = T.S(); S.f.carb = '1'; S.f.portion = 1; };
 tryc('błonnik: każdy składnik ma wartość z tabeli poza mieszanką warzyw', () => Object.entries(T.ING).every(([k, i]) => k === 'warzywa' ? i.fib === undefined : typeof i.fib === 'number' && i.fib >= 0));
 tryc('błonnik: wartości z Fridy i CoFID (płatki, soczewica, siemię, hummus)', () => T.ING.platki.fib === 10.3 && T.ING.soczewica.fib === 18.5 && T.ING.siemie.fib === 30.4 && T.ING.hummus.fib === 4.9 && T.ING.kurczak_piers.fib === 0);
 tryc('błonnik: macros liczy błonnik i zaznacza brak danych składnika', () => { const a = T.macros(M('o4'), 1, 1), b = T.macros(M('o1'), 1, 1); return Math.abs(a.fib - (200 * 1.4 + 200 * 3) / 100) < 0.01 && a.fibNA === false && b.fibNA === true && b.fib > 0; });
-tryc('błonnik: plan dnia pokazuje makro i błonnik przy każdym posiłku', () => { FIBF(); const h = view('meals', BASE()); const n = (h.match(/class="pmac"/g) || []).length; return n === T.planIds().length && /class="pmac"[^]*?B\s\d+\sg[^]*?T\s\d+\sg[^]*?W\s\d+\sg[^]*?Bł\s\d+\+?\sg/.test(h); });
-tryc('błonnik: makro w planie czytane pełnymi słowami', () => { FIBF(); const h = view('meals', BASE()); return /class="pmac"><span aria-hidden="true">[^<]*Bł[^<]*<\/span><span class="sr">[^<]*białko \d+ g, tłuszcz \d+ g, węglowodany \d+ g, błonnik (co najmniej )?\d+ g<\/span>/.test(h); });
+tryc('błonnik: plan dnia pokazuje makro i błonnik przy każdym posiłku', () => { FIBF(); const rs = PROW9(view('meals', BASE())); return rs.length === T.planIds().length && rs.every((r) => /class="mml"[^]*?>B\u00a0<b>\d+<\/b>[^]*?>T\u00a0<b>\d+<\/b>[^]*?>W\u00a0<b>\d+<\/b>[^]*?>Bł\u00a0<b>\d+\+?<\/b>\u00a0g/.test(r)); });
+tryc('błonnik: makro w planie czytane pełnymi słowami', () => { FIBF(); return PROW9(view('meals', BASE())).every((r) => /<span class="sr">białko \d+ g, tłuszcz \d+ g, węglowodany \d+ g, błonnik (co najmniej )?\d+ g<\/span>/.test(r)); });
 tryc('błonnik: podsumowanie planu z błonnikiem i odniesieniem 25 g', () => { FIBF(); const h = view('meals', BASE()); return /Plan dnia: [^<]*błonnika[^<]*25 g/.test(h); });
 tryc('błonnik: lista przepisów ma błonnik w wierszu makro', () => { FIBF(); view('meals', BASE()); return /class="mnum"[^]*?class="mml"[^]*?>Bł\u00a0<b>\d+\+?<\/b>\u00a0g/.test(els.mlist.innerHTML); });
 tryc('błonnik: oznaczenia z progów UE na 100 kcal', () => T.MEALS.filter((m) => m.t).every((m) => { const x = T.macros(m, 1, 1), t = T.mealTags(m, x).map((y) => y[0]), r = x.fib / x.k * 100; return (r >= 3) === t.includes('Dużo błonnika') && (r >= 1.5 && r < 3) === t.includes('Źródło błonnika'); }) && T.MEALS.some((m) => T.mealTags(m, T.macros(m, 1, 1)).some((y) => /błonnika/.test(y[0]))));
@@ -1731,7 +1735,7 @@ tryc('błonnik: źródła w spisie (Frida, CoFID, EFSA, UE 1924/2006)', () => ['
 
 // Zgłoszenie 13.11.2026: jak w CV, słabo widoczne kropki · zamienione na kreskę |, znaczniki w wierszu z czasem
 // Wyjątek (20.11.2026): napis przycisku, który reaguje, „✓ Zjedzone · Cofnij” z briefu przycisków (ten sam wzorzec co „✓ Zapisane · Cofnij” w karcie „Dziś”)
-tryc('separatory: ekran Posiłki bez kropek środkowych poza napisem „✓ … · Cofnij”, makro w planie rozdzielone kreską', () => { const h = view('meals', BASE()).replace(/<button class="btn ab[^"]*"[\s\S]*?<\/button>/g, ''); return !h.includes('·') && /kcal \| B\u00a0\d+\u00a0g \| T\u00a0\d+\u00a0g \| W\u00a0\d+\u00a0g \| Bł\u00a0/.test(h); });
+tryc('separatory: ekran Posiłki bez kropek środkowych poza napisem „✓ … · Cofnij”; makro w planie jako osobne etykiety W6, bez kresek „|” (krok 9b)', () => { const h = view('meals', BASE()).replace(/<button class="btn ab[^"]*"[\s\S]*?<\/button>/g, ''); return !h.includes('·') && !/ \| B\u00a0/.test(h) && MAC9b.test(h); });
 tryc('separatory: znaczniki przepisu w wierszu z czasem, po kresce', () => { view('meals', BASE()); return /<div class="meta">[^<]*\d+ min[^<]*<span class="msep"><span aria-hidden="true"> \| <\/span><span class="sr">, <\/span><\/span><span class="mtag"/.test(els.mlist.innerHTML) && !els.mlist.innerHTML.includes('class="mtags"'); });
 // Sygnały brzucha (sygnaly.js, docs/specs/2026-11-13-sygnaly-brzuch-design.md): moduł liczy z podanego stanu i dnia k.
 const Y = () => sandbox.SYG;
@@ -3333,6 +3337,11 @@ tryc('9a: przepis: makra W6 i pełne słowa dla czytnika', () => { const h = vie
 tryc('9a: brak danych błonnika składnika: „Bł 6+ g” i „co najmniej” dla czytnika', () => { const h = view('recipe', BASE({ recipe: 'o1' })); return /Bł\u00a0<b>\d+\+<\/b>\u00a0g/.test(h) && /błonnik co najmniej \d+ g/.test(h); });
 tryc('9a: pasek proporcji w przepisie i na liście z tokenów makr, odstęp 2 px między odcinkami', () => { FIBF(); view('meals', BASE()); const a = els.mlist.innerHTML, b = view('recipe', BASE({ recipe: 'o4' })); return [a, b].every((h) => /class="bar mbar"[^>]*>(<i style="width:[\d.]+%;background:var\(--m[BTW]\)"><\/i>){3}/.test(h) && !/background:var\(--[pfc]\)/.test(h)) && /\.mbar\{[^}]*gap:2px/.test(CSS9); });
 tryc('9a: CSS W6: tekst w kolorze tekstu, jasne tło --fm, kreska 2 px w kolorze makra; bez kolorowego tekstu makr', () => /\.mc\{[^}]*color:var\(--ink\)/.test(CSS9) && /\.mc\{[^}]*background:color-mix\(in srgb,var\(--c\) var\(--fm\),var\(--surface\)\)/.test(CSS9) && /\.mc\{[^}]*box-shadow:inset 0 -2px 0 var\(--c\)/.test(CSS9) && !/\.mnum \.p\{color/.test(CSS9));
+// Krok 9b (26.11.2026): karta posiłku w planie dnia według „Wersji zwartej” (plan ekranów §12; Z1, Z3, Z4, Z6, Z10)
+tryc('9b: karta planu: nazwa i kcal w jednym wierszu, pod nimi makra W6, potem Zmień i Zjem obok siebie', () => { FIBF(); const rs = PROW9(view('meals', BASE())); return rs.length === T.planIds().length && rs.every((r) => /<div class="prow2"><button class="linkbtn pname" data-recipe="[^"]+">[^<]+<\/button><span class="pk"><b>\d+<\/b> kcal<\/span><\/div>/.test(r) && MAC9b.test(r) && /<div class="pbot"><button class="btn ghost pz" data-swap="\d+">Zmień<\/button><button class="btn ab"[^>]*data-addmeal=/.test(r) && !r.includes('zamień na inne') && !r.includes('class="pmac"')); });
+tryc('9b: Zjem pokazuje skutek przed zapisem: „zostanie X kcal” w napisie przycisku', () => { FIBF(); const ids = T.planIds(); return PROW9(view('meals', BASE())).every((r, i) => { const z = ZJEM9(r), x = T.macros(M(ids[i]), 1, 1), n = z && +z.replace(/\D/g, ''); return z && /^zostanie \d[\d ]* kcal$/.test(z) && Math.abs(n - (T.targetKcal() - x.k)) <= 1; }); });
+tryc('9b: po przekroczeniu celu Zjem mówi „razem X z Y kcal”, bez słów oceniających (Z6)', () => { FIBF(); const rs = PROW9(view('meals', BASE({ days: { [dk(0)]: [{ kind: 'm', label: 'a', k: 3000, p: 0, f: 0, c: 0 }] } }))); return rs.length > 0 && rs.every((r) => /^razem \d[\d ]* z \d[\d ]* kcal$/.test(ZJEM9(r) || '') && !/przekr|za dużo|ponad/.test(r)); });
+tryc('9b: zjedzony posiłek: bez Zmień i bez skutku, przycisk „Zjedzone · Cofnij” w karcie', () => { FIBF(); const id = T.planIds()[0]; const rs = PROW9(view('meals', BASE({ days: { [dk(0)]: [{ kind: 'm', id, label: 'a', k: 400, p: 0, f: 0, c: 0 }] } }))); return !rs[0].includes('data-swap=') && ZJEM9(rs[0]) === null && rs[0].includes('data-addmeal'); });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
