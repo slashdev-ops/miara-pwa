@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Ręczne uruchomienie: w repozytorium prywatnym jedyny sposób na testy w przeglądarce (zob. przegladarka.if)
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -31,6 +33,10 @@ jobs:
 
   przegladarka:
     # Chromium i WebKit (silnik Safari), tryb jasny i ciemny, iPhone 13 i 320 px: tests/przegladarka/miara.spec.js
+    # Ten sam plik jest w miara (prywatne) i miara-pwa (publiczne). W publicznym Actions są bezpłatne, więc testy idą przy każdym
+    # push i PR. W prywatnym plan Free daje 12 USD użycia na miesiąc, a ten krok (ok. 13 min) zużywał prawie cały limit (26.11.2026):
+    # tam tylko ręcznie (workflow_dispatch). Ten sam kod sprawdza miara-pwa po porcie.
+    if: ${{ !github.event.repository.private || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     # ok. 1100 testów: na ubuntu 26-29 min przy domyślnej liczbie procesów; 4 procesy i zapas czasu
     timeout-minutes: 45
