@@ -1,6 +1,8 @@
-// Service worker: najpierw sieć (zawsze najnowsza wersja), przy braku sieci kopia z pamięci podręcznej.
-// Strategia "najpierw sieć" sama pobiera nowe wersje plików. Zmiana CACHE czyści stare kopie
-// z pamięci podręcznej; zmieniaj ją przy większych wydaniach (patrz README).
+// Service worker: start z pamięci (27.11.2026). Odpowiedź od razu z kopii w telefonie, a w tle pobranie z sieci
+// i odświeżenie kopii; bez kopii odpowiada sieć, bez sieci strona główna z pamięci. Gdy z sieci przyjdzie nowa wersja
+// app.js albo strony głównej (inny ETag), okna dostają wiadomość „nowa-wersja” (komunikat z przyciskiem Odśwież).
+// Wcześniej „najpierw sieć” bez limitu czasu: przy słabym zasięgu start czekał na serwer (czarny ekran).
+// Zmiana CACHE czyści stare kopie z pamięci podręcznej; zmieniaj ją przy większych wydaniach (patrz README).
 const CACHE = 'miara-v5';
 const ASSETS = [
   './',
@@ -37,15 +39,25 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
-  e.respondWith(
-    fetch(req)
-      .then((res) => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-        }
-        return res;
-      })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html')))
-  );
+  e.respondWith(caches.match(req).then((hit) => {
+    const net = fetch(req).then((res) => {
+      if (res && res.ok) {
+        const copy = res.clone();
+        const done = caches.open(CACHE).then((c) => c.put(req, copy)).then(() => {
+          if (hit && WATCH.test(new URL(req.url).pathname) && etag(hit) && etag(res) && etag(hit) !== etag(res)) return tell();
+        });
+        if (e.waitUntil) e.waitUntil(done);
+      }
+      return res;
+    });
+    if (hit) { net.catch(() => {}); return hit; }
+    return net.catch(() => caches.match('./index.html'));
+  }));
 });
+
+// Pliki, których nowa wersja oznacza nowe wydanie aplikacji
+const WATCH = /\/(index\.html|app\.js)?$/;
+const etag = (r) => (r && r.headers && r.headers.get ? r.headers.get('ETag') : null);
+function tell() {
+  return self.clients.matchAll({ type: 'window' }).then((cs) => cs.forEach((c) => c.postMessage({ type: 'nowa-wersja' })));
+}
