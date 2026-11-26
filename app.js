@@ -1122,7 +1122,7 @@ const WARM=[
   {id:'w_brzuch',part:2,short:1,src:'borders',fig:'belly',n:'Wciągnięcie dołu brzucha',dose:'5–10 s, 5–10 razy',how:'Leżąc z ugiętymi kolanami, przy wydechu delikatnie wciągnij dół brzucha w stronę kręgosłupa; możesz też napiąć dno miednicy. Plecy i miednica bez ruchu, oddychaj normalnie.'},
   {id:'w_miednica',part:2,short:0,src:'borders',mob:'m_mied',fig:'tilt',n:'Przechylenie miednicy',dose:'5–10 s, 5–10 razy',how:'Bez wstrzymywania oddechu przechyl miednicę, dociskając dół pleców do podłogi, i napnij przy tym dół brzucha; powoli wróć.'},
   {id:'w_kolana',part:2,short:0,src:'borders',fig:'rock',n:'Kołysanie kolan',dose:'powoli, w wygodnym zakresie',how:'Leżąc z ugiętymi kolanami, powoli przechylaj kolana na boki, tylko tak daleko, jak jest wygodnie.'},
-  {id:'w_biodro',part:3,short:0,src:'bmc',fig:'hip',n:'Rozciąganie przodu biodra w klęku',dose:'bez bólu; łącznie ok. 60 s na stronę',how:'W klęku jednonóż napnij pośladek tylnej nogi i podwiń miednicę (dół pleców się spłaszcza), zamiast przesuwać biodra do przodu. Czujesz rozciąganie z przodu biodra tylnej nogi.'}];
+  {id:'w_biodro',part:3,short:0,src:'bmc',fig:'hip',n:'Rozciąganie przodu biodra w klęku',dose:'bez bólu; łącznie ok. 60 s na stronę',how:'W klęku jednonóż napnij pośladek tylnej nogi i dół brzucha, podwiń miednicę i przesuń ją lekko do przodu, nie wyginając dołu pleców. Czujesz rozciąganie z przodu biodra tylnej nogi.'}];
 const WARM_PART={1:'Rozgrzanie, co najmniej 6 min',2:'Głębokie mięśnie brzucha',3:'Biodro i miednica'};
 // Stan tylko w pamięci (nie w S, nie w kopii): krok, pominięcie dziś, zatrzymany ruch, licznik, blokada wygaszania ekranu
 const WARM_UI={step:null,skip:'',paused:false,left:null,timer:0,lock:null,locked:false,focus:false};
