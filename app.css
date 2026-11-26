@@ -10,6 +10,8 @@
   --warn-ink:#663E00; --warn-bg:#FBF0DA;
   --shadow:0 1px 2px rgba(34,37,31,.06),0 8px 24px rgba(34,37,31,.05);
   --p:#1F5C48; --f:#C08A2E; --c:#5563B0; --duck:#F2D45C;
+  /* Makra W6, paleta A′ (krok 9a, 26.11.2026; walidator palety: kontrast z kartą i torem co najmniej 3:1, daltonizm co najmniej 6,5 przy literach B, T, W, Bł) */
+  --mB:#187A52;--mT:#97660F;--mW:#4F5FB5;--mBl:#C2477E;--fm:26%;
   --zw-eye:#2A211E; --zw-hi:#FFFFFF; --zw-blush:#F28B8B; --zw-mouth:#9E3D3D; --zw-heart:#E2506A; --zw-nose:#E07A86; --zw-pink:#F7B2B2; --zw-shadow:rgb(60 45 30 / .24); --zw-beak:#F0963C; --zw-beak-ln:#B4601E;
   --zw-goose-hi:#FFFFFF; --zw-goose:#F7F2E8; --zw-goose-sh:#DCD2C0; --zw-goose-ln:#857A63; --zw-duck-hi:#FFF2A8; --zw-duck-sh:#E2AE2E; --zw-duck-ln:#A87A12;
   --zw-capy-hi:#D4A77C; --zw-capy:#B5875C; --zw-capy-sh:#8E6340; --zw-capy-ln:#654225; --zw-capy-mz:#9E7148; --zw-cat-hi:#FFD6A6; --zw-cat:#F2AE6B; --zw-cat-sh:#D8884A; --zw-cat-ln:#A45A26;
@@ -28,6 +30,7 @@
     --warn-ink:#F2C77E; --warn-bg:#3A2C14;
     --shadow:0 1px 2px rgba(0,0,0,.35);
     --p:#7FC4A6; --f:#E2AE55; --c:#93A0EE; --duck:#CDB04A;
+    --mB:#35A574;--mT:#BE872C;--mW:#6F7DDB;--mBl:#CF6AAA;--fm:22%;
     --zw-eye:#1E1714; --zw-hi:#FFFFFF; --zw-blush:#E07C7C; --zw-mouth:#8A3434; --zw-heart:#F06A82; --zw-nose:#D06B78; --zw-pink:#E89C9C; --zw-shadow:rgb(0 0 0 / .5); --zw-beak:#E08A36; --zw-beak-ln:#A05518;
     --zw-goose-hi:#F4F0E8; --zw-goose:#E2DCD0; --zw-goose-sh:#B9AF9C; --zw-goose-ln:#8E826C; --zw-duck-hi:#F0DE86; --zw-duck-sh:#B8902A; --zw-duck-ln:#8C6A14;
     --zw-capy-hi:#BE9472; --zw-capy:#A27852; --zw-capy-sh:#7C573A; --zw-capy-ln:#5A3B22; --zw-capy-mz:#86603E; --zw-cat-hi:#F2C391; --zw-cat:#DE9E60; --zw-cat-sh:#BF7840; --zw-cat-ln:#8E4E22;
@@ -41,6 +44,7 @@
     --warn-ink:#F2C77E; --warn-bg:#3A2C14;
     --shadow:0 1px 2px rgba(0,0,0,.35);
     --p:#7FC4A6; --f:#E2AE55; --c:#93A0EE; --duck:#CDB04A;
+    --mB:#35A574;--mT:#BE872C;--mW:#6F7DDB;--mBl:#CF6AAA;--fm:22%;
     --zw-eye:#1E1714; --zw-hi:#FFFFFF; --zw-blush:#E07C7C; --zw-mouth:#8A3434; --zw-heart:#F06A82; --zw-nose:#D06B78; --zw-pink:#E89C9C; --zw-shadow:rgb(0 0 0 / .5); --zw-beak:#E08A36; --zw-beak-ln:#A05518;
     --zw-goose-hi:#F4F0E8; --zw-goose:#E2DCD0; --zw-goose-sh:#B9AF9C; --zw-goose-ln:#8E826C; --zw-duck-hi:#F0DE86; --zw-duck-sh:#B8902A; --zw-duck-ln:#8C6A14;
     --zw-capy-hi:#BE9472; --zw-capy:#A27852; --zw-capy-sh:#7C573A; --zw-capy-ln:#5A3B22; --zw-capy-mz:#86603E; --zw-cat-hi:#F2C391; --zw-cat:#DE9E60; --zw-cat-sh:#BF7840; --zw-cat-ln:#8E4E22;
@@ -158,8 +162,11 @@ main p > .btn:not(.small) + .btn:not(.small){margin-top:8px}
 .mhead .name{font-weight:600;font-size:17px;line-height:1.3}
 .mhead .meta{font-size:13px;color:var(--muted);margin-top:4px}
 .mnum{display:flex;gap:16px;padding:0 16px;font-size:15px;align-items:baseline;flex-wrap:wrap}
-.mnum b{font-family:var(--serif);font-size:20px;font-weight:600}
-.mnum .p{color:var(--p)} .mnum .f{color:var(--brass-ink)} .mnum .c{color:var(--c)}
+.mnum>span>b{font-family:var(--serif);font-size:20px;font-weight:600}
+/* Makra W6: tekst w kolorze tekstu (co najmniej 7:1), jasne tło koloru makra i kreska 2 px u dołu, szerokość według treści (Z3, Z11) */
+.mml>[aria-hidden="true"]{display:flex;flex-wrap:wrap;gap:3px 4px;align-items:center}
+.mc{padding:1px 5px;border-radius:0;color:var(--ink);background:color-mix(in srgb,var(--c) var(--fm),var(--surface));box-shadow:inset 0 -2px 0 var(--c);white-space:nowrap;line-height:1.4}
+.mbar{gap:2px;background:none}
 .bar{display:flex;height:6px;border-radius:var(--pill);overflow:hidden;margin:12px 16px 16px;background:var(--surface2)}
 .bar i{display:block;height:100%}
 .mdet{padding:0 16px 16px;border-top:1px solid var(--line)}
@@ -453,7 +460,6 @@ nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;he
 @keyframes ateflash{from{background:var(--surface2)}to{background:transparent}}
 @media (prefers-reduced-motion:reduce){.prow.ate{animation:none}}
 .pmac{font-size:15px;color:var(--muted);line-height:1.4}
-.mnum .b{color:var(--ink)}
 
 /* Zakupy z promocji: dzień zakupów, gazetki, wklejony fragment, propozycje (cele dotyku co najmniej 44 px) */
 .promo{padding:0 16px 12px}
