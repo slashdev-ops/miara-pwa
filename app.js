@@ -375,8 +375,9 @@ const ACT_L={meal:l=>[l,'✓ Zjedzone · Cofnij','Zjem jeszcze raz'],train:['Dod
   lab:['Zapisz wynik',ACT_OK,'Dodaj następny wynik'],ord:['Zapisz zamówione',ACT_OK,'Zapisz kolejne'],plan:['Według planu',ACT_OK,'✓ Plan zapisany']};
 function actOf(key){let a=ACTS[key];if(a&&a.live&&!a.live()){delete ACTS[key];a=null}const o=AB[key]||{L:['','',''],saved:false};
   return WPISY.actBtn({ms:a?(a.end?Infinity:Date.now()-a.at):null,saved:o.saved||!!a,grace:wpGrace(),idle:o.L[0],done:o.L[1],again:o.L[2]})}
-function actHtml(key,attr,L,saved,cls){AB[key]={L,saved:!!saved};const r=actOf(key);
-  return `<button class="btn ab${cls||''}" ${attr} data-ab="${esc(key)}"><span class="act-l">${esc(r.label)}</span><span class="act-z" aria-hidden="true">${L.map(x=>`<i data-l="${esc(x)}"></i>`).join('')}</span></button>`}
+// sub: skutek przed zapisem (Z4), tylko przed pierwszym zapisem; jest częścią nazwy przycisku dla czytnika ekranu
+function actHtml(key,attr,L,saved,cls,sub){AB[key]={L,saved:!!saved};const r=actOf(key);
+  return `<button class="btn ab${cls||''}" ${attr} data-ab="${esc(key)}"><span class="act-l">${esc(r.label)}</span><span class="act-z" aria-hidden="true">${L.map(x=>`<i data-l="${esc(x)}"></i>`).join('')}</span>${sub&&r.st==='idle'?`<small class="act-s">${esc(sub)}</small>`:''}</button>`}
 // Po zapisie i cofnięciu: przerysowanie, przycisk wraca pod palec, napis ogłaszany razem z reakcją zwierzaka (PET.flush w render)
 // Kolejne dotknięcia tego samego przycisku bez przewinięcia przez osobę: miejsce z pierwszego dotknięcia (błąd zaokrąglenia się nie sumuje)
 let ACT_AY=null;
@@ -397,7 +398,7 @@ function actDay(key,k,es,at,more){actSave(key,()=>{es.forEach(e=>actDrop(S.days[
 function actGuide(t){const g=guideAct();if(g)toast(guideToast(t),g)}
 let ATE_FLASH='';
 const mealEaten=id=>day().some(e=>e.kind==='m'&&e.id===id);
-function eatBtn(id,lab,cls){return actHtml('meal:'+id,`data-addmeal="${esc(id)}"`,ACT_L.meal(lab),mealEaten(id),cls)}
+function eatBtn(id,lab,cls,sub){return actHtml('meal:'+id,`data-addmeal="${esc(id)}"`,ACT_L.meal(lab),mealEaten(id),cls,sub)}
 // Pod „Zjem jeszcze raz”: ile razy danie jest dziś zapisane i „Usuń” ostatniego wpisu (przez undoable, 8 s „Cofnij”); w oknie „Cofnij” ukryte, bo cofa przycisk
 const eatN=id=>day().filter(e=>e.kind==='m'&&e.id===id).length;
 function eatLine(id){const n=eatN(id);if(!n)return '';return `<p class="small muted eatn" data-eatn="${esc(id)}"${actOf('meal:'+id).st==='again'?'':' hidden'}>Zjedzone dziś: ${n}× · <button class="linkbtn small" data-eatrm="${esc(id)}">Usuń</button></p>`}
@@ -408,7 +409,11 @@ function planHtml(){
   let h=`<p><button class="btn sos" data-tab="sos">Mam ochotę coś przekąsić</button></p>`+repeatHtml()+`<h2 id="plan">Dziś według planu</h2><p class="small muted">${S.focus?'':([0,6].includes(new Date().getDay())?'Weekend: jedno większe danie, jest więcej czasu. ':'Dzień roboczy: obiad do 20 min. ')}${left>=0?`Zostało ok. ${fmt(left)} kcal na dziś.`:`Cel dnia przekroczony o ok. ${fmt(-left)} kcal.`}</p><div class="panel">`;
   const pk=ids.map(id=>macros(MEALS.find(m=>m.id===id),cm,por)),tk=pk.reduce((a,b)=>a+b.k,0),tp=pk.reduce((a,b)=>a+b.p,0),tf=pk.reduce((a,b)=>a+b.fib,0),tfNA=pk.some(b=>b.fibNA),room=targetKcal()-tk;
   const base=planFor(new Date().getDay()),orig=PLAN[new Date().getDay()];
-  const rows=ids.map((id,i)=>{const m=MEALS.find(x=>x.id===id),x=macros(m,cm,por),done=logged.has(id);return `<div class="entry prow${ATE_FLASH===id?' ate':''}"><div class="ptop"><span class="small muted">${SLOT_T[m.t]}${m.t==='kolacja'&&postTrain()?', po treningu':''}${id!==base[i]?', Twój wybór':base[i]!==orig[i]?', dopasowane do IO':''}${rec&&rec.id===id?', polecane teraz':''}</span>${done?'':`<button class="linkbtn small" data-swap="${i}" style="color:var(--muted);font-size:13px">zamień na inne</button>`}</div><button class="linkbtn pname" data-recipe="${id}">${m.n}</button><div class="pbot">${macLine(x)}${eatBtn(id,'Zjem')}</div>${eatLine(id)}</div>`});
+  // Karta posiłku według „Wersji zwartej” (krok 9b, 26.11.2026): nazwa i kcal w jednym wierszu, makra W6, Zmień i Zjem obok siebie;
+  // Zjem pokazuje skutek przed zapisem (Z4): ile zostanie do celu, a po przekroczeniu neutralnie „razem X z Y” (Z6)
+  const eaten=ms.reduce((a,e)=>a+e.k,0),goal=targetKcal();
+  const rows=ids.map((id,i)=>{const m=MEALS.find(x=>x.id===id),x=macros(m,cm,por),done=logged.has(id),lk=goal-eaten-x.k,sub=lk>=0?`zostanie ${fmt(lk)} kcal`:`razem ${fmt(eaten+x.k)} z ${fmt(goal)} kcal`;
+    return `<div class="entry prow${ATE_FLASH===id?' ate':''}"><div class="ptop"><span class="small muted">${SLOT_T[m.t]}${m.t==='kolacja'&&postTrain()?', po treningu':''}${id!==base[i]?', Twój wybór':base[i]!==orig[i]?', dopasowane do IO':''}${rec&&rec.id===id?', polecane teraz':''}</span></div><div class="prow2"><button class="linkbtn pname" data-recipe="${id}">${m.n}</button><span class="pk"><b>${fmt(x.k)}</b> kcal</span></div>${macChips(x)}<div class="pbot">${done?'<span class="pz" aria-hidden="true"></span>':`<button class="btn ghost pz" data-swap="${i}">Zmień</button>`}${eatBtn(id,'Zjem','',done?'':sub)}</div>${eatLine(id)}</div>`});
   const tot=`<p class="small muted" style="padding:0 16px 12px">Plan dnia: ${fmt(tk)} kcal, ${fmt(tp)} g białka i ${tfNA?'co najmniej ':''}${fmt(tf)} g błonnika (EFSA: 25 g dziennie) przy celu ${fmt(targetKcal())} kcal${tgtApx()?' ('+tgtApx()+')':''}.${room>=50?` Zostaje ok. ${fmt(room)} kcal na dodatek albo większą porcję.`:''}</p>`;
   if(!S.focus)return h+rows.join('')+tot+'</div>';
   // Skupienie (F1c, rada 23.11.2026): na wierzchu jedno danie: zapisane przed chwilą (zostaje w oknie „Cofnij”), polecane teraz albo pierwsze niezjedzone; reszta i podsumowanie dnia zwinięte
@@ -1601,7 +1606,6 @@ function macChips(x){const c=(l,v,t,g)=>`<span class="mc" style="--c:var(--${t})
   return `<span class="mml"><span aria-hidden="true">${c('B',fmt(x.p),'mB')}${c('T',fmt(x.f),'mT')}${c('W',fmt(x.c),'mW')}${c('Bł',fmt(x.fib)+(x.fibNA?'+':''),'mBl',1)}</span><span class="sr">białko ${fmt(x.p)} g, tłuszcz ${fmt(x.f)} g, węglowodany ${fmt(x.c)} g, błonnik ${x.fibNA?'co najmniej ':''}${fmt(x.fib)} g</span></span>`}
 // Pasek proporcji kalorii z makr w kolorach makr, odstęp 2 px między odcinkami
 function propBar(x,st){const tot=x.p*4+x.f*9+x.c*4||1;return `<div class="bar mbar"${st?` style="${st}"`:''} aria-hidden="true"><i style="width:${x.p*4/tot*100}%;background:var(--mB)"></i><i style="width:${x.f*9/tot*100}%;background:var(--mT)"></i><i style="width:${x.c*4/tot*100}%;background:var(--mW)"></i></div>`}
-function macLine(x){return `<span class="pmac"><span aria-hidden="true">${fmt(x.k)}\u00a0kcal | B\u00a0${fmt(x.p)}\u00a0g | T\u00a0${fmt(x.f)}\u00a0g | W\u00a0${fmt(x.c)}\u00a0g | Bł\u00a0${fibG(x).replace(' ','\u00a0')}</span><span class="sr">${fmt(x.k)} kcal, białko ${fmt(x.p)} g, tłuszcz ${fmt(x.f)} g, węglowodany ${fmt(x.c)} g, błonnik ${x.fibNA?'co najmniej ':''}${fmt(x.fib)} g</span></span>`}
 const FIBE=x=>({fib:x.fib,...(x.fibNA?{fibNA:1}:{})});
 const CHIPS=[...new Set(Object.values(ING).map(i=>i.chip).filter(Boolean))];
 function chipsOf(m){return new Set(m.ing.map(x=>ING[x[0]].chip).filter(Boolean))}

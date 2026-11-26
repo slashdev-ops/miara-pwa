@@ -451,15 +451,25 @@ nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;he
 .entry.prow{display:block}
 .prow .ptop{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .prow .pname{display:block;text-align:left;margin:2px 0 8px}
+/* Karta posiłku (krok 9b): nazwa i kcal w jednym wierszu; Zmień węższy po lewej, Zjem szerszy po prawej ze skutkiem (Z4, Z8) */
+.prow .prow2{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px}
+.prow .prow2 .pname{margin:0;min-width:0}
+.prow .pk{white-space:nowrap;color:var(--muted)}.prow .pk b{color:var(--ink)}
+.btn.ab:has(.act-s){grid-template-columns:max-content minmax(0,auto);column-gap:8px}
+.btn.ab:has(.act-s)>.act-z{display:none}
+.btn.ab>.act-s{grid-area:1/2;font-size:13px;font-weight:600;line-height:1.2;text-align:left}
 /* Szerszy krój pisma (np. DejaVu Sans): przycisk „Zjem” przechodzi pod wartości, po prawej, zamiast wychodzić poza ekran */
 .prow .pbot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
 .prow .pbot .btn,.prow .pbot .val{flex:none}
-.prow .pbot .btn{margin-left:auto}
+.prow .pbot{flex-wrap:nowrap;margin-top:8px}
+.prow .pbot .pz{flex:0 0 88px}
+@media (max-width:359px){.prow .pbot .btn{font-size:15px}}
+.prow .pbot .ab{flex:1}
+.prow .pbot .btn{padding-left:12px;padding-right:12px}
 /* Zjem: krótkie podświetlenie wiersza po zapisie (ok. 1 s); przy ograniczonym ruchu bez animacji */
 .prow.ate{animation:ateflash 1s ease-out 1}
 @keyframes ateflash{from{background:var(--surface2)}to{background:transparent}}
 @media (prefers-reduced-motion:reduce){.prow.ate{animation:none}}
-.pmac{font-size:15px;color:var(--muted);line-height:1.4}
 
 /* Zakupy z promocji: dzień zakupów, gazetki, wklejony fragment, propozycje (cele dotyku co najmniej 44 px) */
 .promo{padding:0 16px 12px}

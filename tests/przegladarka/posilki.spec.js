@@ -19,21 +19,37 @@ async function open(page, hash = '#demo-pokaz') {
   return errors;
 }
 
-test('plan dnia: makro z błonnikiem widoczne, „Zjem” nieucięty i co najmniej 44 px, wartości bez łamania w środku', async ({ page }) => {
+// Karta posiłku według „Wersji zwartej” (krok 9b, 26.11.2026): makra W6 w jednej linii, Zmień i Zjem w jednym wierszu, cele co najmniej 44 px
+test('plan dnia: makra W6 w jednej linii, Zmień i Zjem obok siebie i nieucięte, co najmniej 44 px, Zjem ze skutkiem', async ({ page }) => {
   const errors = await open(page);
   await page.evaluate(() => { S.days[todayKey()] = []; S.tab = 'meals'; render(); });
   const rows = await page.evaluate(() => [...document.querySelectorAll('.prow')].map((r) => {
-    const b = r.querySelector('[data-addmeal]'), m = r.querySelector('.pmac [aria-hidden="true"]');
-    return { btnW: b.scrollWidth <= b.clientWidth + 1, btnH: b.getBoundingClientRect().height, txt: m.textContent,
-      inRow: m.getBoundingClientRect().right <= r.getBoundingClientRect().right + 1 };
+    const z = r.querySelector('[data-addmeal]'), c = r.querySelector('[data-swap]'), cs = [...r.querySelectorAll('.mml .mc')], t0 = cs[0].getBoundingClientRect().top;
+    const zr = z.getBoundingClientRect(), cr = c.getBoundingClientRect();
+    return { n: cs.length, oneLine: cs.every((x) => Math.abs(x.getBoundingClientRect().top - t0) < 2), inRow: cs.every((x) => x.getBoundingClientRect().right <= r.getBoundingClientRect().right + 1),
+      zFit: z.scrollWidth <= z.clientWidth + 1, lFit: (() => { const l = z.querySelector('.act-l'); return l.scrollWidth <= l.clientWidth; })(), cFit: c.scrollWidth <= c.clientWidth + 1, zH: zr.height, cH: cr.height, sameRow: Math.abs(zr.top - cr.top) < 2, zRight: zr.left > cr.left, zWider: zr.width > cr.width,
+      sub: (z.querySelector('.act-s') || {}).textContent || '' };
   }));
   expect(rows.length).toBeGreaterThan(2);
   for (const r of rows) {
-    expect(r.btnW).toBe(true);
-    expect(r.btnH).toBeGreaterThanOrEqual(44);
+    expect(r.n).toBe(4);
+    expect(r.oneLine).toBe(true);
     expect(r.inRow).toBe(true);
-    expect(r.txt).toMatch(/kcal \| B\u00a0\d+\u00a0g \| T\u00a0\d+\u00a0g \| W\u00a0\d+\u00a0g \| Bł\u00a0\d+\+?\u00a0g/);
+    expect(r.zFit).toBe(true);
+    expect(r.lFit).toBe(true);
+    expect(r.cFit).toBe(true);
+    expect(r.zH).toBeGreaterThanOrEqual(44);
+    expect(r.cH).toBeGreaterThanOrEqual(44);
+    expect(r.sameRow).toBe(true);
+    expect(r.zRight).toBe(true);
+    expect(r.zWider).toBe(true);
+    expect(r.sub).toMatch(/^zostanie \d[\d\s\u00a0]* kcal$/);
   }
+  // po zapisie napis „✓ Zjedzone · Cofnij” mieści się w tym samym przycisku (bez ucięcia)
+  await page.locator('.prow [data-addmeal]').first().click();
+  const after = await page.evaluate(() => { const l = document.querySelector('.prow [data-addmeal] .act-l'); return { t: l.textContent, fit: l.scrollWidth <= l.clientWidth }; });
+  expect(after.t).toContain('Cofnij');
+  expect(after.fit).toBe(true);
   const over = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(over).toBe(false);
   expect(errors).toEqual([]);
