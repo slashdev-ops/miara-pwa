@@ -462,7 +462,8 @@ nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;he
 .prow .pbot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
 .prow .pbot .btn,.prow .pbot .val{flex:none}
 .prow .pbot{flex-wrap:nowrap;margin-top:8px}
-.prow .pbot .pz{flex:0 0 34%}
+.prow .pbot .pz{flex:0 0 88px}
+@media (max-width:359px){.prow .pbot .btn{font-size:15px}}
 .prow .pbot .ab{flex:1}
 .prow .pbot .btn{padding-left:12px;padding-right:12px}
 /* Zjem: krótkie podświetlenie wiersza po zapisie (ok. 1 s); przy ograniczonym ruchu bez animacji */
