@@ -53,3 +53,40 @@ test('W3a: przełącznik „Oznaczaj nowe funkcje znakiem NOWE” ukrywa znaki N
   expect(await page.locator('.nowe:visible').count()).toBe(0);
   expect(errors).toEqual([]);
 });
+
+for (const w of [320, 390]) {
+  test(`W2 samouczek ${w}px: latarka obejmuje element, dymek w ekranie, przyciski 44 px, Escape kończy i oddaje fokus`, async ({ page }) => {
+    const errors = await fresh(page, w);
+    await page.evaluate(() => { S.onb = true; S.wel = null; S.lite = false; S.seenNew = {}; S.updToast = true; S.tab = 'set'; OPEN_F.add('pierwsze'); render(); });
+    await page.locator('[data-tourstart="all"]').click();
+    await expect(page.locator('#tbh')).toHaveText('Liczba kcal da się dotknąć');
+    await expect(page.locator('#tbh')).toBeFocused();
+    for (let i = 0; i < 4; i++) {
+      const g = await page.evaluate(() => { const k = TOUR.k[TOUR.i], t = document.querySelector(TOUR_S[k][0]), h = document.getElementById('thole').getBoundingClientRect(), b = document.getElementById('tbub').getBoundingClientRect();
+        const r = t && t.getBoundingClientRect(); return { k, cover: !!r && h.left <= r.left && h.top <= r.top && h.right >= r.right && h.bottom >= r.bottom, inView: b.top >= 0 && b.bottom <= innerHeight && b.left >= 0 && b.right <= innerWidth }; });
+      expect(g.cover, g.k).toBe(true); expect(g.inView, g.k).toBe(true);
+      const btn = page.locator('.tbrow .btn'); const r = await btn.boundingBox(); expect(r.height).toBeGreaterThanOrEqual(44);
+      if (i < 3) await btn.click();
+    }
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#thole')).toHaveCount(0);
+    expect(await page.evaluate(() => document.activeElement && document.activeElement.matches('#main [data-addmeal]'))).toBe(true);
+    expect(await page.evaluate(() => [S.seenNew.kcal, S.seenNew.mac, S.seenNew.dop])).toEqual([true, true, true]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    expect(errors).toEqual([]);
+  });
+}
+
+test('W2 po aktualizacji: komunikat „N nowe funkcje” z Pokaż prowadzi tylko po nowościach', async ({ page }) => {
+  const errors = await fresh(page, 390);
+  await page.evaluate(() => { localStorage.setItem(LS, JSON.stringify({ onb: true, lite: false, seenNew: { kcal: true } })); });
+  await page.reload(); await page.waitForFunction(() => typeof S === 'object');
+  await expect(page.locator('#toast')).toContainText('2 nowe funkcje');
+  await page.locator('#toast [data-tourstart="new"]').click();
+  await expect(page.locator('.tcnt')).toHaveText('1 z 2');
+  await expect(page.locator('#tbh')).toHaveText('Makra otwierają rachunek dnia');
+  await page.locator('[data-tourend]').first().click();
+  await page.reload(); await page.waitForFunction(() => typeof S === 'object');
+  await expect(page.locator('#toast')).not.toContainText('nowe funkcje');
+  expect(errors).toEqual([]);
+});

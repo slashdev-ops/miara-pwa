@@ -752,3 +752,17 @@ body.hasbar .toast{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
 .welacts .btn{width:100%;min-height:48px}
 /* W3a: znaki NOWE wyłączone w Ustawieniach */
 [data-nowe="0"] .nowe{display:none}
+/* W2 samouczek z latarką: ekran przygasa cieniem wokół podświetlonego elementu, dymek nad albo pod nim */
+.tourw{display:none}
+.tourw.on{display:block;position:fixed;inset:0;z-index:60}
+.thole{position:fixed;pointer-events:none;border-radius:var(--r-s);box-shadow:0 0 18px 9999px rgb(0 0 0 / .55),0 0 0 2px var(--brass);transition:left .3s,top .3s,width .3s,height .3s}
+.ttag{position:absolute;left:8px;bottom:calc(100% + 2px);font:700 11px/1 var(--sans,system-ui);letter-spacing:.06em;padding:3px 5px 4px;color:var(--ink);background:var(--surface);box-shadow:inset 0 -2px 0 var(--green)}
+.tbub{position:fixed;left:12px;right:12px;max-width:480px;margin:0 auto;background:var(--surface);color:var(--ink);border-radius:var(--r);padding:14px 16px 12px;box-shadow:0 10px 30px rgb(0 0 0 / .3);display:flex;flex-direction:column;gap:8px}
+.tbub h3{margin:0}
+.tbub p{margin:0}
+.tbub .tclose{position:absolute;top:4px;right:4px;min-width:44px;min-height:44px}
+.tbrow{display:flex;justify-content:flex-end}
+.tbrow .btn{min-height:44px}
+@media (prefers-reduced-motion:reduce){.thole{transition:none}}
+[data-still="1"] .thole{transition:none}
+

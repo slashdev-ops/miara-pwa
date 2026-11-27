@@ -3743,6 +3743,34 @@ tryc('W3a znaki NOWE wyłączone: przełącznik odznaczony, strona dostaje znacz
   const h = view('set', BASE({ nowe: false })); const css = fs.readFileSync(path.join(root, 'app.css'), 'utf8'); T.S().nowe = true;
   return /id="nowe" data-k="nowe" >/.test(h) && css.includes('[data-nowe="0"] .nowe{display:none}') && code.includes("dataset.nowe=S.nowe===false?'0':''");
 });
+// W2 samouczek z latarką i komunikat „Co nowego” po aktualizacji (makieta „Pierwsze kroki”, zaakceptowana)
+const bootE = (st) => {
+  const E = {}, mkE = (id) => E[id] || (E[id] = { id, innerHTML: '', textContent: '', value: '', checked: false, style: {}, dataset: {}, classList: { add() {}, remove() {}, toggle() {} }, insertAdjacentHTML(p, h) { this.innerHTML = h + this.innerHTML; } });
+  const sb = { document: { getElementById: mkE, querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, documentElement: { dataset: {} } }, window: { scrollTo() {} },
+    localStorage: { getItem: () => JSON.stringify(st), setItem() {} }, navigator: {}, location: { hash: '' }, console: { log() {}, warn() {}, error() {} }, setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
+    Date, Math, JSON, Promise, URL, Blob, crypto: globalThis.crypto, TextEncoder, TextDecoder, btoa, atob };
+  sb.globalThis = sb; vm.createContext(sb);
+  for (const f of ['pet.js', 'zdarzenia.js', 'sygnaly.js', 'skupienie.js', 'wpisy.js']) { const p = path.join(root, f); if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, 'utf8'), sb); }
+  vm.runInContext(code, sb); return { toast: (E.toast || {}).innerHTML || '', S: vm.runInContext('S', sb) };
+};
+tryc('W2 samouczek: 4 kroki na Posiłkach w pełnym widoku (kcal, makra, Dopasuj danie, Zjem); Dalej, Gotowe oznacza nowe funkcje jako poznane', () => {
+  view('meals', BASE({ lite: false, seenNew: {} })); click({ tourstart: 'all' });
+  const a = mk('tour').innerHTML, tab = T.S().tab;
+  click({ tournext: '1' }); const b = mk('tour').innerHTML;
+  click({ tournext: '1' }); click({ tournext: '1' }); const d = mk('tour').innerHTML;
+  click({ tourend: '1' }); const sn = T.S().seenNew || {};
+  return tab === 'meals' && a.includes('1 z 4') && a.includes('Liczba kcal da się dotknąć') && a.includes('aria-labelledby="tbh"') && b.includes('2 z 4') && b.includes('Makra otwierają rachunek dnia')
+    && d.includes('4 z 4') && d.includes('data-tourend') && !d.includes('data-tournext') && mk('tour').innerHTML === '' && sn.kcal && sn.mac && sn.dop;
+});
+tryc('W2 samouczek w prostym widoku: bez latarki, komunikat, jak go zobaczyć', () => {
+  view('meals', BASE({ lite: true })); mk('toast').innerHTML = ''; click({ tourstart: 'all' }); const ok = mk('tour').innerHTML === '' && /Cała Miara/.test(mk('toast').innerHTML); T.S().lite = false; return ok;
+});
+tryc('W2 Ustawienia: „Przejdź samouczek” w sekcji Pierwsze kroki', () => { const h = view('set', BASE({})); return h.slice(h.indexOf('data-fold="pierwsze"')).includes('data-tourstart="all"'); });
+tryc('W2 po aktualizacji: raz komunikat „N nowe funkcje” z „Pokaż” (tylko nowości), nie przy wyłączonych znakach NOWE ani w prostym widoku', () => {
+  const a = bootE({ onb: true, lite: false, seenNew: { kcal: true } }), b = bootE({ onb: true, lite: false, seenNew: {}, updToast: true });
+  const c = bootE({ onb: true, lite: false, seenNew: {}, nowe: false }), d = bootE({ onb: true, lite: true, seenNew: {} });
+  return a.toast.includes('2 nowe funkcje') && a.toast.includes('data-tourstart="new"') && a.S.updToast === true && b.toast === '' && c.toast === '' && d.toast === '';
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
