@@ -3662,6 +3662,40 @@ tryc('U2a talia w Ustawieniach zapisuje dzisiejszy pomiar (trend zostaje w pomia
 tryc('U2a źródła wartości typowych w Ustawieniach: Eurostat EHIS i WOBASZ II', () => {
   const h = view('set', U2()); return h.includes('hlth_ehis_bm1u') && h.includes('pubmed.ncbi.nlm.nih.gov/27535012');
 });
+// U2b Ustawienia: „Plan na teraz” i „Gdy coś nie idzie” z makiety v13 (mapa powiązań 52, 64-66, 68-72); Shiose 2016 pominięty (brak wiersza, przegląd PMID 36615811: związek niejasny)
+const U2B = (o) => BASE({ sex: 'K', cm: '170', age: '35', kg: '90', goal: '85', mode: 'redukcja', loc: 'all', touched: { cm: true, age: true, kg: true, goal: true }, meas: { [T.todayKey()]: { waist: '95' } }, days: {}, seenNew: {}, ...o });
+const planU2b = (h) => { const i = h.indexOf('id="plan"'); return i < 0 ? '' : h.slice(i, h.indexOf('</ol>', i)); };
+tryc('U2b plan na teraz w redukcji: kalorie trybu, ruch 150 min (WHO 2020), siła 2 razy, talia co tydzień; pod wyborem celu', () => {
+  const h = view('set', U2B()), p = planU2b(h), kc = vm.runInContext('fmt(targetKcal())', sandbox);
+  return /Plan na teraz/.test(h) && h.indexOf('id="plan"') > h.indexOf('Jak ustalić cel?') && p.includes(kc + ' kcal') && p.includes('150 min') && p.includes('2 razy') && p.includes('pomiar talii') && !p.includes('Wpisz swoją');
+});
+tryc('U2b plan bez prośby o własne dane (Z10: podpis „typowo w Polsce, wpisz swoją” jest już przy wierszach)', () => {
+  const a = planU2b(view('set', U2B({ kg: '', touched: { cm: true, age: true }, meas: {} }))); return a.includes('150 min') && !a.includes('Wpisz swoją') && !a.includes('typow');
+});
+tryc('U2b plan: BMI poniżej 18,5 tylko rozmowa z lekarzem, bez kalorii redukcji i ruchu na talię', () => {
+  const p = planU2b(view('set', U2B({ kg: '50', goal: '48', meas: { [T.todayKey()]: { waist: '66' } } })));
+  return p.includes('porozmawiaj z lekarzem') && !p.includes('kcal') && !p.includes('150 min');
+});
+tryc('U2b plan: utrzymanie z talią poniżej połowy wzrostu: utrzymuj ruch; przyrost masy: kalorie przyrostu', () => {
+  const a = planU2b(view('set', U2B({ mode: 'utrzymanie', meas: { [T.todayKey()]: { waist: '80' } } })));
+  const b = planU2b(view('set', U2B({ mode: 'masa', kg: '60', goal: '64', meas: { [T.todayKey()]: { waist: '72' } } })));
+  return a.includes('utrzymuj ruch') && !a.includes('150 min') && b.includes('przyrost') && b.includes('kcal') && !b.includes('150 min');
+});
+tryc('U2b plan: błędny cel w redukcji (wyższy niż waga) pokazuje tylko komunikat o celu, bez planu', () => {
+  const h = view('set', U2B({ goal: '95' })); return h.includes('Cel wyższy niż waga') && !h.includes('id="plan"');
+});
+tryc('U2b „Gdy coś nie idzie”: 4 problemy z tytułami użytkownika, źródła z mapy; cykl tylko u kobiet', () => {
+  const h = view('set', U2B()), m = view('set', U2B({ sex: 'M' }));
+  const t = ['Jem mało, a waga stoi', 'Waga rośnie mimo diety', 'Po dużym spadku idzie wolniej', 'Talia spada, waga nie'];
+  return t.every((x) => h.includes(x)) && h.includes('data-fold="prb"') && /47%/.test(h) && h.includes('1454084') && h.includes('32353079') && h.includes('27136388') && h.includes('21845193') && !m.includes('21845193') && !/miesiączk/.test(m);
+});
+tryc('U2b plan: źródła ruchu i siły (WHO 2020, Schoenfeld, Vispute, Vissers, Ohkawara) w „Dlaczego?”', () => {
+  const h = view('set', U2B()); return ['33239350', '27102172', '21804427', '23409182', '17637702'].every((x) => h.includes(x)) && h.includes('data-fold="why_plan"');
+});
+tryc('U2b plan oznaczony NOWE do pierwszego otwarcia „Gdy coś nie idzie”', () => {
+  const a = planU2b(view('set', U2B())), b = planU2b(view('set', U2B({ seenNew: { plan: true } })));
+  return a.includes('NOWE') && !b.includes('NOWE');
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

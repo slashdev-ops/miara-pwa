@@ -1418,7 +1418,7 @@ function renderChallenge(){
 // ---------- UX: zwijane sekcje z zapamiętanym stanem ----------
 const OPEN_F=new Set(['zapisane']);
 function fold(id,title,inner){return `<details class="fold" id="fold_${id}" data-fold="${id}"${OPEN_F.has(id)?' open':''}><summary>${title}</summary><div style="padding:0 12px 12px">${inner}</div></details>`}
-document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.fold){t.open?OPEN_F.add(t.dataset.fold):OPEN_F.delete(t.dataset.fold)}},true);
+document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.fold){t.open?OPEN_F.add(t.dataset.fold):OPEN_F.delete(t.dataset.fold);if(t.open&&t.dataset.fold==='prb'&&!(S.seenNew||{}).plan){S.seenNew=Object.assign({},S.seenNew,{plan:true});save()}}},true);
 // toggle przychodzi w osobnym zadaniu po kliknięciu: stan sekcji zapisany już przy kliknięciu nagłówka, więc przerysowanie zaraz po nim jej nie zwija
 document.addEventListener('click',e=>{const s=e.target&&e.target.closest&&e.target.closest('summary'),d=s&&s.parentElement;if(!d||d.tagName!=='DETAILS'||!d.dataset.fold||d.querySelector(':scope > summary')!==s)return;
   if(e.defaultPrevented)return;d.open?OPEN_F.delete(d.dataset.fold):OPEN_F.add(d.dataset.fold)});
@@ -1507,6 +1507,24 @@ function goalWayHtml(){if(S.mode!=='redukcja')return '';const w=S.goalWay||'proc
     h+=`<p class="small muted">${bmiOf(S.kg)<up?`Twoje BMI już jest poniżej ${n?23:25}.`:'Przy dużej różnicy zacznij od 5-10% mniej.'}</p>`+whyFold('bmicel','<p>Najniższa śmiertelność w badaniach przy BMI 20-25; dolna część normy (18,5-20) wiązała się z wyższą. Najniżej: BMI 22 w wieku 35-49 lat, 23 w wieku 50-69, 24 w wieku 70-89.</p>'+srcHtml(['bmimort','whoob'].concat(n?['nhsob']:[])));return h}
   const c=num(S.cm)||165,lw=lastWaist();
   return h+`<div class="note">Cel: talia poniżej ${fmt(c/2)} cm (połowa wzrostu).${lw?` Ostatni pomiar: ${fmt1(lw)} cm, talia do wzrostu ${fmt2(lw/c)}.`:' Zmierz talię w Pomiarach dnia, w obwodach.'} Waga docelowa jest tu opcjonalna: postęp pokaże talia.</div>`+srcHtml('nhsob')}
+// U2b „Plan na teraz” i „Gdy coś nie idzie” (makieta v13, 27.11.2026; mapa powiązań 52, 64-66, 68-72). Bez planu przy błędnym celu (komunikat celu wystarczy).
+// Glikogen i woda (Shiose 2016) pominięte: brak wiersza w mapie, przegląd z 2022 (PMID 36615811) nazywa związek niejasnym.
+function planNowHtml(){if(goalErrHtml())return '';
+  const c=num(S.cm)||165,lw=lastWaist(),wa=lw||typWaist(),sn=S.seenNew||{},L=[];let mv=false;
+  if(lowBmi())L.push('BMI poniżej 18,5 to niedowaga: porozmawiaj z lekarzem o przyroście masy.');
+  else{if(S.mode==='redukcja')L.push(`Jedz ok. <b>${fmt(targetKcal())} kcal</b> dziennie.`);
+    if(S.mode==='masa')L.push(`Jedz ok. <b>${fmt(targetKcal())} kcal</b> dziennie (przyrost masy).`);
+    else if(wa/c>=0.5){mv=true;L.push('Tygodniowo: <b>150 min</b> ruchu, <b>2 razy</b> trening siłowy i pomiar talii.')}
+    else if(S.mode==='utrzymanie')L.push('Talia poniżej połowy wzrostu: utrzymuj ruch i mierz talię co tydzień.')}
+  if(!L.length)return '';
+  const K=S.sex!=='M',P=[['Jem mało, a waga stoi','Osoby z „opornością na dietę” zużywały tyle energii, ile wynikało z wyliczeń, a zjedzone kalorie zaniżały średnio o 47%. Przez 7 dni zapisuj w Posiłkach wszystko, także napoje i dodatki, i porównuj średnią wagę z tygodnia oraz talię.',['lichtman','turicchi','ohkawara']],
+    ['Waga rośnie mimo diety','Waga waha się w tygodniu: w weekend zwykle rośnie, w dni robocze spada.'+(K?' Uczucie zatrzymania wody jest największe w 1. dniu miesiączki, więc porównuj ten sam dzień cyklu.':'')+' Porównuj średnie tygodniowe, nie pojedyncze dni.',K?['turicchi','white11']:['turicchi']],
+    ['Po dużym spadku idzie wolniej','Po dużym spadku masy zapotrzebowanie spada bardziej, niż wynika z mniejszej wagi (mała grupa, 14 osób). Miara liczy kalorie z aktualnej wagi; patrz też na talię.',['fothergill']],
+    ['Talia spada, waga nie','To postęp: tłuszcz trzewny może spadać bez wyraźnej zmiany wagi.',['ohkawara','vissers']]];
+  return `<div class="note plan" id="plan"><h3>Plan na teraz${sn.plan?'':NOWE_H}</h3><ol>`+L.map(x=>'<li>'+x+'</li>').join('')+'</ol></div>'
+    +(mv?whyFold('plan','<p>WHO 2020 zaleca dorosłym 150-300 min umiarkowanego ruchu tygodniowo; Miara zaczyna od 150 min. Trening tlenowy zmniejsza tłuszcz trzewny także bez diety, w badaniach po ok. 12 tygodniach. Duże grupy mięśni co najmniej 2 razy w tygodniu. Same ćwiczenia brzucha przez 6 tygodni nie zmniejszyły tłuszczu brzucha. Talię mierz w tym samym miejscu.</p>'+srcHtml(['who2020','vissers','ohkawara','schoenfeld','vispute']),'Plan na teraz'):'')
+    +`<details class="fold" data-fold="prb"${OPEN_F.has('prb')?' open':''}><summary>Gdy coś nie idzie</summary><div style="padding:0 12px 12px">`
+    +P.map(([t,b,src],i)=>`<details class="fold" data-fold="prb${i}"${OPEN_F.has('prb'+i)?' open':''}><summary>${t}</summary><div style="padding:0 16px 12px"><p>${b}</p>${srcHtml(src)}</div></details>`).join('')+'</div></details>'}
 function bmiSetHtml(){const a=bmiCutFor(typeof navigator!=='undefined'&&navigator.language);return '<p style="margin:12px 4px 4px"><b>Progi BMI</b></p>'+seg([['auto','Kraj telefonu'],['who','WHO'],['nhs','NHS']],S.bmiCut||'auto','bmicut','','Progi BMI')+`<p class="small muted">Kraj telefonu: progi ${a==='nhs'?'NHS':'WHO'}.</p>`+whyFold('bmicut','<p>WHO: nadwaga od BMI 25, otyłość od 30. NHS: od 23 i 27,5 dla osób pochodzenia azjatyckiego, bliskowschodniego, afrykańskiego i afrykańsko-karaibskiego.</p>')+muscleHtml()}
 // Dużo mięśni z danych (15.11.2026): FFMI = ostatnia FFM / wzrost w m do kwadratu wobec mediany 18-34 lat z Schutz 2002 (PMID 12080449, abstrakt):
 // 18,9 kg/m² u mężczyzn, 15,4 u kobiet. Tabela centyli niedostępna, więc tylko mediana. Reguła Miary: powyżej mediany = włączone.
@@ -2120,6 +2138,15 @@ const SRC={
   frida:['https://doi.org/10.11583/DTU.32312844','Duńska baza składu żywności Frida 6.1 (DTU)'],
   cofid:['https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid','CoFID 2021 (McCance i Widdowson)'],
   ehisPl:['https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/hlth_ehis_bm1u','Eurostat EHIS 2019: BMI w Polsce według płci, wieku i miejsca zamieszkania'],
+  who2020:['https://pubmed.ncbi.nlm.nih.gov/33239350/','Bull i in. 2020: wytyczne WHO dotyczące aktywności fizycznej'],
+  vissers:['https://pubmed.ncbi.nlm.nih.gov/23409182/','Vissers i in. 2013: trening tlenowy a tłuszcz trzewny (metaanaliza)'],
+  ohkawara:['https://pubmed.ncbi.nlm.nih.gov/17637702/','Ohkawara i in. 2007: dawka ruchu a tłuszcz trzewny (przegląd)'],
+  schoenfeld:['https://pubmed.ncbi.nlm.nih.gov/27102172/','Schoenfeld i in. 2016: częstość treningu siłowego (metaanaliza)'],
+  vispute:['https://pubmed.ncbi.nlm.nih.gov/21804427/','Vispute i in. 2011: ćwiczenia brzucha a tłuszcz brzucha'],
+  lichtman:['https://pubmed.ncbi.nlm.nih.gov/1454084/','Lichtman i in. 1992: „oporność na dietę” a zapis jedzenia'],
+  turicchi:['https://pubmed.ncbi.nlm.nih.gov/32353079/','Turicchi i in. 2020: tygodniowe wahania wagi'],
+  white11:['https://pubmed.ncbi.nlm.nih.gov/21845193/','White i in. 2011: cykl miesiączkowy a zatrzymanie wody'],
+  fothergill:['https://pubmed.ncbi.nlm.nih.gov/27136388/','Fothergill i in. 2016: adaptacja metaboliczna po dużym spadku masy'],
   wobasz:['https://pubmed.ncbi.nlm.nih.gov/27535012/','Stepaniak i in. 2016 (WOBASZ II): talia w Polsce'],
   efsaFib:['https://www.efsa.europa.eu/en/press/news/nda100326','EFSA 2010: błonnik 25 g dziennie'],
   eu1924:['https://eur-lex.europa.eu/legal-content/PL/TXT/HTML/?uri=CELEX:02006R1924-20141213','Rozporządzenie UE 1924/2006: progi błonnika'],
@@ -2480,7 +2507,7 @@ function nextHtml(cur){const g=guideActive()?guideSteps().find(x=>!x.done):null,
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
   let h='<div class="dhead"><h2 id="dane">Twoje dane</h2>'+seg([['K','K'],['M','M']],S.sex,'sex','dsex','Płeć: K kobieta, M mężczyzna')+'</div><div class="panel dcells">'+rwHtml('pfh',['age','cm'])+'</div>'
-    +'<div class="panel">'+rwHtml('pf',['kg','waist','goal'])+RW_TIP+'</div>'+locHtml()+goalErrHtml()+goalWayHtml()+bmiSetHtml();
+    +'<div class="panel">'+rwHtml('pf',['kg','waist','goal'])+RW_TIP+'</div>'+locHtml()+goalErrHtml()+goalWayHtml()+planNowHtml()+bmiSetHtml();
   h+=dataHtml();
   h+='<h2 id="wpisy">Wpisy</h2>'+seg([['prosty','Prosty'],['skup','Skupienie'],['cala','Cała Miara']],S.focus?'skup':S.lite?'prosty':'cala','view','','Mój dzień')+'<p class="small muted">Skupienie pokazuje jedną rzecz naraz, bez wskazówek i ruchu; dane zostają przy każdym widoku.</p>';
   h+=`<div class="panel"><div class="field"><label for="still">Bez ruchu</label><input type="checkbox" class="switch" id="still" data-k="still" ${S.still?'checked':''}></div></div><p class="small muted">Bez animacji w całej Miarze, a w Skupieniu zawsze.</p>`;
