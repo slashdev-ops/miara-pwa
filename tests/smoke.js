@@ -176,7 +176,7 @@ tryc('odznaka świętowana raz (petSeen)', () => {
   const seen = T.S().petSeen.includes('review1'), second = view('pet');
   return first.includes('pet-celebrate') && seen && !second.includes('pet-celebrate');
 });
-tryc('wprowadzenie: 1 ekran danych, Zaczynam, bez kropek postępu i bez wyboru zwierzaka', () => { const a = view('intro', { introStep: 0 }); return a.includes('Twoje dane') && !a.includes('data-intronext') && a.includes('>Zaczynam<') && !a.includes('Krok 1 z') && !a.includes('data-petkind'); });
+tryc('wprowadzenie: 1 ekran danych, Zaczynam, bez kropek postępu i bez wyboru zwierzaka', () => { const a = view('intro', { introStep: 0, wel: null }); return a.includes('Twoje dane') && !a.includes('data-intronext') && a.includes('>Zaczynam<') && !a.includes('Krok 1 z') && !a.includes('data-petkind'); });
 const swSrc = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 check('sw.js: pet.js i krój pisma w pamięci podręcznej, CACHE miara-v5 (duże wydanie: wiersze wartości, suwaki z prędkością, przyciski, które reagują)', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v5'") && swSrc.includes("'./fonts/fraunces-latin-ext-600-normal.woff2'"));
 check('index.html: pet.js przed app.js', /pet\.js[\s\S]*app\.js/.test(html));
@@ -245,8 +245,8 @@ tryc('guide: Zapisz w Ustawieniach zalicza dane, ekran zwierzaka zalicza poznani
 tryc('Dziś: podpowiedź akcji i wyróżniony następny krok', () => { const h = view('day', NEWU()); return h.includes('Otwórz Posiłki i naciśnij Zjem') && h.includes('class="opt hab next"'); });
 tryc('bez ślepych zaułków: przyciski do Treningu i Posiłków', () => { const h = view('day', NEWU()); return !h.includes('w zakładce Trening') && h.includes('Przejdź do Treningu') && h.includes('Przejdź do Posiłków'); });
 tryc('karta: jajo mówi, jak się wykluć', () => view('day', { ...NEWU(), pet: { ...PETA } }).includes('wykluje się'));
-tryc('wprowadzenie: cel aplikacji i dane w telefonie na ekranie danych, Pomiń widoczne', () => { const h = view('intro', { introStep: 0 }); return h.includes('liczy kalorie z Twoich danych') && h.includes('tylko w tym telefonie') && h.includes('>Pomiń<'); });
-tryc('wprowadzenie: stare dane z krokiem 4 otwierają ekran danych bez błędu', () => view('intro', { introStep: 4 }).includes('Twoje dane'));
+tryc('wprowadzenie: cel aplikacji i dane w telefonie na ekranie danych, Pomiń widoczne', () => { const h = view('intro', { introStep: 0, wel: null }); return h.includes('liczy kalorie z Twoich danych') && h.includes('tylko w tym telefonie') && h.includes('>Pomiń<'); });
+tryc('wprowadzenie: stare dane z krokiem 4 otwierają ekran danych bez błędu', () => view('intro', { introStep: 4, wel: null }).includes('Twoje dane'));
 tryc('wprowadzenie: po Zaczynam komunikat z celem kalorii i jajkiem do wyboru towarzysza', () => { view('intro', { introStep: 0, onb: false, pet: null, touched: { kg: true, cm: true, age: true, goal: true } }); click({ introdone: 'ok' }); const t = els.toast.innerHTML; return /Twój cel na start: [0-9 ]+ kcal dziennie/.test(t) && t.includes('jajko') && t.includes('data-tab="pet"'); });
 tryc('wprowadzenie: z wybranym zwierzakiem komunikat tylko z celem', () => { view('intro', { introStep: 0, onb: false, pet: { ...PETA }, touched: { kg: true, cm: true, age: true, goal: true } }); click({ introdone: 'ok' }); const t = els.toast.innerHTML; return t.includes('kcal dziennie') && !t.includes('jajko'); });
 tryc('wprowadzenie: Pomiń bez komunikatu o celu', () => { els.toast.innerHTML = ''; view('intro', { introStep: 0, onb: false }); click({ introdone: '1' }); return !els.toast.innerHTML.includes('kcal dziennie'); });
@@ -3709,6 +3709,30 @@ const bootWith = (st, hash) => {
 tryc('start: po wprowadzeniu Posiłki (pełny widok) albo Mój dzień (prosty widok), nie ostatnio otwarta zakładka', () =>
   ['set', 'day', 'health', 'recipe'].every((t) => bootWith({ onb: true, lite: false, tab: t }) === 'meals') && ['set', 'meals'].every((t) => bootWith({ onb: true, lite: true, tab: t }) === 'day'));
 tryc('start: nowa osoba widzi wprowadzenie', () => bootWith(null) === 'intro' && bootWith({ onb: false, tab: 'meals' }) === 'intro');
+// Powitanie W1 (makieta „Pierwsze kroki”, zaakceptowana): 3 plansze przed danymi; dane są drugim krokiem albo później
+tryc('powitanie: nowa osoba (pusty telefon) zaczyna od planszy 1 z 3', () => {
+  const E = {}, mkE = (id) => E[id] || (E[id] = { id, innerHTML: '', textContent: '', value: '', checked: false, style: {}, dataset: {}, classList: { add() {}, remove() {}, toggle() {} }, insertAdjacentHTML(p, h) { this.innerHTML = h + this.innerHTML; } });
+  const sb = { document: { getElementById: mkE, querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, documentElement: { dataset: {} } }, window: { scrollTo() {} },
+    localStorage: { getItem: () => null, setItem() {} }, navigator: {}, location: { hash: '' }, console: { log() {}, warn() {}, error() {} }, setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
+    Date, Math, JSON, Promise, URL, Blob, crypto: globalThis.crypto, TextEncoder, TextDecoder, btoa, atob };
+  sb.globalThis = sb; vm.createContext(sb);
+  for (const f of ['pet.js', 'zdarzenia.js', 'sygnaly.js', 'skupienie.js', 'wpisy.js']) { const p = path.join(root, f); if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, 'utf8'), sb); }
+  vm.runInContext(code, sb); const h = E.main.innerHTML;
+  return vm.runInContext('S.wel', sb) === 0 && h.includes('Miara podpowiada, co zjeść') && h.includes('aria-label="Plansza 1 z 3"') && h.includes('data-welskip') && h.includes('data-welnext') && !h.includes('id="f_kg"');
+});
+tryc('powitanie: Dalej i Pomiń prowadzą po planszach; ostatnia bez Pomiń, z „Zacznij od szybkiego wpisu” i „Najpierw moje dane”', () => {
+  view('intro', NEWD({ wel: 0 })); click({ welnext: '1' }); T.render(); const b = mainHtml();
+  click({ welskip: '1' }); T.render(); const c = mainHtml();
+  return T.S().wel === 2 && b.includes('Dane zostają w tym telefonie') && b.includes('Plansza 2 z 3') && c.includes('Zacznij od jednej rzeczy') && !c.includes('data-welskip') && c.includes('Zacznij od szybkiego wpisu') && c.includes('Najpierw moje dane') && !c.includes('id="f_kg"');
+});
+tryc('powitanie: „Najpierw moje dane” otwiera ekran danych; „Zacznij od szybkiego wpisu” kończy wprowadzenie w Moim dniu', () => {
+  view('intro', NEWD({ wel: 2 })); click({ weldane: '1' }); T.render(); const a = mainHtml(), wa = T.S().wel;
+  view('intro', NEWD({ wel: 2 })); T.S().tab = 'intro'; click({ introdone: '1' }); const ok = T.S().onb === true && T.S().tab === 'day' && T.S().wel == null;
+  return wa == null && a.includes('id="f_kg"') && ok;
+});
+tryc('powitanie: „Pokaż wprowadzenie” w Ustawieniach zaczyna od planszy 1', () => {
+  view('set', {}); click({ intro: '1' }); const w = T.S().wel, t = T.S().tab; T.S().wel = null; return w === 0 && t === 'intro';
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

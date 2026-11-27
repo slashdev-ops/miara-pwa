@@ -949,7 +949,18 @@ function ekranHtml(inner){
   const an=ef('and','Android (Chrome)','<ol class="steps"><li>Otwórz tę stronę w Chrome.</li><li>Na prawo od paska adresu stuknij w Więcej (⋮), potem w „Zainstaluj i utwórz skrót”, a potem w „Zainstaluj”.</li><li>Postępuj zgodnie z instrukcjami na ekranie.</li></ol><p class="srcl">Źródło: <a href="https://support.google.com/chrome/answer/9658361?hl=pl&amp;co=GENIE.Platform%3DAndroid" target="_blank" rel="noopener">Pomoc Google Chrome</a></p>',and);
   return (inner?'':'<h2 id="ekran">Na ekran główny</h2>')+'<p class="small">Z ikony Miara otwiera się jak aplikacja i działa bez internetu. Otwieraj ją zawsze z ikony: ikona i przeglądarka mogą mieć osobne dane.</p>'+(and?an+ios:ios+an)+'<p class="small muted">Masz już dane w przeglądarce? Przenieś je plikiem kopii (Ustawienia, Kopia danych).</p>';
 }
+// Powitanie W1 (makieta „Pierwsze kroki”, zaakceptowana): 3 plansze przed danymi; Pomiń przechodzi do ostatniej, dane są drugim krokiem albo później
+const WEL=[['Miara podpowiada, co zjeść','Pokazuje posiłki pasujące do Twojego dnia i liczy kalorie z Twoich danych.','card'],
+  ['Dane zostają w tym telefonie','Kopię zrobisz w Ustawieniach jednym przyciskiem i przeniesiesz ją plikiem.','file'],
+  ['Zacznij od jednej rzeczy','Szybki wpis dnia zajmuje kilka sekund. Swoje dane ustawisz potem, kiedy zechcesz.','']];
+function welHtml(){const i=Math.max(0,Math.min(WEL.length-1,S.wel|0)),[t,p,a]=WEL[i],last=i===WEL.length-1;let art='';
+  if(a==='card'){const m=MEALS[0],x=macros(m,carbMult(),1,null);art=`<div class="welart entry prow" aria-hidden="true"><div class="prow2"><span class="pname">${m.n}</span><span class="pk"><b>${fmt(x.k)}</b> kcal</span></div>${macChips(x)}</div>`}
+  else if(a==='file')art='<div class="welart welfile" aria-hidden="true"><span class="wphn"></span><span class="warr"></span><span class="wdoc"></span></div>';
+  return `<div class="wel"><div class="weltop"><span class="dots" aria-hidden="true">${WEL.map((_,n)=>`<i${n<=i?' class="on"':''}></i>`).join('')}</span>${last?'':'<button class="btn ghost small" data-welskip="1">Pomiń</button>'}</div>`
+    +`<div role="group" aria-roledescription="plansza" aria-label="Plansza ${i+1} z ${WEL.length}">${art}<h2 id="wh" tabindex="-1">${t}</h2><p>${p}</p></div>`
+    +`<div class="welacts">${last?'<button class="btn" data-introdone="1">Zacznij od szybkiego wpisu</button><button class="btn ghost" data-weldane="1">Najpierw moje dane</button>':'<button class="btn" data-welnext="1">Dalej</button>'}</div></div>`}
 function renderIntro(){
+  if(S.wel!=null){document.getElementById('main').innerHTML=welHtml();return}
   let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p>'+(S.lite?'<p><button class="btn" data-introdone="1">Zacznij od szybkiego wpisu</button></p>':'')+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex','','Płeć')+'<div class="panel">'+rwHtml('pf',['kg','cm','age','goal'])+RW_TIP+'</div>'+goalHint()+goalPctHtml()+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
   if(!isApp())h+=fold('ekranintro','Jak dodać Miarę do ekranu głównego',ekranHtml(true));
   if(!S.lite)h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
@@ -1607,7 +1618,7 @@ function startSync(){const b=START[S.sex]||START.K;['cm','age'].forEach(k=>{if(i
 // Rodzaj zwierzaka z kopii: tylko znane gatunki (stare kaczka zostaje kaczuszką), nieznany to gąska
 function petFix(s){if(s&&s.pet&&typeof s.pet==='object'&&!PET.kinds().includes(s.pet.kind))s.pet.kind='gaska';return s}
 function syFix(s){s=petFix(suppFix(s));s=promoFix(s,todayKey());try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
-function load(){let r=null;try{r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(viewFix(o,petNameFix(o,muscleFix(o,merge(clone(DEF),fixTouched(o))))))}}catch(e){}const f=clone(DEF);if(!r)f.lite=true;return f}
+function load(){let r=null;try{r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(viewFix(o,petNameFix(o,muscleFix(o,merge(clone(DEF),fixTouched(o))))))}}catch(e){}const f=clone(DEF);if(!r){f.lite=true;f.wel=0}return f}
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
 // ---------- Scenariusze do sprawdzania: dane przykładowe pod #demo-<nazwa>, nic się nie zapisuje ----------
@@ -2824,8 +2835,10 @@ document.addEventListener('click',e=>{
   else if(d.litedone){liteCollapse(todayKey())}
   else if(d.unlock){if(!UNLOCK.includes(d.unlock))return;S.unlock=S.unlock||[];if(!S.unlock.includes(d.unlock))S.unlock.push(d.unlock);S.unlockAt=todayKey();if(d.unlock==='cala')S.lite=false}
   else if(d.unlocklater){const t=new Date();t.setDate(t.getDate()+7);S.unlockAt=todayKey();S.unlockSnooze=keyOf(t)}
-  else if(d.introdone){const ok=d.introdone==='ok',st=['kg','cm','age'].filter(isStart);if(ok&&st.length){S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);save();render();const nm=st.map(k=>({kg:'waga',cm:'wzrost',age:'wiek'})[k]),lst=nm.length>1?nm.slice(0,-1).join(', ')+' i '+nm.at(-1):nm[0];toast(`${lst[0].toUpperCase()+lst.slice(1)} ${nm.length>1?'są':'jest'} na wartościach startowych. Ustaw swoje w Ustawieniach, żeby kalorie były liczone dla Ciebie.`,{act:'tab',arg:'set',label:'Ustawienia'});return}if(ok&&S.guide)S.guide.dataOk=true;S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);if(ok){save();render();toast(`Twój cel na start: ${fmt(targetKcal())} kcal dziennie.`+(S.pet?'':' W Moim dniu czeka jajko: wybierz, kto się z niego wykluje.'),S.pet?0:{act:'tab',arg:'pet',label:'Wybierz'});return}}
-  else if(d.intro){S.introStep=0;S.tab='intro';window.scrollTo(0,0)}
+  else if(d.welnext||d.welskip){S.wel=d.welskip?WEL.length-1:Math.min(WEL.length-1,(S.wel|0)+1);save();render();dopFocus('#wh');return}
+  else if(d.weldane){S.wel=null;save();render();dopFocus('#main h2');return}
+  else if(d.introdone){S.wel=null;const ok=d.introdone==='ok',st=['kg','cm','age'].filter(isStart);if(ok&&st.length){S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);save();render();const nm=st.map(k=>({kg:'waga',cm:'wzrost',age:'wiek'})[k]),lst=nm.length>1?nm.slice(0,-1).join(', ')+' i '+nm.at(-1):nm[0];toast(`${lst[0].toUpperCase()+lst.slice(1)} ${nm.length>1?'są':'jest'} na wartościach startowych. Ustaw swoje w Ustawieniach, żeby kalorie były liczone dla Ciebie.`,{act:'tab',arg:'set',label:'Ustawienia'});return}if(ok&&S.guide)S.guide.dataOk=true;S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);if(ok){save();render();toast(`Twój cel na start: ${fmt(targetKcal())} kcal dziennie.`+(S.pet?'':' W Moim dniu czeka jajko: wybierz, kto się z niego wykluje.'),S.pet?0:{act:'tab',arg:'pet',label:'Wybierz'});return}}
+  else if(d.intro){S.introStep=0;S.wel=0;S.tab='intro';window.scrollTo(0,0)}
   else if(d.goto){const el=document.getElementById(d.goto);if(el){SKUP.reveal(el);if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.focus)el.focus({preventScroll:true})}return}
   else if(d.kq){const [q,v]=d.kq.split(':');S.krok=S.krok||{ans:{},eq:{},done:false,conf:false,zap:{}};S.krok.ans[q]=v}
   else if(d.keq){S.krok=S.krok||{ans:{},eq:{},done:false,conf:false,zap:{}};S.krok.eq[d.keq]=!S.krok.eq[d.keq]}

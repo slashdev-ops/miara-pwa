@@ -737,4 +737,17 @@ body.hasbar .toast{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
 .plan h3{margin:0 0 6px;display:flex;align-items:center;gap:8px}
 .plan ol{margin:0;padding-left:20px}
 .plan li+li{margin-top:4px}
+/* Powitanie W1: 3 plansze, kropki postępu, przyciski na dole w zasięgu kciuka */
+.wel{min-height:70vh;display:flex;flex-direction:column;gap:12px}
+.weltop{display:flex;justify-content:space-between;align-items:center;min-height:44px}
+.weltop .btn{min-height:44px;min-width:44px}
+.wel .dots i{display:inline-block;width:8px;height:8px;border-radius:var(--pill);background:var(--line);margin-right:6px}
+.wel .dots i.on{background:var(--green)}
+.welart{margin:8px 0 16px}
+.welfile{display:flex;align-items:center;justify-content:center;gap:16px;height:96px}
+.wphn{width:44px;height:76px;border:3px solid var(--ink);border-radius:var(--r-s)}
+.warr{width:40px;height:3px;background:var(--green)}
+.wdoc{width:48px;height:60px;border:3px solid var(--green);border-radius:var(--r-s)}
+.welacts{display:flex;flex-direction:column;gap:8px;margin-top:auto}
+.welacts .btn{width:100%;min-height:48px}
 
