@@ -50,7 +50,6 @@ check('app.js: brak atrybutów on...= (CSP)', !/\son[a-z]+=["']/i.test(code));
 check('każde danie ma kroki przygotowania', T.MEALS.every((m) => Array.isArray(T.STEPS[m.id]) && T.STEPS[m.id].length >= 2));
 check('każdy składnik dania istnieje w bazie', T.MEALS.every((m) => m.ing.every(([id]) => T.ING[id])));
 check('plan tygodnia wskazuje istniejące dania', Object.values(T.PLAN).every((d) => d.every((id) => T.MEALS.some((m) => m.id === id))));
-check('kroki bez płyty grzewczej', !T.MEALS.some((m) => /patel|smaż|garn|płyt/i.test(T.STEPS[m.id].join(' '))));
 
 // Testy wpisów E1-E11 z testu użytkownika (05.11.2026)
 const cn = (k, v) => T.checkNum(k, v);
@@ -1213,7 +1212,7 @@ tryc('dopasuj: „Jak w przepisie” i zapis usuwa dopasowanie dnia', () => { co
 tryc('dopasuj: Zjem po dopasowaniu zapisuje dopasowane kcal', () => { const S = T.S(); S.adj = {}; S.ver = {}; view('meals', { days: {} }); const id = T.planIds()[0], m = T.MEALS.find((x) => x.id === id), L = sandbox.dopLevers(m);
   S.adj = { [T.todayKey()]: { [id]: { [L.c]: 0.5 } } }; click({ addmeal: id }); const e = (S.days[T.todayKey()] || []).filter((x) => x.kind === 'm' && x.id === id).pop(), k = T.macros(m, sandbox.carbMult(), T.num(S.f.portion) || 1, { [L.c]: 0.5 }).k;
   const ok = !!e && Math.abs(e.k - k) < 0.01; S.adj = {}; S.days = {}; return ok; });
-tryc('dopasuj: znacznik NOWE przy makrach do pierwszego otwarcia arkusza', () => { const S = T.S(); S.adj = {}; S.ver = {}; delete S.seenNew; const a = /data-dop="[^"]+"[^>]*>[\s\S]*?NOWE/.test(view('meals', {})); click({ dop: T.planIds()[0] }); click({ dopclose: '1' }); return a && !view('meals', {}).includes('>NOWE<'); });
+tryc('dopasuj: znacznik NOWE przy makrach do pierwszego otwarcia arkusza', () => { const S = T.S(); S.adj = {}; S.ver = {}; delete S.seenNew; const a = /data-dop="[^"]+"[^>]*>[\s\S]*?NOWE/.test(view('meals', {})); click({ dop: T.planIds()[0] }); click({ dopclose: '1' }); return a && !/data-dop="[^"]+"[^>]*>(?:(?!<\/button>)[\s\S])*NOWE/.test(view('meals', {})); });
 tryc('dopasuj: Escape zamyka arkusz bez zapisu', () => { const id = dopOpen(), S = T.S(); click({ doptile: 'p' }); (lis.keydown || []).forEach((f) => f({ key: 'Escape', preventDefault() {} })); return !/Dopasuj danie/.test(sheetH()) && !((S.adj || {})[T.todayKey()] || {})[id]; });
 tryc('dopasuj: arkusz dodaje wpis historii (Z13), zapis go zdejmuje', () => { const H = []; sandbox.history = { state: null, pushState(st) { H.push(st); this.state = st; }, back() { H.pop(); this.state = H.length ? H[H.length - 1] : null; } };
   try { dopOpen(); const a = H.length === 1; click({ dopsave: '1' }); return a && H.length === 0; } finally { delete sandbox.history; T.S().adj = {}; } });
@@ -3444,6 +3443,70 @@ tryc('start z pamięci: sw-register pokazuje „Jest nowa wersja Miary” z przy
   return !!shown && /nowa wersja/i.test(shown.t) && shown.o && shown.o.act === 'odswiez' && shown.o.label === 'Odśwież';
 });
 tryc('start z pamięci: Odśwież przeładowuje stronę', () => { let n = 0; sandbox.location = { reload: () => { n++; } }; click({ odswiez: '1' }); delete sandbox.location; return n === 1; });
+// P3 Dania z planów F0-F1 (27.11.2026, makieta „Dania z wariantami” v6): szybkie dania z nazwą zależną od pory, filtr „Mam tylko…”, główne składniki w kolorze makra
+const QD = () => T.MEALS.filter((m) => m.q), QN = () => vm.runInContext('QUICK_N', sandbox), GR = { p: 'p', c: 'c', f: 'f' };
+tryc('P3 składniki: każdy ma krótką nazwę i grupę; grupa B/T/W to makro z największą liczbą gramów, warzywa i owoce tylko do 100 kcal', () => Object.values(T.ING).every((i) => {
+  if (typeof i.s !== 'string' || !i.s || !['p', 'c', 'f', 'v'].includes(i.g)) return false;
+  if (i.g === 'v') return i.k <= 100;
+  const top = ['p', 'c', 'f'].sort((a, b) => i[b] - i[a])[0]; return GR[i.g] === top;
+}));
+tryc('P3 składniki: Frida najpierw (UE), CoFID tylko gdy Frida nie ma produktu w tej postaci; wartości z tabel', () => {
+  const E = { feta: [258, 17.4, 20.4, 0, 0], serek_wiejski: [98.9, 13.3, 4.2, 1.6, 0], rukola: [21.4, 3.3, 0.3, 0.1, 2.4], borowki: [54.2, 0.5, 0.2, 11.2, 2.7], ciabatta: [262.2, 8.4, 3.6, 47.4, 3.2],
+    bajgiel: [273, 10, 1.8, 57.8, 3], burak: [53, 1.6, 0.3, 11.6, 2.6], tortilla: [285, 7.8, 5.7, 53.9, 3.6] };
+  return Object.entries(E).every(([id, [k, p, f, c, fib]]) => { const i = T.ING[id]; return i && i.k === k && i.p === p && i.f === f && i.c === c && i.fib === fib; });
+});
+tryc('źródła: każdy składnik ma w komentarzu bazę i kod (Frida FoodID, CoFID Food Code albo USDA), poza mieszanką warzyw opisaną wprost', () => {
+  const src = code.split('\n').filter((l) => /^\/\/ .*(Frida FoodID|CoFID 2021 Food Code|USDA SR Legacy)/.test(l)).join(' ');
+  const miss = Object.keys(T.ING).filter((k) => k !== 'warzywa' && !new RegExp('(^|[ ,(])' + k + ' (\\d+|CoFID \\d+-\\d+|\\d+-\\d+)').test(src));
+  if (miss.length) console.log('  bez źródła: ' + miss.join(', '));
+  return !miss.length;
+});
+tryc('P3 główne składniki: do 4, od największego udziału w kcal, bez dodatków poniżej 15 g; warzywo dopisane, gdy nie ma go w pierwszych trzech', () => {
+  const g = (id) => sandbox.mainIng(T.MEALS.find((m) => m.id === id)).map((x) => x.id);
+  const all = T.MEALS.every((m) => { const L = sandbox.mainIng(m); return L.length >= 1 && L.length <= 4 && L.every((x) => m.ing.some((y) => y[0] === x.id && y[1] >= 15)); });
+  return all && g('q1').join() === 'bajgiel,feta,burak' && g('o5').join() === 'losos,bataty,brokul' && g('o16').join() === 'kasza_gr,indyk_piers,cukinia';
+});
+tryc('P3 szybkie dania: co najmniej 5, do 10 min, pory z listy, kroki i sprzęt; poza planem tygodnia i poza listą „Albo wybierz sam”', () => {
+  const Q = QD(), P = ['rano', 'dzien', 'wieczor', 'weekend'];
+  if (Q.length < 5 || !Q.every((m) => m.min <= 10 && Array.isArray(m.q) && m.q.length && m.q.every((x) => P.includes(x)) && m.s && T.STEPS[m.id].length >= 2 && sandbox.eqOf(m).length)) return false;
+  view('meals', BASE({ f: { ...T.S().f, type: 'all', noeq: [] } }));
+  const inPlan = [0, 1, 2, 3, 4, 5, 6].some((d) => T.PLAN[d].some((id) => Q.some((m) => m.id === id)));
+  return !inPlan && !sandbox.filtered().some((o) => o.m.q);
+});
+tryc('P3 szybkie dania: plan z IO nie podmienia dań na szybkie', () => { view('meals', BASE({ prof: { cond: { io: true }, pill: '' } })); return [0, 1, 2, 3, 4, 5, 6].every((d) => sandbox.planFor(d).every((id) => !T.MEALS.find((m) => m.id === id).q)); });
+tryc('P3 nazwa sekcji zależy od pory: rano w pracy, w przerwie, w drodze do domu, weekend', () => {
+  const at = (d, h) => sandbox.quickSlot(new Date(2026, 10, d, h, 0));
+  // 23.11.2026 poniedziałek, 28.11 sobota
+  return at(23, 8) === 'rano' && at(23, 10) === 'dzien' && at(23, 15) === 'dzien' && at(23, 16) === 'wieczor' && at(28, 8) === 'weekend' && at(29, 19) === 'weekend'
+    && QN().rano === 'W drodze do pracy' && QN().dzien === 'Na szybko w przerwie' && QN().wieczor === 'W drodze do domu' && QN().weekend === 'Na szybko ze sklepu';
+});
+tryc('P3 sprzęt: płyta rozpoznawana z kroków, każde danie ma znacznik z listy filtra (blender poza filtrem)', () => {
+  const K = ['płyta', 'piekarnik', 'mikrofala', 'blender', 'bez gotowania'];
+  return sandbox.eqOf({ id: 'x_', how: 'Podsmaż na patelni 3 min.' }).includes('płyta') && T.MEALS.every((m) => sandbox.eqOf(m).every((e) => K.includes(e)));
+});
+tryc('P3 „Mam tylko…”: bez piekarnika znikają dania z piekarnikiem, liczba ukrytych się zgadza; stare dane bez noeq pokazują wszystko', () => {
+  const f0 = { ...T.S().f, type: 'all' }; delete f0.noeq; view('meals', BASE({ f: f0 })); const all = sandbox.filtered().length; if (!all) return false;
+  const f = { ...T.S().f, type: 'all', noeq: ['piekarnik'] }; view('meals', BASE({ f }));
+  const L = sandbox.filtered(), full = T.MEALS.filter((m) => !m.q).length;
+  return !L.some((o) => sandbox.eqOf(o.m).includes('piekarnik')) && L.length < full && sandbox.eqHidden() === T.MEALS.filter((m) => sandbox.eqOf(m).includes('piekarnik')).length;
+});
+tryc('P3 ekran: „Mam tylko” z 4 przyciskami aria-pressed, sekcja szybkich dań z nazwą pory i kartami do przepisu, NOWE przy nowościach', () => {
+  const S = BASE({ f: { ...T.S().f, noeq: [] }, seenNew: {} }), h = view('meals', S), slot = sandbox.quickSlot(new Date());
+  const btns = (h.match(/data-eqf="[a-z]+" aria-pressed="(true|false)"/g) || []).length;
+  const Q = QD().filter((m) => m.q.includes(slot));
+  return btns === 4 && h.includes('role="group" aria-label="Sprzęt, który mam"') && h.includes(`>${QN()[slot]}<`) && Q.every((m) => h.includes(`data-recipe="${m.id}"`)) && h.includes('Mam tylko<span class="nowe') && h.includes(QN()[slot] + '<span class="nowe');
+});
+tryc('P3 ekran: dotknięcie „Piekarnik” zapisuje wybór, przycisk zostaje z fokusem, NOWE znika po pierwszym użyciu', () => {
+  view('meals', BASE({ f: { ...T.S().f, type: 'all', noeq: [] }, seenNew: {} })); click({ eqf: 'piekarnik' });
+  const S = T.S(), h = mainHtml();
+  return S.f.noeq.includes('piekarnik') && /data-eqf="piekarnik" aria-pressed="false"/.test(h) && S.seenNew.eq === true && !/Ukryte: 0/.test(h) && /Ukryte: \d+/.test(h);
+});
+tryc('P3 ekran: składniki przy daniu z listy tylko, gdy nazwa ich nie wymienia (Z10): o3 tak, o5 nie; kolor makra i opis dla czytnika', () => {
+  const o3 = T.MEALS.find((m) => m.id === 'o3'), o5 = T.MEALS.find((m) => m.id === 'o5');
+  if (!sandbox.glNeed(o3) || sandbox.glNeed(o5)) return false;
+  const h = view('meals', BASE({ f: { ...T.S().f, type: 'obiad', noeq: [] } }));
+  return /class="gl"[^>]*aria-hidden="true"><span style="--c:var\(--m(B|W|T|Bl)\)">/.test(h) && /<span class="sr">Główne składniki: [^<]*\((białko|węglowodany|tłuszcz|warzywa i owoce)\)/.test(h);
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
