@@ -2157,6 +2157,7 @@ const SRC={
   lichtman:['https://pubmed.ncbi.nlm.nih.gov/1454084/','Lichtman i in. 1992: „oporność na dietę” a zapis jedzenia'],
   turicchi:['https://pubmed.ncbi.nlm.nih.gov/32353079/','Turicchi i in. 2020: tygodniowe wahania wagi'],
   white11:['https://pubmed.ncbi.nlm.nih.gov/21845193/','White i in. 2011: cykl miesiączkowy a zatrzymanie wody'],
+  helms:['https://pubmed.ncbi.nlm.nih.gov/24864135/','Helms, Aragon, Fitschen 2014: tempo redukcji a mięśnie u zawodników'],
   fothergill:['https://pubmed.ncbi.nlm.nih.gov/27136388/','Fothergill i in. 2016: adaptacja metaboliczna po dużym spadku masy'],
   wobasz:['https://pubmed.ncbi.nlm.nih.gov/27535012/','Stepaniak i in. 2016 (WOBASZ II): talia w Polsce'],
   efsaFib:['https://www.efsa.europa.eu/en/press/news/nda100326','EFSA 2010: błonnik 25 g dziennie'],
@@ -2251,7 +2252,10 @@ const CARDS=[
   {id:'skok_wagi',ev:'m',ref:['glyc','hall'],when:()=>{const w=wAt(todayKey()),a=wAvg(1,7);return w!=null&&a.n>=3&&w-a.avg>=0.8},src:()=>{const a=wAvg(1,7);return `dziś ${fmt1(wAt(todayKey()))} kg, średnia z ${a.n} ważeń w 7 dni ${fmt1(a.avg)} kg`},
     t:'Skok wagi to zwykle woda',why:'Węglowodany wiążą wodę: każdy gram glikogenu to 2,7-4 g wody. Kilogram tłuszczu to ok. 7700 kcal, więc jeden dzień go nie zrobi.'},
   {id:'waga_stoi',ev:'u',ref:['glyc','meds'],when:()=>{const a=wAvg(0,6),b=wAvg(21,27);return a.n>=2&&b.n>=2&&Math.abs(a.avg-b.avg)<0.2},src:()=>{const a=wAvg(0,6),b=wAvg(21,27);return `średnia teraz ${fmt1(a.avg)} kg (${a.n} ważeń), 3 tygodnie temu ${fmt1(b.avg)} kg (${b.n} ważeń)`},
-    t:'Waga stoi mimo starań',why:'Glikogen z wodą zmienia wagę niezależnie od tłuszczu, a część leków (np. na migrenę) zmienia masę ciała. Obwód talii pokazuje zmianę niezależnie od wody.',todo:['Wpisz obwód talii','goto','m_waist']}
+    t:'Waga stoi mimo starań',why:'Glikogen z wodą zmienia wagę niezależnie od tłuszczu, a część leków (np. na migrenę) zmienia masę ciała. Obwód talii pokazuje zmianę niezależnie od wody.',todo:['Wpisz obwód talii','goto','m_waist']},
+  // U3 karta tempa (rada 27.11, działanie 5; mapa 74): ostrzeżenie, nie cel; średnia 7 dni względem tygodnia wcześniej, po 3 ważenia; tylko redukcja
+  {id:'tempo',ev:'s',ref:['helms'],when:()=>{if(S.mode!=='redukcja')return false;const a=wAvg(0,6),b=wAvg(7,13);return a.n>=3&&b.n>=3&&(b.avg-a.avg)/b.avg>0.01},src:()=>{const a=wAvg(0,6),b=wAvg(7,13);return `średnia teraz ${fmt1(a.avg)} kg (${a.n} ważeń), tydzień wcześniej ${fmt1(b.avg)} kg (${b.n} ważeń): spadek ${fmt1((b.avg-a.avg)/b.avg*100)}% w tydzień`},
+    t:'Waga spada szybciej niż ok. 1% tygodniowo',why:'U zawodników kulturystyki tempo ok. 0,5-1% masy tygodniowo pomagało zachować mięśnie; szybszy spadek to większe ryzyko ich utraty (badania na zawodnikach). Nie dokręcaj diety: jedz do celu kalorii z Miary i trenuj siłowo 2 razy w tygodniu.',todo:['Trening','tab','train']}
 ];
 function cardHtml(c,day){return `<div class="card panel" data-card="${c.id}"><h3>${typeof c.t==='function'?c.t():c.t}</h3><p>${typeof c.why==='function'?c.why():c.why}</p>${c.more?`<p class="small">${typeof c.more==='function'?c.more():c.more}</p>`:''}<p class="small muted">Na podstawie: ${c.src()}. <span class="ev">${EV[c.ev]}</span></p>${srcHtml(c.ref)}`
   +((c.todo||day)?`<p class="cardact">${c.todo?`<button class="btn small" data-${c.todo[1]}="${c.todo[2]}">${c.todo[0]}</button>`:''}${day&&!(c.todo&&c.todo[1]==='cardok')?`<button class="btn ghost small" data-cardok="${c.id}">Rozumiem</button>`:''}</p>`:'')+'</div>'}
