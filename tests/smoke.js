@@ -3504,8 +3504,39 @@ tryc('P3 ekran: dotknięcie „Piekarnik” zapisuje wybór, przycisk zostaje z 
 tryc('P3 ekran: składniki przy daniu z listy tylko, gdy nazwa ich nie wymienia (Z10): o3 tak, o5 nie; kolor makra i opis dla czytnika', () => {
   const o3 = T.MEALS.find((m) => m.id === 'o3'), o5 = T.MEALS.find((m) => m.id === 'o5');
   if (!sandbox.glNeed(o3) || sandbox.glNeed(o5)) return false;
-  const h = view('meals', BASE({ f: { ...T.S().f, type: 'obiad', noeq: [] } }));
+  view('meals', BASE({ f: { ...T.S().f, type: 'obiad', noeq: [] } })); const h = els.mlist.innerHTML;
   return /class="gl"[^>]*aria-hidden="true"><span style="--c:var\(--m(B|W|T|Bl)\)">/.test(h) && /<span class="sr">Główne składniki: [^<]*\((białko|węglowodany|tłuszcz|warzywa i owoce)\)/.test(h);
+});
+// P4a Warianty dań i śniadania z planów, partia 1 (27.11.2026, makieta „Dania z wariantami” v6): jedna karta na rodzinę, wybór wariantu bez przesuwania układu (Z12)
+const FAMS = () => vm.runInContext('FAM', sandbox), FAMV = (f) => T.MEALS.filter((m) => m.fam === f);
+tryc('P4 rodziny: każda ma nazwę, co najmniej 2 warianty jednej pory dnia z krótką nazwą; nowe śniadania 400-500 kcal (cel planu 450 ±10%)', () => {
+  const F = FAMS(), fams = [...new Set(T.MEALS.filter((m) => m.fam).map((m) => m.fam))];
+  if (fams.length < 7 || !fams.every((f) => F[f] && FAMV(f).length >= 2 && new Set(FAMV(f).map((m) => m.t)).size === 1 && FAMV(f).every((m) => m.vn))) return false;
+  const nowe = T.MEALS.filter((m) => /^s(1\d|2\d|3[01])$/.test(m.id) && m.fam);
+  return nowe.length === 22 && nowe.every((m) => { const k = T.macros(m, 1, 1).k; return k >= 400 && k <= 500; });
+});
+tryc('P4 składniki: Frida najpierw (mango 1859, kiwi 1858, maliny 1850, gruszka 9, kakao 1256, wiórki 704, chia 1728, pistacje 328, awokado 616, łosoś wędzony 1552), CoFID: pomidorki 13-519, mozzarella świeża 12-360', () => {
+  const E = { mango: [51.5, 0.2, 0, 11.7, 2], kiwi: [51.9, 0.9, 0.7, 8.8, 3.3], maliny: [40.7, 1, 0.3, 6.5, 4], gruszka: [49.2, 0.3, 0.1, 11.1, 3.2], kakao: [405, 21.7, 21.9, 17.9, 24], wiorki: [636, 6.5, 61.3, 2.3, 24.7],
+    chia: [461.8, 18.2, 34.1, 0, 40.9], pistacje: [605.5, 21.6, 50.2, 12.3, 8.8], awokado: [155, 1.6, 15.1, 0.5, 5.5], losos_wedz: [169.9, 20.9, 8.9, 1.6, 0], pomidorki: [22, 1.1, 0.5, 3.6, 1.3], mozzarella: [257, 18.6, 20.3, 0, 0] };
+  return Object.entries(E).every(([id, [k, p, f, c, fib]]) => { const i = T.ING[id]; return i && i.k === k && i.p === p && i.f === f && i.c === c && i.fib === fib; });
+});
+tryc('P4 lista: jedna karta na rodzinę; wariant z S.vsel, bez wyboru pierwszy w kolejności sortowania', () => {
+  view('meals', BASE({ f: { ...T.S().f, type: 'sniadanie', noeq: [] }, vsel: { nocna: 's12' } }));
+  const G = sandbox.famPick(sandbox.filtered()), fam = G.filter((o) => o.m.fam).map((o) => o.m.fam);
+  const noc = G.find((o) => o.m.fam === 'nocna'), chia = G.find((o) => o.m.fam === 'chia');
+  return fam.length === new Set(fam).size && noc.m.id === 's12' && noc.vs.length === FAMV('nocna').length && chia.m.id === sandbox.filtered().find((o) => o.m.fam === 'chia').m.id;
+});
+tryc('P4 ekran: karta rodziny z nazwą, grupą wariantów (aria-pressed) i wszystkimi wariantami w stosie; nieaktywne ukryte dla czytnika; przepis wybranego', () => {
+  const h = view('meals', BASE({ f: { ...T.S().f, type: 'sniadanie', noeq: [], minP: 0, maxK: 1000, maxC: 130 }, vsel: { omlet: 's22' }, seenNew: {} })), M = els.mlist.innerHTML;
+  const art = (M.split('<article').find((a) => a.includes('aria-label="Wariant: Omlet"')) || '');
+  const on = (art.match(/data-vsel="omlet:s\d+" aria-pressed="true"/g) || []).length, all = (art.match(/data-vsel="omlet:/g) || []).length;
+  return art.includes('>Omlet<') && on === 1 && /data-vsel="omlet:s22" aria-pressed="true"/.test(art) && all === FAMV('omlet').length
+    && (art.match(/class="stk off" aria-hidden="true"/g) || []).length === FAMV('omlet').length - 1 && art.includes('data-recipe="s22"') && /aria-label="Wariant: Omlet">[\s\S]*?NOWE/.test(art);
+});
+tryc('P4 ekran: dotknięcie wariantu zapisuje wybór, przepis prowadzi do niego, NOWE znika po pierwszym użyciu', () => {
+  view('meals', BASE({ f: { ...T.S().f, type: 'sniadanie', noeq: [] }, vsel: {}, seenNew: {} })); click({ vsel: 'szak:s26' });
+  const S = T.S(), art = (els.mlist.innerHTML.split('<article').find((a) => a.includes('aria-label="Wariant: Szakszuka"')) || '');
+  return S.vsel.szak === 's26' && S.seenNew.var === true && art.includes('data-recipe="s26"') && !/aria-label="Wariant: Szakszuka">[\s\S]*?NOWE/.test(art);
 });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);

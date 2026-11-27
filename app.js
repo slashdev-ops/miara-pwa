@@ -4,6 +4,8 @@
 // Kolejność źródeł (decyzja właściciela 27.11.2026): Frida (UE) najpierw, CoFID (Wielka Brytania) tylko gdy Frida nie ma produktu w tej postaci, USDA w ostateczności.
 // Frida FoodID (P3, plik FCDB_6.1_Dataset.xlsx, odczyt 27.11.2026): ciabatta 1521 (pieczywo pszenne białe), feta 73 (40% tł. w s.m.), serek_wiejski 517 (20% tł. w s.m.), rukola 1492, borowki 1848; węglowodany przyswajalne.
 // CoFID 2021 Food Code (brak w Fridzie): bajgiel 11-970, tortilla 11-925, burak 13-633 (gotowany w wodzie; Frida ma tylko surowy i z puszki); błonnik AOAC.
+// Frida FoodID (P4a, odczyt 27.11.2026): mango 1859, kiwi 1858, maliny 1850, gruszka 9, kakao 1256, wiorki 704, chia 1728 (węglowodany przyswajalne 0, błonnik 40,9), pistacje 328, awokado 616, losos_wedz 1552 (hodowlany, wędzony na zimno).
+// CoFID 2021 Food Code (P4a, brak w Fridzie w tej postaci): pomidorki 13-519 (Frida bez pomidorków koktajlowych), mozzarella 12-360 (świeża; Frida ma tylko półtwardą do pizzy).
 // s = krótka nazwa przy daniu, g = co składnik wnosi (reguła aplikacji): p/c/f = makro z największą liczbą gramów na 100 g, v = warzywa i owoce (do 100 kcal).
 const ING={
   kurczak_piers:{n:'Pierś z kurczaka',k:110,p:23,f:1.5,c:0,fib:0,chip:'Kurczak',s:'kurczak',g:'p'},
@@ -63,7 +65,19 @@ const ING={
   serek_wiejski:{n:'Serek wiejski',k:98.9,p:13.3,f:4.2,c:1.6,fib:0,s:'serek wiejski',g:'p'},
   burak:{n:'Burak gotowany (z opakowania)',k:53,p:1.6,f:0.3,c:11.6,fib:2.6,s:'burak',g:'v'},
   rukola:{n:'Rukola',k:21.4,p:3.3,f:0.3,c:0.1,fib:2.4,s:'rukola',g:'v'},
-  borowki:{n:'Borówki',k:54.2,p:0.5,f:0.2,c:11.2,fib:2.7,s:'borówki',g:'v'}
+  borowki:{n:'Borówki',k:54.2,p:0.5,f:0.2,c:11.2,fib:2.7,s:'borówki',g:'v'},
+  mango:{n:'Mango',k:51.5,p:0.2,f:0,c:11.7,fib:2,s:'mango',g:'v'},
+  kiwi:{n:'Kiwi',k:51.9,p:0.9,f:0.7,c:8.8,fib:3.3,s:'kiwi',g:'v'},
+  maliny:{n:'Maliny',k:40.7,p:1,f:0.3,c:6.5,fib:4,s:'maliny',g:'v'},
+  gruszka:{n:'Gruszka',k:49.2,p:0.3,f:0.1,c:11.1,fib:3.2,s:'gruszka',g:'v'},
+  pomidorki:{n:'Pomidorki koktajlowe',k:22,p:1.1,f:0.5,c:3.6,fib:1.3,s:'pomidorki',g:'v'},
+  kakao:{n:'Kakao naturalne',k:405,p:21.7,f:21.9,c:17.9,fib:24,s:'kakao',g:'f'},
+  wiorki:{n:'Wiórki kokosowe',k:636,p:6.5,f:61.3,c:2.3,fib:24.7,s:'kokos',g:'f'},
+  chia:{n:'Nasiona chia',k:461.8,p:18.2,f:34.1,c:0,fib:40.9,s:'chia',g:'f'},
+  pistacje:{n:'Pistacje',k:605.5,p:21.6,f:50.2,c:12.3,fib:8.8,s:'pistacje',g:'f'},
+  mozzarella:{n:'Mozzarella świeża',k:257,p:18.6,f:20.3,c:0,fib:0,s:'mozzarella',g:'f'},
+  awokado:{n:'Awokado',k:155,p:1.6,f:15.1,c:0.5,fib:5.5,s:'awokado',g:'f'},
+  losos_wedz:{n:'Łosoś wędzony',k:169.9,p:20.9,f:8.9,c:1.6,fib:0,chip:'Ryba',s:'łosoś',g:'p'}
 };
 
 // ---------- Dane: posiłki. Trzeci element 1 = źródło węglowodanów, skalowane pod trening ----------
@@ -84,7 +98,7 @@ const MEALS=[
   {id:'o14',t:'obiad',n:'Ziemniaki z twarożkiem i ogórkiem',min:20,ing:[['twarog',200],['jogurt',50],['ziemniaki',250,1],['ogorek',150]],how:'Ziemniaki w misce z 3 łyżkami wody, mikrofala pod przykryciem 8-10 min. Twaróg wymieszać z jogurtem, szczypiorkiem i koperkiem.'},
   {id:'o15',t:'obiad',n:'Kasza jęczmienna z kurczakiem i pieczarkami',min:25,ing:[['kurczak_piers',150],['pieczarki',150],['cebula',50],['kasza_jecz',60,1],['jogurt',50],['oliwa',8]],how:'Kurczaka, pieczarki i cebulę piec 25 min w 200°C, wymieszać z kaszą z mikrofali i jogurtem.'},
   {id:'o16',t:'obiad',n:'Indyk z cukinią i kaszą gryczaną',min:20,ing:[['indyk_piers',150],['cukinia',200],['kasza_gr',60,1],['oliwa',8]],how:'Indyka w paskach i cukinię z ziołami piec 20 min w 210°C. Kasza z mikrofali.'},
-  {id:'s1',sw:1,t:'sniadanie',n:'Owsianka białkowa z owocami leśnymi',min:7,ing:[['platki',50,1],['mleko',200],['skyr',150],['owoce',100],['orzechy',10]],how:'Płatki z mlekiem w dużym kubku do mikrofali, 2 min z przerwą na zamieszanie, potem wmieszać skyr, owoce i orzechy.'},
+  {id:'s1',fam:'owsianka',vn:'Z owocami leśnymi',sw:1,t:'sniadanie',n:'Owsianka białkowa z owocami leśnymi',min:7,ing:[['platki',50,1],['mleko',200],['skyr',150],['owoce',100],['orzechy',10]],how:'Płatki z mlekiem w dużym kubku do mikrofali, 2 min z przerwą na zamieszanie, potem wmieszać skyr, owoce i orzechy.'},
   {id:'s2',t:'sniadanie',n:'Jajecznica ze szpinakiem i chlebem żytnim',min:10,ing:[['jajko',180],['szpinak',100],['chleb',50,1],['pomidor',100],['oliwa',3]],how:'Jajka roztrzepać ze szpinakiem w misce, mikrofala 2-3 min, mieszając co 30 s.'},
   {id:'s3',sw:1,t:'sniadanie',n:'Miska skyru z płatkami, siemieniem i jabłkiem',min:3,ing:[['skyr',300],['platki',30,1],['siemie',10],['jablko',120]],how:'Wymieszać w misce. Można przygotować wieczorem.'},
   {id:'s4',t:'sniadanie',n:'Kanapki z twarożkiem i warzywami',min:5,ing:[['chleb',80,1],['twarog',150],['papryka',100],['ogorek',100]],how:'Twaróg z ziołami na chleb, warzywa obok.'},
@@ -107,8 +121,30 @@ const MEALS=[
   {id:'o21',t:'obiad',n:'Dorsz z batatami i brokułem',min:30,ing:[['dorsz',200],['bataty',150,1],['brokul',200],['oliwa',8]],how:'Bataty w kostce piec 15 min w 200°C, dołożyć dorsza z oliwą i ziołami, piec kolejne 15 min. Brokuł w mikrofali z 2 łyżkami wody, 4 min.'},
   {id:'s7',sw:1,t:'sniadanie',n:'Pieczone placuszki twarogowe z jabłkiem i cynamonem',min:20,ing:[['twarog',150],['jajko',60],['platki',30,1],['jablko',100]],how:'Twaróg, jajko i płatki rozgnieść widelcem, dodać starte jabłko i cynamon. Łyżką nakładać małe placki na blachę z papierem do pieczenia, piec 15 min w 190°C. Słodycz daje jabłko, bez cukru.'},
   {id:'s8',sw:1,t:'sniadanie',n:'Twarożek waniliowy z owocami i orzechami',min:3,ing:[['twarog',200],['owoce',150],['orzechy',10]],how:'Twaróg rozetrzeć z łyżką mleka i kilkoma kroplami aromatu waniliowego, na wierzch owoce i posiekane orzechy. Bez cukru: słodycz dają owoce.'},
-  {id:'s9',sw:1,t:'sniadanie',n:'Owsianka nocna z jabłkiem i cynamonem',min:5,ing:[['platki',40,1],['skyr',150],['mleko',100],['jablko',100],['orzechy',10]],how:'Wieczorem wymieszać w słoiku płatki, skyr, mleko i starte jabłko z cynamonem, rano posypać orzechami. Na zimno albo 1 min w mikrofali.'},
+  {id:'s9',fam:'nocna',vn:'Z jabłkiem i cynamonem',sw:1,t:'sniadanie',n:'Owsianka nocna z jabłkiem i cynamonem',min:5,ing:[['platki',40,1],['skyr',150],['mleko',100],['jablko',100],['orzechy',10]],how:'Wieczorem wymieszać w słoiku płatki, skyr, mleko i starte jabłko z cynamonem, rano posypać orzechami. Na zimno albo 1 min w mikrofali.'},
   {id:'p6',sw:1,t:'przekaska',n:'Koktajl ze skyru, owoców i płatków',min:3,ing:[['skyr',200],['owoce',100],['platki',20,1]],how:'Zmiksować blenderem z odrobiną wody.'},
+  {id:'s10',fam:'nocna',vn:'Mango z kokosem',sw:1,t:'sniadanie',n:'Nocna owsianka mango z kokosem',min:5,ing:[['platki',50,1],['skyr',150],['mleko',120],['mango',100],['wiorki',8]],how:'Płatki, skyr i mleko na noc do lodówki, rano mango i wiórki.'},
+  {id:'s11',fam:'nocna',vn:'Jagodowa',sw:1,t:'sniadanie',n:'Nocna owsianka jagodowa',min:5,ing:[['platki',50,1],['skyr',150],['mleko',120],['borowki',125],['maslo_orz',10]],how:'Płatki, skyr i mleko na noc do lodówki, rano borówki i masło orzechowe.'},
+  {id:'s12',fam:'nocna',vn:'Czekoladowo-malinowa',sw:1,t:'sniadanie',n:'Nocna owsianka czekoladowo-malinowa',min:5,ing:[['platki',50,1],['skyr',150],['mleko',120],['kakao',8],['maliny',100],['orzechy',10]],how:'Płatki, skyr, mleko i kakao na noc do lodówki, rano maliny i orzechy.'},
+  {id:'s13',fam:'nocna',vn:'Piernikowa z gruszką',sw:1,t:'sniadanie',n:'Nocna owsianka piernikowa z gruszką',min:5,ing:[['platki',50,1],['skyr',150],['mleko',120],['gruszka',120],['orzechy',10]],how:'Płatki, skyr, mleko i przyprawa piernikowa na noc, rano gruszka i orzechy.'},
+  {id:'s14',fam:'nocna',vn:'Kakaowa z mandarynką',sw:1,t:'sniadanie',n:'Nocna owsianka kakaowa z mandarynką',min:5,ing:[['platki',45,1],['skyr',150],['mleko',120],['kakao',8],['mandarynka',120],['orzechy',10]],how:'Płatki, skyr, mleko i kakao na noc, rano mandarynka i orzechy.'},
+  {id:'s15',fam:'owsianka',vn:'Malinowo-pistacjowa',sw:1,t:'sniadanie',n:'Owsianka malinowo-pistacjowa',min:7,ing:[['platki',50,1],['mleko',200],['skyr',120],['maliny',100],['pistacje',12]],how:'Płatki z mlekiem 2 min w mikrofali, potem skyr, maliny i pistacje.'},
+  {id:'s16',fam:'owsianka',vn:'Czekoladowa z malinami',sw:1,t:'sniadanie',n:'Owsianka czekoladowa z malinami',min:7,ing:[['platki',50,1],['mleko',200],['skyr',150],['kakao',8],['maliny',100]],how:'Płatki z mlekiem i kakao 2 min w mikrofali, potem skyr i maliny.'},
+  {id:'s17',fam:'owsianka',vn:'Z gruszką i orzechami',sw:1,t:'sniadanie',n:'Owsianka z gruszką i orzechami',min:8,ing:[['platki',50,1],['mleko',200],['skyr',120],['gruszka',120],['orzechy',10]],how:'Płatki z mlekiem i gruszką 3 min w mikrofali, potem skyr i orzechy.'},
+  {id:'s18',fam:'chia',vn:'Z kiwi i borówkami',sw:1,t:'sniadanie',n:'Pudding chia z kiwi i borówkami',min:5,ing:[['chia',25],['mleko',150],['skyr',150],['kiwi',100],['borowki',60],['maslo_orz',10]],how:'Chia z mlekiem na noc, rano skyr, kiwi, borówki i masło orzechowe.'},
+  {id:'s19',fam:'chia',vn:'Z korzennym jabłkiem',sw:1,t:'sniadanie',n:'Pudding chia z korzennym jabłkiem',min:5,ing:[['chia',25],['mleko',150],['skyr',150],['jablko',150],['orzechy',10]],how:'Chia z mlekiem na noc, rano skyr, starte jabłko z cynamonem i orzechy.'},
+  {id:'s20',fam:'chia',vn:'Z mango i kokosem',sw:1,t:'sniadanie',n:'Pudding chia z mango i kokosem',min:5,ing:[['chia',25],['mleko',150],['skyr',200],['mango',120],['wiorki',5]],how:'Chia z mlekiem na noc, rano skyr, mango i wiórki.'},
+  {id:'s21',fam:'omlet',vn:'Z pieczarkami i mozzarellą',t:'sniadanie',n:'Omlet z pieczarkami i mozzarellą',min:12,ing:[['jajko',150],['pieczarki',100],['mozzarella',40],['oliwa',5],['chleb',40,1]],how:'Pieczarki podsmażyć na patelni, zalać jajkami, na wierzch mozzarella.'},
+  {id:'s22',fam:'omlet',vn:'Ze szpinakiem i pomidorkami',t:'sniadanie',n:'Omlet ze szpinakiem, pomidorkami i fetą',min:12,ing:[['jajko',150],['szpinak',100],['pomidorki',100],['feta',30],['oliwa',5],['chleb',40,1]],how:'Szpinak na patelni, zalać jajkami, pomidorki i feta.'},
+  {id:'s23',fam:'omlet',vn:'Na słodko z malinami',sw:1,t:'sniadanie',n:'Omlet na słodko z malinami',min:12,ing:[['jajko',120],['skyr',100],['platki',40,1],['maliny',100],['oliwa',3]],how:'Jajka z płatkami na patelni, na wierzch skyr i maliny.'},
+  {id:'s24',fam:'szak',vn:'Ze szpinakiem',t:'sniadanie',n:'Szakszuka ze szpinakiem',min:20,ing:[['jajko',120],['pom_puszka',200],['cebula',50],['papryka',80],['szpinak',80],['oliwa',5],['chleb',50,1]],how:'Cebula i papryka na patelni, pomidory i szpinak, jajka w sosie pod przykryciem.'},
+  {id:'s25',fam:'szak',vn:'Z mozzarellą',t:'sniadanie',n:'Szakszuka z mozzarellą',min:20,ing:[['jajko',120],['pom_puszka',200],['cebula',50],['papryka',80],['mozzarella',40],['oliwa',5],['chleb',40,1]],how:'Cebula i papryka na patelni, pomidory, jajka i mozzarella pod przykryciem.'},
+  {id:'s26',fam:'szak',vn:'Meksykańska z fasolą',t:'sniadanie',n:'Szakszuka meksykańska z fasolą',min:20,ing:[['jajko',120],['pom_puszka',200],['cebula',50],['papryka',80],['fasola',80],['oliwa',5],['chleb',40,1]],how:'Cebula i papryka na patelni, pomidory z fasolą, jajka w sosie pod przykryciem.'},
+  {id:'s27',fam:'bajgiel',vn:'Z łososiem i twarożkiem',t:'sniadanie',n:'Bajgiel z wędzonym łososiem i twarożkiem',min:4,ing:[['bajgiel',90,1],['losos_wedz',50],['twarog',60],['ogorek',60]],how:'Bajgiel z twarożkiem, łososiem i ogórkiem.'},
+  {id:'s28',fam:'bajgiel',vn:'Z pastą z tuńczyka',t:'sniadanie',n:'Bajgiel z pastą z tuńczyka',min:5,ing:[['bajgiel',90,1],['tunczyk',80],['jogurt',40],['pomidor',60],['oliwa',5]],how:'Bajgiel z pastą z tuńczyka, jogurtu i oliwy, pomidor.'},
+  {id:'s29',fam:'bajgiel',vn:'Z jajkiem i twarożkiem',t:'sniadanie',n:'Bajgiel z jajkiem i twarożkiem',min:5,ing:[['bajgiel',90,1],['jajko',60],['twarog',80],['rzodkiewka',40]],how:'Bajgiel z twarożkiem, jajkiem na twardo z zapasu i rzodkiewką.'},
+  {id:'s30',fam:'awokado',vn:'Z jajkiem i łososiem',t:'sniadanie',n:'Tosty z awokado, jajkiem i łososiem',min:5,ing:[['chleb',80,1],['awokado',50],['jajko',60],['losos_wedz',40]],how:'Chleb z rozgniecionym awokado, jajko na twardo z zapasu i łosoś.'},
+  {id:'s31',fam:'awokado',vn:'Z jajkiem sadzonym i pomidorem',t:'sniadanie',n:'Tosty z awokado, jajkiem sadzonym i pomidorem',min:10,ing:[['chleb',80,1],['awokado',60],['jajko',120],['pomidor',80],['oliwa',3]],how:'Chleb z awokado, dwa jajka sadzone z patelni i pomidor.'},
   {id:'q1',q:['rano','dzien','weekend'],s:'Bajgiel',t:'sniadanie',n:'Bajgiel z burakiem i fetą',min:3,ing:[['bajgiel',90,1],['feta',60],['burak',80],['rukola',20]],how:'Bajgiel przekroić, położyć rukolę, plastry buraka i pokruszoną fetę.'},
   {id:'q2',q:['rano','dzien','wieczor'],s:'Wrap',t:'obiad',n:'Wrap z tuńczykiem i warzywami',min:5,ing:[['tortilla',60,1],['tunczyk',120],['pomidor',80],['ogorek',60],['jogurt',30]],how:'Tuńczyka wymieszać z jogurtem, zawinąć w tortillę z pomidorem i ogórkiem.'},
   {id:'q3',q:['rano','dzien','weekend'],sw:1,s:'Skyr',t:'sniadanie',n:'Skyr z borówkami i płatkami',min:2,ing:[['skyr',300],['borowki',125],['platki',30,1]],how:'Skyr wymieszać z borówkami i płatkami.'},
@@ -1060,6 +1096,28 @@ const STEPS={
   p4:['Jabłko pokrój w ćwiartki.','Podaj z łyżką masła orzechowego.'],
   p5:['Odlicz garść orzechów do miseczki, nie jedz z paczki.','Obierz mandarynkę.'],
   p6:['Skyr, owoce i płatki wrzuć do blendera, dodaj ok. 50 ml wody.','Miksuj 30-40 s.'],
+  s10:['Wieczorem wymieszaj w słoiku płatki, skyr i mleko.','Zamknij i odstaw na noc do lodówki.','Rano dodaj mango w kostce i posyp wiórkami kokosowymi.'],
+  s11:['Wieczorem wymieszaj w słoiku płatki, skyr i mleko.','Zamknij i odstaw na noc do lodówki.','Rano dodaj borówki i łyżeczkę masła orzechowego.'],
+  s12:['Wieczorem wymieszaj w słoiku płatki, skyr i mleko z łyżką kakao.','Zamknij i odstaw na noc do lodówki.','Rano dodaj maliny i posiekane orzechy.'],
+  s13:['Wieczorem wymieszaj w słoiku płatki, skyr i mleko z pół łyżeczki przyprawy do piernika.','Zamknij i odstaw na noc do lodówki.','Rano dodaj gruszkę w kostce i posiekane orzechy.'],
+  s14:['Wieczorem wymieszaj w słoiku płatki, skyr i mleko z łyżką kakao.','Zamknij i odstaw na noc do lodówki.','Rano dodaj cząstki mandarynki i posiekane orzechy.'],
+  s15:['Płatki zalej mlekiem w dużym kubku do mikrofali.','Podgrzewaj w mikrofali 2 min z przerwą na zamieszanie.','Wmieszaj skyr, na wierzch maliny i posiekane pistacje.'],
+  s16:['Płatki i kakao zalej mlekiem w dużym kubku do mikrofali.','Podgrzewaj w mikrofali 2 min z przerwą na zamieszanie.','Wmieszaj skyr, na wierzch maliny.'],
+  s17:['Płatki zalej mlekiem w dużym kubku do mikrofali, dodaj gruszkę w kostce i cynamon.','Podgrzewaj w mikrofali 3 min z przerwą na zamieszanie.','Wmieszaj skyr, posyp posiekanymi orzechami.'],
+  s18:['Wieczorem wymieszaj nasiona chia z mlekiem, po 5 min zamieszaj jeszcze raz.','Zamknij i odstaw na noc do lodówki.','Rano wmieszaj skyr, dodaj kiwi w plastrach, borówki i łyżeczkę masła orzechowego.'],
+  s19:['Wieczorem wymieszaj nasiona chia z mlekiem, po 5 min zamieszaj jeszcze raz.','Zamknij i odstaw na noc do lodówki.','Rano wmieszaj skyr, dodaj starte jabłko z cynamonem i posiekane orzechy.'],
+  s20:['Wieczorem wymieszaj nasiona chia z mlekiem, po 5 min zamieszaj jeszcze raz.','Zamknij i odstaw na noc do lodówki.','Rano wmieszaj skyr, dodaj mango w kostce i posyp wiórkami.'],
+  s21:['Na patelni rozgrzej oliwę i podsmaż pokrojone pieczarki 3-4 min.','Wlej roztrzepane jajka, na wierzch połóż porwaną mozzarellę.','Smaż pod przykryciem na małym ogniu 4-5 min. Chleb obok.'],
+  s22:['Na patelni rozgrzej oliwę, wrzuć szpinak i poczekaj, aż zwiędnie.','Wlej roztrzepane jajka, dodaj przekrojone pomidorki i pokruszoną fetę.','Smaż pod przykryciem na małym ogniu 4-5 min. Chleb obok.'],
+  s23:['Jajka roztrzepaj widelcem z płatkami i szczyptą cynamonu.','Na patelni rozgrzej odrobinę oliwy, wlej masę i smaż pod przykryciem 3-4 min, przewróć na 1 min.','Na wierzch skyr i maliny.'],
+  s24:['Na patelni rozgrzej oliwę, podsmaż posiekaną cebulę i paprykę 5 min.','Dodaj pomidory z puszki i szpinak, gotuj 5 min, dopraw kuminem i papryką.','Zrób dwa wgłębienia, wbij jajka i gotuj pod przykryciem 5-6 min. Chleb obok.'],
+  s25:['Na patelni rozgrzej oliwę, podsmaż posiekaną cebulę i paprykę 5 min.','Dodaj pomidory z puszki, gotuj 5 min, dopraw oregano.','Zrób dwa wgłębienia, wbij jajka, obok połóż porwaną mozzarellę i gotuj pod przykryciem 5-6 min. Chleb obok.'],
+  s26:['Na patelni rozgrzej oliwę, podsmaż posiekaną cebulę i paprykę 5 min.','Dodaj pomidory z puszki i opłukaną fasolę, gotuj 5 min, dopraw kuminem i chili.','Zrób dwa wgłębienia, wbij jajka i gotuj pod przykryciem 5-6 min. Chleb obok.'],
+  s27:['Przekrój bajgiel na pół i posmaruj twarożkiem z koperkiem.','Połóż plastry łososia i ogórka.'],
+  s28:['Tuńczyka rozgnieć widelcem z jogurtem, oliwą, pieprzem i odrobiną chili.','Przekrój bajgiel, nałóż pastę i plastry pomidora.'],
+  s29:['Przekrój bajgiel na pół i posmaruj twarożkiem ze szczypiorkiem.','Połóż plastry jajka na twardo z zapasu i rzodkiewki.'],
+  s30:['Awokado rozgnieć widelcem z sokiem z cytryny, solą i pieprzem.','Posmaruj chleb, połóż plastry jajka na twardo z zapasu i łososia.'],
+  s31:['Awokado rozgnieć widelcem z sokiem z cytryny, solą i pieprzem, posmaruj chleb.','Na patelni z odrobiną oliwy usmaż dwa jajka sadzone, 3-4 min.','Połóż jajka na chlebie, obok plastry pomidora.'],
   q1:['Przekrój bajgiel na pół.','Połóż rukolę, plastry gotowanego buraka z opakowania i pokruszoną fetę.'],
   q2:['Tuńczyka odsącz i wymieszaj z jogurtem, solą i pieprzem.','Na tortillę połóż tuńczyka, pokrojonego pomidora i ogórek, zwiń ciasno.'],
   q3:['Skyr przełóż do miski albo jedz z kubka.','Dodaj borówki i płatki, wymieszaj.'],
@@ -1685,6 +1743,11 @@ function eqHtml(){const no=S.f.noeq||[],hid=eqHidden(),sn=S.seenNew||{};
 function quickHtml(){const sl=quickSlot(new Date()),Q=quickList().filter(eqOk),cm=carbMult(),por=num(S.f.portion)||1,sn=S.seenNew||{};
   return `<h2 class="qh">${QUICK_N[sl]}${sn.quick?'':NOWE_H}</h2>`+(Q.length?'<div class="qstrip">'+Q.map(m=>{const x=macros(m,cm,por,dopOf(m.id));
     return `<button class="qc" data-recipe="${m.id}" aria-label="${m.n}, ${fmt(x.k)} kcal, białko ${fmt(x.p)} g, ${eqOf(m).join(', ')}, ${m.min} min"><b class="n">${m.s}</b>${glHtml(m,m.s)}<span class="k">${eqOf(m).includes('bez gotowania')?'':eqOf(m).join(', ')+', '}${m.min} min, <b>${fmt(x.k)}</b> kcal</span></button>`}).join('')+'</div>':'<p class="small muted">Brak szybkich dań dla wybranego sprzętu.</p>')}
+// ---------- P4a warianty dań (makieta „Dania z wariantami” v6): rodzina = jedna karta, każdy wariant to pełne danie w MEALS (plan, Zjem, Dopasuj, przepis bez zmian) ----------
+const FAM={nocna:'Nocna owsianka',owsianka:'Owsianka na ciepło',chia:'Pudding chia',omlet:'Omlet',szak:'Szakszuka',bajgiel:'Bajgiel',awokado:'Tosty z awokado'};
+// Jedna pozycja na rodzinę w miejscu jej pierwszego wariantu; wybrany wariant z S.vsel, gdy przechodzi filtry, inaczej pierwszy pasujący. o.vs = warianty rodziny po filtrach
+function famPick(L){const seen=new Set(),out=[];for(const o of L){const f=o.m.fam;if(!f){out.push(o);continue}if(seen.has(f))continue;seen.add(f);
+  const vs=L.filter(x=>x.m.fam===f),sel=(S.vsel||{})[f],pick=vs.find(x=>x.m.id===sel)||vs[0];out.push(Object.assign({},pick,{vs}))}return out}
 function filtered(o){
   const cm=carbMult(),por=num(S.f.portion)||1;
   const inc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===1),exc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===-1);
@@ -2184,14 +2247,19 @@ function renderMeals(){
 }
 function renderMealList(){renderMealList0();tileLabels(document.getElementById('mlist'))}
 function renderMealList0(){
-  const L=filtered(),el=document.getElementById('mlist');if(!el)return;
+  const L=famPick(filtered()),el=document.getElementById('mlist');if(!el)return;
   const TN={sniadanie:'Śniadanie',obiad:'Obiad',kolacja:'Kolacja',przekaska:'Przekąska'};
   if(!L.length){el.innerHTML='<div class="note">Żaden posiłek nie spełnia tych warunków. Poluzuj limit kalorii lub białka albo odznacz produkt wykluczony.</div>';return}
-  el.innerHTML=`<h2>${L.length} ${L.length===1?'propozycja':(L.length%10>=2&&L.length%10<=4&&(L.length%100<10||L.length%100>=20)?'propozycje':'propozycji')}</h2>`+L.map(({m,x},i)=>{
-    const tot=x.p*4+x.f*9+x.c*4||1,isOpen=open.has(m.id);
-    return (i===6?`<details class="fold" id="fold_mreszta" data-fold="mreszta"${OPEN_F.has('mreszta')?' open':''}><summary>Pokaż pozostałe (${L.length-6})</summary>`:'')+`<article class="meal"><button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div>${glNeed(m)?glHtml(m):''}<div class="meta">${S.f.type==='all'?TN[m.t]+', ':''}${m.min} min${m.prep?', z gotowania na zapas':''}${tagsHtml(m,x)}</div><div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Składniki i przygotowanie</div></button>
+  el.innerHTML=`<h2>${L.length} ${L.length===1?'propozycja':(L.length%10>=2&&L.length%10<=4&&(L.length%100<10||L.length%100>=20)?'propozycje':'propozycji')}</h2>`+L.map((o,i)=>{const {m,x}=o;
+    const tot=x.p*4+x.f*9+x.c*4||1,isOpen=open.has(m.id),meta=v=>`<div class="meta">${S.f.type==='all'?TN[v.m.t]+', ':''}${v.m.min} min${v.m.prep?', z gotowania na zapas':''}${tagsHtml(v.m,v.x)}</div>`,LNK='<div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Składniki i przygotowanie</div>';
+    const fam=o.vs&&FAM[m.fam]?o.vs:null,fn=fam&&FAM[m.fam],sn=S.seenNew||{};
+    // Karta rodziny (Z12): nazwa i wybór wariantu stoją w miejscu, warianty w jednym stosie (komórka siatki), widoczny wybrany
+    const body=fam?`<button class="mhead" data-recipe="${m.id}"><div class="name">${fn}</div>${LNK}</button><div class="vsel" role="group" aria-label="Wariant: ${fn}">`+fam.map(v=>`<button data-vsel="${m.fam}:${v.m.id}" aria-pressed="${v.m.id===m.id}">${v.m.vn}</button>`).join('')+(sn.var?'':NOWE_H)+'</div><div class="vstk">'
+      +fam.map(v=>{const on=v.m.id===m.id;return `<div class="stk${on?'':' off'}"${on?'':' aria-hidden="true"'}>${meta(v)}${glHtml(v.m,fn+' '+v.m.vn)}<div class="mnum"><span><b>${fmt(v.x.k)}</b> kcal</span>${macChips(v.x)}</div>${propBar(v.x)}</div>`}).join('')+'</div>'
+      :`<button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div>${glNeed(m)?glHtml(m):''}${meta(o)}${LNK}</button>
       <div class="mnum"><span><b>${fmt(x.k)}</b> kcal</span>${macChips(x)}</div>
-      ${propBar(x)}
+      ${propBar(x)}`;
+    return (i===6?`<details class="fold" id="fold_mreszta" data-fold="mreszta"${OPEN_F.has('mreszta')?' open':''}><summary>Pokaż pozostałe (${L.length-6})</summary>`:'')+`<article class="meal">${body}
       ${isOpen?`<div class="mdet"><ul>${x.items.map(i=>`<li><span>${i.n}</span><span>${fmt(Math.round(i.g/5)*5)} g</span></li>`).join('')}</ul><p class="small">${m.how}</p><p class="small muted">${leftTxt(x.k)} ${fmt(x.k)} kcal to ok. ${fmt(x.k/walkPerMin())} min spaceru.</p><p>${eatBtn(m.id,'Dodaj do dnia')} <button class="btn ghost" data-copy="${m.id}">Kopiuj składniki do Fitatu</button></p>${eatLine(m.id)}</div>`:''}
     </article>`}).join('')+(L.length>6?'</details>':'')+fold('mlinfo','Skąd te wartości','<p class="small muted">Wartości odżywcze orientacyjne, z typowych tabel składu. Gramatury produktów suchych (kasza, ryż, makaron, soczewica) przed ugotowaniem. Kasza i ryż z mikrofali: 1 część na 2 części wody, duża miska pod przykryciem, ok. 12-20 min na średniej mocy z mieszaniem; czas zależy od mikrofali, więc przy pierwszym razie sprawdź miękkość.</p>'+'<p class="small muted">Błonnik (Bł) z duńskiej bazy składu żywności Frida 6.1, hummus, bajgiel, tortilla i gotowany burak z brytyjskiej CoFID 2021 (brak w Fridzie); polskie tabele składu nie są dostępne jako otwarte dane. Mrożona mieszanka warzyw nie ma wartości błonnika w żadnej z tych tabel, dlatego przy daniach z nią jest znak +: błonnika jest co najmniej tyle. Oznaczenia „Źródło błonnika” (od 1,5 g na 100 kcal) i „Dużo błonnika” (od 3 g na 100 kcal) to progi z rozporządzenia UE, tu liczone na porcję.</p>'+'<p class="small muted">Błonnik rozpuszczalny (owies, strączki, siemię) spowalnia opróżnianie żołądka i zmniejsza skok cukru po posiłku; pokazało to badanie na 40 osobach po jednym posiłku. EFSA uznaje 25 g błonnika dziennie za ilość wystarczającą dla prawidłowej pracy jelit, a w metaanalizach największe zmniejszenie ryzyka chorób serca i cukrzycy typu 2 wiązało się z 25-29 g dziennie.</p>'+srcHtml(['frida','cofid','eu1924','fibGE','efsaFib','reynolds']));
 }
@@ -2588,6 +2656,7 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;const at=actAt(b);if(d.guta&&['krew','wymkrew','bol'].includes(d.guta)&&!(((S.gut||{})[todayKey()]||{}).a||[]).includes(d.guta))at.rev=1;
   if(d.addsheet){SHEET=true;sheetPush();render();sheetFocus();return}
   if(d.dop&&!DOP){dopOpen(d.dop);return}
+  if(d.vsel){const [f,id]=String(d.vsel).split(':');S.vsel=Object.assign({},S.vsel,{[f]:id});S.seenNew=Object.assign({},S.seenNew,{var:true});save();render();dopFocus(`[data-vsel="${d.vsel}"]`);return}
   if(d.eqf){const no=new Set(S.f.noeq||[]);if(no.has(d.eqf))no.delete(d.eqf);else no.add(d.eqf);S.f.noeq=[...no];S.seenNew=Object.assign({},S.seenNew,{eq:true});save();render();dopFocus(`[data-eqf="${d.eqf}"]`);return}
   if(d.k2){BAR_K2=!BAR_K2;S.seenNew=Object.assign({},S.seenNew,{kcal:true});save();render();dopFocus('#dbar [data-k2]');return}
   if(d.today&&!TODAY){S.seenNew=Object.assign({},S.seenNew,{mac:true});save();TODAY=true;sheetPush();render();dopFocus('#td_t');return}
