@@ -36,7 +36,9 @@ test('po usunięciu ochoty fokus zostaje w liście, a „Cofnij” przywraca wpi
 
 // Rada gotowości 24.11.2026 (P1): po usunięciu jedynej ochoty sekcja „Ochoty” znika; fokus ma zostać w „Zapisane dziś”,
 // a strona nie może przeskoczyć na górę (przewinięcie zmienia się najwyżej o tyle, o ile skróciła się strona po zniknięciu bloku „Ochoty”).
-test('po usunięciu ostatniej ochoty fokus zostaje w „Zapisane dziś”, bez skoku na górę strony', async ({ page }) => {
+// Wysokości 560 i 600 px (27.11.2026): z paskiem nad menu przeglądarka (zakotwiczenie przewinięcia) przewijała o 56-76 px więcej, niż skróciła się strona
+for (const H of [0, 600, 560]) test('po usunięciu ostatniej ochoty fokus zostaje w „Zapisane dziś”, bez skoku na górę strony' + (H ? ' (wysokość ' + H + ' px)' : ''), async ({ page }) => {
+  if (H) await page.setViewportSize({ width: page.viewportSize().width, height: H });
   await page.goto('/index.html#demo-pokaz');
   await page.waitForFunction(() => typeof render === 'function' && typeof S === 'object');
   await page.evaluate(() => {

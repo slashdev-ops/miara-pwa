@@ -2386,7 +2386,7 @@ function tileFit(root){if(!root||typeof root.querySelectorAll!=='function'||type
 // Po załadowaniu czcionek szerokość słów jest inna: kolumny kafelków liczone ponownie
 if(typeof document!=='undefined'&&document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>tileFit(document.getElementById('main'))).catch(()=>{});
 if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('resize',()=>tileFit(document.getElementById('main')));document.addEventListener('toggle',()=>tileFit(document.getElementById('main')),true)}
-function render(){if(S.tab!=='day'){LITE_UI.focus='';LITE_UI.say=''}if(S.tab!=='labs')LAB_KEEP=null;if(typeof document!=='undefined'&&document.documentElement&&document.documentElement.dataset){document.documentElement.dataset.pm=S.pmLeft?'l':'r';document.documentElement.dataset.still=(S.still||S.focus)?'1':''}if(S.focus&&typeof PET!=='undefined'&&PET.drop)PET.drop();startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():DOP?dopHtml():''}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');if(S.focus){const mt=skupMain(S.tab);if(mt)SKUP.fold(document.getElementById('main'),mt,'skupmore-'+S.tab,OPEN_F.has('skupmore-'+S.tab),'Więcej na tym ekranie')}if(typeof WPISY!=='undefined')WPISY.mount(document.getElementById('main'),{done:id=>{save();renderKeep((id&&document.getElementById(id))||document.activeElement);liteAfter()},say:t=>{const sr=document.getElementById('sr');if(sr)sr.textContent=t}});tileLabels(document.getElementById('main'));tileLabels(document.getElementById('sheet'));PET.flush()}
+function render(){if(S.tab!=='day'){LITE_UI.focus='';LITE_UI.say=''}if(S.tab!=='labs')LAB_KEEP=null;if(typeof document!=='undefined'&&document.documentElement&&document.documentElement.dataset){document.documentElement.dataset.pm=S.pmLeft?'l':'r';document.documentElement.dataset.still=(S.still||S.focus)?'1':''}if(S.focus&&typeof PET!=='undefined'&&PET.drop)PET.drop();startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():DOP?dopHtml():TODAY?todayHtml():'';const db=document.getElementById('dbar');if(db){const bh=barHtml();db.innerHTML=bh;if(document.body&&document.body.classList)document.body.classList.toggle('hasbar',!!bh);navH()}}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');if(S.focus){const mt=skupMain(S.tab);if(mt)SKUP.fold(document.getElementById('main'),mt,'skupmore-'+S.tab,OPEN_F.has('skupmore-'+S.tab),'Więcej na tym ekranie')}if(typeof WPISY!=='undefined')WPISY.mount(document.getElementById('main'),{done:id=>{save();renderKeep((id&&document.getElementById(id))||document.activeElement);liteAfter()},say:t=>{const sr=document.getElementById('sr');if(sr)sr.textContent=t}});tileLabels(document.getElementById('main'));tileLabels(document.getElementById('sheet'));PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -2408,7 +2408,7 @@ let SHEET=false,QUICK_PENDING=false,QUICK_ID='';
 let SHEET_H=false;
 function sheetPush(){if(SHEET_H||typeof history==='undefined'||!history.pushState)return;try{history.pushState({miaraSheet:1},'');SHEET_H=true}catch(_){}}
 function sheetPop(){if(!SHEET_H)return;SHEET_H=false;try{if(history.state&&history.state.miaraSheet)history.back()}catch(_){}}
-if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('popstate',()=>{if(!SHEET_H)return;SHEET_H=false;if(SHEET){SHEET=false;render();addFocus()}else if(typeof DOP!=='undefined'&&DOP){const id=DOP.id;DOP=null;render();dopFocus(`[data-dop="${id}"]`)}});
+if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('popstate',()=>{if(!SHEET_H)return;SHEET_H=false;if(SHEET){SHEET=false;render();addFocus()}else if(typeof DOP!=='undefined'&&DOP){const id=DOP.id;DOP=null;render();dopFocus(`[data-dop="${id}"]`)}else if(typeof TODAY!=='undefined'&&TODAY){TODAY=false;render();dopFocus('#dbar [data-today]')}});
 function dayLeft(){if(S.lite)return liteFull(todayKey())||painAt(todayKey())?0:1;if(S.once||painAt(todayKey()))return 0;const k=todayKey(),m=(S.meas||{})[k]||{},d=day();
   return [num(m.w)>0,d.filter(e=>e.kind==='m').length>=3,d.some(e=>e.kind==='t')||num(m.steps)>0].filter(x=>!x).length}
 function yMeals(){return ((S.days||{})[nAgo(1)]||[]).filter(e=>e.kind==='m')}
@@ -2467,6 +2467,37 @@ if(typeof document!=='undefined'&&document.addEventListener)document.addEventLis
   const dt=(now-DOP_IN[0][0])/1000,px=(t.getBoundingClientRect?t.getBoundingClientRect().width:1)/((r.hi-r.lo)||1),sp=DOP_IN.length<2?0:dt>0.001?(raw-DOP_IN[0][1])/dt*px:0;
   const g=typeof WPISY!=='undefined'&&WPISY.snapBySpeed?WPISY.snapBySpeed(raw,sp,{step:r.s,coarse:r.s*5,range:[r.lo,r.hi]}):raw;
   DOP.a=Object.assign({},DOP.a,{[id]:g/r.b});DOP.t={};if(typeof document.querySelectorAll==='function')document.querySelectorAll('#sheet [data-doptile]').forEach(x=>{x.setAttribute('aria-pressed','false');x.classList.remove('on')});dopRefresh()});
+// ---------- Pasek nad menu (P2, krok 9c; makieta „Pierwsze kroki”, akcent: kreska pod wartością, decyzja 26.11.2026) ----------
+// Kcal: K1 „zostaje”, dotknięcie pokazuje K2 „zjedzone/cel”, po przekroczeniu celu K2 sam. Makra B/T/W/Bł: kreska 2 px pod wartością, długość = część celu.
+// Cele: białko z protTarget(), błonnik 25 g (EFSA), tłuszcz i węglowodany względem planu dnia (brak źródła celów dziennych, plan §12.1).
+let BAR_K2=false,TODAY=false;
+const DUMB='<svg class="dbic" viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 4.5v3M3.5 3v6M8.5 3v6M10.5 4.5v3M3.5 6h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+// Dodatek do celu kcal po dzisiejszym treningu (część targetKcal z trainNet); przy zmierzonym wydatku z wagi 0
+function trainPlus(){if(measuredTdee())return 0;const R=rmr(),f=S.mode==='utrzymanie'?1:S.mode==='masa'?1.1:0.8;return Math.max(0,targetKcal()-Math.max(R,R*1.3*f))}
+function dayEat(){return day().filter(e=>e.kind==='m').reduce((a,e)=>({k:a.k+(e.k||0),p:a.p+(e.p||0),f:a.f+(e.f||0),c:a.c+(e.c||0),b:a.b+(e.fib||0)}),{k:0,p:0,f:0,c:0,b:0})}
+function dayGoals(){const cm=carbMult(),por=num(S.f.portion)||1,pk=planIds().map(id=>macros(MEALS.find(m=>m.id===id),cm,por,dopOf(id)));
+  return {k:targetKcal(),plus:trainPlus(),p:protTarget(),f:pk.reduce((a,x)=>a+x.f,0),c:pk.reduce((a,x)=>a+x.c,0),b:25}}
+function barHtml(){if(!['day','meals'].includes(S.tab)||S.lite)return '';
+  const G=dayGoals(),E=dayEat(),g=Math.round(G.k),e=Math.round(E.k),over=e>g,left=g-e,k2=over||BAR_K2,plus=Math.round(G.plus),sn=S.seenNew||{},NW='<span class="nowe dbnew" aria-hidden="true">NOWE</span>';
+  const pct=(a,b)=>b>0?Math.max(0,Math.min(100,a/b*100)):0,ln=x=>`<i class="trk"></i><i class="hl" style="right:calc(${(100-x).toFixed(0)}% - 2px)"></i>`;
+  const pl=plus?`, cel wyższy o ${fmt(plus)} po treningu`:'',l1=`Zostaje ${fmt(left)} z ${fmt(g)} kcal${pl}`,l2=`Zjedzone ${fmt(e)} z ${fmt(g)} kcal${over?`, cel dnia osiągnięty, ${fmt(e-g)} kcal więcej niż cel`:''}${pl}`;
+  const txt=k2?`<b>${fmt(e)}</b>/${fmt(g)}\u00a0kcal`:`<b>${fmt(left)}</b>\u00a0kcal`,tr=plus?`<span class="dbpl">${DUMB}+${fmt(plus)}</span>`:'';
+  const kin=`<span class="tx">${txt}${ln(pct(Math.min(e,g),g))}</span>${tr}${sn.kcal?'':NW}`;
+  const kc=over?`<button class="cell kcell" style="--c:var(--green)" data-today="1" aria-label="${l2}. Pokaż szczegóły dnia">${kin}</button>`
+    :`<button class="cell kcell" style="--c:var(--green)" data-k2="1" aria-pressed="${k2}" aria-label="${k2?l2+'. Pokaż, ile zostaje':l1+'. Pokaż zjedzone z celu'}">${kin}</button>`;
+  const M=[['B','p','mB','Białko'],['T','f','mT','tłuszcz'],['W','c','mW','węglowodany'],['Bł','b','mBl','błonnik']];
+  const mc=M.map(([l,k,c],i)=>`<span class="cell" style="--c:var(--${c})"><span class="tx">${l}\u00a0<b>${fmt(E[k])}</b>${i===3?'\u202fg':''}${ln(pct(E[k],G[k]))}</span></span>`).join('');
+  const ml=M.map(([,k,,n])=>`${n} ${fmt(E[k])} z ${fmt(G[k])} g`).join(', ');
+  return `<div class="dbm">${kc}<button class="cell mcells" data-today="1" aria-label="${ml}. Pokaż rachunek dnia"><span class="mg">${mc}</span>${sn.mac?'':NW}</button></div>`}
+function todayHtml(){const G=dayGoals(),E=dayEat(),g=G.k,plus=G.plus,row=(a,b,s)=>`<span${s?' class="s"':''}>${a}</span><b${s?' class="s"':''}>${b}</b>`;
+  let r='';if(plus>=1)r+=row('Cel bez treningu',`${fmt(g-plus)} kcal`)+row('Po treningu',`+${fmt(plus)} kcal`);
+  r+=row('Cel dziś',`${fmt(g)} kcal`,1)+row('Zjedzone',`${fmt(E.k)} kcal`)+row(E.k>g?'Ponad cel':'Zostaje',`${fmt(Math.abs(g-E.k))} kcal`,1);
+  const mm=[['Białko','p','cel białka'],['Tłuszcz','f','plan dnia'],['Węglowodany','c','plan dnia'],['Błonnik','b','EFSA']].map(([n,k,src])=>row(`${n} <small class="muted">(${src})</small>`,`${fmt(E[k])} z ${fmt(G[k])} g`)).join('');
+  return `<button class="sheetbg" data-todayclose="1" aria-label="Zamknij" tabindex="-1"></button><div class="sheetbox" role="dialog" aria-modal="true" aria-labelledby="td_t"><div class="dophd"><h2 id="td_t" tabindex="-1">Dziś</h2><button class="btn ghost dopx" data-todayclose="1" aria-label="Zamknij">×</button></div><div class="tdg">${r}</div><h3 class="dopsh">Makro</h3><div class="tdg">${mm}</div></div>`}
+// Pasek leży tuż nad zakładkami: ich wysokość zależy od czcionki systemu, więc mierzona przy rysowaniu i zmianie rozmiaru
+function navH(){if(typeof document==='undefined'||!document.documentElement||!document.documentElement.style)return;const n=document.getElementById('tabs');if(n&&n.offsetHeight)document.documentElement.style.setProperty('--navh',n.offsetHeight+'px')}
+if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('resize',navH);
+function todayClose(){if(!TODAY)return;TODAY=false;sheetPop();render();dopFocus('#dbar [data-today]')}
 function sheetFocus(){if(!SHEET||typeof document.querySelector!=='function')return;const f=document.querySelector('#sheet .sheetbox button');if(f&&f.focus)f.focus()}
 function addFocus(){if(typeof document.querySelector!=='function')return;const a=document.querySelector('nav.tabs [data-addsheet]');if(a&&a.focus)a.focus()}
 // Prosty widok: pola, których tam nie ma, nie wyglądają na zepsute; komunikat prowadzi do całej Miary
@@ -2477,7 +2508,7 @@ function quickFromHash(h){const q=QUICK[String(h||'')];if(!q)return false;S.tab=
   try{if(typeof history!=='undefined'&&history.replaceState)history.replaceState(null,'',location.pathname+location.search)}catch(_){}return true}
 function quickFocus(){if(typeof document.querySelector!=='function')return;window.scrollTo(0,0);const el=QUICK_ID&&document.getElementById(QUICK_ID);
   if(el){if(el.scrollIntoView)el.scrollIntoView({block:'center'});focusEl(el)}else focusEl(document.querySelector('header h1'))}
-document.addEventListener('keydown',e=>{if(DOP&&e.key==='Escape'){dopClose();return}if(!SHEET)return;if(e.key==='Escape'){SHEET=false;sheetPop();render();addFocus();return}
+document.addEventListener('keydown',e=>{if(DOP&&e.key==='Escape'){dopClose();return}if(TODAY&&e.key==='Escape'){todayClose();return}if(!SHEET)return;if(e.key==='Escape'){SHEET=false;sheetPop();render();addFocus();return}
   if(e.key==='Tab'){const bs=[...document.querySelectorAll('#sheet .sheetbox button')];if(!bs.length)return;const i=bs.indexOf(document.activeElement);
     if(e.shiftKey&&i<=0){e.preventDefault();bs[bs.length-1].focus()}else if(!e.shiftKey&&i===bs.length-1){e.preventDefault();bs[0].focus()}}});
 // Po akcji (przegląd ekranów 11.11.2026, WCAG 2.4.3): przed przerysowaniem zapamiętaj przycisk, jego miejsce na ekranie
@@ -2486,11 +2517,17 @@ document.addEventListener('keydown',e=>{if(DOP&&e.key==='Escape'){dopClose();ret
 function btnSel(b){const a=[...(b.attributes||[])].filter(x=>/^data-/.test(x.name)).map(x=>`[${x.name}="${String(x.value).replace(/["\\]/g,'\\$&')}"]`).join('');return a?'button'+a:null}
 function headOf(el){const m=document.getElementById('main');if(!m||!m.querySelectorAll||!el.compareDocumentPosition)return '';let t='';
   for(const h of m.querySelectorAll('h2,h3'))if(h.compareDocumentPosition(el)&4)t=h.textContent;return t}
-function actAt(b){return {tab:S.tab,sel:btnSel(b),y:b.getBoundingClientRect?b.getBoundingClientRect().top:null,sy:window.scrollY,head:headOf(b),fold:(()=>{const d=b.closest&&b.closest('details[data-fold]');return d&&d.dataset?d.dataset.fold:''})(),own:!!(b.dataset.goto||b.dataset.nav)}}
+function actAt(b){return {tab:S.tab,sel:btnSel(b),y:b.getBoundingClientRect?b.getBoundingClientRect().top:null,sy:window.scrollY,sh:document.documentElement?document.documentElement.scrollHeight:0,head:headOf(b),fold:(()=>{const d=b.closest&&b.closest('details[data-fold]');return d&&d.dataset?d.dataset.fold:''})(),own:!!(b.dataset.goto||b.dataset.nav)}}
 function focusEl(el){if(!el||!el.focus)return;if(!/^(BUTTON|INPUT|SELECT|TEXTAREA|A|SUMMARY)$/.test(el.tagName))el.setAttribute('tabindex','-1');el.focus({preventScroll:true})}
 function actDone(at){if(!document.querySelector)return;
   if(S.tab!==at.tab){window.scrollTo(0,0);focusEl(document.querySelector('header h1'));return}
   if(at.rev&&typeof SYG!=='undefined'){const x=SYG.visible(S,todayKey())[0],l=x&&x.lvl==='112'&&document.querySelector('#main a[href="tel:112"]'),al=l&&l.closest('.petsay.syg,.note.warn');if(al&&al.scrollIntoView){al.scrollIntoView({block:'center',behavior:'auto'});focusEl(l);return}}
+  // Usunięty wiersz (przycisk zniknął): przeglądarka (zakotwiczenie przewinięcia) potrafi przewinąć dalej, niż skróciła się strona,
+  // np. przy pasku nad menu na niskim ekranie; przewinięcie zmienia się najwyżej o skrócenie strony (27.11.2026)
+  {const de0=document.documentElement,gone=at.sel&&!document.querySelector(at.sel),cut=de0&&at.sh?at.sh-de0.scrollHeight:0;
+    const fix=()=>{if(at.sy-window.scrollY>cut+1)window.scrollTo(0,Math.max(0,at.sy-cut))};
+    // zakotwiczenie działa przy następnej klatce, więc sprawdzenie teraz i w dwóch kolejnych klatkach
+    if(gone&&cut>0){fix();if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>{fix();requestAnimationFrame(fix)})}}
   // Strona krótsza po usunięciu wiersza przy końcu: przeglądarka sama cofa przewinięcie do nowego końca. To nie jest przewinięcie przez akcję, fokus wraca (F2c, 23.11.2026).
   const de=document.documentElement,clamp=de&&window.scrollY<at.sy&&Math.abs(window.scrollY-(de.scrollHeight-window.innerHeight))<=1;
   if(at.own||(window.scrollY!==at.sy&&!clamp))return;
@@ -2506,6 +2543,9 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;const at=actAt(b);if(d.guta&&['krew','wymkrew','bol'].includes(d.guta)&&!(((S.gut||{})[todayKey()]||{}).a||[]).includes(d.guta))at.rev=1;
   if(d.addsheet){SHEET=true;sheetPush();render();sheetFocus();return}
   if(d.dop&&!DOP){dopOpen(d.dop);return}
+  if(d.k2){BAR_K2=!BAR_K2;S.seenNew=Object.assign({},S.seenNew,{kcal:true});save();render();dopFocus('#dbar [data-k2]');return}
+  if(d.today&&!TODAY){S.seenNew=Object.assign({},S.seenNew,{mac:true});save();TODAY=true;sheetPush();render();dopFocus('#td_t');return}
+  if(TODAY&&d.todayclose){todayClose();return}
   if(DOP){if(d.dopclose){dopClose();return}if(d.dopsave){dopSave();return}if(d.dopkeep){DOP.keep=!DOP.keep;dopUpd();return}
     if(d.dopreset){DOP.a=null;DOP.t={};dopUpd();return}
     if(d.doptile){DOP.t[d.doptile]=!DOP.t[d.doptile];DOP.a=dopFromTiles();dopUpd();return}}
