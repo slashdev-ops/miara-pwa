@@ -3019,7 +3019,8 @@ document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.lab
 document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||t.dataset.promoing==null||!PROMO_PENDING)return;const p=PROMO_PENDING[+t.dataset.promoing];if(p)p.ing=ING[t.value]?t.value:''});
 // usuń dni starsze niż 60
 (function(){const lim=Date.now()-60*864e5;for(const k in S.days){if(new Date(k).getTime()<lim)delete S.days[k]}save()})();
-if(!S.onb){S.tab='intro';S.introStep=0}
+// Ekran po wejściu (makieta „Pierwsze kroki”): nowa osoba wprowadzenie; pozostali Posiłki z paskiem dnia, w prostym widoku Mój dzień z szybkim wpisem; nie ostatnia zakładka; skrót z ekranu głównego niżej zmienia zakładkę
+if(!S.onb){S.tab='intro';S.introStep=0}else if(!DEMO)S.tab=S.lite?'day':'meals';
 if(S.onb&&muscleToast())save();
 if(typeof location!=='undefined'&&S.onb&&!impFromHash(location.hash)&&quickFromHash(location.hash))QUICK_PENDING=true;
 if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('hashchange',()=>{if(!S.onb)return;if(impFromHash(location.hash))render();else if(quickFromHash(location.hash)){render();quickFocus()}});
