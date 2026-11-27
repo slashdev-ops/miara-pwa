@@ -3584,6 +3584,17 @@ tryc('P4c sprzęt: frittata z piekarnikiem, jajka po turecku z płytą (garnek),
   const E = (id) => sandbox.eqOf(T.MEALS.find((m) => m.id === id));
   return E('s42').includes('piekarnik') && E('s38').includes('płyta') && E('s39').includes('bez gotowania') && E('s32').includes('płyta');
 });
+// P4d Śniadania z planów, partia 3 (27.11.2026): koktajle, tosty francuskie, serniczki, quesadilla, miski; nowy składnik: ser żółty z Fridy (161)
+tryc('P4d śniadania partia 3: 5 nowych rodzin, 11 wariantów 400-500 kcal z krokami', () => {
+  const F = vm.runInContext('FAM', sandbox), nowe = T.MEALS.filter((m) => /^s(4[5-9]|5[0-5])$/.test(m.id));
+  return ['koktajl', 'tosty', 'serniczki', 'quesadilla', 'bowl'].every((f) => F[f] && T.MEALS.filter((m) => m.fam === f).length >= 2) && nowe.length === 11
+    && nowe.every((m) => m.fam && m.t === 'sniadanie' && T.STEPS[m.id].length >= 2 && (() => { const k = T.macros(m, 1, 1).k; return k >= 400 && k <= 500; })());
+});
+tryc('P4d składnik: ser żółty z Fridy (FoodID 161, ser półtwardy 45% tł. w s.m.); koktajle z blenderem, serniczki z piekarnikiem, quesadilla z płytą', () => {
+  const i = T.ING.ser_zolty, E = (id) => sandbox.eqOf(T.MEALS.find((m) => m.id === id));
+  return i && i.k === 342.8 && i.p === 24.5 && i.f === 26.8 && i.c === 0 && i.fib === 0 && /ser_zolty 161/.test(code)
+    && E('s45').includes('blender') && E('s50').includes('piekarnik') && E('s52').includes('płyta');
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

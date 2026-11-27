@@ -6,6 +6,7 @@
 // CoFID 2021 Food Code (brak w Fridzie): bajgiel 11-970, tortilla 11-925, burak 13-633 (gotowany w wodzie; Frida ma tylko surowy i z puszki); błonnik AOAC.
 // Frida FoodID (P4a, odczyt 27.11.2026): mango 1859, kiwi 1858, maliny 1850, gruszka 9, kakao 1256, wiorki 704, chia 1728 (węglowodany przyswajalne 0, błonnik 40,9), pistacje 328, awokado 616, losos_wedz 1552 (hodowlany, wędzony na zimno).
 // CoFID 2021 Food Code (P4a, brak w Fridzie w tej postaci): pomidorki 13-519 (Frida bez pomidorków koktajlowych), mozzarella 12-360 (świeża; Frida ma tylko półtwardą do pizzy).
+// Frida FoodID (P4d, odczyt 27.11.2026): ser_zolty 161 (ser półtwardy 45% tł. w s.m., najbliższy goudzie; Frida bez goudy).
 // s = krótka nazwa przy daniu, g = co składnik wnosi (reguła aplikacji): p/c/f = makro z największą liczbą gramów na 100 g, v = warzywa i owoce (do 100 kcal).
 const ING={
   kurczak_piers:{n:'Pierś z kurczaka',k:110,p:23,f:1.5,c:0,fib:0,chip:'Kurczak',s:'kurczak',g:'p'},
@@ -77,7 +78,8 @@ const ING={
   pistacje:{n:'Pistacje',k:605.5,p:21.6,f:50.2,c:12.3,fib:8.8,s:'pistacje',g:'f'},
   mozzarella:{n:'Mozzarella świeża',k:257,p:18.6,f:20.3,c:0,fib:0,s:'mozzarella',g:'f'},
   awokado:{n:'Awokado',k:155,p:1.6,f:15.1,c:0.5,fib:5.5,s:'awokado',g:'f'},
-  losos_wedz:{n:'Łosoś wędzony',k:169.9,p:20.9,f:8.9,c:1.6,fib:0,chip:'Ryba',s:'łosoś',g:'p'}
+  losos_wedz:{n:'Łosoś wędzony',k:169.9,p:20.9,f:8.9,c:1.6,fib:0,chip:'Ryba',s:'łosoś',g:'p'},
+  ser_zolty:{n:'Ser żółty (typu gouda, 45% tł. w s.m.)',k:342.8,p:24.5,f:26.8,c:0,fib:0,s:'ser',g:'f'}
 };
 
 // ---------- Dane: posiłki. Trzeci element 1 = źródło węglowodanów, skalowane pod trening ----------
@@ -158,6 +160,17 @@ const MEALS=[
   {id:'s42',fam:'frittata',vn:'Ze szpinakiem i fetą',t:'sniadanie',n:'Frittata ze szpinakiem i fetą',min:25,ing:[['jajko',180],['szpinak',100],['feta',40],['chleb',40,1]],how:'Jajka ze szpinakiem i fetą w naczyniu żaroodpornym, 20 min w 190°C.'},
   {id:'s43',fam:'frittata',vn:'Z serkiem wiejskim i pomidorkami',t:'sniadanie',n:'Frittata z serkiem wiejskim i pomidorkami',min:25,ing:[['jajko',150],['serek_wiejski',150],['pomidorki',100],['chleb',40,1]],how:'Jajka z serkiem wiejskim i pomidorkami, 20 min w 190°C.'},
   {id:'s44',fam:'frittata',vn:'Z papryką i mozzarellą',t:'sniadanie',n:'Frittata z papryką i mozzarellą',min:25,ing:[['jajko',150],['papryka',120],['mozzarella',40],['chleb',40,1]],how:'Jajka z papryką i mozzarellą, 20 min w 190°C.'},
+  {id:'s45',fam:'koktajl',vn:'Mango z borówkami',sw:1,t:'sniadanie',n:'Koktajl mango z borówkami',min:3,ing:[['skyr',250],['mango',120],['borowki',80],['platki',30,1],['mleko',100]],how:'Skyr, mango, borówki, płatki i mleko zmiksować blenderem.'},
+  {id:'s46',fam:'koktajl',vn:'Bananowo-kakaowy',sw:1,t:'sniadanie',n:'Koktajl bananowo-kakaowy',min:3,ing:[['skyr',250],['banan',100],['kakao',8],['platki',30,1],['mleko',100]],how:'Skyr, banan, kakao, płatki i mleko zmiksować blenderem.'},
+  {id:'s47',fam:'koktajl',vn:'Malinowy z masłem orzechowym',sw:1,t:'sniadanie',n:'Koktajl malinowy z masłem orzechowym',min:3,ing:[['skyr',250],['maliny',120],['maslo_orz',15],['platki',30,1],['mleko',100]],how:'Skyr, maliny, masło orzechowe, płatki i mleko zmiksować blenderem.'},
+  {id:'s48',fam:'tosty',vn:'Cynamonowe z jabłkiem',sw:1,t:'sniadanie',n:'Tosty francuskie cynamonowe z jabłkiem',min:12,ing:[['chleb',80,1],['jajko',120],['mleko',50],['jablko',100],['skyr',50],['oliwa',3]],how:'Chleb namoczony w jajkach z mlekiem i cynamonem, z patelni, z jabłkiem i skyrem.'},
+  {id:'s49',fam:'tosty',vn:'Z borówkami i skyrem',sw:1,t:'sniadanie',n:'Tosty francuskie z borówkami i skyrem',min:12,ing:[['chleb',80,1],['jajko',120],['mleko',50],['borowki',100],['skyr',70],['oliwa',3]],how:'Chleb namoczony w jajkach z mlekiem, z patelni, z borówkami i skyrem.'},
+  {id:'s50',fam:'serniczki',vn:'Z borówkami',sw:1,t:'sniadanie',n:'Serniczki z borówkami',min:25,ing:[['twarog',200],['jajko',60],['platki',25,1],['borowki',80]],how:'Twaróg z jajkiem i płatkami w foremkach z borówkami, 20 min w 180°C.'},
+  {id:'s51',fam:'serniczki',vn:'Z malinami',sw:1,t:'sniadanie',n:'Serniczki z malinami',min:25,ing:[['twarog',200],['jajko',60],['platki',25,1],['maliny',100]],how:'Twaróg z jajkiem i płatkami w foremkach z malinami, 20 min w 180°C.'},
+  {id:'s52',fam:'quesadilla',vn:'Z jajkiem i serem',t:'sniadanie',n:'Quesadilla z jajkiem, serem i papryką',min:12,ing:[['tortilla',60,1],['jajko',120],['ser_zolty',25],['papryka',60]],how:'Jajecznica z papryką i ser w tortilli, z suchej patelni.'},
+  {id:'s53',fam:'quesadilla',vn:'Z fasolą i serem',t:'sniadanie',n:'Quesadilla z fasolą, serem i jajkiem',min:12,ing:[['tortilla',60,1],['fasola',100],['ser_zolty',30],['pomidor',80],['jajko',60]],how:'Fasola, pomidor, jajko i ser w tortilli, z suchej patelni.'},
+  {id:'s54',fam:'bowl',vn:'Z jajkiem i ciecierzycą',t:'sniadanie',n:'Miska śniadaniowa z jajkiem, ciecierzycą i awokado',min:7,ing:[['jajko',120],['ciecierzyca',100,1],['pomidorki',100],['ogorek',80],['awokado',50],['oliwa',3]],how:'Jajka na twardo z zapasu, ciecierzyca, warzywa i awokado w misce.'},
+  {id:'s55',fam:'bowl',vn:'Z łososiem i kaszą',t:'sniadanie',n:'Miska śniadaniowa z łososiem, kaszą i jajkiem',min:7,ing:[['losos_wedz',60],['jajko',60],['kasza_gr',45,1],['ogorek',80],['awokado',40]],how:'Kasza z zapasu, łosoś, jajko na twardo z zapasu, ogórek i awokado.'},
   {id:'q1',q:['rano','dzien','weekend'],s:'Bajgiel',t:'sniadanie',n:'Bajgiel z burakiem i fetą',min:3,ing:[['bajgiel',90,1],['feta',60],['burak',80],['rukola',20]],how:'Bajgiel przekroić, położyć rukolę, plastry buraka i pokruszoną fetę.'},
   {id:'q2',q:['rano','dzien','wieczor'],s:'Wrap',t:'obiad',n:'Wrap z tuńczykiem i warzywami',min:5,ing:[['tortilla',60,1],['tunczyk',120],['pomidor',80],['ogorek',60],['jogurt',30]],how:'Tuńczyka wymieszać z jogurtem, zawinąć w tortillę z pomidorem i ogórkiem.'},
   {id:'q3',q:['rano','dzien','weekend'],sw:1,s:'Skyr',t:'sniadanie',n:'Skyr z borówkami i płatkami',min:2,ing:[['skyr',300],['borowki',125],['platki',30,1]],how:'Skyr wymieszać z borówkami i płatkami.'},
@@ -1144,6 +1157,17 @@ const STEPS={
   s42:['Jajka roztrzepaj z pieprzem, wmieszaj szpinak i pokruszoną fetę.','Przelej do małego naczynia żaroodpornego wyłożonego papierem do pieczenia.','Piecz 20 min w 190°C, aż środek się zetnie. Chleb obok.'],
   s43:['Jajka roztrzepaj z serkiem wiejskim, solą i pieprzem.','Przelej do małego naczynia żaroodpornego wyłożonego papierem, ułóż przekrojone pomidorki.','Piecz 20 min w 190°C, aż środek się zetnie. Chleb obok.'],
   s44:['Jajka roztrzepaj z oregano i pieprzem, wmieszaj paprykę w kostce.','Przelej do małego naczynia żaroodpornego wyłożonego papierem, na wierzch porwana mozzarella.','Piecz 20 min w 190°C, aż środek się zetnie. Chleb obok.'],
+  s45:['Wrzuć wszystko do blendera, dodaj kilka kostek lodu.','Miksuj 30-40 s, aż będzie gładko.'],
+  s46:['Wrzuć wszystko do blendera, dodaj kilka kostek lodu.','Miksuj 30-40 s, aż będzie gładko.'],
+  s47:['Wrzuć wszystko do blendera, dodaj kilka kostek lodu.','Miksuj 30-40 s, aż będzie gładko.'],
+  s48:['Jajka roztrzepaj z mlekiem i cynamonem, namocz w nich kromki chleba.','Na patelni rozgrzej oliwę, smaż kromki po 2-3 min z każdej strony.','Podaj ze skyrem i jabłkiem w plastrach.'],
+  s49:['Jajka roztrzepaj z mlekiem i cynamonem, namocz w nich kromki chleba.','Na patelni rozgrzej oliwę, smaż kromki po 2-3 min z każdej strony.','Podaj ze skyrem i borówkami.'],
+  s50:['Twaróg rozgnieć widelcem z jajkiem, płatkami i kilkoma kroplami aromatu waniliowego.','Nałóż do 4 foremek na muffinki, na wierzch borówki.','Piecz 20 min w 180°C, ostudź; starczają na 2 dni w lodówce.'],
+  s51:['Twaróg rozgnieć widelcem z jajkiem, płatkami i kilkoma kroplami aromatu waniliowego.','Nałóż do 4 foremek na muffinki, na wierzch maliny.','Piecz 20 min w 180°C, ostudź; starczają na 2 dni w lodówce.'],
+  s52:['Na suchej patelni z powłoką zetnij roztrzepane jajka z papryką w kostce, przełóż na talerz.','Na połowę tortilli połóż jajka i starty ser, złóż na pół.','Podgrzej na tej samej patelni po 2 min z każdej strony.'],
+  s53:['Fasolę opłucz i rozgnieć widelcem z kuminem, pomidora pokrój w kostkę.','Na połowę tortilli połóż fasolę, pomidor, plastry jajka na twardo z zapasu i starty ser, złóż na pół.','Podgrzej na suchej patelni po 2-3 min z każdej strony.'],
+  s54:['Ciecierzycę odsącz i opłucz, warzywa pokrój.','W misce ułóż ciecierzycę, warzywa, awokado i połówki jajek na twardo z zapasu, skrop oliwą z cytryną.'],
+  s55:['Kaszę z zapasu przełóż do miski.','Dodaj łososia, plastry jajka na twardo z zapasu, ogórek i awokado, skrop cytryną.'],
   q1:['Przekrój bajgiel na pół.','Połóż rukolę, plastry gotowanego buraka z opakowania i pokruszoną fetę.'],
   q2:['Tuńczyka odsącz i wymieszaj z jogurtem, solą i pieprzem.','Na tortillę połóż tuńczyka, pokrojonego pomidora i ogórek, zwiń ciasno.'],
   q3:['Skyr przełóż do miski albo jedz z kubka.','Dodaj borówki i płatki, wymieszaj.'],
@@ -1781,7 +1805,7 @@ function quickHtml(){const sl=quickSlot(new Date()),Q=quickList().filter(eqOk),c
   return `<h2 class="qh">${QUICK_N[sl]}${sn.quick?'':NOWE_H}</h2>`+(Q.length?'<div class="qstrip">'+Q.map(m=>{const x=macros(m,cm,por,dopOf(m.id));
     return `<button class="qc" data-recipe="${m.id}" aria-label="${m.n}, ${fmt(x.k)} kcal, białko ${fmt(x.p)} g, ${eqOf(m).join(', ')}, ${m.min} min"><b class="n">${m.s}</b>${glHtml(m,m.s)}<span class="k">${eqOf(m).includes('bez gotowania')?'':eqOf(m).join(', ')+', '}${m.min} min, <b>${fmt(x.k)}</b> kcal</span></button>`}).join('')+'</div>':'<p class="small muted">Brak szybkich dań dla wybranego sprzętu.</p>')}
 // ---------- P4a warianty dań (makieta „Dania z wariantami” v6): rodzina = jedna karta, każdy wariant to pełne danie w MEALS (plan, Zjem, Dopasuj, przepis bez zmian) ----------
-const FAM={nocna:'Nocna owsianka',owsianka:'Owsianka na ciepło',chia:'Pudding chia',omlet:'Omlet',szak:'Szakszuka',bajgiel:'Bajgiel',awokado:'Tosty z awokado',placuszki:'Placuszki',jajecznica:'Jajecznica i jajka',kanapki:'Kanapki',frittata:'Frittata z piekarnika'};
+const FAM={nocna:'Nocna owsianka',owsianka:'Owsianka na ciepło',chia:'Pudding chia',omlet:'Omlet',szak:'Szakszuka',bajgiel:'Bajgiel',awokado:'Tosty z awokado',placuszki:'Placuszki',jajecznica:'Jajecznica i jajka',kanapki:'Kanapki',frittata:'Frittata z piekarnika',koktajl:'Koktajl śniadaniowy',tosty:'Tosty francuskie',serniczki:'Serniczki z piekarnika',quesadilla:'Quesadilla',bowl:'Miska śniadaniowa'};
 // Jedna pozycja na rodzinę w miejscu jej pierwszego wariantu; wybrany wariant z S.vsel, gdy przechodzi filtry, inaczej pierwszy pasujący. o.vs = warianty rodziny po filtrach
 function famPick(L){const seen=new Set(),out=[];for(const o of L){const f=o.m.fam;if(!f){out.push(o);continue}if(seen.has(f))continue;seen.add(f);
   const vs=L.filter(x=>x.m.fam===f),sel=(S.vsel||{})[f],pick=vs.find(x=>x.m.id===sel)||vs.reduce((b,x)=>recOf(x.m,x.x).s>recOf(b.m,b.x).s?x:b,vs[0]);out.push(Object.assign({},pick,{vs}))}return out}
