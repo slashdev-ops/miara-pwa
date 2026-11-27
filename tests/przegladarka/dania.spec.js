@@ -47,3 +47,20 @@ test('szybkie dania: nazwa sekcji z pory, karta 44 px otwiera przepis, NOWE nie 
   expect(await page.evaluate(() => S.seenNew.quick)).toBe(true);
   expect(errors).toEqual([]);
 });
+
+// Uwagi użytkownika 27.11: karty dań na telefonie do krawędzi ekranu jak inne sekcje; „Przepis” w wierszu z nazwą, nie w osobnej linii
+for (const w of [320, 390]) {
+  test(`karty dań ${w}px: do krawędzi ekranu, „Przepis” w pierwszym wierszu nazwy`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: 800 });
+    const errors = await open(page);
+    const g = await page.evaluate(() => [...document.querySelectorAll('#mlist article.meal')].slice(0, 8).map((a) => {
+      const r = a.getBoundingClientRect(), n = a.querySelector('.mhead .name'), l = a.querySelector('.mhead .mlnk');
+      const nr = n.getClientRects()[0], lr = l && l.getBoundingClientRect();
+      return { left: Math.round(r.left), right: Math.round(innerWidth - r.right), inLine: !!lr && lr.top < nr.bottom && lr.bottom > nr.top, own: !!a.querySelector('.mhead > .small') };
+    }));
+    expect(g.length).toBeGreaterThan(2);
+    for (const x of g) { expect(x.left).toBe(0); expect(x.right).toBe(0); expect(x.inLine).toBe(true); expect(x.own).toBe(false); }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    expect(errors).toEqual([]);
+  });
+}
