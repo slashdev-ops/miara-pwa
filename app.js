@@ -2517,11 +2517,17 @@ document.addEventListener('keydown',e=>{if(DOP&&e.key==='Escape'){dopClose();ret
 function btnSel(b){const a=[...(b.attributes||[])].filter(x=>/^data-/.test(x.name)).map(x=>`[${x.name}="${String(x.value).replace(/["\\]/g,'\\$&')}"]`).join('');return a?'button'+a:null}
 function headOf(el){const m=document.getElementById('main');if(!m||!m.querySelectorAll||!el.compareDocumentPosition)return '';let t='';
   for(const h of m.querySelectorAll('h2,h3'))if(h.compareDocumentPosition(el)&4)t=h.textContent;return t}
-function actAt(b){return {tab:S.tab,sel:btnSel(b),y:b.getBoundingClientRect?b.getBoundingClientRect().top:null,sy:window.scrollY,head:headOf(b),fold:(()=>{const d=b.closest&&b.closest('details[data-fold]');return d&&d.dataset?d.dataset.fold:''})(),own:!!(b.dataset.goto||b.dataset.nav)}}
+function actAt(b){return {tab:S.tab,sel:btnSel(b),y:b.getBoundingClientRect?b.getBoundingClientRect().top:null,sy:window.scrollY,sh:document.documentElement?document.documentElement.scrollHeight:0,head:headOf(b),fold:(()=>{const d=b.closest&&b.closest('details[data-fold]');return d&&d.dataset?d.dataset.fold:''})(),own:!!(b.dataset.goto||b.dataset.nav)}}
 function focusEl(el){if(!el||!el.focus)return;if(!/^(BUTTON|INPUT|SELECT|TEXTAREA|A|SUMMARY)$/.test(el.tagName))el.setAttribute('tabindex','-1');el.focus({preventScroll:true})}
 function actDone(at){if(!document.querySelector)return;
   if(S.tab!==at.tab){window.scrollTo(0,0);focusEl(document.querySelector('header h1'));return}
   if(at.rev&&typeof SYG!=='undefined'){const x=SYG.visible(S,todayKey())[0],l=x&&x.lvl==='112'&&document.querySelector('#main a[href="tel:112"]'),al=l&&l.closest('.petsay.syg,.note.warn');if(al&&al.scrollIntoView){al.scrollIntoView({block:'center',behavior:'auto'});focusEl(l);return}}
+  // Usunięty wiersz (przycisk zniknął): przeglądarka (zakotwiczenie przewinięcia) potrafi przewinąć dalej, niż skróciła się strona,
+  // np. przy pasku nad menu na niskim ekranie; przewinięcie zmienia się najwyżej o skrócenie strony (27.11.2026)
+  {const de0=document.documentElement,gone=at.sel&&!document.querySelector(at.sel),cut=de0&&at.sh?at.sh-de0.scrollHeight:0;
+    const fix=()=>{if(at.sy-window.scrollY>cut+1)window.scrollTo(0,Math.max(0,at.sy-cut))};
+    // zakotwiczenie działa przy następnej klatce, więc sprawdzenie teraz i w dwóch kolejnych klatkach
+    if(gone&&cut>0){fix();if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>{fix();requestAnimationFrame(fix)})}}
   // Strona krótsza po usunięciu wiersza przy końcu: przeglądarka sama cofa przewinięcie do nowego końca. To nie jest przewinięcie przez akcję, fokus wraca (F2c, 23.11.2026).
   const de=document.documentElement,clamp=de&&window.scrollY<at.sy&&Math.abs(window.scrollY-(de.scrollHeight-window.innerHeight))<=1;
   if(at.own||(window.scrollY!==at.sy&&!clamp))return;
