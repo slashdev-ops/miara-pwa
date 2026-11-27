@@ -1,57 +1,67 @@
 // ---------- Dane: produkty (wartości na 100 g, orientacyjne, typowe wartości z tabel) ----------
 // Błonnik (fib, g/100 g): duńska baza Frida 6.1 (DTU, CC BY 4.0), hummus z CoFID 2021; mieszanka warzyw bez wartości w obu tabelach.
 // Frida FoodID: kurczak_piers 907, kurczak_udko 882, indyk_piers 732, indyk_miel 1613, dorsz 72, losos 30, makrela 1220, tunczyk 825, jajko 1663, twarog 1678, skyr 1693, jogurt 1597, mleko 33, tofu 272, soczewica 1799, ciecierzyca 1812, fasola 1810, kasza_gr 67, bulgur 283, jaglana 385, kasza_jecz 1730, ryz 156, ziemniaki 4, bataty 714, platki 480, chleb 379, makaron 377, brokul 17, fasolka 764, szpinak 50, kapusta 26, papryka 38, pomidor 52, pom_puszka 596, ogorek 388, cukinia 56, cebula 716, marchew 24, pieczarki 961, rzodkiewka 39, oliwa 1467, orzechy 647, siemie 149, maslo_orz 1162, hummus CoFID 13-556, owoce 1831, jablko 2, banan 3, mandarynka 560
+// CoFID 2021 Food Code: bajgiel 11-970, tortilla 11-925, ciabatta 11-969, feta 12-525, serek_wiejski 12-539, burak 13-633 (gotowany w wodzie), rukola 13-522 (węglowodany „Tr” = 0), borowki 14-325; błonnik AOAC (odczyt 27.11.2026).
+// s = krótka nazwa przy daniu, g = co składnik wnosi (reguła aplikacji): p/c/f = makro z największą liczbą gramów na 100 g, v = warzywa i owoce (do 100 kcal).
 const ING={
-  kurczak_piers:{n:'Pierś z kurczaka',k:110,p:23,f:1.5,c:0,fib:0,chip:'Kurczak'},
-  kurczak_udko:{n:'Udko z kurczaka bez skóry',k:130,p:19,f:6,c:0,fib:0,chip:'Kurczak'},
-  indyk_piers:{n:'Pierś z indyka',k:105,p:23,f:1,c:0,fib:0,chip:'Indyk'},
-  indyk_miel:{n:'Mięso mielone z indyka',k:150,p:19,f:8,c:0,fib:0,chip:'Indyk'},
-  dorsz:{n:'Dorsz lub mintaj',k:78,p:18,f:0.7,c:0,fib:0,chip:'Ryba'},
-  losos:{n:'Łosoś',k:200,p:20,f:13,c:0,fib:0,chip:'Ryba'},
-  makrela:{n:'Makrela wędzona',k:220,p:21,f:15,c:0,fib:0,chip:'Ryba'},
-  tunczyk:{n:'Tuńczyk w sosie własnym',k:110,p:25,f:1,c:0,fib:0,chip:'Ryba'},
-  jajko:{n:'Jajka (1 szt. ok. 60 g)',k:140,p:12.5,f:10,c:0.7,fib:0,chip:'Jajka'},
-  twarog:{n:'Twaróg półtłusty',k:130,p:18,f:4.5,c:3.5,fib:0,chip:'Twaróg'},
-  skyr:{n:'Skyr naturalny',k:63,p:11,f:0.2,c:4,fib:0,chip:'Skyr lub jogurt'},
-  jogurt:{n:'Jogurt naturalny 2%',k:60,p:4.3,f:2,c:6,fib:0,chip:'Skyr lub jogurt'},
-  mleko:{n:'Mleko 2%',k:50,p:3.3,f:2,c:4.8,fib:0},
-  tofu:{n:'Tofu naturalne',k:120,p:12,f:7,c:2,fib:2.5,chip:'Tofu'},
-  soczewica:{n:'Soczewica czerwona (sucha)',k:340,p:24,f:1.5,c:50,fib:18.5,chip:'Strączki'},
-  ciecierzyca:{n:'Ciecierzyca z puszki (odsączona)',k:120,p:7,f:2.5,c:15,fib:7.8,chip:'Strączki'},
-  fasola:{n:'Fasola czerwona z puszki (odsączona)',k:100,p:7,f:0.5,c:14,fib:8.0,chip:'Strączki'},
-  kasza_gr:{n:'Kasza gryczana niepalona, jasna (sucha)',k:340,p:13,f:3,c:62,fib:5.8,chip:'Kasza'},
-  bulgur:{n:'Kasza bulgur (sucha)',k:340,p:12,f:1.3,c:64,fib:9.9,chip:'Kasza'},
-  jaglana:{n:'Kasza jaglana (sucha)',k:350,p:11,f:3,c:68,fib:2.6,chip:'Kasza'},
-  kasza_jecz:{n:'Kasza jęczmienna (sucha)',k:330,p:9,f:2,c:68,fib:13.4,chip:'Kasza'},
-  ryz:{n:'Ryż brązowy (suchy)',k:360,p:7.5,f:2.7,c:73,fib:4.2,chip:'Ryż'},
-  ziemniaki:{n:'Ziemniaki',k:77,p:2,f:0.1,c:17,fib:1.4,chip:'Ziemniaki lub bataty'},
-  bataty:{n:'Bataty',k:86,p:1.6,f:0.1,c:20,fib:2.7,chip:'Ziemniaki lub bataty'},
-  platki:{n:'Płatki owsiane',k:370,p:13,f:7,c:58,fib:10.3,chip:'Płatki owsiane'},
-  chleb:{n:'Chleb żytni razowy',k:220,p:6,f:1.5,c:42,fib:8.4,chip:'Pieczywo'},
-  makaron:{n:'Makaron pełnoziarnisty (suchy)',k:350,p:13,f:2.5,c:63,fib:9.6,chip:'Makaron'},
-  warzywa:{n:'Mieszanka warzyw (mrożona)',k:40,p:2.5,f:0.3,c:6},
-  brokul:{n:'Brokuł',k:34,p:2.8,f:0.4,c:5,fib:3.2},
-  fasolka:{n:'Fasolka szparagowa',k:31,p:1.8,f:0.2,c:5,fib:3.0},
-  szpinak:{n:'Szpinak',k:23,p:2.9,f:0.4,c:1.4,fib:1.9},
-  kapusta:{n:'Kapusta biała',k:25,p:1.3,f:0.1,c:4.5,fib:2.3},
-  papryka:{n:'Papryka',k:30,p:1,f:0.3,c:5,fib:1.7},
-  pomidor:{n:'Pomidor',k:18,p:0.9,f:0.2,c:3,fib:1.4},
-  pom_puszka:{n:'Pomidory krojone z puszki',k:22,p:1.2,f:0.2,c:3.5,fib:0.9},
-  ogorek:{n:'Ogórek',k:15,p:0.7,f:0.1,c:3,fib:0.8},
-  cukinia:{n:'Cukinia',k:17,p:1.2,f:0.3,c:2.7,fib:1.2},
-  cebula:{n:'Cebula',k:40,p:1.1,f:0.1,c:8,fib:1.9},
-  marchew:{n:'Marchew',k:41,p:0.9,f:0.2,c:8,fib:2.9},
-  pieczarki:{n:'Pieczarki',k:22,p:3.1,f:0.3,c:3.3,fib:0.8},
-  rzodkiewka:{n:'Rzodkiewka',k:16,p:0.7,f:0.1,c:3.4,fib:1.3},
-  oliwa:{n:'Oliwa lub olej rzepakowy',k:884,p:0,f:100,c:0,fib:0},
-  orzechy:{n:'Orzechy włoskie',k:650,p:15,f:65,c:7,fib:7.0},
-  siemie:{n:'Siemię lniane mielone',k:534,p:18,f:42,c:2,fib:30.4},
-  maslo_orz:{n:'Masło orzechowe 100%',k:600,p:25,f:50,c:12,fib:7.6},
-  hummus:{n:'Hummus',k:200,p:7,f:15,c:9,fib:4.9},
-  owoce:{n:'Owoce leśne (mrożone)',k:45,p:0.8,f:0.4,c:9,fib:3.4},
-  jablko:{n:'Jabłko',k:52,p:0.3,f:0.2,c:12,fib:2.2},
-  banan:{n:'Banan',k:89,p:1.1,f:0.3,c:21,fib:1.6},
-  mandarynka:{n:'Mandarynka',k:53,p:0.8,f:0.3,c:13,fib:1.4}
+  kurczak_piers:{n:'Pierś z kurczaka',k:110,p:23,f:1.5,c:0,fib:0,chip:'Kurczak',s:'kurczak',g:'p'},
+  kurczak_udko:{n:'Udko z kurczaka bez skóry',k:130,p:19,f:6,c:0,fib:0,chip:'Kurczak',s:'kurczak',g:'p'},
+  indyk_piers:{n:'Pierś z indyka',k:105,p:23,f:1,c:0,fib:0,chip:'Indyk',s:'indyk',g:'p'},
+  indyk_miel:{n:'Mięso mielone z indyka',k:150,p:19,f:8,c:0,fib:0,chip:'Indyk',s:'indyk',g:'p'},
+  dorsz:{n:'Dorsz lub mintaj',k:78,p:18,f:0.7,c:0,fib:0,chip:'Ryba',s:'dorsz',g:'p'},
+  losos:{n:'Łosoś',k:200,p:20,f:13,c:0,fib:0,chip:'Ryba',s:'łosoś',g:'p'},
+  makrela:{n:'Makrela wędzona',k:220,p:21,f:15,c:0,fib:0,chip:'Ryba',s:'makrela',g:'p'},
+  tunczyk:{n:'Tuńczyk w sosie własnym',k:110,p:25,f:1,c:0,fib:0,chip:'Ryba',s:'tuńczyk',g:'p'},
+  jajko:{n:'Jajka (1 szt. ok. 60 g)',k:140,p:12.5,f:10,c:0.7,fib:0,chip:'Jajka',s:'jajka',g:'p'},
+  twarog:{n:'Twaróg półtłusty',k:130,p:18,f:4.5,c:3.5,fib:0,chip:'Twaróg',s:'twaróg',g:'p'},
+  skyr:{n:'Skyr naturalny',k:63,p:11,f:0.2,c:4,fib:0,chip:'Skyr lub jogurt',s:'skyr',g:'p'},
+  jogurt:{n:'Jogurt naturalny 2%',k:60,p:4.3,f:2,c:6,fib:0,chip:'Skyr lub jogurt',s:'jogurt',g:'c'},
+  mleko:{n:'Mleko 2%',k:50,p:3.3,f:2,c:4.8,fib:0,s:'mleko',g:'c'},
+  tofu:{n:'Tofu naturalne',k:120,p:12,f:7,c:2,fib:2.5,chip:'Tofu',s:'tofu',g:'p'},
+  soczewica:{n:'Soczewica czerwona (sucha)',k:340,p:24,f:1.5,c:50,fib:18.5,chip:'Strączki',s:'soczewica',g:'c'},
+  ciecierzyca:{n:'Ciecierzyca z puszki (odsączona)',k:120,p:7,f:2.5,c:15,fib:7.8,chip:'Strączki',s:'ciecierzyca',g:'c'},
+  fasola:{n:'Fasola czerwona z puszki (odsączona)',k:100,p:7,f:0.5,c:14,fib:8.0,chip:'Strączki',s:'fasola',g:'c'},
+  kasza_gr:{n:'Kasza gryczana niepalona, jasna (sucha)',k:340,p:13,f:3,c:62,fib:5.8,chip:'Kasza',s:'kasza gryczana',g:'c'},
+  bulgur:{n:'Kasza bulgur (sucha)',k:340,p:12,f:1.3,c:64,fib:9.9,chip:'Kasza',s:'bulgur',g:'c'},
+  jaglana:{n:'Kasza jaglana (sucha)',k:350,p:11,f:3,c:68,fib:2.6,chip:'Kasza',s:'kasza jaglana',g:'c'},
+  kasza_jecz:{n:'Kasza jęczmienna (sucha)',k:330,p:9,f:2,c:68,fib:13.4,chip:'Kasza',s:'kasza jęczmienna',g:'c'},
+  ryz:{n:'Ryż brązowy (suchy)',k:360,p:7.5,f:2.7,c:73,fib:4.2,chip:'Ryż',s:'ryż',g:'c'},
+  ziemniaki:{n:'Ziemniaki',k:77,p:2,f:0.1,c:17,fib:1.4,chip:'Ziemniaki lub bataty',s:'ziemniaki',g:'c'},
+  bataty:{n:'Bataty',k:86,p:1.6,f:0.1,c:20,fib:2.7,chip:'Ziemniaki lub bataty',s:'bataty',g:'c'},
+  platki:{n:'Płatki owsiane',k:370,p:13,f:7,c:58,fib:10.3,chip:'Płatki owsiane',s:'płatki',g:'c'},
+  chleb:{n:'Chleb żytni razowy',k:220,p:6,f:1.5,c:42,fib:8.4,chip:'Pieczywo',s:'chleb',g:'c'},
+  makaron:{n:'Makaron pełnoziarnisty (suchy)',k:350,p:13,f:2.5,c:63,fib:9.6,chip:'Makaron',s:'makaron',g:'c'},
+  warzywa:{n:'Mieszanka warzyw (mrożona)',k:40,p:2.5,f:0.3,c:6,s:'warzywa',g:'v'},
+  brokul:{n:'Brokuł',k:34,p:2.8,f:0.4,c:5,fib:3.2,s:'brokuł',g:'v'},
+  fasolka:{n:'Fasolka szparagowa',k:31,p:1.8,f:0.2,c:5,fib:3.0,s:'fasolka',g:'v'},
+  szpinak:{n:'Szpinak',k:23,p:2.9,f:0.4,c:1.4,fib:1.9,s:'szpinak',g:'v'},
+  kapusta:{n:'Kapusta biała',k:25,p:1.3,f:0.1,c:4.5,fib:2.3,s:'kapusta',g:'v'},
+  papryka:{n:'Papryka',k:30,p:1,f:0.3,c:5,fib:1.7,s:'papryka',g:'v'},
+  pomidor:{n:'Pomidor',k:18,p:0.9,f:0.2,c:3,fib:1.4,s:'pomidor',g:'v'},
+  pom_puszka:{n:'Pomidory krojone z puszki',k:22,p:1.2,f:0.2,c:3.5,fib:0.9,s:'pomidory',g:'v'},
+  ogorek:{n:'Ogórek',k:15,p:0.7,f:0.1,c:3,fib:0.8,s:'ogórek',g:'v'},
+  cukinia:{n:'Cukinia',k:17,p:1.2,f:0.3,c:2.7,fib:1.2,s:'cukinia',g:'v'},
+  cebula:{n:'Cebula',k:40,p:1.1,f:0.1,c:8,fib:1.9,s:'cebula',g:'v'},
+  marchew:{n:'Marchew',k:41,p:0.9,f:0.2,c:8,fib:2.9,s:'marchew',g:'v'},
+  pieczarki:{n:'Pieczarki',k:22,p:3.1,f:0.3,c:3.3,fib:0.8,s:'pieczarki',g:'v'},
+  rzodkiewka:{n:'Rzodkiewka',k:16,p:0.7,f:0.1,c:3.4,fib:1.3,s:'rzodkiewka',g:'v'},
+  oliwa:{n:'Oliwa lub olej rzepakowy',k:884,p:0,f:100,c:0,fib:0,s:'oliwa',g:'f'},
+  orzechy:{n:'Orzechy włoskie',k:650,p:15,f:65,c:7,fib:7.0,s:'orzechy',g:'f'},
+  siemie:{n:'Siemię lniane mielone',k:534,p:18,f:42,c:2,fib:30.4,s:'siemię',g:'f'},
+  maslo_orz:{n:'Masło orzechowe 100%',k:600,p:25,f:50,c:12,fib:7.6,s:'masło orzechowe',g:'f'},
+  hummus:{n:'Hummus',k:200,p:7,f:15,c:9,fib:4.9,s:'hummus',g:'f'},
+  owoce:{n:'Owoce leśne (mrożone)',k:45,p:0.8,f:0.4,c:9,fib:3.4,s:'owoce',g:'v'},
+  jablko:{n:'Jabłko',k:52,p:0.3,f:0.2,c:12,fib:2.2,s:'jabłko',g:'v'},
+  banan:{n:'Banan',k:89,p:1.1,f:0.3,c:21,fib:1.6,s:'banan',g:'v'},
+  mandarynka:{n:'Mandarynka',k:53,p:0.8,f:0.3,c:13,fib:1.4,s:'mandarynka',g:'v'},
+  bajgiel:{n:'Bajgiel pszenny',k:273,p:10,f:1.8,c:57.8,fib:3,chip:'Pieczywo',s:'bajgiel',g:'c'},
+  tortilla:{n:'Tortilla pszenna',k:285,p:7.8,f:5.7,c:53.9,fib:3.6,chip:'Pieczywo',s:'tortilla',g:'c'},
+  ciabatta:{n:'Ciabatta',k:271,p:10.2,f:3.9,c:52,fib:3.3,chip:'Pieczywo',s:'ciabatta',g:'c'},
+  feta:{n:'Feta',k:250,p:15.6,f:20.2,c:1.5,fib:0,s:'feta',g:'f'},
+  serek_wiejski:{n:'Serek wiejski',k:103,p:9.4,f:6,c:3.1,fib:0,s:'serek wiejski',g:'p'},
+  burak:{n:'Burak gotowany (z opakowania)',k:53,p:1.6,f:0.3,c:11.6,fib:2.6,s:'burak',g:'v'},
+  rukola:{n:'Rukola',k:18,p:3.6,f:0.4,c:0,fib:1.7,s:'rukola',g:'v'},
+  borowki:{n:'Borówki',k:40,p:0.9,f:0.2,c:9.1,fib:1.5,s:'borówki',g:'v'}
 };
 
 // ---------- Dane: posiłki. Trzeci element 1 = źródło węglowodanów, skalowane pod trening ----------
@@ -96,7 +106,12 @@ const MEALS=[
   {id:'s7',sw:1,t:'sniadanie',n:'Pieczone placuszki twarogowe z jabłkiem i cynamonem',min:20,ing:[['twarog',150],['jajko',60],['platki',30,1],['jablko',100]],how:'Twaróg, jajko i płatki rozgnieść widelcem, dodać starte jabłko i cynamon. Łyżką nakładać małe placki na blachę z papierem do pieczenia, piec 15 min w 190°C. Słodycz daje jabłko, bez cukru.'},
   {id:'s8',sw:1,t:'sniadanie',n:'Twarożek waniliowy z owocami i orzechami',min:3,ing:[['twarog',200],['owoce',150],['orzechy',10]],how:'Twaróg rozetrzeć z łyżką mleka i kilkoma kroplami aromatu waniliowego, na wierzch owoce i posiekane orzechy. Bez cukru: słodycz dają owoce.'},
   {id:'s9',sw:1,t:'sniadanie',n:'Owsianka nocna z jabłkiem i cynamonem',min:5,ing:[['platki',40,1],['skyr',150],['mleko',100],['jablko',100],['orzechy',10]],how:'Wieczorem wymieszać w słoiku płatki, skyr, mleko i starte jabłko z cynamonem, rano posypać orzechami. Na zimno albo 1 min w mikrofali.'},
-  {id:'p6',sw:1,t:'przekaska',n:'Koktajl ze skyru, owoców i płatków',min:3,ing:[['skyr',200],['owoce',100],['platki',20,1]],how:'Zmiksować blenderem z odrobiną wody.'}
+  {id:'p6',sw:1,t:'przekaska',n:'Koktajl ze skyru, owoców i płatków',min:3,ing:[['skyr',200],['owoce',100],['platki',20,1]],how:'Zmiksować blenderem z odrobiną wody.'},
+  {id:'q1',q:['rano','dzien','weekend'],s:'Bajgiel',t:'sniadanie',n:'Bajgiel z burakiem i fetą',min:3,ing:[['bajgiel',90,1],['feta',60],['burak',80],['rukola',20]],how:'Bajgiel przekroić, położyć rukolę, plastry buraka i pokruszoną fetę.'},
+  {id:'q2',q:['rano','dzien','wieczor'],s:'Wrap',t:'obiad',n:'Wrap z tuńczykiem i warzywami',min:5,ing:[['tortilla',60,1],['tunczyk',120],['pomidor',80],['ogorek',60],['jogurt',30]],how:'Tuńczyka wymieszać z jogurtem, zawinąć w tortillę z pomidorem i ogórkiem.'},
+  {id:'q3',q:['rano','dzien','weekend'],sw:1,s:'Skyr',t:'sniadanie',n:'Skyr z borówkami i płatkami',min:2,ing:[['skyr',300],['borowki',125],['platki',30,1]],how:'Skyr wymieszać z borówkami i płatkami.'},
+  {id:'q4',q:['dzien','wieczor','weekend'],s:'Serek wiejski',t:'kolacja',n:'Serek wiejski z pomidorem i ciabattą',min:4,ing:[['serek_wiejski',200],['pomidor',150],['ciabatta',60,1]],how:'Serek wymieszać z pomidorem w kostce, ciabatta obok.'},
+  {id:'q5',q:['dzien','wieczor','weekend'],s:'Ciecierzyca',t:'obiad',n:'Ciecierzyca z fetą, ogórkiem i pomidorem',min:5,ing:[['ciecierzyca',150],['feta',50],['ogorek',100],['pomidor',100],['chleb',40,1]],how:'Ciecierzycę odsączyć, wymieszać z warzywami i pokruszoną fetą, chleb obok.'}
 ];
 
 // ---------- Dane: aktywności. MET z Compendium; "niesprawdzone" = wartość nie weryfikowana ze źródłem ----------
@@ -259,7 +274,7 @@ function measHtml(part){
 // najpierw w tym samym rytmie (obiad do 20 min w dni robocze, od 25 min w weekend), potem najbliższe kalorycznie
 function planFor(dw){const base=PLAN[dw];if(!((S.prof||{}).cond||{}).io)return base.slice();const we=[0,6].includes(dw),kc=m=>macros(m,1,1).k;
   return base.map(id=>{const m=MEALS.find(x=>x.id===id);if(ioFit(m,macros(m,1,1)))return id;const off=o=>o.t==='obiad'&&(we?o.min<25:o.min>20)?1:0;
-    const c=MEALS.filter(o=>o.t===m.t&&!base.includes(o.id)&&ioFit(o,macros(o,1,1))).sort((a,b)=>off(a)-off(b)||Math.abs(kc(a)-kc(m))-Math.abs(kc(b)-kc(m))||a.id.localeCompare(b.id));return c.length?c[0].id:id})}
+    const c=MEALS.filter(o=>o.t===m.t&&!o.q&&!base.includes(o.id)&&ioFit(o,macros(o,1,1))).sort((a,b)=>off(a)-off(b)||Math.abs(kc(a)-kc(m))-Math.abs(kc(b)-kc(m))||a.id.localeCompare(b.id));return c.length?c[0].id:id})}
 function planIds(){const sw=(S.swaps||{})[todayKey()]||{};return planFor(new Date().getDay()).map((id,i)=>sw[i]||id)}
 function shopAgg(){const agg={};for(const d of [0,1,2,3,4,5,6])planFor(d).forEach(id=>MEALS.find(m=>m.id===id).ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g}));return agg}
 function shopKeys(){const agg=shopAgg();return Object.keys(ING).filter(i=>agg[i])}
@@ -1042,9 +1057,14 @@ const STEPS={
   p3:['Marchew pokrój w słupki.','Podaj z hummusem.'],
   p4:['Jabłko pokrój w ćwiartki.','Podaj z łyżką masła orzechowego.'],
   p5:['Odlicz garść orzechów do miseczki, nie jedz z paczki.','Obierz mandarynkę.'],
-  p6:['Skyr, owoce i płatki wrzuć do blendera, dodaj ok. 50 ml wody.','Miksuj 30-40 s.']
+  p6:['Skyr, owoce i płatki wrzuć do blendera, dodaj ok. 50 ml wody.','Miksuj 30-40 s.'],
+  q1:['Przekrój bajgiel na pół.','Połóż rukolę, plastry gotowanego buraka z opakowania i pokruszoną fetę.'],
+  q2:['Tuńczyka odsącz i wymieszaj z jogurtem, solą i pieprzem.','Na tortillę połóż tuńczyka, pokrojonego pomidora i ogórek, zwiń ciasno.'],
+  q3:['Skyr przełóż do miski albo jedz z kubka.','Dodaj borówki i płatki, wymieszaj.'],
+  q4:['Pomidora pokrój w kostkę i wymieszaj z serkiem, solą i pieprzem.','Ciabattę zjedz obok albo połóż serek na kromkach.'],
+  q5:['Ciecierzycę z puszki odsącz i opłucz.','Wymieszaj z pokrojonym ogórkiem, pomidorem i pokruszoną fetą, dopraw cytryną i pieprzem; chleb zjedz obok.']
 };
-function eqOf(m){const s=(STEPS[m.id]||[m.how]).join(' '),e=[];if(/°C/.test(s))e.push('piekarnik');if(/mikrofal/i.test(s))e.push('mikrofala');if(/blender/i.test(s))e.push('blender');return e.length?e:['bez gotowania']}
+function eqOf(m){const s=(STEPS[m.id]||[m.how]).join(' '),e=[];if(/patelni|garnk|płyt/i.test(s))e.push('płyta');if(/°C/.test(s))e.push('piekarnik');if(/mikrofal/i.test(s))e.push('mikrofala');if(/blender/i.test(s))e.push('blender');return e.length?e:['bez gotowania']}
 function hhm(id,g){const r=Math.round(g/5)*5,half=v=>Math.round(v*2)/2,f=n=>String(n).replace('.',','),pl=(n,a,b)=>n===1?a:b;if(id==='jajko'){const n=Math.max(1,half(g/60));return `${f(n)} szt. (${r} g)`}if(id==='oliwa'){const n=Math.max(0.5,half(g/10));return `${f(n)} ${pl(n,'łyżka','łyżki')} (${r} g)`}if(id==='chleb'){const n=Math.max(0.5,half(g/40));return `${f(n)} ${pl(n,'kromka','kromki')} (${r} g)`}return `${r} g`}
 // Ruch dnia: wpis treningu bez rozgrzewki i mobilności (decyzje 24.11.2026: obie są dodatkiem do treningu albo kroków, nie zastępują ich)
 function isMove(e){return !!e&&e.kind==='t'&&!e.warm&&!e.mob}
@@ -1319,7 +1339,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
 const DEF={petNames:1,focus:false,still:false,frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
-  f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p'},
+  f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p',noeq:[]},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,lite:false,unlock:[],unlockAt:'',unlockSnooze:'',body:false,once:false,toastLen:'std',pmLeft:false,vibr:true,ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},shopDay:null,stores:[],promos:[],sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
 function clone(o){return JSON.parse(JSON.stringify(o))}
@@ -1640,12 +1660,35 @@ function mealTags(m,x){const t=[];if(m.sw)t.push(['Słodkie','danie na słodko, 
   const fr=x.k>0?x.fib/x.k*100:0;if(fr>=3)t.push(['Dużo błonnika','co najmniej 3 g błonnika na 100 kcal (próg UE dla wysokiej zawartości)']);else if(fr>=1.5)t.push(['Źródło błonnika','co najmniej 1,5 g błonnika na 100 kcal (próg UE dla źródła błonnika)']);
   if(((S.prof||{}).cond||{}).hashi&&m.ing.some(i=>i[0]==='tofu'))t.push(['Soja: odstęp od leku','soja może zmniejszać wchłanianie lewotyroksyny (opisy przypadków, wytyczne ATA)']);return t}
 function tagsHtml(m,x){return mealTags(m,x).map(([l,w])=>`<span class="msep"><span aria-hidden="true"> | </span><span class="sr">, </span></span><span class="mtag" title="${w}">${l}</span>`).join('')}
+// ---------- P3 dania z planów F1 (makieta „Dania z wariantami” v6, 27.11.2026): filtr sprzętu, szybkie dania, główne składniki ----------
+// [klucz filtra, etykieta, znacznik z eqOf]; blender poza filtrem
+const EQF=[['plyta','Płyta','płyta'],['piekarnik','Piekarnik','piekarnik'],['mikro','Mikrofala','mikrofala'],['zimne','Na zimno','bez gotowania']];
+function eqOk(m){const no=S.f.noeq||[];return !EQF.some(([k,,e])=>no.includes(k)&&eqOf(m).includes(e))}
+// Szybkie dania z produktów z jednego sklepu: nazwa sekcji zależna od pory (decyzja właściciela 26.11.2026)
+const QUICK_N={rano:'W drodze do pracy',dzien:'Na szybko w przerwie',wieczor:'W drodze do domu',weekend:'Na szybko ze sklepu'};
+function quickSlot(d){const w=d.getDay(),h=d.getHours();return w===0||w===6?'weekend':h<10?'rano':h<16?'dzien':'wieczor'}
+function quickList(){const sl=quickSlot(new Date());return MEALS.filter(m=>m.q&&m.q.includes(sl))}
+function eqHidden(){return filtered({noEq:1}).length-filtered().length+quickList().filter(m=>!eqOk(m)).length}
+// Główne składniki: do 3 o największym udziale w kcal (bez dodatków poniżej 15 g), warzywo dopisane, gdy nie ma go w pierwszych trzech
+function mainIng(m){const L=m.ing.filter(x=>x[1]>=15).map(([id,g])=>({id,g:ING[id].g,s:ING[id].s,gr:g,kc:ING[id].k*g/100})).sort((a,b)=>b.kc-a.kc),top=L.slice(0,3);
+  if(!top.some(x=>x.g==='v')){const v=L.filter(x=>x.g==='v'&&x.gr>=50).sort((a,b)=>b.gr-a.gr)[0];if(v)top.push(v)}return top.map(({id,g,s})=>({id,g,s}))}
+const GL_C={p:'mB',c:'mW',f:'mT',v:'mBl'},GL_N={p:'białko',c:'węglowodany',f:'tłuszcz',v:'warzywa i owoce'};
+// Na liście (Z10): tylko gdy nazwa dania nie wymienia wszystkich głównych składników (porównanie po pierwszych 4 literach)
+function glNeed(m){const n=m.n.toLowerCase();return mainIng(m).some(x=>!n.includes(x.s.toLowerCase().slice(0,4)))}
+// nm: widoczna nazwa; składnik już w niej wymieniony nie powtarza się w kolorowych etykietach (czytnik dostaje pełną listę)
+function glHtml(m,nm){const L=mainIng(m),q=(nm||'').toLowerCase();return `<span class="gl" aria-hidden="true">${L.filter(x=>!q||!q.includes(x.s.toLowerCase().slice(0,4))).map(x=>`<span style="--c:var(--${GL_C[x.g]})">${x.s}</span>`).join('')}</span><span class="sr">Główne składniki: ${L.map(x=>`${x.s} (${GL_N[x.g]})`).join(', ')}.</span>`}
+const NOWE_H='<span class="nowe" aria-hidden="true">NOWE</span>';
+function eqHtml(){const no=S.f.noeq||[],hid=eqHidden(),sn=S.seenNew||{};
+  return `<h2 class="eqh">Mam tylko${sn.eq?'':NOWE_H}</h2><div class="eqf" role="group" aria-label="Sprzęt, który mam">`+EQF.map(([k,l])=>`<button data-eqf="${k}" aria-pressed="${!no.includes(k)}">${l}</button>`).join('')+`</div><p class="small muted eqn">${hid?`Ukryte: ${hid} (inny sprzęt)`:''}</p>`}
+function quickHtml(){const sl=quickSlot(new Date()),Q=quickList().filter(eqOk),cm=carbMult(),por=num(S.f.portion)||1,sn=S.seenNew||{};
+  return `<h2 class="qh">${QUICK_N[sl]}${sn.quick?'':NOWE_H}</h2>`+(Q.length?'<div class="qstrip">'+Q.map(m=>{const x=macros(m,cm,por,dopOf(m.id));
+    return `<button class="qc" data-recipe="${m.id}" aria-label="${m.n}, ${fmt(x.k)} kcal, białko ${fmt(x.p)} g, ${eqOf(m).join(', ')}, ${m.min} min"><b class="n">${m.s}</b>${glHtml(m,m.s)}<span class="k">${eqOf(m).includes('bez gotowania')?'':eqOf(m).join(', ')+', '}${m.min} min, <b>${fmt(x.k)}</b> kcal</span></button>`}).join('')+'</div>':'<p class="small muted">Brak szybkich dań dla wybranego sprzętu.</p>')}
 function filtered(o){
   const cm=carbMult(),por=num(S.f.portion)||1;
   const inc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===1),exc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===-1);
   const sorters={p:(a,b)=>b.x.p/b.x.k-a.x.p/a.x.k,k:(a,b)=>a.x.k-b.x.k,t:(a,b)=>a.m.min-b.m.min};
   const pc=S.f.pace||'all';
-  return MEALS.filter(m=>(o&&o.allTypes)||((S.f.type==='all'||m.t===S.f.type)&&(pc==='all'||(pc==='quick'?m.min<=20:m.min>=25))))
+  return MEALS.filter(m=>((o&&o.noEq)||eqOk(m))&&((o&&o.allTypes)||(!m.q&&(S.f.type==='all'||m.t===S.f.type)&&(pc==='all'||(pc==='quick'?m.min<=20:m.min>=25)))))
     .map(m=>({m,x:macros(m,cm,por),ch:chipsOf(m)}))
     .filter(o=>(!(S.f.tags||{}).sw||o.m.sw)&&(!(S.f.tags||{}).io||ioFit(o.m,o.x))&&(!forMe()||ioFit(o.m,o.x)))
     .filter(o=>!exc.some(c=>o.ch.has(c)))
@@ -2122,7 +2165,7 @@ function optList(list,cur,attr){return '<div class="panel">'+list.map(o=>`<butto
 function renderMeals(){
   const cm=carbMult(),n=trainNet();
   const carbTxt=S.f.carb==='auto'?(n>0?`Automatycznie z dzisiejszych treningów (${fmt(n)} kcal netto): węglowodany ×${fmt1(cm)}.`:'Automatycznie: brak treningu w dzienniku dnia, węglowodany ×1.'):`Ustawione ręcznie: węglowodany ×${fmt1(cm)}.`;
-  let h=planHtml()+'<h2>Albo wybierz sam</h2>'+seg([['sniadanie','Śniadanie'],['obiad','Obiad'],['kolacja','Kolacja'],['przekaska','Przekąska'],['all','Wszystkie']],S.f.type,'type','scroll','Rodzaj posiłku')+forMeHtml()+'<div id="oznaczenia"><p class="small" style="margin:8px 8px 4px"><b>Oznaczenia</b></p>'+whyP('oznaczenia')+'<div class="chips">'+[['sw','Słodkie'],['io','Przy IO']].map(([v,l])=>`<button class="chip${(S.f.tags||{})[v]?' inc':''}" data-ftag="${v}" aria-pressed="${!!(S.f.tags||{})[v]}">${l}</button>`).join('')+'</div></div>'+'<div id="rytm">'+seg([['all','Każdy czas'],['quick','Na co dzień, do 20 min'],['big','Na weekend, więcej czasu']],S.f.pace||'all','pace','scroll','Czas przygotowania')+'</div>';
+  let h=planHtml()+eqHtml()+quickHtml()+'<h2>Albo wybierz sam</h2>'+seg([['sniadanie','Śniadanie'],['obiad','Obiad'],['kolacja','Kolacja'],['przekaska','Przekąska'],['all','Wszystkie']],S.f.type,'type','scroll','Rodzaj posiłku')+forMeHtml()+'<div id="oznaczenia"><p class="small" style="margin:8px 8px 4px"><b>Oznaczenia</b></p>'+whyP('oznaczenia')+'<div class="chips">'+[['sw','Słodkie'],['io','Przy IO']].map(([v,l])=>`<button class="chip${(S.f.tags||{})[v]?' inc':''}" data-ftag="${v}" aria-pressed="${!!(S.f.tags||{})[v]}">${l}</button>`).join('')+'</div></div>'+'<div id="rytm">'+seg([['all','Każdy czas'],['quick','Na co dzień, do 20 min'],['big','Na weekend, więcej czasu']],S.f.pace||'all','pace','scroll','Czas przygotowania')+'</div>';
   h+='<details class="fold" data-fold="filtry"'+(OPEN_F.has('filtry')?' open':'')+'><summary>Filtry i sortowanie</summary><div style="padding:0 12px 12px">';
   h+='<h2>Produkty</h2><p class="small muted">Dotknij raz: chcę. Drugi raz: bez tego. Trzeci: bez znaczenia.</p><div class="chips">'+CHIPS.map(c=>{const s=S.f.chips[c]||0;return `<button class="chip ${s===1?'inc':s===-1?'exc':''}" data-chip="${c}" aria-pressed="${s===1?'true':s===-1?'mixed':'false'}">${c}${s===1?' (chcę)':s===-1?' (bez)':''}</button>`}).join('')+'</div>';
   h+='<h2 id="podtrening">Pod trening</h2>'+whyP('podtrening')+seg([['auto','Auto: z treningów dnia'],['1','Bez treningu'],['1.25','Lekki trening'],['1.5','Siłownia, cardio']],S.f.carb,'carb','scroll','Węglowodany pod trening')+`<p class="small muted">${carbTxt} Zmienia tylko porcję kaszy, ryżu, ziemniaków, pieczywa i płatków.</p>`;
@@ -2144,11 +2187,11 @@ function renderMealList0(){
   if(!L.length){el.innerHTML='<div class="note">Żaden posiłek nie spełnia tych warunków. Poluzuj limit kalorii lub białka albo odznacz produkt wykluczony.</div>';return}
   el.innerHTML=`<h2>${L.length} ${L.length===1?'propozycja':(L.length%10>=2&&L.length%10<=4&&(L.length%100<10||L.length%100>=20)?'propozycje':'propozycji')}</h2>`+L.map(({m,x},i)=>{
     const tot=x.p*4+x.f*9+x.c*4||1,isOpen=open.has(m.id);
-    return (i===6?`<details class="fold" id="fold_mreszta" data-fold="mreszta"${OPEN_F.has('mreszta')?' open':''}><summary>Pokaż pozostałe (${L.length-6})</summary>`:'')+`<article class="meal"><button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div><div class="meta">${S.f.type==='all'?TN[m.t]+', ':''}${m.min} min${m.prep?', z gotowania na zapas':''}${tagsHtml(m,x)}</div><div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Składniki i przygotowanie</div></button>
+    return (i===6?`<details class="fold" id="fold_mreszta" data-fold="mreszta"${OPEN_F.has('mreszta')?' open':''}><summary>Pokaż pozostałe (${L.length-6})</summary>`:'')+`<article class="meal"><button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div>${glNeed(m)?glHtml(m):''}<div class="meta">${S.f.type==='all'?TN[m.t]+', ':''}${m.min} min${m.prep?', z gotowania na zapas':''}${tagsHtml(m,x)}</div><div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Składniki i przygotowanie</div></button>
       <div class="mnum"><span><b>${fmt(x.k)}</b> kcal</span>${macChips(x)}</div>
       ${propBar(x)}
       ${isOpen?`<div class="mdet"><ul>${x.items.map(i=>`<li><span>${i.n}</span><span>${fmt(Math.round(i.g/5)*5)} g</span></li>`).join('')}</ul><p class="small">${m.how}</p><p class="small muted">${leftTxt(x.k)} ${fmt(x.k)} kcal to ok. ${fmt(x.k/walkPerMin())} min spaceru.</p><p>${eatBtn(m.id,'Dodaj do dnia')} <button class="btn ghost" data-copy="${m.id}">Kopiuj składniki do Fitatu</button></p>${eatLine(m.id)}</div>`:''}
-    </article>`}).join('')+(L.length>6?'</details>':'')+fold('mlinfo','Skąd te wartości','<p class="small muted">Wartości odżywcze orientacyjne, z typowych tabel składu. Gramatury produktów suchych (kasza, ryż, makaron, soczewica) przed ugotowaniem. Kasza i ryż z mikrofali: 1 część na 2 części wody, duża miska pod przykryciem, ok. 12-20 min na średniej mocy z mieszaniem; czas zależy od mikrofali, więc przy pierwszym razie sprawdź miękkość.</p>'+'<p class="small muted">Błonnik (Bł) z duńskiej bazy składu żywności Frida 6.1, hummus z brytyjskiej CoFID; polskie tabele składu nie są dostępne jako otwarte dane. Mrożona mieszanka warzyw nie ma wartości błonnika w żadnej z tych tabel, dlatego przy daniach z nią jest znak +: błonnika jest co najmniej tyle. Oznaczenia „Źródło błonnika” (od 1,5 g na 100 kcal) i „Dużo błonnika” (od 3 g na 100 kcal) to progi z rozporządzenia UE, tu liczone na porcję.</p>'+'<p class="small muted">Błonnik rozpuszczalny (owies, strączki, siemię) spowalnia opróżnianie żołądka i zmniejsza skok cukru po posiłku; pokazało to badanie na 40 osobach po jednym posiłku. EFSA uznaje 25 g błonnika dziennie za ilość wystarczającą dla prawidłowej pracy jelit, a w metaanalizach największe zmniejszenie ryzyka chorób serca i cukrzycy typu 2 wiązało się z 25-29 g dziennie.</p>'+srcHtml(['frida','cofid','eu1924','fibGE','efsaFib','reynolds']));
+    </article>`}).join('')+(L.length>6?'</details>':'')+fold('mlinfo','Skąd te wartości','<p class="small muted">Wartości odżywcze orientacyjne, z typowych tabel składu. Gramatury produktów suchych (kasza, ryż, makaron, soczewica) przed ugotowaniem. Kasza i ryż z mikrofali: 1 część na 2 części wody, duża miska pod przykryciem, ok. 12-20 min na średniej mocy z mieszaniem; czas zależy od mikrofali, więc przy pierwszym razie sprawdź miękkość.</p>'+'<p class="small muted">Błonnik (Bł) z duńskiej bazy składu żywności Frida 6.1, hummus i składniki szybkich dań (bajgiel, tortilla, ciabatta, feta, serek wiejski, burak, rukola, borówki) z brytyjskiej CoFID 2021; polskie tabele składu nie są dostępne jako otwarte dane. Mrożona mieszanka warzyw nie ma wartości błonnika w żadnej z tych tabel, dlatego przy daniach z nią jest znak +: błonnika jest co najmniej tyle. Oznaczenia „Źródło błonnika” (od 1,5 g na 100 kcal) i „Dużo błonnika” (od 3 g na 100 kcal) to progi z rozporządzenia UE, tu liczone na porcję.</p>'+'<p class="small muted">Błonnik rozpuszczalny (owies, strączki, siemię) spowalnia opróżnianie żołądka i zmniejsza skok cukru po posiłku; pokazało to badanie na 40 osobach po jednym posiłku. EFSA uznaje 25 g błonnika dziennie za ilość wystarczającą dla prawidłowej pracy jelit, a w metaanalizach największe zmniejszenie ryzyka chorób serca i cukrzycy typu 2 wiązało się z 25-29 g dziennie.</p>'+srcHtml(['frida','cofid','eu1924','fibGE','efsaFib','reynolds']));
 }
 
 function renderTrain(){
@@ -2543,6 +2586,7 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;const at=actAt(b);if(d.guta&&['krew','wymkrew','bol'].includes(d.guta)&&!(((S.gut||{})[todayKey()]||{}).a||[]).includes(d.guta))at.rev=1;
   if(d.addsheet){SHEET=true;sheetPush();render();sheetFocus();return}
   if(d.dop&&!DOP){dopOpen(d.dop);return}
+  if(d.eqf){const no=new Set(S.f.noeq||[]);if(no.has(d.eqf))no.delete(d.eqf);else no.add(d.eqf);S.f.noeq=[...no];S.seenNew=Object.assign({},S.seenNew,{eq:true});save();render();dopFocus(`[data-eqf="${d.eqf}"]`);return}
   if(d.k2){BAR_K2=!BAR_K2;S.seenNew=Object.assign({},S.seenNew,{kcal:true});save();render();dopFocus('#dbar [data-k2]');return}
   if(d.today&&!TODAY){S.seenNew=Object.assign({},S.seenNew,{mac:true});save();TODAY=true;sheetPush();render();dopFocus('#td_t');return}
   if(TODAY&&d.todayclose){todayClose();return}
@@ -2645,7 +2689,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.promosaveall){promoSave((PROMO_PENDING||[]).map((_,i)=>i))}
   else if(d.promoskip){if(PROMO_PENDING){const i=+d.promoskip;PROMO_PENDING=PROMO_PENDING.filter((_,j)=>j!==i);if(!PROMO_PENDING.length)PROMO_PENDING=null}OPEN_F.add('zakupy')}
   else if(d.promodel){undoable('Usunięto promocję');S.promos=(Array.isArray(S.promos)?S.promos:[]).filter(p=>p.id!==d.promodel);OPEN_F.add('zakupy')}
-  else if(d.recipe){if(S.tab!=='recipe')S.recipeBack=S.tab;S.recipe=d.recipe;S.tab='recipe';window.scrollTo(0,0)}
+  else if(d.recipe){if((MEALS.find(m=>m.id===d.recipe)||{}).q)S.seenNew=Object.assign({},S.seenNew,{quick:true});if(S.tab!=='recipe')S.recipeBack=S.tab;S.recipe=d.recipe;S.tab='recipe';window.scrollTo(0,0)}
   else if(d.labsave){const g=id=>document.getElementById(id),v=g('l_val').value.trim(),dt=g('l_date').value,lo0=g('l_lo')?g('l_lo').value.trim().replace(',','.'):'',lo=lo0&&isFinite(parseFloat(lo0))?lo0:'';if(!v||!isFinite(parseFloat(v.replace(',','.')))){toast('Wpisz wynik liczbowo');return}if(!dt){toast('Wpisz datę');return}const e={id:Date.now().toString(36),test:LABN[S.labSel]?S.labSel:'tsh',date:dt,val:v.replace(',','.'),...(lo?{lo}:{}),unit:g('l_unit').value.trim(),fast:g('l_fast').checked,bio:g('l_bio')?g('l_bio').checked:undefined,cyc:g('l_cyc')?g('l_cyc').value.trim():'',cr:g('l_cr')?g('l_cr').checked:false};S.labs.push(e);petHealth('lab',v,null,{out:labStatus(e).w===1});LAB_KEEP={test:e.test,date:dt,unit:e.unit,raw:v,back:false,day:todayKey(),f:{lo:g('l_lo')?g('l_lo').value.trim():'',fast:e.fast,bio:e.bio,cyc:e.cyc,cr:e.cr}};actSave('lab',()=>labDrop(e),()=>S.labs.some(x=>x===e||x.id===e.id),at);return}
   else if(d.labdel){undoable('Usunięto wynik badania');S.labs=S.labs.filter(e=>e.id!==d.labdel)}
   else if(d.labcopy){const t=LABS.map(x=>{const es=S.labs.filter(e=>e.test===x.id).sort((a,b)=>a.date.localeCompare(b.date));return es.length?x.n+': '+es.map(e=>fmtDate(e.date)+' '+e.val+' '+e.unit).join('; '):''}).filter(Boolean).join('\n');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Skopiowano'),()=>toast('Nie udało się skopiować'));else toast('Kopiowanie niedostępne w tej przeglądarce');return}
