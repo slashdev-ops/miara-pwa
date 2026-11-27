@@ -3782,6 +3782,72 @@ tryc('U3 karta tempa: treść bez restrykcji, „badania na zawodnikach”, źr�
   const h = view('health', TEMPO('79', '80')), i = h.indexOf('data-card="tempo"'), c = h.slice(i, h.indexOf('</div>', i));
   return /szybciej niż ok\. 1%/.test(c) && /badania na zawodnikach/.test(c) && c.includes('24864135') && c.includes('1,3%') && c.includes('data-tab="train"') && !/mniej jedz|zjedz mniej|głod/i.test(c);
 });
+// Notka scenariusza w jednym wierszu (27.11.2026): nazwa i „Wyjdź”, co sprawdzić po rozwinięciu
+tryc('demo: notka scenariusza w jednym wierszu: nazwa w podsumowaniu, „Sprawdź” dopiero po rozwinięciu, „Wyjdź” obok', () => {
+  T.setDemo(true); T.setDemoN('prosty'); let h = ''; try { h = view('day', {}); } finally { T.setDemoN(''); T.setDemo(false); }
+  const n = h.slice(h.indexOf('class="note demo'), h.indexOf('data-demoexit') + 40), sm = n.slice(n.indexOf('<summary'), n.indexOf('</summary>'));
+  return n.includes('<details') && sm.includes('Scenariusz: ' + T.SCEN.prosty.t) && !sm.includes('Sprawdź') && n.includes('Sprawdź: ') && n.includes('data-demoexit');
+});
+tryc('demo: tryb pokazowy bez scenariusza: jeden krótki wiersz z „Wyjdź”', () => {
+  T.setDemo(true); let h = ''; try { h = view('day', {}); } finally { T.setDemo(false); }
+  const n = h.slice(h.indexOf('class="note demo'), h.indexOf('data-demoexit')); return n.includes('Tryb pokazowy') && !n.includes('Zmiany się nie zapisują') && n.length < 200;
+});
+// Ekran startowy 0,2 s (makieta „Pierwsze kroki”, zaakceptowana): znak w HTML przed skryptami, potem przejście zależne od ekranu
+tryc('ekran startowy: w index.html przed nagłówkiem, ukryty dla czytnika, bez przechwytywania dotyku; w CSS ruch wyłączany', () => {
+  const i = html.indexOf('id="splash"'), sp = html.slice(html.lastIndexOf('<div', i), html.indexOf('</div>', i));
+  return i > 0 && i < html.indexOf('<header') && sp.includes('aria-hidden="true"') && sp.includes('Miara') && /\.splash\{[^}]*pointer-events:none/.test(sysCss) && /prefers-reduced-motion:reduce\)\{\.splash/.test(sysCss);
+});
+const bootSp = (st) => {
+  const E = {}, cls = [], mkE = (id) => E[id] || (E[id] = { id, innerHTML: id === 'dbar' ? '' : '', textContent: '', value: '', checked: false, style: { setProperty() {} }, dataset: {}, removed: false, remove() { this.removed = true; }, focus() { E.__f = id; }, getBoundingClientRect: () => ({ top: 0, bottom: 40 }), querySelector: () => null, classList: { add(c) { if (id === 'splash') cls.push(c); }, remove() {}, toggle() {} }, insertAdjacentHTML(p, h) { this.innerHTML = h + this.innerHTML; } });
+  const q = []; const sb = { document: { getElementById: mkE, querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, documentElement: { dataset: {} } }, window: { scrollTo() {}, matchMedia: () => ({ matches: false }) },
+    localStorage: { getItem: () => (st ? JSON.stringify(st) : null), setItem() {} }, navigator: {}, location: { hash: '' }, console: { log() {}, warn() {}, error() {} }, setTimeout: (f, ms) => { q.push([f, ms]); return q.length; }, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
+    Date, Math, JSON, Promise, URL, Blob, crypto: globalThis.crypto, TextEncoder, TextDecoder, btoa, atob };
+  sb.globalThis = sb; sb.matchMedia = sb.window.matchMedia; vm.createContext(sb);
+  for (const f of ['pet.js', 'zdarzenia.js', 'sygnaly.js', 'skupienie.js', 'wpisy.js']) { const p = path.join(root, f); if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, 'utf8'), sb); }
+  vm.runInContext(code, sb); const first = q.find((x) => x[1] === 200); for (let n = 0; n < 6 && q.length; n++) q.shift()[0]();
+  return { first: !!first, cls, gone: !!(E.splash && E.splash.removed), foc: E.__f };
+};
+tryc('ekran startowy: po 0,2 s nowa osoba przechodzi do powitania (znak rośnie i znika, fokus na nagłówku planszy); osoba po starcie do paska dnia', () => {
+  const a = bootSp(null), b = bootSp({ onb: true, lite: false });
+  return a.first && a.cls.includes('to-welcome') && a.gone && a.foc === 'wh' && b.first && b.cls.includes('to-day') && b.gone && b.foc !== 'wh';
+});
+// U2c „Twoja sylwetka” w Ustawieniach (makieta v13, zaakceptowana 27.11.2026): ta sama postać co w ilustracjach ćwiczeń (silnik v33),
+// brzuch z talii do wzrostu, masa z wagi; ilustracja kierunku, nie prognoza
+tryc('U2c: silnik postaci w sylwetka.js, wczytany przed app.js i w pamięci service workera', () => {
+  const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+  return fs.existsSync(path.join(root, 'sylwetka.js')) && html.indexOf('sylwetka.js') > 0 && html.indexOf('sylwetka.js') < html.indexOf('app.js') && /'\.\/sylwetka\.js'/.test(sw);
+});
+tryc('U2c: silnik rysuje postać K i M; większa masa i brzuch zmieniają obrys', () => {
+  const sb = { window: {}, document: {} }; vm.createContext(sb); vm.runInContext(fs.readFileSync(path.join(root, 'sylwetka.js'), 'utf8'), sb);
+  const Y = sb.window.SYL, svg = () => ({ dataset: { k: 't' }, closest: () => null, innerHTML: '' }), FP = { tor: 0, hd: -2, shN: -10, elN: 6, shF: -6, elF: 6 };
+  const d = (o, f) => { const s = svg(); Y.drawRaw(s, Y.P(Object.assign({}, FP, o)), Y.EX[0], f); return s.innerHTML; };
+  const a = d({ belly: 0, mass: 1, gut: 0 }, 'k'), b = d({ belly: 1, mass: 1.6, gut: 1 }, 'k'), m = d({ belly: 0, mass: 1, gut: 0 }, 'm');
+  return a.includes('class="fb"') && a !== b && a !== m;
+});
+tryc('U2c: reguły rysunku: brzuch z talii do wzrostu (0,40 płasko, 0,65 największy), masa z BMI w granicach 0,85-1,6', () => {
+  const S = T.S(); Object.assign(S, { cm: '170' });
+  return sandbox.silGut(68) === 0 && sandbox.silGut(110.5) === 1 && Math.abs(sandbox.silGut(85) - 0.4) < 1e-9 && sandbox.silMass(40) === 0.85 && sandbox.silMass(200) === 1.6 && Math.abs(sandbox.silMass(22 * 2.89) - 1) < 1e-9;
+});
+tryc('U2c: Ustawienia, redukcja z wagi: „Twoja sylwetka: 80 → 72 kg”, postać Teraz i Cel, podpis „Ilustracja, nie prognoza”', () => {
+  const h = view('set', BASE({ touched: { kg: true, cm: true, goal: true, waist: true, age: true }, mode: 'redukcja', kg: '80', cm: '170', goal: '72', sex: 'K', goalWay: 'proc', still: false, silAnim: true }));
+  const s = h.slice(h.indexOf('class="sil panel"'), h.indexOf('class="sil panel"') + 1500);
+  return h.includes('class="sil panel"') && s.includes('Twoja sylwetka: 80 → 72 kg') && s.includes('id="silA"') && s.includes('role="img"') && s.includes('Ilustracja, nie prognoza') && s.includes('data-silanim') && s.includes('Zatrzymaj ruch')
+    && h.indexOf('class="sil panel"') < h.indexOf('Jak ustalić cel');
+});
+tryc('U2c: bez ruchu (przełącznik w Miarze albo „Zatrzymaj ruch”): dwie postacie obok siebie, Teraz i Cel', () => {
+  const a = view('set', BASE({ touched: { kg: true, cm: true, goal: true, waist: true, age: true }, mode: 'redukcja', kg: '80', cm: '170', goal: '72', still: true, silAnim: true })), b = view('set', BASE({ touched: { kg: true, cm: true, goal: true, waist: true, age: true }, mode: 'redukcja', kg: '80', cm: '170', goal: '72', still: false, silAnim: false }));
+  return a.includes('id="silNow"') && a.includes('id="silGoal"') && !a.includes('id="silA"') && !a.includes('data-silanim') && b.includes('id="silNow"') && b.includes('Pokaż ruch');
+});
+tryc('U2c: utrzymanie „bez zmian”, przyrost masy z wagą teraz; cel z talii: talia teraz → poniżej połowy wzrostu; przy błędnym celu bez postaci', () => {
+  const u = view('set', BASE({ touched: { kg: true, cm: true, goal: true, waist: true, age: true }, mode: 'utrzymanie', kg: '80', cm: '170', still: true })), m = view('set', BASE({ touched: { kg: true, cm: true, goal: true, waist: true, age: true }, mode: 'masa', kg: '60', cm: '170', still: true }));
+  const t = view('set', BASE({ touched: { kg: true, cm: true, goal: true, waist: true, age: true }, mode: 'redukcja', kg: '80', cm: '170', goal: '', goalWay: 'talia', still: true, meas: { [dk(1)]: { waist: '92' } } }));
+  const e = view('set', BASE({ touched: { kg: true, cm: true, goal: true, waist: true, age: true }, mode: 'redukcja', kg: '80', cm: '170', goal: '95', goalWay: 'proc', still: true }));
+  return u.includes('Twoja sylwetka: bez zmian') && m.includes('Twoja sylwetka: 60 kg → przyrost masy') && t.includes('Twoja sylwetka: talia 92 → 84,5 cm') && !e.includes('class="sil panel"');
+});
+tryc('U2c: „Zatrzymaj ruch” przełącza na dwie postacie i zapamiętuje wybór', () => {
+  view('set', BASE({ mode: 'redukcja', kg: '80', cm: '170', goal: '72', still: false, silAnim: true })); click({ silanim: '1' }); const h = mainHtml(); const v = T.S().silAnim;
+  return v === false && h.includes('id="silNow"') && h.includes('Pokaż ruch');
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

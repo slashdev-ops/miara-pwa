@@ -90,3 +90,23 @@ test('W2 po aktualizacji: komunikat „N nowe funkcje” z Pokaż prowadzi tylko
   await expect(page.locator('#toast')).not.toContainText('nowe funkcje');
   expect(errors).toEqual([]);
 });
+
+// Ekran startowy 0,2 s (makieta „Pierwsze kroki”): znika po przejściu, nie zasłania ekranu i nie przechwytuje dotyku
+for (const w of [320, 390]) {
+  test(`ekran startowy ${w}px: znak widoczny na starcie, znika po przejściu (ok. 0,85 s); nowa osoba ma fokus na nagłówku planszy`, async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', (e) => errors.push('strona: ' + e.message));
+    await page.setViewportSize({ width: w, height: 760 });
+    await page.goto('/index.html');
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    expect(await page.evaluate(() => getComputedStyle(document.getElementById('splash')).pointerEvents)).toBe('none');
+    await expect(page.locator('#splash')).toHaveCount(0, { timeout: 2500 });
+    await expect(page.locator('#wh')).toBeFocused();
+    await page.evaluate(() => { S.onb = true; S.lite = false; S.wel = null; save(); });
+    await page.reload();
+    await expect(page.locator('#splash')).toHaveCount(0, { timeout: 2500 });
+    await expect(page.locator('#dbar .kcell')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+}
