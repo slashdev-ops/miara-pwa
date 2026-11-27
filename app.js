@@ -2372,12 +2372,12 @@ function renderMealList0(){
   const TN={sniadanie:'Śniadanie',obiad:'Obiad',kolacja:'Kolacja',przekaska:'Przekąska'};
   if(!L.length){el.innerHTML='<div class="note">Żaden posiłek nie spełnia tych warunków. Poluzuj limit kalorii lub białka albo odznacz produkt wykluczony.</div>';return}
   el.innerHTML=(recN?'':`<h2>${L.length} ${L.length===1?'propozycja':(L.length%10>=2&&L.length%10<=4&&(L.length%100<10||L.length%100>=20)?'propozycje':'propozycji')}</h2>`)+L.map((o,i)=>{const {m,x}=o;
-    const tot=x.p*4+x.f*9+x.c*4||1,isOpen=open.has(m.id),meta=v=>`<div class="meta">${S.f.type==='all'?TN[v.m.t]+', ':''}${v.m.min} min${v.m.prep?', z zapasu':''}${tagsHtml(v.m,v.x)}</div>`,LNK='<div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Przepis</div>';
+    const tot=x.p*4+x.f*9+x.c*4||1,isOpen=open.has(m.id),meta=v=>`<div class="meta">${S.f.type==='all'?TN[v.m.t]+', ':''}${v.m.min} min${v.m.prep?', z zapasu':''}${tagsHtml(v.m,v.x)}</div>`,NM=n=>`<div class="ntop"><div class="name">${n}</div><span class="mlnk">Przepis</span></div>`;
     const fam=o.vs&&FAM[m.fam]?o.vs:null,fn=fam&&FAM[m.fam],sn=S.seenNew||{};
     // Karta rodziny (Z12): nazwa i wybór wariantu stoją w miejscu, warianty w jednym stosie (komórka siatki), widoczny wybrany
-    const body=fam?`<button class="mhead" data-recipe="${m.id}"><div class="name">${fn}</div>${LNK}</button><div class="vsel" role="group" aria-label="Wariant: ${fn}">`+fam.map(v=>`<button data-vsel="${m.fam}:${v.m.id}" aria-pressed="${v.m.id===m.id}">${v.m.vn}</button>`).join('')+(sn.var?'':NOWE_H)+'</div><div class="vstk">'
+    const body=fam?`<button class="mhead" data-recipe="${m.id}">${NM(fn)}</button><div class="vsel" role="group" aria-label="Wariant: ${fn}">`+fam.map(v=>`<button data-vsel="${m.fam}:${v.m.id}" aria-pressed="${v.m.id===m.id}">${v.m.vn}</button>`).join('')+(sn.var?'':NOWE_H)+'</div><div class="vstk">'
       +fam.map(v=>{const on=v.m.id===m.id;return `<div class="stk${on?'':' off'}"${on?'':' aria-hidden="true"'}>${meta(v)}${glHtml(v.m,fn+' '+v.m.vn)}<div class="mnum"><span><b>${fmt(v.x.k)}</b> kcal</span>${macChips(v.x,PW(v))}</div>${propBar(v.x)}</div>`}).join('')+'</div>'
-      :`<button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div>${glNeed(m)?glHtml(m):''}${meta(o)}${LNK}</button>
+      :`<button class="mhead" data-recipe="${m.id}">${NM(m.n)}${glNeed(m)?glHtml(m):''}${meta(o)}</button>
       <div class="mnum"><span><b>${fmt(x.k)}</b> kcal</span>${macChips(x,PW(o))}</div>
       ${propBar(x)}`;
     return (i===6?`<details class="fold" id="fold_mreszta" data-fold="mreszta"${OPEN_F.has('mreszta')?' open':''}><summary>Pokaż pozostałe (${L.length-6})</summary>`:'')+(recN&&i===0?'<h3 class="rech">Polecane dla Ciebie</h3>':'')+(recN&&i===recN?'<h3 class="rech">Pozostałe dania</h3>':'')+`<article class="meal">${body}
