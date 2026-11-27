@@ -64,13 +64,13 @@ test('drobne: „Przyciski − i + po lewej” przestawia grupę w karcie „Dzi
   expect(g.v.x).toBeGreaterThan(g.l.x);
   await noHScroll(page);
   await page.evaluate(() => { S.tab = 'set'; render(); });
-  const f = page.locator('.wp-f .wp-r').first();
+  const f = page.locator('.panel:not(.dcells) .wp-f .wp-r').first();
   g = await geo(f);
   expect(g.p.x + g.p.width).toBeLessThanOrEqual(g.l.x + 1);
   expect(g.v.x).toBeGreaterThan(g.l.x);
   await noHScroll(page);
   await page.evaluate(() => { S.pmLeft = false; render(); });
-  g = await geo(page.locator('.wp-f .wp-r').first());
+  g = await geo(page.locator('.panel:not(.dcells) .wp-f .wp-r').first());
   expect(g.p.x).toBeGreaterThan(g.l.x);
   expect(await page.evaluate(() => document.documentElement.dataset.pm)).toBe('r');
   expect(errors).toEqual([]);

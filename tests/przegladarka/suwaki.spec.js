@@ -146,7 +146,8 @@ test('przytrzymanie + przy śnie: najpierw co 5 min, po ok. 1 s co 15 min (siatk
 
 test('wzrost (zapis od razu): wolne przeciągnięcie daje każdy centymetr spoza siatki 5 cm, szybkie machnięcie siatkę 5 cm', async ({ page }) => {
   const errors = await open(page, 320, 'light');
-  await page.evaluate(() => { S.tab = 'set'; S.cm = '170'; S.touched = { kg: true, cm: true, age: true, goal: true }; render(); });
+  // U2a: w Ustawieniach wzrost bez suwaka (komórka w nagłówku); suwak wzrostu zostaje na ekranie startowym
+  await page.evaluate(() => { S.onb = false; S.tab = 'intro'; S.introStep = 0; S.cm = '170'; S.touched = { kg: true, cm: true, age: true, goal: true }; render(); });
   await page.locator('#pf_rcm').scrollIntoViewIfNeeded();
   let t = await thumb(page, '#pf_rcm');
   await page.mouse.move(t.x, t.y);

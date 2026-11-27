@@ -726,6 +726,7 @@ body.hasbar .toast{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
 .dhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .dhead h2{margin-right:auto}
 .dhead .dsex{margin:0}
+.dhead .dsex button{min-width:44px}
 .dcells{display:grid;grid-template-columns:1fr 1fr}
 .dcells .wp-f + .wp-f{border-top:0;border-left:1px solid var(--line)}
 .dcells .wp-pm{display:none}
