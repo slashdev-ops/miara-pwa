@@ -2262,7 +2262,7 @@ function renderMealList0(){
   const TN={sniadanie:'Śniadanie',obiad:'Obiad',kolacja:'Kolacja',przekaska:'Przekąska'};
   if(!L.length){el.innerHTML='<div class="note">Żaden posiłek nie spełnia tych warunków. Poluzuj limit kalorii lub białka albo odznacz produkt wykluczony.</div>';return}
   el.innerHTML=(recN?'':`<h2>${L.length} ${L.length===1?'propozycja':(L.length%10>=2&&L.length%10<=4&&(L.length%100<10||L.length%100>=20)?'propozycje':'propozycji')}</h2>`)+L.map((o,i)=>{const {m,x}=o;
-    const tot=x.p*4+x.f*9+x.c*4||1,isOpen=open.has(m.id),meta=v=>`<div class="meta">${S.f.type==='all'?TN[v.m.t]+', ':''}${v.m.min} min${v.m.prep?', z gotowania na zapas':''}${tagsHtml(v.m,v.x)}</div>`,LNK='<div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Przepis</div>';
+    const tot=x.p*4+x.f*9+x.c*4||1,isOpen=open.has(m.id),meta=v=>`<div class="meta">${S.f.type==='all'?TN[v.m.t]+', ':''}${v.m.min} min${v.m.prep?', z zapasu':''}${tagsHtml(v.m,v.x)}</div>`,LNK='<div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Przepis</div>';
     const fam=o.vs&&FAM[m.fam]?o.vs:null,fn=fam&&FAM[m.fam],sn=S.seenNew||{};
     // Karta rodziny (Z12): nazwa i wybór wariantu stoją w miejscu, warianty w jednym stosie (komórka siatki), widoczny wybrany
     const body=fam?`<button class="mhead" data-recipe="${m.id}"><div class="name">${fn}</div>${LNK}</button><div class="vsel" role="group" aria-label="Wariant: ${fn}">`+fam.map(v=>`<button data-vsel="${m.fam}:${v.m.id}" aria-pressed="${v.m.id===m.id}">${v.m.vn}</button>`).join('')+(sn.var?'':NOWE_H)+'</div><div class="vstk">'
