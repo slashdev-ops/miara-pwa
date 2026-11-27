@@ -42,3 +42,14 @@ test('powitanie: „Najpierw moje dane” otwiera ekran danych, „Zacznij od sz
   await expect(page.locator('#wh')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test('W3a: przełącznik „Oznaczaj nowe funkcje znakiem NOWE” ukrywa znaki NOWE na Posiłkach', async ({ page }) => {
+  const errors = await fresh(page, 390);
+  await page.evaluate(() => { S.onb = true; S.wel = null; S.lite = false; S.seenNew = {}; S.tab = 'set'; OPEN_F.add('pierwsze'); render(); });
+  const sw = page.locator('#nowe'); await expect(sw).toBeChecked();
+  await sw.click(); await expect(sw).not.toBeChecked();
+  await page.evaluate(() => { S.tab = 'meals'; render(); });
+  expect(await page.locator('.nowe').count()).toBeGreaterThan(0);
+  expect(await page.locator('.nowe:visible').count()).toBe(0);
+  expect(errors).toEqual([]);
+});

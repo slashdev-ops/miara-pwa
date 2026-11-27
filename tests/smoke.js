@@ -3733,6 +3733,16 @@ tryc('powitanie: „Najpierw moje dane” otwiera ekran danych; „Zacznij od sz
 tryc('powitanie: „Pokaż wprowadzenie” w Ustawieniach zaczyna od planszy 1', () => {
   view('set', {}); click({ intro: '1' }); const w = T.S().wel, t = T.S().tab; T.S().wel = null; return w === 0 && t === 'intro';
 });
+// W3a Ustawienia: „Pierwsze kroki i co nowego” jako jedna zwinięta sekcja (Z10: scala przyciski wprowadzenia i wskazówek)
+tryc('W3a Ustawienia: sekcja „Pierwsze kroki i co nowego” z powitaniem, wskazówkami, przełącznikiem znaków NOWE i listą zmian', () => {
+  const h = view('set', BASE({})), i = h.indexOf('data-fold="pierwsze"'), f = h.slice(i);
+  return i > 0 && f.includes('Pierwsze kroki i co nowego') && f.includes('data-intro="1"') && f.includes('data-tipsreset="1"') && /id="nowe" data-k="nowe" checked/.test(f) && (f.match(/<li>/g) || []).length >= 5
+    && (h.match(/data-intro="1"/g) || []).length === 1;
+});
+tryc('W3a znaki NOWE wyłączone: przełącznik odznaczony, strona dostaje znacznik data-nowe="0" (CSS ukrywa znaki)', () => {
+  const h = view('set', BASE({ nowe: false })); const css = fs.readFileSync(path.join(root, 'app.css'), 'utf8'); T.S().nowe = true;
+  return /id="nowe" data-k="nowe" >/.test(h) && css.includes('[data-nowe="0"] .nowe{display:none}') && code.includes("dataset.nowe=S.nowe===false?'0':''");
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

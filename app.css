@@ -750,4 +750,5 @@ body.hasbar .toast{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
 .wdoc{width:48px;height:60px;border:3px solid var(--green);border-radius:var(--r-s)}
 .welacts{display:flex;flex-direction:column;gap:8px;margin-top:auto}
 .welacts .btn{width:100%;min-height:48px}
-
+/* W3a: znaki NOWE wyłączone w Ustawieniach */
+[data-nowe="0"] .nowe{display:none}
