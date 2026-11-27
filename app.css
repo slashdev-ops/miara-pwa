@@ -711,4 +711,11 @@ body.hasbar .toast{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
 .qc .k{font-size:13px;font-variant-numeric:tabular-nums}
 .gl{display:flex;flex-wrap:wrap;gap:3px 4px;margin-top:4px;font-size:13px;line-height:1.35;font-weight:400}
 .gl span{padding:0 4px;color:var(--ink);background:color-mix(in srgb,var(--c) var(--fm),var(--surface));box-shadow:inset 0 -2px 0 var(--c);white-space:nowrap}
+/* P4a warianty: wybór wariantu (styl Z11: odcień i kreska 2 px, ta sama grubość pisma, żeby wybór nie przesuwał zawijania) i stos wariantów w jednej komórce siatki (Z12) */
+.vsel{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:6px 0}
+.vsel button{min-height:44px;padding:0 10px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.vsel button[aria-pressed="true"]{background:color-mix(in srgb,var(--green) var(--fm),var(--surface));box-shadow:inset 0 -2px 0 var(--green)}
+.vstk{display:grid}
+.vstk>.stk{grid-area:1/1;min-width:0}
+.vstk>.stk.off{visibility:hidden}
 
