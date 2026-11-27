@@ -2385,6 +2385,11 @@ function setPath(p,v){const a=p.split('.');let o=S;for(let i=0;i<a.length-1;i++)
 // ---------- Szybkie wpisy z każdego ekranu (11.11.2026) ----------
 // A: arkusz „Dodaj wpis” z paska; B: liczba braków z listy Dziś na zakładce; C: powtórz wczoraj; D: skróty ikony (#dodaj-…)
 let SHEET=false,QUICK_PENDING=false,QUICK_ID='';
+// Z13: gest i przycisk Wstecz systemu zamykają arkusz zamiast opuścić aplikację; wpis w historii istnieje tylko, gdy arkusz jest otwarty
+let SHEET_H=false;
+function sheetPush(){if(SHEET_H||typeof history==='undefined'||!history.pushState)return;try{history.pushState({miaraSheet:1},'');SHEET_H=true}catch(_){}}
+function sheetPop(){if(!SHEET_H)return;SHEET_H=false;try{if(history.state&&history.state.miaraSheet)history.back()}catch(_){}}
+if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('popstate',()=>{if(!SHEET_H)return;SHEET_H=false;if(SHEET){SHEET=false;render();addFocus()}});
 function dayLeft(){if(S.lite)return liteFull(todayKey())||painAt(todayKey())?0:1;if(S.once||painAt(todayKey()))return 0;const k=todayKey(),m=(S.meas||{})[k]||{},d=day();
   return [num(m.w)>0,d.filter(e=>e.kind==='m').length>=3,d.some(e=>e.kind==='t')||num(m.steps)>0].filter(x=>!x).length}
 function yMeals(){return ((S.days||{})[nAgo(1)]||[]).filter(e=>e.kind==='m')}
@@ -2405,7 +2410,7 @@ function quickFromHash(h){const q=QUICK[String(h||'')];if(!q)return false;S.tab=
   try{if(typeof history!=='undefined'&&history.replaceState)history.replaceState(null,'',location.pathname+location.search)}catch(_){}return true}
 function quickFocus(){if(typeof document.querySelector!=='function')return;window.scrollTo(0,0);const el=QUICK_ID&&document.getElementById(QUICK_ID);
   if(el){if(el.scrollIntoView)el.scrollIntoView({block:'center'});focusEl(el)}else focusEl(document.querySelector('header h1'))}
-document.addEventListener('keydown',e=>{if(!SHEET)return;if(e.key==='Escape'){SHEET=false;render();addFocus();return}
+document.addEventListener('keydown',e=>{if(!SHEET)return;if(e.key==='Escape'){SHEET=false;sheetPop();render();addFocus();return}
   if(e.key==='Tab'){const bs=[...document.querySelectorAll('#sheet .sheetbox button')];if(!bs.length)return;const i=bs.indexOf(document.activeElement);
     if(e.shiftKey&&i<=0){e.preventDefault();bs[bs.length-1].focus()}else if(!e.shiftKey&&i===bs.length-1){e.preventDefault();bs[0].focus()}}});
 // Po akcji (przegląd ekranów 11.11.2026, WCAG 2.4.3): przed przerysowaniem zapamiętaj przycisk, jego miejsce na ekranie
@@ -2432,8 +2437,8 @@ function actDone(at){if(!document.querySelector)return;
   if(h){if(h.scrollIntoView){const r=h.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)h.scrollIntoView({block:'start'})}focusEl(h)}}
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;const at=actAt(b);if(d.guta&&['krew','wymkrew','bol'].includes(d.guta)&&!(((S.gut||{})[todayKey()]||{}).a||[]).includes(d.guta))at.rev=1;
-  if(d.addsheet){SHEET=true;render();sheetFocus();return}
-  if(SHEET){SHEET=false;if(d.sheetclose){render();addFocus();return}}
+  if(d.addsheet){SHEET=true;sheetPush();render();sheetFocus();return}
+  if(SHEET){SHEET=false;sheetPop();if(d.sheetclose){render();addFocus();return}}
   if(d.toastclose){toastHide();return}
   if(d.undo){if(UNDO){const tab=S.tab;S=JSON.parse(UNDO);S.tab=tab;UNDO=null;save();render();toast('Przywrócono')}else toastHide();return}
   // Przycisk, który reaguje: w oknie „Cofnij” dotknięcie cofa ostatni zapis, drugie dotknięcie w 700 ms po zapisie nic nie robi

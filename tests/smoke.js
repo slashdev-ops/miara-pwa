@@ -1184,6 +1184,13 @@ tryc('dodaj: brzuch tylko przy profilu z wzdęciami, „Powtórz wczoraj” tylk
   return !a.includes('fold_brzuch') && !a.includes('data-repeat') && b.includes('data-nav="day#fold_brzuch#brzuch"') && b.includes('data-repeat="1"');
 });
 tryc('dodaj: wybór z arkusza zamyka arkusz', () => { view('day', NOW0()); click({ addsheet: '1' }); click({ tab: 'meals' }); return !/role="dialog"/.test(sheetH()) && T.S().tab === 'meals'; });
+// Z13 (27.11.2026): wpis w historii tylko na czas otwartego arkusza (Wstecz systemu zamyka arkusz, zamknięcie przyciskiem zdejmuje wpis)
+tryc('Z13: arkusz dodaje wpis historii, zamknięcie i wybór z arkusza go zdejmują', () => {
+  const H = []; sandbox.history = { state: null, pushState(st) { H.push(st); this.state = st; }, back() { H.pop(); this.state = H.length ? H[H.length - 1] : null; } };
+  try { view('day', NOW0()); click({ addsheet: '1' }); const a = H.length === 1 && sandbox.history.state.miaraSheet === 1; click({ sheetclose: '1' }); const b = H.length === 0;
+    click({ addsheet: '1' }); click({ tab: 'meals' }); const c = H.length === 0; click({ addsheet: '1' }); click({ addsheet: '1' }); const d = H.length === 1;
+    return a && b && c && d; } finally { delete sandbox.history; }
+});
 tryc('braki: zakładka Mój dzień pokazuje, ile z listy Dziś zostało, bez liczby przy 0 i w dzień z bólem', () => {
   view('day', NOW0()); const a = tabsH();
   const full = { [dk(0)]: [1, 2, 3].map((i) => ({ kind: 'm', label: 'p' + i, k: 300, p: 20, f: 10, c: 30 })) };
