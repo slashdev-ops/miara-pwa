@@ -3771,6 +3771,17 @@ tryc('W2 po aktualizacji: raz komunikat „N nowe funkcje” z „Pokaż” (tyl
   const c = bootE({ onb: true, lite: false, seenNew: {}, nowe: false }), d = bootE({ onb: true, lite: true, seenNew: {} });
   return a.toast.includes('2 nowe funkcje') && a.toast.includes('data-tourstart="new"') && a.S.updToast === true && b.toast === '' && c.toast === '' && d.toast === '';
 });
+// U3 karta tempa (rada 27.11, cel „odsłonięty brzuch”, działanie 5; mapa 74 Helms 2014): średnia z 7 dni spada o ponad 1% względem tygodnia wcześniej; ostrzeżenie, nie cel; tylko redukcja
+const TEMPO = (now, prev, o) => BASE({ mode: 'redukcja', meas: { [dk(0)]: { w: now }, [dk(2)]: { w: now }, [dk(4)]: { w: now }, [dk(8)]: { w: prev }, [dk(10)]: { w: prev }, [dk(12)]: { w: prev } }, ...o });
+tryc('U3 karta tempa: spadek ponad 1% tygodniowo w redukcji (79 z 80,0 kg), nie przy 0,9% ani w utrzymaniu, ani przy 2 ważeniach', () => {
+  const a = cards(view('health', TEMPO('79', '80'))), b = cards(view('health', TEMPO('79,3', '80'))), c = cards(view('health', TEMPO('79', '80', { mode: 'utrzymanie' })));
+  const d = cards(view('health', BASE({ mode: 'redukcja', meas: { [dk(0)]: { w: '79' }, [dk(8)]: { w: '80' } } })));
+  return a.includes('tempo') && !b.includes('tempo') && !c.includes('tempo') && !d.includes('tempo');
+});
+tryc('U3 karta tempa: treść bez restrykcji, „badania na zawodnikach”, źródło Helms 2014, liczby z danych osoby, przycisk do Treningu', () => {
+  const h = view('health', TEMPO('79', '80')), i = h.indexOf('data-card="tempo"'), c = h.slice(i, h.indexOf('</div>', i));
+  return /szybciej niż ok\. 1%/.test(c) && /badania na zawodnikach/.test(c) && c.includes('24864135') && c.includes('1,3%') && c.includes('data-tab="train"') && !/mniej jedz|zjedz mniej|głod/i.test(c);
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
