@@ -3696,7 +3696,7 @@ tryc('U2b plan oznaczony NOWE do pierwszego otwarcia „Gdy coś nie idzie”', 
   const a = planU2b(view('set', U2B())), b = planU2b(view('set', U2B({ seenNew: { plan: true } })));
   return a.includes('NOWE') && !b.includes('NOWE');
 });
-// Ekran po wejściu (makieta „Pierwsze kroki”, zaakceptowana): osoba po starcie wraca do Mojego dnia, nie na ostatnią zakładkę; nowa osoba: wprowadzenie; skrót z ekranu głównego ma pierwszeństwo
+// Ekran po wejściu (makieta „Pierwsze kroki”, zaakceptowana): Posiłki albo Mój dzień w prostym widoku, nie ostatnia zakładka; nowa osoba: wprowadzenie; skrót z ekranu głównego ma pierwszeństwo
 const bootWith = (st, hash) => {
   const E = {}, mkE = (id) => E[id] || (E[id] = { id, innerHTML: '', textContent: '', value: '', checked: false, style: {}, dataset: {}, classList: { add() {}, remove() {}, toggle() {} }, insertAdjacentHTML(p, h) { this.innerHTML = h + this.innerHTML; } });
   const sb = { document: { getElementById: mkE, querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, documentElement: { dataset: {} } }, window: { scrollTo() {} },
@@ -3706,8 +3706,8 @@ const bootWith = (st, hash) => {
   for (const f of ['pet.js', 'zdarzenia.js', 'sygnaly.js', 'skupienie.js', 'wpisy.js']) { const p = path.join(root, f); if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, 'utf8'), sb); }
   vm.runInContext(code, sb); return vm.runInContext('S.tab', sb);
 };
-tryc('start: osoba po wprowadzeniu wraca do Mojego dnia, nie na ostatnio otwartą zakładkę (Ustawienia, Posiłki, Zdrowie)', () =>
-  ['set', 'meals', 'health', 'recipe'].every((t) => bootWith({ onb: true, tab: t }) === 'day'));
+tryc('start: po wprowadzeniu Posiłki (pełny widok) albo Mój dzień (prosty widok), nie ostatnio otwarta zakładka', () =>
+  ['set', 'day', 'health', 'recipe'].every((t) => bootWith({ onb: true, lite: false, tab: t }) === 'meals') && ['set', 'meals'].every((t) => bootWith({ onb: true, lite: true, tab: t }) === 'day'));
 tryc('start: nowa osoba widzi wprowadzenie', () => bootWith(null) === 'intro' && bootWith({ onb: false, tab: 'meals' }) === 'intro');
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
