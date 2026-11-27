@@ -3573,6 +3573,17 @@ tryc('P4b wariant domyślny: najlepszy dla profilu, dopóki osoba sama nie wybie
   const G2 = sandbox.famPick(sandbox.filtered());
   return sandbox.recOf(ch.m, ch.x).s === best && G2.find((o) => o.m.fam === 'chia').m.id === 's19';
 });
+// P4c Śniadania z planów, partia 2 (27.11.2026): placuszki, jajecznica i jajka, kanapki, frittata; bez nowych składników (wartości z Fridy i CoFID z P3-P4a)
+tryc('P4c śniadania partia 2: 4 nowe rodziny, 13 nowych wariantów 400-500 kcal; s2, s4 i s7 dołączone do rodzin', () => {
+  const F = vm.runInContext('FAM', sandbox), nowe = T.MEALS.filter((m) => /^s(3[2-9]|4[0-4])$/.test(m.id));
+  const rodz = ['placuszki', 'jajecznica', 'kanapki', 'frittata'];
+  return rodz.every((f) => F[f] && T.MEALS.filter((m) => m.fam === f).length >= 3) && nowe.length === 13 && nowe.every((m) => m.fam && m.t === 'sniadanie' && T.STEPS[m.id].length >= 2 && (() => { const k = T.macros(m, 1, 1).k; return k >= 400 && k <= 500; })())
+    && T.MEALS.find((m) => m.id === 's2').fam === 'jajecznica' && T.MEALS.find((m) => m.id === 's4').fam === 'kanapki' && T.MEALS.find((m) => m.id === 's7').fam === 'placuszki';
+});
+tryc('P4c sprzęt: frittata z piekarnikiem, jajka po turecku z płytą (garnek), kanapki bez gotowania', () => {
+  const E = (id) => sandbox.eqOf(T.MEALS.find((m) => m.id === id));
+  return E('s42').includes('piekarnik') && E('s38').includes('płyta') && E('s39').includes('bez gotowania') && E('s32').includes('płyta');
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
