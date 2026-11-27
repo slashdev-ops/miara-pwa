@@ -1701,8 +1701,9 @@ function dopPrune(){if(!S.adj)return;const lim=nAgo(7);Object.keys(S.adj).forEac
 // Makro jednym wierszem: skróty widoczne, pełne słowa dla czytnika ekranu
 function fibG(x){return `${fmt(x.fib)}${x.fibNA?'+':''} g`}
 // Makra W6 (krok 9a, 26.11.2026): litera i liczba na jasnym tle koloru makra z kreską 2 px, „g” raz po błonniku; czytnik ekranu dostaje pełne słowa z jednostką
-function macChips(x){const c=(l,v,t,g)=>`<span class="mc" style="--c:var(--${t})">${l}\u00a0<b>${v}</b>${g?'\u00a0g':''}</span>`;
-  return `<span class="mml"><span aria-hidden="true">${c('B',fmt(x.p),'mB')}${c('T',fmt(x.f),'mT')}${c('W',fmt(x.c),'mW')}${c('Bł',fmt(x.fib)+(x.fibNA?'+':''),'mBl',1)}</span><span class="sr">białko ${fmt(x.p)} g, tłuszcz ${fmt(x.f)} g, węglowodany ${fmt(x.c)} g, błonnik ${x.fibNA?'co najmniej ':''}${fmt(x.fib)} g</span></span>`}
+// pw: białko jest powodem polecenia przy redukcji (co najmniej 30 g w porcji: reguła aplikacji; białko a sytość i mięśnie: Leidy i in. 2015, mapa 13)
+function macChips(x,pw){const c=(l,v,t,g)=>`<span class="mc${pw&&l==='B'?' pw':''}" style="--c:var(--${t})">${l}\u00a0<b>${v}</b>${g?'\u00a0g':''}</span>`;
+  return `<span class="mml"><span aria-hidden="true">${c('B',fmt(x.p),'mB')}${c('T',fmt(x.f),'mT')}${c('W',fmt(x.c),'mW')}${c('Bł',fmt(x.fib)+(x.fibNA?'+':''),'mBl',1)}</span><span class="sr">białko ${fmt(x.p)} g${pw?' (powód polecenia: białko przy redukcji)':''}, tłuszcz ${fmt(x.f)} g, węglowodany ${fmt(x.c)} g, błonnik ${x.fibNA?'co najmniej ':''}${fmt(x.fib)} g</span></span>`}
 // Pasek proporcji kalorii z makr w kolorach makr, odstęp 2 px między odcinkami
 function propBar(x,st){const tot=x.p*4+x.f*9+x.c*4||1;return `<div class="bar mbar"${st?` style="${st}"`:''} aria-hidden="true"><i style="width:${x.p*4/tot*100}%;background:var(--mB)"></i><i style="width:${x.f*9/tot*100}%;background:var(--mT)"></i><i style="width:${x.c*4/tot*100}%;background:var(--mW)"></i></div>`}
 const FIBE=x=>({fib:x.fib,...(x.fibNA?{fibNA:1}:{})});
@@ -1718,8 +1719,18 @@ function ioFit(m,x){return m.t==='przekaska'?x.c<=20&&(x.p>=10||x.f>=8):x.p>=20&
 function mealTags(m,x){const t=[];if(m.sw)t.push(['Słodkie','danie na słodko, słodycz z owoców']);
   if(ioFit(m,x))t.push(['Przy IO',m.t==='przekaska'?'do 20 g węglowodanów z białkiem albo tłuszczem':'co najmniej 20 g białka i do 50 g węglowodanów']);
   const fr=x.k>0?x.fib/x.k*100:0;if(fr>=3)t.push(['Dużo błonnika','co najmniej 3 g błonnika na 100 kcal (próg UE dla wysokiej zawartości)']);else if(fr>=1.5)t.push(['Źródło błonnika','co najmniej 1,5 g błonnika na 100 kcal (próg UE dla źródła błonnika)']);
+  if(((S.prof||{}).cond||{}).gut&&m.ing.some(i=>i[0]==='kiwi'))t.push(['Kiwi','kiwi przy zaparciach: w badaniach 2-3 sztuki dziennie przez co najmniej 4 tygodnie (BDA 2025)']);
   if(((S.prof||{}).cond||{}).hashi&&m.ing.some(i=>i[0]==='tofu'))t.push(['Soja: odstęp od leku','soja może zmniejszać wchłanianie lewotyroksyny (opisy przypadków, wytyczne ATA)']);return t}
-function tagsHtml(m,x){return mealTags(m,x).map(([l,w])=>`<span class="msep"><span aria-hidden="true"> | </span><span class="sr">, </span></span><span class="mtag" title="${w}">${l}</span>`).join('')}
+// Polecanie (P4b): IO 3 (reguła Przy IO), jelita 2 (dużo błonnika albo kiwi, mapa 25), redukcja 2 (białko 30+ g, mapa 13), błonnik 1 (mapa 29-30); powody w kolejności: problem, cel, błonnik. Wagi: reguła aplikacji
+function recOf(m,x){const c=(S.prof||{}).cond||{},fr=x.k>0?x.fib/x.k*100:0,r=[];
+  if(c.io&&ioFit(m,x))r.push(['Przy IO',3]);if(c.gut&&(fr>=3||m.ing.some(i=>i[0]==='kiwi')))r.push([fr>=3?'Dużo błonnika':'Kiwi',2]);
+  if(S.mode==='redukcja'&&x.p>=30)r.push(['Białko 30+ g',2]);if(fr>=3&&!r.some(y=>y[0]==='Dużo błonnika'))r.push(['Dużo błonnika',1]);
+  return {s:r.reduce((a,y)=>a+y[1],0),why:r.map(y=>y[0])}}
+// Polecane na górze według punktów (stabilnie: przy remisie kolejność sortowania listy), potem pozostałe
+// Punkty pozycji listy: rodzina liczy się najlepszym wariantem, żeby wybór wariantu nie przesuwał karty (Z12)
+function recScore(o){return o.vs?Math.max(...o.vs.map(v=>recOf(v.m,v.x).s)):recOf(o.m,o.x).s}
+function recSort(L){const sc=new Map(L.map(o=>[o,recScore(o)]));return L.filter(o=>sc.get(o)>0).sort((a,b)=>sc.get(b)-sc.get(a)).concat(L.filter(o=>!sc.get(o)))}
+function tagsHtml(m,x){const W=new Set(recOf(m,x).why);return mealTags(m,x).map(([l,w])=>`<span class="msep"><span aria-hidden="true"> | </span><span class="sr">, </span></span><span class="mtag${W.has(l)?' pw':''}" title="${w}">${l}</span>`).join('')}
 // ---------- P3 dania z planów F1 (makieta „Dania z wariantami” v6, 27.11.2026): filtr sprzętu, szybkie dania, główne składniki ----------
 // [klucz filtra, etykieta, znacznik z eqOf]; blender poza filtrem
 const EQF=[['plyta','Płyta','płyta'],['piekarnik','Piekarnik','piekarnik'],['mikro','Mikrofala','mikrofala'],['zimne','Na zimno','bez gotowania']];
@@ -1747,7 +1758,7 @@ function quickHtml(){const sl=quickSlot(new Date()),Q=quickList().filter(eqOk),c
 const FAM={nocna:'Nocna owsianka',owsianka:'Owsianka na ciepło',chia:'Pudding chia',omlet:'Omlet',szak:'Szakszuka',bajgiel:'Bajgiel',awokado:'Tosty z awokado'};
 // Jedna pozycja na rodzinę w miejscu jej pierwszego wariantu; wybrany wariant z S.vsel, gdy przechodzi filtry, inaczej pierwszy pasujący. o.vs = warianty rodziny po filtrach
 function famPick(L){const seen=new Set(),out=[];for(const o of L){const f=o.m.fam;if(!f){out.push(o);continue}if(seen.has(f))continue;seen.add(f);
-  const vs=L.filter(x=>x.m.fam===f),sel=(S.vsel||{})[f],pick=vs.find(x=>x.m.id===sel)||vs[0];out.push(Object.assign({},pick,{vs}))}return out}
+  const vs=L.filter(x=>x.m.fam===f),sel=(S.vsel||{})[f],pick=vs.find(x=>x.m.id===sel)||vs.reduce((b,x)=>recOf(x.m,x.x).s>recOf(b.m,b.x).s?x:b,vs[0]);out.push(Object.assign({},pick,{vs}))}return out}
 function filtered(o){
   const cm=carbMult(),por=num(S.f.portion)||1;
   const inc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===1),exc=Object.keys(S.f.chips).filter(k=>S.f.chips[k]===-1);
@@ -2247,19 +2258,19 @@ function renderMeals(){
 }
 function renderMealList(){renderMealList0();tileLabels(document.getElementById('mlist'))}
 function renderMealList0(){
-  const L=famPick(filtered()),el=document.getElementById('mlist');if(!el)return;
+  const L=recSort(famPick(filtered())),el=document.getElementById('mlist');if(!el)return;const recN=L.filter(o=>recScore(o)>0).length,PW=v=>recOf(v.m,v.x).why.includes('Białko 30+ g');
   const TN={sniadanie:'Śniadanie',obiad:'Obiad',kolacja:'Kolacja',przekaska:'Przekąska'};
   if(!L.length){el.innerHTML='<div class="note">Żaden posiłek nie spełnia tych warunków. Poluzuj limit kalorii lub białka albo odznacz produkt wykluczony.</div>';return}
-  el.innerHTML=`<h2>${L.length} ${L.length===1?'propozycja':(L.length%10>=2&&L.length%10<=4&&(L.length%100<10||L.length%100>=20)?'propozycje':'propozycji')}</h2>`+L.map((o,i)=>{const {m,x}=o;
-    const tot=x.p*4+x.f*9+x.c*4||1,isOpen=open.has(m.id),meta=v=>`<div class="meta">${S.f.type==='all'?TN[v.m.t]+', ':''}${v.m.min} min${v.m.prep?', z gotowania na zapas':''}${tagsHtml(v.m,v.x)}</div>`,LNK='<div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Składniki i przygotowanie</div>';
+  el.innerHTML=(recN?'':`<h2>${L.length} ${L.length===1?'propozycja':(L.length%10>=2&&L.length%10<=4&&(L.length%100<10||L.length%100>=20)?'propozycje':'propozycji')}</h2>`)+L.map((o,i)=>{const {m,x}=o;
+    const tot=x.p*4+x.f*9+x.c*4||1,isOpen=open.has(m.id),meta=v=>`<div class="meta">${S.f.type==='all'?TN[v.m.t]+', ':''}${v.m.min} min${v.m.prep?', z zapasu':''}${tagsHtml(v.m,v.x)}</div>`,LNK='<div class="small" style="color:var(--green);margin-top:4px;text-decoration:underline;text-underline-offset:3px">Przepis</div>';
     const fam=o.vs&&FAM[m.fam]?o.vs:null,fn=fam&&FAM[m.fam],sn=S.seenNew||{};
     // Karta rodziny (Z12): nazwa i wybór wariantu stoją w miejscu, warianty w jednym stosie (komórka siatki), widoczny wybrany
     const body=fam?`<button class="mhead" data-recipe="${m.id}"><div class="name">${fn}</div>${LNK}</button><div class="vsel" role="group" aria-label="Wariant: ${fn}">`+fam.map(v=>`<button data-vsel="${m.fam}:${v.m.id}" aria-pressed="${v.m.id===m.id}">${v.m.vn}</button>`).join('')+(sn.var?'':NOWE_H)+'</div><div class="vstk">'
-      +fam.map(v=>{const on=v.m.id===m.id;return `<div class="stk${on?'':' off'}"${on?'':' aria-hidden="true"'}>${meta(v)}${glHtml(v.m,fn+' '+v.m.vn)}<div class="mnum"><span><b>${fmt(v.x.k)}</b> kcal</span>${macChips(v.x)}</div>${propBar(v.x)}</div>`}).join('')+'</div>'
+      +fam.map(v=>{const on=v.m.id===m.id;return `<div class="stk${on?'':' off'}"${on?'':' aria-hidden="true"'}>${meta(v)}${glHtml(v.m,fn+' '+v.m.vn)}<div class="mnum"><span><b>${fmt(v.x.k)}</b> kcal</span>${macChips(v.x,PW(v))}</div>${propBar(v.x)}</div>`}).join('')+'</div>'
       :`<button class="mhead" data-recipe="${m.id}"><div class="name">${m.n}</div>${glNeed(m)?glHtml(m):''}${meta(o)}${LNK}</button>
-      <div class="mnum"><span><b>${fmt(x.k)}</b> kcal</span>${macChips(x)}</div>
+      <div class="mnum"><span><b>${fmt(x.k)}</b> kcal</span>${macChips(x,PW(o))}</div>
       ${propBar(x)}`;
-    return (i===6?`<details class="fold" id="fold_mreszta" data-fold="mreszta"${OPEN_F.has('mreszta')?' open':''}><summary>Pokaż pozostałe (${L.length-6})</summary>`:'')+`<article class="meal">${body}
+    return (i===6?`<details class="fold" id="fold_mreszta" data-fold="mreszta"${OPEN_F.has('mreszta')?' open':''}><summary>Pokaż pozostałe (${L.length-6})</summary>`:'')+(recN&&i===0?'<h3 class="rech">Polecane dla Ciebie</h3>':'')+(recN&&i===recN?'<h3 class="rech">Pozostałe dania</h3>':'')+`<article class="meal">${body}
       ${isOpen?`<div class="mdet"><ul>${x.items.map(i=>`<li><span>${i.n}</span><span>${fmt(Math.round(i.g/5)*5)} g</span></li>`).join('')}</ul><p class="small">${m.how}</p><p class="small muted">${leftTxt(x.k)} ${fmt(x.k)} kcal to ok. ${fmt(x.k/walkPerMin())} min spaceru.</p><p>${eatBtn(m.id,'Dodaj do dnia')} <button class="btn ghost" data-copy="${m.id}">Kopiuj składniki do Fitatu</button></p>${eatLine(m.id)}</div>`:''}
     </article>`}).join('')+(L.length>6?'</details>':'')+fold('mlinfo','Skąd te wartości','<p class="small muted">Wartości odżywcze orientacyjne, z typowych tabel składu. Gramatury produktów suchych (kasza, ryż, makaron, soczewica) przed ugotowaniem. Kasza i ryż z mikrofali: 1 część na 2 części wody, duża miska pod przykryciem, ok. 12-20 min na średniej mocy z mieszaniem; czas zależy od mikrofali, więc przy pierwszym razie sprawdź miękkość.</p>'+'<p class="small muted">Błonnik (Bł) z duńskiej bazy składu żywności Frida 6.1, hummus, bajgiel, tortilla i gotowany burak z brytyjskiej CoFID 2021 (brak w Fridzie); polskie tabele składu nie są dostępne jako otwarte dane. Mrożona mieszanka warzyw nie ma wartości błonnika w żadnej z tych tabel, dlatego przy daniach z nią jest znak +: błonnika jest co najmniej tyle. Oznaczenia „Źródło błonnika” (od 1,5 g na 100 kcal) i „Dużo błonnika” (od 3 g na 100 kcal) to progi z rozporządzenia UE, tu liczone na porcję.</p>'+'<p class="small muted">Błonnik rozpuszczalny (owies, strączki, siemię) spowalnia opróżnianie żołądka i zmniejsza skok cukru po posiłku; pokazało to badanie na 40 osobach po jednym posiłku. EFSA uznaje 25 g błonnika dziennie za ilość wystarczającą dla prawidłowej pracy jelit, a w metaanalizach największe zmniejszenie ryzyka chorób serca i cukrzycy typu 2 wiązało się z 25-29 g dziennie.</p>'+srcHtml(['frida','cofid','eu1924','fibGE','efsaFib','reynolds']));
 }
