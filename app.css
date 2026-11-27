@@ -128,7 +128,10 @@ main p > .btn:not(.small) + .btn:not(.small){margin-top:8px}
 .note.warn{background:var(--warn-bg);color:var(--warn-ink);box-shadow:none}
 /* Wyjdź 12 px od prawej krawędzi paska trybu pokazowego jak w innych ramkach (test ramek, 17.11.2026) */
 .note.demo{display:flow-root;padding:8px 12px 8px 16px;background:var(--surface2);box-shadow:none;line-height:1.4}
-.note.demo{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.note.demo{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-top:4px;padding-bottom:4px}
+/* Notka scenariusza w jednym wierszu: nazwa i Wyjdź; co sprawdzić po rozwinięciu */
+.demochk{flex:1;min-width:0}.demochk summary{min-height:44px;display:flex;align-items:center;cursor:pointer}.demochk p{margin:0 0 8px}
+.note.demo>span{align-self:center}.note.demo>.btn{min-height:44px}
 
 /* Kafelki wyboru (20.11.2026): równe kolumny, 12 px, min. 48 px, cała powierzchnia klikalna; liczba kolumn zależy od liczby opcji */
 .chips,.seg{display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));gap:8px;margin:8px 0 4px}
@@ -771,3 +774,30 @@ body.hasbar .toast{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
 /* Karta dania: „Przepis” w wierszu z nazwą, po prawej (uwaga użytkownika 27.11) */
 .mhead .ntop{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .mhead .mlnk{flex:none;font-size:13px;color:var(--green);text-decoration:underline;text-underline-offset:3px}
+/* Ekran startowy: 0,2 s, potem przejście zależne od celu (makieta „Pierwsze kroki”); nie przechwytuje dotyku */
+.splash{position:fixed;inset:0;z-index:80;pointer-events:none;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .38s ease,transform .38s cubic-bezier(.2,.8,.2,1)}
+.splash .logo{font-family:var(--serif);font-weight:600;font-size:32px;color:var(--ink);transition:transform .38s cubic-bezier(.2,.8,.2,1),opacity .25s}
+.splash .stripes{display:flex;gap:4px;width:150px;transition:transform .42s cubic-bezier(.2,.8,.2,1),width .42s cubic-bezier(.2,.8,.2,1)}
+.splash .stripes i{flex:1;height:7px;background:color-mix(in srgb,var(--c) var(--fm),var(--surface));box-shadow:inset 0 -2px 0 var(--c)}
+.splash.to-welcome{opacity:0;transform:scale(1.08)}
+.splash.to-day{background:transparent;transition:background .3s ease}
+.splash.to-day .logo{opacity:0;transform:translateY(-16px)}
+.splash.to-day .stripes{width:92%;transform:translateY(var(--dy,260px))}
+.splash.gone{opacity:0}
+@media (prefers-reduced-motion:reduce){.splash,.splash *{transition:none!important}}
+[data-still="1"] .splash,[data-still="1"] .splash *{transition:none!important}
+/* U2c „Twoja sylwetka”: scena jasna w obu motywach (postać rysowana ciemną linią na papierze), podpis pod postacią */
+:root{--fl:#1F2A24;--paper:#FFFFFF;--inkS:#151515;--koHair:#151515;--koFar:#D6D2CA;--cloth:#9AA6AE;--clothF:#7E8990;--workFill:#D9480F;--workLine:#7A1F05;--stretchFill:#1D5FA8;--stretchLine:#0B3A70;--move:#B03A0A;--stage:#E8E1D3;--mat:#DCD3C1;--floorsh:rgb(31 42 36 / .14)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--stage:#C9C2B4;--mat:#ADA594;--floorsh:rgb(0 0 0 / .35)}}
+:root[data-theme="dark"]{--stage:#C9C2B4;--mat:#ADA594;--floorsh:rgb(0 0 0 / .35)}
+.sil{display:flex;gap:12px;align-items:center;padding:8px 12px}
+.sil-st{flex:none;position:relative;display:grid;background:var(--stage);border-radius:var(--r-s);padding:4px 4px 22px}
+.sil-st.two{grid-template-columns:1fr 1fr}
+.sil-fig{width:78px;height:118px}
+.sil-cap,.sil-cap2{position:absolute;left:0;right:0;bottom:3px;font-size:12px;font-weight:700;color:#1F2A24;text-align:center}
+.sil-cap{height:16px;line-height:16px}
+.sil-cap span{position:absolute;top:0;left:0;right:0;white-space:nowrap}
+.sil-cap2{display:grid;grid-template-columns:1fr 1fr}
+.sil-t{display:flex;flex-direction:column;gap:4px;min-width:0}
+.sil-t .btn{align-self:flex-start;min-height:44px}
+

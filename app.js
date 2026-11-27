@@ -2544,13 +2544,57 @@ function tourPlace(){const w=document.getElementById('tour');if(!TOUR||!w||typeo
   Object.assign(ho.style,{display:'',left:(r.left-4)+'px',top:(r.top-4)+'px',width:(r.width+8)+'px',height:(r.height+8)+'px'});
   if(r.top+r.height/2>ih/2){bu.style.bottom=(ih-r.top+(ho.firstChild?30:12))+'px';bu.style.top='auto'}else{bu.style.top=(r.bottom+18)+'px';bu.style.bottom='auto'}}
 // Po aktualizacji: raz komunikat o nowościach z „Pokaż” (samouczek tylko po nich); bez niego przy wyłączonych znakach NOWE i w prostym widoku
+// Ekran startowy (makieta „Pierwsze kroki”, zaakceptowana): znak z index.html stoi 0,2 s, potem do powitania rośnie i znika,
+// a do pełnego widoku pasek kolorów zjeżdża na miejsce paska dnia; przy ograniczonym ruchu znika od razu po 0,2 s
+function splashOut(){const sp=document.getElementById('splash');if(!sp||!sp.classList)return;const mm=typeof window!=='undefined'&&window.matchMedia,rm=!!(mm&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)||!!S.still;
+  const db=document.getElementById('dbar'),toDay=S.tab!=='intro'&&!!(db&&db.innerHTML),st=sp.querySelector&&sp.querySelector('.stripes');
+  if(toDay&&st&&db.getBoundingClientRect&&st.getBoundingClientRect&&sp.style&&sp.style.setProperty)sp.style.setProperty('--dy',(db.getBoundingClientRect().top-st.getBoundingClientRect().top+4)+'px');
+  setTimeout(()=>{sp.classList.add(toDay?'to-day':'to-welcome');setTimeout(()=>{sp.classList.add('gone');setTimeout(()=>{if(sp.remove)sp.remove();if(S.tab==='intro'){const h=document.getElementById('wh');if(h&&h.focus)h.focus({preventScroll:true})}},rm?0:250)},rm?0:400)},200)}
 function updToast(){if(!S.onb||S.lite||S.nowe===false||S.updToast||DEMO)return;const u=tourUnseen();if(!u.length)return;S.updToast=true;save();toast(nFun(u.length),{act:'tourstart',arg:'new',label:'Pokaż',ms:12000})}
 const NOWE_L=['Liczba kcal w pasku przełącza: zostaje albo zjedzone z celu.','Makra w pasku otwierają rachunek dnia.','Makra w karcie dania otwierają „Dopasuj danie”.','Dania mają warianty: jedna karta, kilka wersji.','„Mam tylko”: dania na sprzęt, który masz, i szybkie dania bez gotowania.','Ustawienia: wartości typowe w Polsce i „Plan na teraz”.','Powitanie w 3 planszach.'];
 function firstHtml(){return `<details class="fold" data-fold="pierwsze"${OPEN_F.has('pierwsze')?' open':''}><summary>Pierwsze kroki i co nowego</summary><div class="panel" style="padding:4px 16px 12px"><p><button class="btn ghost" data-intro="1">Pokaż powitanie</button></p><p><button class="btn ghost" data-tourstart="all">Przejdź samouczek</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><div class="field"><label for="nowe">Oznaczaj nowe funkcje znakiem NOWE</label><input type="checkbox" class="switch" id="nowe" data-k="nowe" ${S.nowe!==false?'checked':''}></div><h3>Co nowego</h3><ul>${NOWE_L.map(x=>'<li>'+x+'</li>').join('')}</ul></div></details>`}
+// U2c „Twoja sylwetka” (makieta Ustawień v13, zaakceptowana 27.11.2026): ta sama postać co w ilustracjach ćwiczeń (sylwetka.js, wzorzec v33),
+// stoi prosto w profilu; reguły rysunku, nie wiedza o ciele: brzuch z talii do wzrostu, masa i głębokość tułowia z BMI.
+// Ilustracja kierunku, nie prognoza. Ruch: Teraz → Cel w pętli; przy „Bez ruchu”, ograniczonym ruchu albo „Zatrzymaj ruch” dwie postacie obok siebie.
+const SIL_P={tor:0,hd:-2,shN:-10,elN:6,shF:-6,elF:6};
+function silCm(){return num(S.cm)||165}
+function silBelly(k){return Math.max(0,Math.min(1,(k/Math.pow(silCm()/100,2)-19)/14))}
+function silMass(k){return Math.max(0.85,Math.min(1.6,1+0.6*(k/Math.pow(silCm()/100,2)-22)/22))}
+function silGut(w){return Math.max(0,Math.min(1,(w/silCm()-0.40)/0.25))}
+function silRm(){return typeof window!=='undefined'&&!!window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches}
+function silData(){const k0=kg(),w0=lastWaist()||typWaist(),c=silCm(),byW=S.mode==='redukcja'&&S.goalWay==='talia';
+  const k1=S.mode==='utrzymanie'?k0:S.mode==='masa'?k0*1.04:num(S.goal)||k0,w1=byW?Math.min(w0,c/2-0.5):w0*k1/k0;
+  const lab=S.mode==='utrzymanie'?'bez zmian':S.mode==='masa'?fmt1(k0)+' kg → przyrost masy':byW?'talia '+fmt1(w0)+' → '+fmt1(w1)+' cm':fmt1(k0)+' → '+fmt1(k1)+' kg';
+  return {now:{b:silBelly(k0),m:silMass(k0),g:silGut(w0)},goal:{b:silBelly(k1),m:silMass(k1),g:silGut(w1)},lab:'Twoja sylwetka: '+lab,
+    capN:byW?fmt1(w0)+' cm':fmt1(k0)+' kg',capG:byW?fmt1(w1)+' cm':fmt1(k1)+' kg'}}
+function silStill(){return !!S.still||!!S.focus||silRm()}
+function silMove(){return S.silAnim!==false&&!silStill()}
+function silGhost(d){return S.mode!=='utrzymanie'&&Math.abs(d.now.g-d.goal.g)+Math.abs(d.now.m-d.goal.m)>0.01}
+function silHtml(){if(goalErrHtml())return '';const d=silData(),run=silMove(),gh=silGhost(d),fig=(id,l)=>`<svg class="sil-fig" id="${id}" data-k="${id}" role="img" aria-label="${l}"></svg>`;
+  const figs=run?`<div class="sil-st">${fig('silA',d.lab+'. Ilustracja kierunku, nie prognoza wymiarów.')}<span class="sil-cap" aria-hidden="true"><span id="capNow">Teraz ${d.capN}</span><span id="capGoal" style="visibility:hidden">Cel ${d.capG}</span></span></div>`
+    :`<div class="sil-st two">${fig('silNow','Teraz '+(S.goalWay==='talia'&&S.mode==='redukcja'?'talia ':'')+d.capN)}${fig('silGoal','Cel '+(S.goalWay==='talia'&&S.mode==='redukcja'?'talia ':'')+d.capG+(gh?', przerywana linia pokazuje brzuch teraz':''))}<span class="sil-cap2" aria-hidden="true"><span>Teraz</span><span>Cel</span></span></div>`;
+  return `<div class="sil panel">${figs}<div class="sil-t"><b>${d.lab}</b><span class="small muted">${gh?'Linia przerywana: brzuch teraz. ':''}Ilustracja, nie prognoza.</span>${silStill()?'':`<button class="btn ghost small" data-silanim="1">${run?'Zatrzymaj ruch':'Pokaż ruch'}</button>`}</div></div>`}
+let SIL_VB=null,SIL_RAF=0;
+function silY(){return typeof window!=='undefined'&&window.SYL&&typeof document!=='undefined'&&document.createElementNS?window.SYL:null}
+function silFront(Y,b){let pts=null;const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.dataset.k='silTmp';
+  const ex=Object.assign({},Y.EX[0],{extra:(T,g,P,tp)=>{pts=tp.pr.map((q,i)=>[q[0],T(tp.fr[i])]).filter(x=>x[0]>=-0.06&&x[0]<=0.55).map(x=>x[1]);return ''}});
+  Y.drawRaw(svg,Y.P(Object.assign({},SIL_P,{belly:b.b,mass:b.m,gut:b.g})),ex,S.sex==='M'?'m':'k');return pts&&pts.length>1?pts:null}
+function silPath(p){const r=v=>v.toFixed(1);let d='M'+r(p[0][0])+' '+r(p[0][1]);for(let i=0;i<p.length-1;i++){const a=p[i-1]||p[i],b=p[i],c=p[i+1],e=p[i+2]||c;
+  d+='C'+r(b[0]+(c[0]-a[0])/6)+' '+r(b[1]+(c[1]-a[1])/6)+' '+r(c[0]-(e[0]-b[0])/6)+' '+r(c[1]-(e[1]-b[1])/6)+' '+r(c[0])+' '+r(c[1])}return d}
+function silFig(Y,svg,b,gh){if(!svg)return;const fig=S.sex==='M'?'m':'k',o=Y.EX[0].extra,ex=gh?Object.assign({},Y.EX[0],{extra:(T,g,P,tp)=>(o?o(T,g,P,tp):'')+`<path class="ghost" d="${silPath(gh)}" fill="none" stroke="var(--move)" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/>`}):Y.EX[0];
+  const draw=x=>Y.drawRaw(svg,Y.P(Object.assign({},SIL_P,{belly:x.b,mass:x.m,gut:x.g})),ex,fig);
+  if(!SIL_VB||SIL_VB.f!==fig){draw({b:1,m:1.6,g:1});const fb=svg.querySelector('.fb'),bb=fb&&fb.getBBox?fb.getBBox():null;if(bb&&bb.width){const p=0.1;SIL_VB={f:fig,v:`${(bb.x-bb.width*p).toFixed(1)} ${(bb.y-bb.height*p).toFixed(1)} ${(bb.width*(1+2*p)).toFixed(1)} ${((bb.height+4)*(1+p)).toFixed(1)}`}}}
+  draw(b);if(SIL_VB)svg.setAttribute('viewBox',SIL_VB.v)}
+function silDraw(){if(typeof cancelAnimationFrame==='function')cancelAnimationFrame(SIL_RAF);const Y=silY();if(!Y||S.tab!=='set'||!document.getElementById('silNow')&&!document.getElementById('silA'))return;
+  const d=silData(),gh=silGhost(d)?silFront(Y,d.now):null;silFig(Y,document.getElementById('silNow'),d.now);silFig(Y,document.getElementById('silGoal'),d.goal,gh);
+  const el=document.getElementById('silA');if(!el)return;silFig(Y,el,d.now,gh);if(typeof requestAnimationFrame!=='function')return;
+  const cn=document.getElementById('capNow'),cg=document.getElementById('capGoal'),t0=performance.now();let last=0;const mix=e=>({b:d.now.b+(d.goal.b-d.now.b)*e,m:d.now.m+(d.goal.m-d.now.m)*e,g:d.now.g+(d.goal.g-d.now.g)*e});
+  const step=t=>{if(!el.isConnected)return;if(t-last>33){last=t;const c=((t-t0)/4200)%1,u=c<0.4?c/0.4:c<0.6?1:c<0.9?1-(c-0.6)/0.3:0,e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+    silFig(Y,el,mix(e),gh);if(cn&&cg){cn.style.visibility=e>0.5?'hidden':'visible';cg.style.visibility=e>0.5?'visible':'hidden'}}SIL_RAF=requestAnimationFrame(step)};SIL_RAF=requestAnimationFrame(step)}
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
   let h='<div class="dhead"><h2 id="dane">Twoje dane</h2>'+seg([['K','K'],['M','M']],S.sex,'sex','dsex','Płeć: K kobieta, M mężczyzna')+'</div><div class="panel dcells">'+rwHtml('pfh',['age','cm'])+'</div>'
-    +'<div class="panel">'+rwHtml('pf',['kg','waist','goal'])+RW_TIP+'</div>'+locHtml()+goalErrHtml()+goalWayHtml()+planNowHtml()+bmiSetHtml();
+    +'<div class="panel">'+rwHtml('pf',['kg','waist','goal'])+RW_TIP+'</div>'+locHtml()+goalErrHtml()+silHtml()+goalWayHtml()+planNowHtml()+bmiSetHtml();
   h+=dataHtml();
   h+='<h2 id="wpisy">Wpisy</h2>'+seg([['prosty','Prosty'],['skup','Skupienie'],['cala','Cała Miara']],S.focus?'skup':S.lite?'prosty':'cala','view','','Mój dzień')+'<p class="small muted">Skupienie pokazuje jedną rzecz naraz, bez wskazówek i ruchu; dane zostają przy każdym widoku.</p>';
   h+=`<div class="panel"><div class="field"><label for="still">Bez ruchu</label><input type="checkbox" class="switch" id="still" data-k="still" ${S.still?'checked':''}></div></div><p class="small muted">Bez animacji w całej Miarze, a w Skupieniu zawsze.</p>`;
@@ -2653,7 +2697,7 @@ function tileFit(root){if(!root||typeof root.querySelectorAll!=='function'||type
 // Po załadowaniu czcionek szerokość słów jest inna: kolumny kafelków liczone ponownie
 if(typeof document!=='undefined'&&document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>tileFit(document.getElementById('main'))).catch(()=>{});
 if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('resize',()=>{tileFit(document.getElementById('main'));if(TOUR)tourPlace()});document.addEventListener('toggle',()=>tileFit(document.getElementById('main')),true)}
-function render(){if(S.tab!=='day'){LITE_UI.focus='';LITE_UI.say=''}if(S.tab!=='labs')LAB_KEEP=null;if(typeof document!=='undefined'&&document.documentElement&&document.documentElement.dataset){document.documentElement.dataset.pm=S.pmLeft?'l':'r';document.documentElement.dataset.still=(S.still||S.focus)?'1':'';document.documentElement.dataset.nowe=S.nowe===false?'0':''}if(S.focus&&typeof PET!=='undefined'&&PET.drop)PET.drop();startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():DOP?dopHtml():TODAY?todayHtml():'';const db=document.getElementById('dbar');if(db){const bh=barHtml();db.innerHTML=bh;if(document.body&&document.body.classList)document.body.classList.toggle('hasbar',!!bh);navH()}}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');if(S.focus){const mt=skupMain(S.tab);if(mt)SKUP.fold(document.getElementById('main'),mt,'skupmore-'+S.tab,OPEN_F.has('skupmore-'+S.tab),'Więcej na tym ekranie')}if(typeof WPISY!=='undefined')WPISY.mount(document.getElementById('main'),{done:id=>{save();renderKeep((id&&document.getElementById(id))||document.activeElement);liteAfter()},say:t=>{const sr=document.getElementById('sr');if(sr)sr.textContent=t}});tileLabels(document.getElementById('main'));tileLabels(document.getElementById('sheet'));{const tw=document.getElementById('tour');if(tw){tw.innerHTML=TOUR?tourHtml():'';if(tw.classList&&tw.classList.toggle)tw.classList.toggle('on',!!TOUR);if(TOUR)tourPlace()}}PET.flush()}
+function render(){if(S.tab!=='day'){LITE_UI.focus='';LITE_UI.say=''}if(S.tab!=='labs')LAB_KEEP=null;if(typeof document!=='undefined'&&document.documentElement&&document.documentElement.dataset){document.documentElement.dataset.pm=S.pmLeft?'l':'r';document.documentElement.dataset.still=(S.still||S.focus)?'1':'';document.documentElement.dataset.nowe=S.nowe===false?'0':''}if(S.focus&&typeof PET!=='undefined'&&PET.drop)PET.drop();startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():DOP?dopHtml():TODAY?todayHtml():'';const db=document.getElementById('dbar');if(db){const bh=barHtml();db.innerHTML=bh;if(document.body&&document.body.classList)document.body.classList.toggle('hasbar',!!bh);navH()}}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo">'+(DEMO_N?`<details class="demochk" data-fold="demochk"${OPEN_F.has('demochk')?' open':''}><summary><b>Scenariusz: ${SCEN[DEMO_N].t}</b></summary><p class="small">Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.</p></details>`:'<span><b>Tryb pokazowy</b>, nic się nie zapisuje</span>')+'<button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');if(S.focus){const mt=skupMain(S.tab);if(mt)SKUP.fold(document.getElementById('main'),mt,'skupmore-'+S.tab,OPEN_F.has('skupmore-'+S.tab),'Więcej na tym ekranie')}if(typeof WPISY!=='undefined')WPISY.mount(document.getElementById('main'),{done:id=>{save();renderKeep((id&&document.getElementById(id))||document.activeElement);liteAfter()},say:t=>{const sr=document.getElementById('sr');if(sr)sr.textContent=t}});tileLabels(document.getElementById('main'));tileLabels(document.getElementById('sheet'));{const tw=document.getElementById('tour');if(tw){tw.innerHTML=TOUR?tourHtml():'';if(tw.classList&&tw.classList.toggle)tw.classList.toggle('on',!!TOUR);if(TOUR)tourPlace()}}if(S.tab==='set')silDraw();PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -2869,6 +2913,7 @@ document.addEventListener('click',e=>{
   else if(d.unlocklater){const t=new Date();t.setDate(t.getDate()+7);S.unlockAt=todayKey();S.unlockSnooze=keyOf(t)}
   else if(d.welnext||d.welskip){S.wel=d.welskip?WEL.length-1:Math.min(WEL.length-1,(S.wel|0)+1);save();render();dopFocus('#wh');return}
   else if(d.weldane){S.wel=null;save();render();dopFocus('#main h2');return}
+  else if(d.silanim){S.silAnim=!silMove();save();renderKeep(document.activeElement);return}
   else if(d.tourstart){tourStart(d.tourstart==='new'?tourUnseen():TOUR_ALL);return}
   else if(d.tournext){if(TOUR){TOUR.i=Math.min(TOUR.k.length-1,TOUR.i+1);render();dopFocus('#tbh')}return}
   else if(d.tourend){tourEnd();return}
@@ -3074,6 +3119,7 @@ if(typeof location!=='undefined'&&S.onb&&!impFromHash(location.hash)&&quickFromH
 if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('hashchange',()=>{if(!S.onb)return;if(impFromHash(location.hash))render();else if(quickFromHash(location.hash)){render();quickFocus()}});
 render();
 updToast();
+splashOut();
 if(QUICK_PENDING){QUICK_PENDING=false;quickFocus()}
 if(!DEMO)chInit();
 // Automatyczna wysyłka kopii dla rady po starcie (bez blokowania widoku)

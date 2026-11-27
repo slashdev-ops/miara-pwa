@@ -14,6 +14,7 @@ const ASSETS = [
   './sygnaly.js',
   './wpisy.js',
   './skupienie.js',
+  './sylwetka.js',
   './sw-register.js',
   './manifest.webmanifest',
   './brand/miara-favicon.svg?v=2',
