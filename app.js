@@ -1,7 +1,9 @@
 // ---------- Dane: produkty (wartości na 100 g, orientacyjne, typowe wartości z tabel) ----------
 // Błonnik (fib, g/100 g): duńska baza Frida 6.1 (DTU, CC BY 4.0), hummus z CoFID 2021; mieszanka warzyw bez wartości w obu tabelach.
 // Frida FoodID: kurczak_piers 907, kurczak_udko 882, indyk_piers 732, indyk_miel 1613, dorsz 72, losos 30, makrela 1220, tunczyk 825, jajko 1663, twarog 1678, skyr 1693, jogurt 1597, mleko 33, tofu 272, soczewica 1799, ciecierzyca 1812, fasola 1810, kasza_gr 67, bulgur 283, jaglana 385, kasza_jecz 1730, ryz 156, ziemniaki 4, bataty 714, platki 480, chleb 379, makaron 377, brokul 17, fasolka 764, szpinak 50, kapusta 26, papryka 38, pomidor 52, pom_puszka 596, ogorek 388, cukinia 56, cebula 716, marchew 24, pieczarki 961, rzodkiewka 39, oliwa 1467, orzechy 647, siemie 149, maslo_orz 1162, hummus CoFID 13-556, owoce 1831, jablko 2, banan 3, mandarynka 560
-// CoFID 2021 Food Code: bajgiel 11-970, tortilla 11-925, ciabatta 11-969, feta 12-525, serek_wiejski 12-539, burak 13-633 (gotowany w wodzie), rukola 13-522 (węglowodany „Tr” = 0), borowki 14-325; błonnik AOAC (odczyt 27.11.2026).
+// Kolejność źródeł (decyzja właściciela 27.11.2026): Frida (UE) najpierw, CoFID (Wielka Brytania) tylko gdy Frida nie ma produktu w tej postaci, USDA w ostateczności.
+// Frida FoodID (P3, plik FCDB_6.1_Dataset.xlsx, odczyt 27.11.2026): ciabatta 1521 (pieczywo pszenne białe), feta 73 (40% tł. w s.m.), serek_wiejski 517 (20% tł. w s.m.), rukola 1492, borowki 1848; węglowodany przyswajalne.
+// CoFID 2021 Food Code (brak w Fridzie): bajgiel 11-970, tortilla 11-925, burak 13-633 (gotowany w wodzie; Frida ma tylko surowy i z puszki); błonnik AOAC.
 // s = krótka nazwa przy daniu, g = co składnik wnosi (reguła aplikacji): p/c/f = makro z największą liczbą gramów na 100 g, v = warzywa i owoce (do 100 kcal).
 const ING={
   kurczak_piers:{n:'Pierś z kurczaka',k:110,p:23,f:1.5,c:0,fib:0,chip:'Kurczak',s:'kurczak',g:'p'},
@@ -56,12 +58,12 @@ const ING={
   mandarynka:{n:'Mandarynka',k:53,p:0.8,f:0.3,c:13,fib:1.4,s:'mandarynka',g:'v'},
   bajgiel:{n:'Bajgiel pszenny',k:273,p:10,f:1.8,c:57.8,fib:3,chip:'Pieczywo',s:'bajgiel',g:'c'},
   tortilla:{n:'Tortilla pszenna',k:285,p:7.8,f:5.7,c:53.9,fib:3.6,chip:'Pieczywo',s:'tortilla',g:'c'},
-  ciabatta:{n:'Ciabatta',k:271,p:10.2,f:3.9,c:52,fib:3.3,chip:'Pieczywo',s:'ciabatta',g:'c'},
-  feta:{n:'Feta',k:250,p:15.6,f:20.2,c:1.5,fib:0,s:'feta',g:'f'},
-  serek_wiejski:{n:'Serek wiejski',k:103,p:9.4,f:6,c:3.1,fib:0,s:'serek wiejski',g:'p'},
+  ciabatta:{n:'Ciabatta lub pieczywo pszenne',k:262.2,p:8.4,f:3.6,c:47.4,fib:3.2,chip:'Pieczywo',s:'ciabatta',g:'c'},
+  feta:{n:'Feta',k:258,p:17.4,f:20.4,c:0,fib:0,s:'feta',g:'f'},
+  serek_wiejski:{n:'Serek wiejski',k:98.9,p:13.3,f:4.2,c:1.6,fib:0,s:'serek wiejski',g:'p'},
   burak:{n:'Burak gotowany (z opakowania)',k:53,p:1.6,f:0.3,c:11.6,fib:2.6,s:'burak',g:'v'},
-  rukola:{n:'Rukola',k:18,p:3.6,f:0.4,c:0,fib:1.7,s:'rukola',g:'v'},
-  borowki:{n:'Borówki',k:40,p:0.9,f:0.2,c:9.1,fib:1.5,s:'borówki',g:'v'}
+  rukola:{n:'Rukola',k:21.4,p:3.3,f:0.3,c:0.1,fib:2.4,s:'rukola',g:'v'},
+  borowki:{n:'Borówki',k:54.2,p:0.5,f:0.2,c:11.2,fib:2.7,s:'borówki',g:'v'}
 };
 
 // ---------- Dane: posiłki. Trzeci element 1 = źródło węglowodanów, skalowane pod trening ----------
@@ -2191,7 +2193,7 @@ function renderMealList0(){
       <div class="mnum"><span><b>${fmt(x.k)}</b> kcal</span>${macChips(x)}</div>
       ${propBar(x)}
       ${isOpen?`<div class="mdet"><ul>${x.items.map(i=>`<li><span>${i.n}</span><span>${fmt(Math.round(i.g/5)*5)} g</span></li>`).join('')}</ul><p class="small">${m.how}</p><p class="small muted">${leftTxt(x.k)} ${fmt(x.k)} kcal to ok. ${fmt(x.k/walkPerMin())} min spaceru.</p><p>${eatBtn(m.id,'Dodaj do dnia')} <button class="btn ghost" data-copy="${m.id}">Kopiuj składniki do Fitatu</button></p>${eatLine(m.id)}</div>`:''}
-    </article>`}).join('')+(L.length>6?'</details>':'')+fold('mlinfo','Skąd te wartości','<p class="small muted">Wartości odżywcze orientacyjne, z typowych tabel składu. Gramatury produktów suchych (kasza, ryż, makaron, soczewica) przed ugotowaniem. Kasza i ryż z mikrofali: 1 część na 2 części wody, duża miska pod przykryciem, ok. 12-20 min na średniej mocy z mieszaniem; czas zależy od mikrofali, więc przy pierwszym razie sprawdź miękkość.</p>'+'<p class="small muted">Błonnik (Bł) z duńskiej bazy składu żywności Frida 6.1, hummus i składniki szybkich dań (bajgiel, tortilla, ciabatta, feta, serek wiejski, burak, rukola, borówki) z brytyjskiej CoFID 2021; polskie tabele składu nie są dostępne jako otwarte dane. Mrożona mieszanka warzyw nie ma wartości błonnika w żadnej z tych tabel, dlatego przy daniach z nią jest znak +: błonnika jest co najmniej tyle. Oznaczenia „Źródło błonnika” (od 1,5 g na 100 kcal) i „Dużo błonnika” (od 3 g na 100 kcal) to progi z rozporządzenia UE, tu liczone na porcję.</p>'+'<p class="small muted">Błonnik rozpuszczalny (owies, strączki, siemię) spowalnia opróżnianie żołądka i zmniejsza skok cukru po posiłku; pokazało to badanie na 40 osobach po jednym posiłku. EFSA uznaje 25 g błonnika dziennie za ilość wystarczającą dla prawidłowej pracy jelit, a w metaanalizach największe zmniejszenie ryzyka chorób serca i cukrzycy typu 2 wiązało się z 25-29 g dziennie.</p>'+srcHtml(['frida','cofid','eu1924','fibGE','efsaFib','reynolds']));
+    </article>`}).join('')+(L.length>6?'</details>':'')+fold('mlinfo','Skąd te wartości','<p class="small muted">Wartości odżywcze orientacyjne, z typowych tabel składu. Gramatury produktów suchych (kasza, ryż, makaron, soczewica) przed ugotowaniem. Kasza i ryż z mikrofali: 1 część na 2 części wody, duża miska pod przykryciem, ok. 12-20 min na średniej mocy z mieszaniem; czas zależy od mikrofali, więc przy pierwszym razie sprawdź miękkość.</p>'+'<p class="small muted">Błonnik (Bł) z duńskiej bazy składu żywności Frida 6.1, hummus, bajgiel, tortilla i gotowany burak z brytyjskiej CoFID 2021 (brak w Fridzie); polskie tabele składu nie są dostępne jako otwarte dane. Mrożona mieszanka warzyw nie ma wartości błonnika w żadnej z tych tabel, dlatego przy daniach z nią jest znak +: błonnika jest co najmniej tyle. Oznaczenia „Źródło błonnika” (od 1,5 g na 100 kcal) i „Dużo błonnika” (od 3 g na 100 kcal) to progi z rozporządzenia UE, tu liczone na porcję.</p>'+'<p class="small muted">Błonnik rozpuszczalny (owies, strączki, siemię) spowalnia opróżnianie żołądka i zmniejsza skok cukru po posiłku; pokazało to badanie na 40 osobach po jednym posiłku. EFSA uznaje 25 g błonnika dziennie za ilość wystarczającą dla prawidłowej pracy jelit, a w metaanalizach największe zmniejszenie ryzyka chorób serca i cukrzycy typu 2 wiązało się z 25-29 g dziennie.</p>'+srcHtml(['frida','cofid','eu1924','fibGE','efsaFib','reynolds']));
 }
 
 function renderTrain(){

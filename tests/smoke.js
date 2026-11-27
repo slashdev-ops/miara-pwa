@@ -3450,10 +3450,16 @@ tryc('P3 składniki: każdy ma krótką nazwę i grupę; grupa B/T/W to makro z 
   if (i.g === 'v') return i.k <= 100;
   const top = ['p', 'c', 'f'].sort((a, b) => i[b] - i[a])[0]; return GR[i.g] === top;
 }));
-tryc('P3 składniki: nowe z CoFID 2021 z wartościami z tabeli (bajgiel 11-970, burak 13-633, feta 12-525, tortilla 11-925, rukola 13-522, borówki 14-325, serek wiejski 12-539, ciabatta 11-969)', () => {
-  const E = { bajgiel: [273, 10, 1.8, 57.8, 3], burak: [53, 1.6, 0.3, 11.6, 2.6], feta: [250, 15.6, 20.2, 1.5, 0], tortilla: [285, 7.8, 5.7, 53.9, 3.6], rukola: [18, 3.6, 0.4, 0, 1.7], borowki: [40, 0.9, 0.2, 9.1, 1.5], serek_wiejski: [103, 9.4, 6, 3.1, 0], ciabatta: [271, 10.2, 3.9, 52, 3.3] };
-  return Object.entries(E).every(([id, [k, p, f, c, fib]]) => { const i = T.ING[id]; return i && i.k === k && i.p === p && i.f === f && i.c === c && i.fib === fib; })
-    && /CoFID 2021 Food Code: [^\n]*bajgiel 11-970/.test(code);
+tryc('P3 składniki: Frida najpierw (UE), CoFID tylko gdy Frida nie ma produktu w tej postaci; wartości z tabel', () => {
+  const E = { feta: [258, 17.4, 20.4, 0, 0], serek_wiejski: [98.9, 13.3, 4.2, 1.6, 0], rukola: [21.4, 3.3, 0.3, 0.1, 2.4], borowki: [54.2, 0.5, 0.2, 11.2, 2.7], ciabatta: [262.2, 8.4, 3.6, 47.4, 3.2],
+    bajgiel: [273, 10, 1.8, 57.8, 3], burak: [53, 1.6, 0.3, 11.6, 2.6], tortilla: [285, 7.8, 5.7, 53.9, 3.6] };
+  return Object.entries(E).every(([id, [k, p, f, c, fib]]) => { const i = T.ING[id]; return i && i.k === k && i.p === p && i.f === f && i.c === c && i.fib === fib; });
+});
+tryc('źródła: każdy składnik ma w komentarzu bazę i kod (Frida FoodID, CoFID Food Code albo USDA), poza mieszanką warzyw opisaną wprost', () => {
+  const src = code.split('\n').filter((l) => /^\/\/ .*(Frida FoodID|CoFID 2021 Food Code|USDA SR Legacy)/.test(l)).join(' ');
+  const miss = Object.keys(T.ING).filter((k) => k !== 'warzywa' && !new RegExp('(^|[ ,(])' + k + ' (\\d+|CoFID \\d+-\\d+|\\d+-\\d+)').test(src));
+  if (miss.length) console.log('  bez źródła: ' + miss.join(', '));
+  return !miss.length;
 });
 tryc('P3 główne składniki: do 4, od największego udziału w kcal, bez dodatków poniżej 15 g; warzywo dopisane, gdy nie ma go w pierwszych trzech', () => {
   const g = (id) => sandbox.mainIng(T.MEALS.find((m) => m.id === id)).map((x) => x.id);
