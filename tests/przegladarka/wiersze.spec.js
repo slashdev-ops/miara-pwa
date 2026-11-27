@@ -19,7 +19,7 @@ async function open(page, w, scheme, hash = '#demo-pokaz') {
 const today = () => new Date().toLocaleDateString('sv-SE');
 
 // Pomiar każdego wiersza .wp-f na ekranie: wartość, − i + w jednej linii po prawej, cele dotyku, brak wyjścia poza ekran
-const measure = (page) => page.evaluate(() => [...document.querySelectorAll('#main .wp-f')].filter((x) => x.offsetParent).map((q) => {
+const measure = (page) => page.evaluate(() => [...document.querySelectorAll('#main .wp-f')].filter((x) => x.offsetParent && !x.closest('.dcells')).map((q) => {
   const r = (el) => el.getBoundingClientRect(), v = q.querySelector('.wp-val'), [mi, pl] = q.querySelectorAll('.wp-sq'), rg = q.querySelector('.wp-range'), lab = q.querySelector('.wp-lab');
   const V = r(v), M = r(mi), P = r(pl);
   return { lab: lab.textContent, vR: V.right, vH: V.height, vW: V.width, vMid: V.top + V.height / 2, mL: M.left, mW: M.width, mH: M.height, pW: P.width, pH: P.height, pR: P.right, pMid: P.top + P.height / 2,
@@ -32,7 +32,7 @@ const GROUPS = [
   ['trening', async (page) => page.evaluate(() => { S.tab = 'train'; SHEET = false; render(); }), ['Czas z zegarka', 'Kalorie z zegarka', 'Czas treningu']],
   ['pomiary', async (page) => page.evaluate(() => { S.tab = 'day'; S.lite = false; SHEET = false; OPEN_F.add('obwody'); OPEN_F.add('tanita'); OPEN_F.add('sprawnosc'); render(); }),
     ['Talia', 'Biodra', 'Udo', 'Nadgarstek', 'Kostka', /^Tłuszcz \(/, /^FFM \(/, /^ECW\/TBW \(/, /^BMR \(/, 'VO2max (zegarek)', 'Tętno spoczynkowe', 'Tętno maksymalne (jeśli zmierzone)']], // skład ciała: nazwa urządzenia tylko w wersji prywatnej
-  ['ustawienia', async (page) => page.evaluate(() => { S.tab = 'set'; SHEET = false; render(); }), ['Waga', 'Wzrost', 'Wiek', 'Waga docelowa']],
+  ['ustawienia', async (page) => page.evaluate(() => { S.tab = 'set'; SHEET = false; render(); }), ['Waga', 'Talia', 'Waga docelowa']],
   ['start', async (page) => page.evaluate(() => { S.onb = false; S.tab = 'intro'; S.introStep = 0; S.touched = {}; SHEET = false; render(); }), ['Waga', 'Wzrost', 'Wiek', 'Waga docelowa']],
 ];
 for (const [name, go, labels] of GROUPS) for (const w of [320, 390]) for (const scheme of ['light', 'dark']) {
@@ -131,7 +131,8 @@ test('profil: ekran startowy pokazuje wartości startowe wyszarzone; suwak wzros
   await page.waitForTimeout(100);
   for (const id of ['#f_kg', '#f_cm', '#f_age', '#f_goal']) { await page.locator(id).click(); await page.keyboard.press('Enter'); await page.waitForTimeout(80); }
   expect(await page.evaluate(() => JSON.stringify(S.touched || {}))).toBe('{}');
-  for (const id of ['#pf_dkg', '#pf_dcm', '#pf_dage', '#pf_dgoal']) await expect(page.locator(id)).toHaveText('wartość startowa');
+  for (const id of ['#pf_dcm', '#pf_dage', '#pf_dgoal']) await expect(page.locator(id)).toHaveText('wartość startowa');
+  await expect(page.locator('#pf_dkg')).toHaveText('typowo w Polsce, wpisz swoją');
   await page.locator('#f_age').click();
   await page.keyboard.type('35');
   await page.keyboard.press('Enter');
@@ -161,6 +162,19 @@ test('trend: talia i FFM z punktami i średnią 4 tygodni bez pasa wahania; waga
     await expect(svg.locator('text.wp-avgl')).toHaveText('średnia 4 tygodni');
     expect(await svg.locator('circle').count()).toBeGreaterThanOrEqual(3);
   }
+  expect(await noHScroll(page)).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+// U2a (27.11.2026, makieta Ustawień v13): wiek i wzrost w nagłówku „Twoje dane” obok płci jako dwie komórki „dotknij i wpisz” w jednym rzędzie
+for (const w of [320, 390]) test(`Ustawienia ${w}px: wiek i wzrost w jednym rzędzie, przyciski wartości co najmniej 44 px, bez przewijania w bok`, async ({ page }) => {
+  const errors = await open(page, w, 'light');
+  await page.evaluate(() => { S.tab = 'set'; SHEET = false; render(); });
+  const c = await page.evaluate(() => [...document.querySelectorAll('.dcells .wp-val')].map((v) => { const r = v.getBoundingClientRect(); return { t: r.top, h: r.height, w: r.width, x: r.right }; }));
+  expect(c.length).toBe(2);
+  expect(Math.abs(c[0].t - c[1].t)).toBeLessThanOrEqual(2);
+  for (const x of c) { expect(x.h).toBeGreaterThanOrEqual(44); expect(x.w).toBeGreaterThanOrEqual(44); expect(x.x).toBeLessThanOrEqual(w); }
+  await expect(page.locator('.dhead [data-sex="K"]')).toBeVisible();
   expect(await noHScroll(page)).toBe(true);
   expect(errors).toEqual([]);
 });

@@ -722,4 +722,14 @@ body.hasbar .toast{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
 .mtag.pw{color:var(--ink);text-decoration:underline 2px var(--green);text-underline-offset:3px}
 .mc.pw{box-shadow:inset 0 -3px 0 var(--c)}
 .rech{margin:12px 8px 6px}
+/* U2a Twoje dane: płeć, wiek i wzrost w jednym rzędzie; wiek i wzrost jako komórki „dotknij i wpisz” (bez suwaka i − +) */
+.dhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dhead h2{margin-right:auto}
+.dhead .dsex{margin:0}
+.dcells{display:grid;grid-template-columns:1fr 1fr}
+.dcells .wp-f + .wp-f{border-top:0;border-left:1px solid var(--line)}
+.dcells .wp-pm{display:none}
+.dcells .wp-r{display:grid;grid-template-columns:minmax(0,1fr);justify-items:start}
+.dcells .wp-r::before{display:none}
+.dcells .wp-ctl{margin-left:0}
 

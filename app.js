@@ -1033,11 +1033,12 @@ function msRows(){const k=todayKey(),m=(S.meas||{})[k]||{},sx=S.sex==='M'?1:0,F=
 // Profil: ustawienia, nie pomiar dnia. Wartość startowa (isStart) wyszarzona z podpisem „wartość startowa”; zmiana albo wpis bez zmiany ustawia S.touched
 const PF_U={kg:'kg',goal:'kg',cm:'cm',age:'lat'};
 // Pusta wartość z dawnych danych (np. S.kg '') nie jest pokazywana jako 0: wyszarzona wartość startowa jak przy nieustawionej
-function pfRows(){const b=START[S.sex]||START.K,fb={kg:b.kg,cm:b.cm,age:b.age,goal:Math.round((num(S.kg)||b.kg)*0.95*2)/2},one=(key,label,step,range,coarse)=>{const v=num(S[key]),ok=v>0;
+function pfRows(compact){const b=START[S.sex]||START.K,fb={kg:typKg(),cm:b.cm,age:b.age,goal:Math.round((num(S.kg)||b.kg)*0.95*2)/2},one=(key,label,step,range,coarse)=>{const v=num(S[key]),ok=v>0;if(compact)range=undefined;
     return rwSpec({key,id:'f_'+key,label,unit:PF_U[key],step,range,coarse,path:key,today:isStart(key)||!ok?null:v,def:ok?v:fb[key],
-    after:key==='cm'?()=>muscleToast():null,x:{subStart:'wartość startowa',greyLab:''}})};
-  return [one('kg','Waga',.1),one('cm','Wzrost',1,[140,210],5),one('age','Wiek',1,[16,90],5),one('goal','Waga docelowa',.5)]}
-function rowSpecs(g){return g==='tr'?trRows():g==='ms'?msRows():g==='pf'?pfRows():[]}
+    after:key==='cm'?()=>muscleToast():null,x:{subStart:key==='kg'?TYP_SUB:'wartość startowa',greyLab:''}})};
+  const tk=todayKey(),tw=num((S.meas[tk]||{}).waist),lw=lastWaist(),waist=rwSpec({key:'waist',id:'f_waist',label:'Talia',unit:'cm',step:.5,range:compact?undefined:[55,150],coarse:5,path:'meas.'+tk+'.waist',today:tw>0?tw:null,def:lw||typWaist(),x:{subStart:lw?'ostatni pomiar':TYP_SUB,greyLab:''}});
+  return [one('kg','Waga',.1),one('cm','Wzrost',1,[140,210],5),one('age','Wiek',1,[16,90],5),one('goal','Waga docelowa',.5),waist]}
+function rowSpecs(g){return g==='tr'?trRows():g==='ms'?msRows():g==='pf'?pfRows():g==='pfh'?pfRows(true):[]}
 const rwHtml=(g,keys)=>{const R=rowSpecs(g);return WPISY.rows(g,todayKey(),keys.map(k=>R.find(x=>x.key===k)),'wp-f')};
 // Jeden podpis na ramkę zamiast podpowiedzi w każdym wierszu
 const RW_TIP='<p class="small muted wp-pc">Dotknij liczby, aby ją wpisać.</p>';
@@ -1449,7 +1450,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
-const DEF={petNames:1,focus:false,still:false,frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',goalRule:null,muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
+const DEF={petNames:1,focus:false,still:false,frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',goalRule:null,loc:'all',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p',noeq:[]},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,lite:false,unlock:[],unlockAt:'',unlockSnooze:'',body:false,once:false,toastLen:'std',pmLeft:false,vibr:true,ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},shopDay:null,stores:[],promos:[],sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
@@ -1459,6 +1460,17 @@ function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.is
 // aplikacji, nie średnia (GUS 2019 podaje dla dorosłych tylko rozkład BMI). Cel startowy: 5% mniej niż waga (NHLBI: 5-10% w ok. 6 miesięcy).
 // Nieustawione wartości nie są potwierdzonymi danymi: podpis „wartość startowa”, krok „Sprawdź swoje dane” niezaliczony.
 const START={K:{kg:70,cm:165,age:35},M:{kg:85,cm:178,age:35}},START_K=['kg','cm','age','goal'];
+// Wartości typowe w Polsce (U2a, mapa powiązań 67): waga = mediana BMI × wzrost²; BMI z Eurostat EHIS 2019 (hlth_ehis_bm1u, Polska) według płci,
+// grupy wieku (18-24 … 75+) i stopnia urbanizacji (ogółem, miasto, miasteczko, wieś); mediany z interpolacji odsetków w przedziałach (reguła aplikacji).
+// Talia: WOBASZ II (Stepaniak i in. 2016), mediana dla płci. „Typowe” nie znaczy „zdrowe”: mediany są w nadwadze.
+const AGE_G=[18,25,35,45,55,65,75];
+const BMI_PL={K:{all:[22.0,22.8,23.8,25.6,27.0,27.6,26.8],mia:[22.4,22.6,23.6,24.9,26.9,27.4,26.6],mst:[21.8,22.9,24.2,25.6,27.2,27.5,26.8],wies:[21.8,23.0,23.9,26.0,26.9,27.9,27.1]},
+  M:{all:[23.3,26.0,27.0,27.6,27.6,27.6,26.8],mia:[23.1,25.2,26.7,27.4,27.6,27.3,26.6],mst:[23.7,26.3,27.0,27.6,28.0,27.9,26.8],wies:[23.3,26.4,27.3,27.8,27.4,27.7,26.9]}};
+const WAIST_PL={K:86.4,M:96.8};
+function typKg(){const a=num(S.age)||35;let i=0;AGE_G.forEach((g,n)=>{if(a>=g)i=n});const t=BMI_PL[S.sex==='M'?'M':'K'],r=t[S.loc]||t.all;return Math.round(r[i]*Math.pow((num(S.cm)||165)/100,2)*10)/10}
+const typWaist=()=>Math.round(WAIST_PL[S.sex==='M'?'M':'K']*2)/2;
+const TYP_SUB='typowo w Polsce, wpisz swoją';
+function locHtml(){if(!isStart('kg'))return '';return '<div class="chips" role="group" aria-label="Gdzie mieszkasz (wartości typowe z Polski)">'+[['mia','Miasto'],['mst','Miasteczko'],['wies','Wieś']].map(([k,l])=>`<button class="chip${S.loc===k?' inc':''}" data-loc="${k}" aria-pressed="${S.loc===k}">${l}</button>`).join('')+'</div>'+srcHtml(['ehisPl','wobasz'])}
 const isStart=k=>!(S.touched||{})[k];
 // Cel kalorii liczony z wartości startowych (waga, wzrost lub wiek): podpis przy każdym pokazaniu celu
 const APX_T='cel w przybliżeniu, wpisz wagę, wzrost i wiek',tgtApx=()=>['kg','cm','age'].some(isStart)?APX_T:'';
@@ -1573,7 +1585,7 @@ function goalHint(){return S.mode!=='redukcja'||!isStart('goal')?'':'<p class="s
 function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
 // S.goalRule = {pct} albo {bmi}: cel pochodny z wagi i wzrostu (L15, 27.11.2026); ręczna zmiana celu usuwa regułę
 function goalOfRule(r){return r.pct?goalOf(r.pct):Math.round(r.bmi*Math.pow((num(S.cm)||165)/100,2)*2)/2}
-function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(lowBmi()?num(S.kg):Math.round(num(S.kg)*0.95*2)/2,.5);else if(S.goalRule&&(S.goalRule.pct||S.goalRule.bmi))S.goal=stpFmt(goalOfRule(S.goalRule),.5)}
+function startSync(){const b=START[S.sex]||START.K;['cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('kg'))S.kg=stpFmt(typKg(),.1);if(isStart('goal'))S.goal=stpFmt(lowBmi()?num(S.kg):Math.round(num(S.kg)*0.95*2)/2,.5);else if(S.goalRule&&(S.goalRule.pct||S.goalRule.bmi))S.goal=stpFmt(goalOfRule(S.goalRule),.5)}
 // Rodzaj zwierzaka z kopii: tylko znane gatunki (stare kaczka zostaje kaczuszką), nieznany to gąska
 function petFix(s){if(s&&s.pet&&typeof s.pet==='object'&&!PET.kinds().includes(s.pet.kind))s.pet.kind='gaska';return s}
 function syFix(s){s=petFix(suppFix(s));s=promoFix(s,todayKey());try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
@@ -2107,6 +2119,8 @@ const SRC={
   reicks:['https://pubmed.ncbi.nlm.nih.gov/28958671/','Reicks 2018 (nauka gotowania)'],
   frida:['https://doi.org/10.11583/DTU.32312844','Duńska baza składu żywności Frida 6.1 (DTU)'],
   cofid:['https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid','CoFID 2021 (McCance i Widdowson)'],
+  ehisPl:['https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/hlth_ehis_bm1u','Eurostat EHIS 2019: BMI w Polsce według płci, wieku i miejsca zamieszkania'],
+  wobasz:['https://pubmed.ncbi.nlm.nih.gov/27535012/','Stepaniak i in. 2016 (WOBASZ II): talia w Polsce'],
   efsaFib:['https://www.efsa.europa.eu/en/press/news/nda100326','EFSA 2010: błonnik 25 g dziennie'],
   eu1924:['https://eur-lex.europa.eu/legal-content/PL/TXT/HTML/?uri=CELEX:02006R1924-20141213','Rozporządzenie UE 1924/2006: progi błonnika'],
   fibGE:['https://pubmed.ncbi.nlm.nih.gov/24901089/','Yu i in. 2014: błonnik a opróżnianie żołądka'],
@@ -2465,8 +2479,9 @@ function nextHtml(cur){const g=guideActive()?guideSteps().find(x=>!x.done):null,
   return `<p class="nextbar"><button class="btn" data-${a}="${v}">${t}</button></p>`}
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
-  let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+rwHtml('pf',['kg','cm','age','goal'])+RW_TIP+'</div>'+goalErrHtml()+goalWayHtml()+bmiSetHtml();
-  h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex','','Płeć')+dataHtml();
+  let h='<div class="dhead"><h2 id="dane">Twoje dane</h2>'+seg([['K','K'],['M','M']],S.sex,'sex','dsex','Płeć: K kobieta, M mężczyzna')+'</div><div class="panel dcells">'+rwHtml('pfh',['age','cm'])+'</div>'
+    +'<div class="panel">'+rwHtml('pf',['kg','waist','goal'])+RW_TIP+'</div>'+locHtml()+goalErrHtml()+goalWayHtml()+bmiSetHtml();
+  h+=dataHtml();
   h+='<h2 id="wpisy">Wpisy</h2>'+seg([['prosty','Prosty'],['skup','Skupienie'],['cala','Cała Miara']],S.focus?'skup':S.lite?'prosty':'cala','view','','Mój dzień')+'<p class="small muted">Skupienie pokazuje jedną rzecz naraz, bez wskazówek i ruchu; dane zostają przy każdym widoku.</p>';
   h+=`<div class="panel"><div class="field"><label for="still">Bez ruchu</label><input type="checkbox" class="switch" id="still" data-k="still" ${S.still?'checked':''}></div></div><p class="small muted">Bez animacji w całej Miarze, a w Skupieniu zawsze.</p>`;
   h+='<h2 id="komunikaty">Komunikaty</h2>'+seg([['std','Zwykły czas'],['long','Dłużej'],['stay','Do zamknięcia']],S.toastLen||'std','toastlen','','Czas wyświetlania komunikatów')+'<p class="small muted">Jak długo widać dymek po zapisie.</p>';
@@ -2803,6 +2818,7 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.goalway){S.goalWay=d.goalway}
   else if(d.bmicut){S.bmiCut=d.bmicut}
   else if(d.goalbmi){S.goalRule={bmi:+d.goalbmi};S.goal=stpFmt(goalOfRule(S.goalRule),.5);(S.touched=S.touched||{}).goal=true}
+  else if(d.loc){S.loc=S.loc===d.loc?'all':d.loc;save();render();dopFocus(`[data-loc="${d.loc}"]`);return}
   else if(d.goalpct){S.goalRule={pct:+d.goalpct};S.goal=stpFmt(goalOf(+d.goalpct),.5);(S.touched=S.touched||{}).goal=true}
   else if(d.kcalset){const [id,v]=d.kcalset.split(':'),el=document.getElementById(id);if(el){el.value=v;if(el.focus)el.focus()}return}
   else if(d.revsave){const g=id=>document.getElementById(id).value.trim();S.reviews=S.reviews||{};S.reviews[reviewKey()]={a:g('r_a'),b:g('r_b'),c:g('r_c'),d:todayKey()};S.tab='day';toast('Zapisano przegląd');window.scrollTo(0,0)}

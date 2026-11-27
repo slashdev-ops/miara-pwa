@@ -200,7 +200,7 @@ tryc('tryb demo: save() nie zapisuje', () => { let n = 0; const o = sandbox.loca
 
 // Poprawki po przeglądzie końcowym (I1-I5)
 const PETA = { kind: 'gaska', name: 'A', since: '2026-11-01' }, REV = { r: { a: 'x', d: '2026-11-01' } };
-const CLEAN = () => ({ days: {}, swaps: {}, meas: {}, hab: {}, urges: {}, gut: {}, reviews: {}, mode: 'redukcja', petCeleb: null, krok: null, goalRule: null }), NOREV = SEEN_ALL.filter((x) => x !== 'review1');
+const CLEAN = () => ({ days: {}, swaps: {}, meas: {}, hab: {}, urges: {}, gut: {}, reviews: {}, mode: 'redukcja', petCeleb: null, krok: null, goalRule: null, loc: 'all' }), NOREV = SEEN_ALL.filter((x) => x !== 'review1');
 tryc('I1: świętowanie trwa do obejrzenia ekranu zwierzaka', () => {
   const d1 = view('day', { ...CLEAN(), pet: { ...PETA }, petSeen: [...NOREV], reviews: REV }), d2 = view('day');
   const p1 = view('pet'), d3 = view('day');
@@ -574,7 +574,7 @@ tryc('komunikat: Ustawienia mają wybór czasu komunikatów', () => { const h = 
 tryc('komunikat: po zapisie posiłku w pierwszych krokach przycisk do następnego kroku', () => { view('meals', { ...NEWU(), kg: '82', guide: { hidden: false, dataOk: true, seenPet: false }, pet: { ...PETA } }); click({ addmeal: 's1' }); return /data-(tab|goto|nav)="/.test(els.toast.innerHTML); });
 // Zadanie 5 (20.11.2026): profil w wierszach wartości (wpisy.js); waga i waga docelowa co 0,5 kg, wpis z klawiatury dla dokładnej wartości
 const PFR = (k) => T.rowSpecs('pf').find((R) => R.key === k), PFS = (k, d) => { const R = PFR(k); R.put(WP().step(R, R.start.v, d)); return T.S()[k]; };
-tryc('pola: Ustawienia mają przyciski − i + przy wadze i wzroście', () => { WP().reset(); const h = view('set', BASE()); return ['kg', 'cm'].every((k) => h.includes(`data-wps="pf" data-wpk="${k}"`) && h.includes(`data-wp="pm:${k}:-1"`) && h.includes(`data-wp="pm:${k}:1"`)); });
+tryc('pola: Ustawienia mają przyciski − i + przy wadze; wiek i wzrost w nagłówku jako komórki (U2a)', () => { WP().reset(); const h = view('set', BASE()); return h.includes('data-wps="pf" data-wpk="kg"') && h.includes('data-wp="pm:kg:-1"') && h.includes('data-wp="pm:kg:1"') && h.includes('data-wps="pfh" data-wpk="cm"') && h.includes('data-wps="pfh" data-wpk="age"'); });
 tryc('pola: + przy wadze dodaje 0,1 kg', () => { view('set', BASE({ kg: '82', touched: { kg: true, cm: true, age: true, goal: true } })); return PFS('kg', 1) === '82,1'; });
 tryc('pola: − przy wadze odejmuje 0,1 kg', () => { view('set', BASE({ kg: '82', touched: { kg: true, cm: true, age: true, goal: true } })); return PFS('kg', -1) === '81,9'; });
 tryc('pola: krok nie wychodzi poza limit', () => { view('set', BASE({ cm: '220', touched: { kg: true, cm: true, age: true, goal: true } })); return PFS('cm', 1) === '220'; });
@@ -641,7 +641,7 @@ tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h =
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
 const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord', 'shopDay', 'stores', 'promos', 'lite', 'unlock', 'unlockAt', 'unlockSnooze', 'pmLeft', 'vibr', 'petNames', 'focus', 'still'];
-const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'goalRule', 'muscle', 'muscleAuto', 'muscleAutoLast', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'suppTake', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut', 'frame'];
+const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'goalRule', 'loc', 'muscle', 'muscleAuto', 'muscleAutoLast', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'suppTake', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut', 'frame'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
   view('day', BASE({ kg: '90', age: '50', sex: 'M', muscle: true, bmiCut: 'nhs', meas: { [dk(0)]: { w: '90', steps: '8000', waist: '100' } }, days: { [dk(0)]: ML(1, 500, 30) }, krok: { step: 1, since: dk(3), ans: { why: 'zmeczenie' } }, knee: { start: dk(3), sessions: [{ d: dk(1), pain: 4 }], morning: {}, days: [2], tmpPain: null, tmpCramp: null } }));
@@ -687,7 +687,7 @@ tryc('przytrzymanie: krok ze wspólnej funkcji, większy krok przy długim trzym
 tryc('przytrzymanie: obsługa wciśnięcia i puszczenia przycisku (wiersze wartości: pointercancel osobno jako anulowanie)', () => { const w = fs.readFileSync(wpPath, 'utf8'); return /addEventListener\('pointerdown'/.test(w) && /addEventListener\('pointerup', holdEnd\)/.test(w) && /addEventListener\('pointercancel', holdCancel\)/.test(w) && !/addEventListener\('pointercancel', holdEnd\)/.test(w); });
 tryc('przytrzymanie: po puszczeniu fokus wraca na ten sam przycisk (fokus na − albo + przed zapisem, przerysowanie oddaje go po data-)', () => { const w = fs.readFileSync(wpPath, 'utf8'); return /document\.activeElement !== b && b\.focus\) b\.focus\(\{ preventScroll: true \}\)/.test(w) && /function btnSel\(/.test(code); });
 tryc('przytrzymanie: przyciski bez zaznaczania tekstu i z szybkim dotykiem', () => /\.wp-sq,\.wp-chg\{[^}]*touch-action:manipulation/.test(sysCss) && /\.wp-sq,\.wp-chg\{[^}]*user-select:none/.test(sysCss) && !sysCss.includes('.stp{'));
-tryc('klawiatura: wiersze wartości mają suwak natywny (strzałki o krok dokładny) albo − i + jako przyciski; pola z data-k i − + nie zostały', () => { WP().reset(); const h = view('set', BASE({ touched: { kg: true, cm: true, age: true, goal: true } })); return /<input class="wp-range" type="range" id="pf_rcm" min="140" max="210" step="1"/.test(h) && h.includes('data-wp="pm:kg:1"') && !h.includes('data-stp') && !/data-k="(kg|cm|age|goal)"/.test(h); });
+tryc('klawiatura: wiersze wartości mają suwak natywny (strzałki o krok dokładny) albo − i + jako przyciski; pola z data-k i − + nie zostały', () => { WP().reset(); const h = view('set', BASE({ touched: { kg: true, cm: true, age: true, goal: true } })); return /<input class="wp-range" type="range" id="pf_rwaist" min="55" max="150" step="0.5"/.test(h) && h.includes('data-wp="pm:kg:1"') && !h.includes('data-stp') && !/data-k="(kg|cm|age|goal)"/.test(h); });
 tryc('podpowiedź: waga dnia bez dzisiejszego ważenia pokazuje ostatnie ważenie', () => { WP().reset(); return /id="m_w"[^>]*>80,4 kg</.test(card(view('day', BASE({ meas: { [dk(2)]: { w: '80,4' } } })))); });
 tryc('fokus niezasłonięty: przewijanie z marginesem na dolny pasek', () => /html\{[^}]*scroll-padding-bottom:/.test(sysCss));
 tryc('komunikat dla czytnika: obszar aria-live na wartości pól', () => /id="sr"[^>]*aria-live="polite"|aria-live="polite"[^>]*id="sr"/.test(html));
@@ -854,11 +854,11 @@ tryc('przegląd: zdanie zwierzaka bez wstydu i kar', () => [0, 1, 4, 7].every((n
 tryc('przegląd: bez zwierzaka bez zdania', () => !view('review', BASE({ pet: null, days: revDays(3) })).includes('class="petsay"'));
 // Rada 09.11.2026 (wartości startowe): punkt startowy zależny od płci, cel 5% mniej (NHLBI), wartości startowe nie są potwierdzonymi danymi
 const NEWD = (o) => ({ onb: false, introStep: 0, touched: {}, sex: 'K', ...o });
-tryc('start: kobieta: 165 cm, 35 lat, 70 kg, cel 66,5 kg', () => { view('intro', NEWD()); const S = T.S(); return T.num(S.cm) === 165 && T.num(S.age) === 35 && T.num(S.kg) === 70 && T.num(S.goal) === 66.5; });
-tryc('start: mężczyzna: 178 cm, 35 lat, 85 kg, cel 81 kg', () => { view('intro', NEWD({ sex: 'M' })); const S = T.S(); return T.num(S.cm) === 178 && T.num(S.age) === 35 && T.num(S.kg) === 85 && T.num(S.goal) === 81; });
-tryc('start: zmiana płci zmienia tylko nieustawione wartości', () => { view('intro', NEWD({ cm: '160', touched: { cm: true } })); click({ sex: 'M' }); const S = T.S(); return T.num(S.cm) === 160 && T.num(S.kg) === 85; });
+tryc('start: kobieta: 165 cm, 35 lat, waga typowa w Polsce 64,8 kg, cel 61,5 kg', () => { view('intro', NEWD()); const S = T.S(); return T.num(S.cm) === 165 && T.num(S.age) === 35 && T.num(S.kg) === 64.8 && T.num(S.goal) === 61.5; });
+tryc('start: mężczyzna: 178 cm, 35 lat, waga typowa w Polsce 85,5 kg, cel 81 kg', () => { view('intro', NEWD({ sex: 'M' })); const S = T.S(); return T.num(S.cm) === 178 && T.num(S.age) === 35 && T.num(S.kg) === 85.5 && T.num(S.goal) === 81; });
+tryc('start: zmiana płci zmienia tylko nieustawione wartości', () => { view('intro', NEWD({ cm: '160', touched: { cm: true } })); click({ sex: 'M' }); const S = T.S(); return T.num(S.cm) === 160 && T.num(S.kg) === 69.1; });
 tryc('start: cel idzie za wagą, dopóki nie ustawisz celu', () => { view('intro', NEWD({ kg: '90', touched: { kg: true } })); const a = T.num(T.S().goal); view('intro', NEWD({ kg: '90', goal: '80', touched: { kg: true, goal: true } })); return a === 85.5 && T.num(T.S().goal) === 80; });
-tryc('start: przy nieustawionej wartości podpis „wartość startowa”', () => { const h = view('intro', NEWD()); const k = view('intro', NEWD({ touched: { kg: true, cm: true, age: true, goal: true } })); return (h.match(/wartość startowa/g) || []).length === 4 && !k.includes('wartość startowa'); });
+tryc('start: przy nieustawionej wartości podpis „wartość startowa”', () => { const h = view('intro', NEWD()); const k = view('intro', NEWD({ touched: { kg: true, cm: true, age: true, goal: true } })); return (h.match(/wartość startowa/g) || []).length === 3 && (h.match(/typowo w Polsce, wpisz swoją/g) || []).length === 1 && !k.includes('wartość startowa'); });
 tryc('start: + i - ustawiają wartość jako Twoją', () => { WP().reset(); view('intro', NEWD()); PFS('kg', 1); return T.S().touched.kg === true && !T.S().touched.cm; });
 tryc('start: cel startowy ze źródłem NHLBI (5-10% w ok. 6 miesięcy)', () => { const h = view('intro', NEWD()); return h.includes('nhlbi.nih.gov') && h.includes('5% mniej'); });
 tryc('start: Zaczynam z wartościami startowymi nie zalicza danych i prowadzi do Ustawień', () => { view('intro', NEWD({ guide: { hidden: false, dataOk: false, seenPet: false } })); click({ introdone: 'ok' }); const t = els.toast.innerHTML; return !T.S().guide.dataOk && t.includes('wartościach startowych') && t.includes('data-tab="set"'); });
@@ -3178,14 +3178,15 @@ tryc('wiersze: wykres trendu talii i FFM z punktami i średnią 4 tygodni, bez p
 });
 tryc('wiersze profil: Ustawienia i ekran startowy: waga co 0,1 i waga docelowa co 0,5 bez suwaka, wzrost suwak 140-210, wiek suwak 16-90; cele f_kg, f_cm, f_age, f_goal to przyciski', () => {
   WP().reset(); const a = view('set', BASE({ kg: '82', cm: '170', age: '40', goal: '78', touched: { ...TA4 } })); WP().reset(); const b = view('intro', NEWD());
-  return [a, b].every((h) => ['f_kg', 'f_cm', 'f_age', 'f_goal'].every((id) => isBtn(h, id)) && /type="range" id="pf_rcm" min="140" max="210" step="1"/.test(h) && /type="range" id="pf_rage" min="16" max="90" step="1"/.test(h)
+  return [a, b].every((h) => ['f_kg', 'f_cm', 'f_age', 'f_goal'].every((id) => isBtn(h, id))) && !/id="pfh_r(cm|age)"/.test(a) && [b].every((h) => /type="range" id="pf_rcm" min="140" max="210" step="1"/.test(h) && /type="range" id="pf_rage" min="16" max="90" step="1"/.test(h))
+    && [a, b].every((h) => true
     && !h.includes('id="pf_rkg"') && !h.includes('id="pf_rgoal"') && !h.includes('data-k="kg"') && h.includes('aria-label="Waga o 0,1 kg więcej"') && h.includes('aria-label="Waga docelowa o 0,5 kg więcej"'))
     && /class="wp-val" id="f_kg"[^>]*>82,0 kg</.test(a) && /class="wp-val" id="f_cm"[^>]*>170 cm</.test(a);
 });
 tryc('wiersze profil: wartość startowa wyszarzona; zmiana zapisuje S.kg i oznacza jako Twoją; wpisana wartość równa startowej ustawia ją jako Twoją, Enter bez wpisu i wyjście z pola nie', () => {
   WP().reset(); const h = view('intro', NEWD()), kg = RW('pf', 'kg');
-  const a = /class="wp-val wp-y" id="f_kg"[^>]*>70,0 kg</.test(h) && kg.start.src === 'default' && kg.today == null;
-  kg.put(WP().step(kg, kg.start.v, 1)); const b = T.S().kg === '70,1' && T.S().touched.kg === true && !T.S().touched.cm;
+  const a = /class="wp-val wp-y" id="f_kg"[^>]*>64,8 kg</.test(h) && kg.start.src === 'default' && kg.today == null;
+  kg.put(WP().step(kg, kg.start.v, 1)); const b = T.S().kg === '64,9' && T.S().touched.kg === true && !T.S().touched.cm;
   const cm = RW('pf', 'cm'), blur = WP().editOutcome(cm, cm.start.v), en = WP().editOutcome(cm, cm.start.v, true), o = WP().editOutcome(cm, cm.start.v, true, true); if (o.kind === 'put') cm.put(o.v);
   return a && b && blur.kind === 'none' && en.kind === 'none' && o.kind === 'put' && o.v === 165 && T.S().touched.cm === true && T.S().cm === '165';
 });
@@ -3224,7 +3225,7 @@ tryc('poprawki: wpisana wartość równa startowej zapisuje się (obwód, skład
 });
 tryc('poprawki: profil bez wpisu: Enter nie potwierdza (bez confirmMsg), S.touched bez zmian; podpis „wartość startowa” zostaje', () => {
   WP().reset(); const h = view('intro', NEWD()), R = T.rowSpecs('pf');
-  return R.every((x) => !x.confirmMsg && WP().editOutcome(x, x.start.v, true, false).kind === 'none') && JSON.stringify(T.S().touched) === '{}' && (h.match(/wartość startowa/g) || []).length === 4;
+  return R.every((x) => !x.confirmMsg && WP().editOutcome(x, x.start.v, true, false).kind === 'none') && JSON.stringify(T.S().touched) === '{}' && (h.match(/wartość startowa/g) || []).length === 3;
 });
 tryc('poprawki: snapBySpeed w pikselach na sekundę (domyślnie 300 px/s): wolne przeciągnięcie wzrostu i kroków zostaje dokładne, szybkie na siatce', () => {
   const CM = { step: 1, coarse: 5, range: [140, 210], lim: [120, 220] }, K = { step: 50, coarse: 500, range: [0, 20000], lim: [0, 60000] }, SNP2 = WP().snapBySpeed;
@@ -3630,6 +3631,36 @@ tryc('U1 L13: talia do wzrostu blisko 0,5 z trzema miejscami (86,5 cm na 174 cm 
   view('set', U1({ cm: '174', meas: { [T.todayKey()]: { waist: '86,5' } } })); const t = sandbox.wskTxt();
   view('set', U1({ cm: '174', meas: { [T.todayKey()]: { waist: '80' } } })); const t2 = sandbox.wskTxt();
   return /0,497/.test(t) && /0,46/.test(t2) && !/0,460/.test(t2);
+});
+// U2a Ustawienia: „Twoje dane” z makiety v13 (27.11.2026): płeć, wiek i wzrost w jednym rzędzie; waga i talia typowe w Polsce (Eurostat EHIS 2019, WOBASZ II; mapa 67)
+const U2 = (o) => BASE({ sex: 'K', cm: '168', age: '35', mode: 'redukcja', loc: 'all', touched: { cm: true, age: true }, meas: {}, days: {}, ...o });
+tryc('U2a waga typowa: mediana BMI z EHIS 2019 dla płci, wieku i miejsca × wzrost² (K 35 lat 168 cm: 67,2 kg; M 30 lat 178 cm: 82,4 kg; K 45 lat wieś: 73,4 kg)', () => {
+  view('set', U2()); const a = T.S().kg;
+  view('set', U2({ sex: 'M', cm: '178', age: '30' })); const b = T.S().kg;
+  view('set', U2({ age: '45', loc: 'wies' })); const c = T.S().kg;
+  view('set', U2({ kg: '90', touched: { cm: true, age: true, kg: true } })); const d = T.S().kg;
+  return a === '67,2' && b === '82,4' && c === '73,4' && d === '90';
+});
+tryc('U2a nagłówek: „Twoje dane” z płcią, wiekiem i wzrostem w jednym rzędzie (wiek i wzrost: dotknij i wpisz, bez suwaka)', () => {
+  const h = view('set', U2()), i = h.indexOf('class="dhead"'), j = h.indexOf('id="f_kg"');
+  const head = h.slice(i, j);
+  return i > 0 && /<h2 id="dane">Twoje dane<\/h2>/.test(head) && /data-sex="K"/.test(head) && head.includes('id="f_age"') && head.includes('id="f_cm"') && !/id="pf_rcm"|id="pf_rage"/.test(h);
+});
+tryc('U2a waga i talia typowe: podpis „typowo w Polsce, wpisz swoją”, wybór miejsca zamieszkania tylko przy typowej wadze; po wpisie znika', () => {
+  const h = view('set', U2());
+  const ok1 = (h.match(/typowo w Polsce, wpisz swoją/g) || []).length === 2 && h.includes('aria-label="Gdzie mieszkasz (wartości typowe z Polski)"') && /data-loc="wies" aria-pressed="false"/.test(h);
+  click({ loc: 'wies' }); const ok2 = T.S().loc === 'wies' && T.S().kg === '67,5';
+  const h2 = view('set', U2({ kg: '70', touched: { cm: true, age: true, kg: true }, meas: { [T.todayKey()]: { waist: '80' } } }));
+  return ok1 && ok2 && !h2.includes('typowo w Polsce') && !h2.includes('Gdzie mieszkasz');
+});
+tryc('U2a talia w Ustawieniach zapisuje dzisiejszy pomiar (trend zostaje w pomiarach dnia); typowa: K 86,5 cm, M 97 cm (WOBASZ II)', () => {
+  view('set', U2()); const R = sandbox.pfRows().find((r) => r.key === 'waist');
+  view('set', U2({ sex: 'M' })); const RM = sandbox.pfRows().find((r) => r.key === 'waist');
+  if (!R || R.start.v !== 86.5 || RM.start.v !== 97 || R.subStart !== 'typowo w Polsce, wpisz swoją') return false;
+  view('set', U2()); const R2 = sandbox.pfRows().find((r) => r.key === 'waist'); R2.put(82); return T.S().meas[T.todayKey()].waist === '82';
+});
+tryc('U2a źródła wartości typowych w Ustawieniach: Eurostat EHIS i WOBASZ II', () => {
+  const h = view('set', U2()); return h.includes('hlth_ehis_bm1u') && h.includes('pubmed.ncbi.nlm.nih.gov/27535012');
 });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
