@@ -217,7 +217,8 @@ const SPIN=[
 const PLAN={1:['s1','o1','k1','p2'],2:['s2','o6','k4','p1'],3:['s3','o16','k2','p5'],4:['s1','o14','k3','p3'],5:['s4','o7','k1','p6'],6:['s2','o9','k2','p4'],0:['s5','o5','k5','p1']};
 const SLOT_T={sniadanie:'Śniadanie',obiad:'Obiad',kolacja:'Kolacja',przekaska:'Przekąska'};
 function slotNow(){const h=new Date().getHours();return h<11?'sniadanie':h<18?'obiad':'kolacja'}
-function targetKcal(){const R=rmr(),M=measuredTdee(),f=S.mode==='utrzymanie'?1:S.mode==='masa'?1.1:0.8;if(M)return Math.max(R,M.tdee*f);return Math.max(R,(R*1.3+trainNet())*f)}
+const lowBmi=()=>{const w=num(S.kg),h=num(S.cm)/100;return w>0&&h>0&&w/(h*h)<18.5};
+function targetKcal(){const R=rmr(),M=measuredTdee(),f=S.mode==='utrzymanie'||(S.mode==='redukcja'&&lowBmi())?1:S.mode==='masa'?1.1:0.8;if(M)return Math.max(R,M.tdee*f);return Math.max(R,(R*1.3+trainNet())*f)}
 // Klucz dnia i dni temu: dni kalendarza od dzisiejszego południa, nie co 24 h od teraz (przy zmianie czasu dzień się powtarzał albo znikał)
 function keyAgo(i){const d=new Date(Date.now());d.setHours(12,0,0,0);d.setDate(d.getDate()-i);return keyOf(d)}
 function lastKeys(n){const a=[];for(let i=0;i<n;i++)a.push(keyAgo(i));return a}
@@ -1007,7 +1008,7 @@ function rwSpec(o){const st=o.step,nf=rwNum(st),u=o.unit,raw=stpVal(o.path),stT=
     parse:t=>{const c=checkNum(o.path,String(t==null?'':t));if(c.err)return {err:c.err+'.'};if(c.s==='')return {err:'Wpisz liczbę.'};return {v:num(c.s)}},
     put:v=>rwPut(o,v),announce:v=>rwSay(o,v)},o.x||{})}
 function rwPut(o,v){const a=o.path.split('.'),prev=stpVal(o.path);if(a[0]==='meas')S.meas[a[1]]=S.meas[a[1]]||{};if(a[0]==='frame')S.frame=S.frame||{};
-  const s=stpFmt(v,o.step);setPath(o.path,s);if(START_K.includes(o.path))(S.touched=S.touched||{})[o.path]=true;if(o.after)o.after(s,prev);
+  const s=stpFmt(v,o.step);setPath(o.path,s);if(START_K.includes(o.path))(S.touched=S.touched||{})[o.path]=true;if(o.path==='goal')delete S.goalRule;if(o.after)o.after(s,prev);
   const sr=document.getElementById('sr');if(sr)sr.textContent=''}
 // Nowa wartość dla czytnika ekranu (WCAG 4.1.3) po przerysowaniu, razem z reakcją zwierzaka, jeśli ją ogłoszono (PET.flush w render)
 function rwSay(o,v){const sr=document.getElementById('sr'),p=sr?String(sr.textContent||''):'';return o.label+': '+rwNum(o.step)(v)+' '+o.unit+(p?'. '+p:'')}
@@ -1062,7 +1063,7 @@ function legHtml(){
 function avg7at(k){const b=Date.parse(k+'T12:00:00'),v=[];for(let i=0;i<7;i++){const x=num((S.meas[keyOf(new Date(b-i*864e5))]||{}).w);if(x>0)v.push(x)}return v.length?v.reduce((a,c)=>a+c,0)/v.length:null}
 function avg7(){return avg7at(todayKey())}
 function flat3w(){const W=[];lastKeys(21).reverse().forEach((k,i)=>{const v=num((S.meas[k]||{}).w);if(v>0)W.push([i,v])});if(W.length<6||W.at(-1)[0]-W[0][0]<14)return false;const n=W.length,mx=W.reduce((a,p)=>a+p[0],0)/n,my=W.reduce((a,p)=>a+p[1],0)/n,sl=W.reduce((a,p)=>a+(p[0]-mx)*(p[1]-my),0)/W.reduce((a,p)=>a+(p[0]-mx)**2,0);return Math.abs(sl*7)<0.1}
-function modeHtml(){if(S.mode==='masa')return '<div class="note">'+masaHtml()+'</div>';if(S.mode!=='redukcja')return '';const si=stageInfo(),done=si&&si.pct>=100,flat=flat3w();if(!done&&!flat)return '';return `<div class="note"><b>${done?'Etap 5% osiągnięty.':'Waga stoi od 3 tygodni.'}</b> Zamiast dokręcać dietę, przejdź na 4-8 tygodni utrzymania: cel bez deficytu, średnia waga w paśmie ±1 kg.<p><button class="btn" data-mode="utrzymanie">Przejdź na utrzymanie</button></p></div>`}
+function modeHtml(){if(S.mode==='masa')return '<div class="note">'+masaHtml()+'</div>';if(S.mode!=='redukcja')return '';if(lowBmi())return '<div class="note"><b>BMI poniżej 18,5.</b> Miara nie liczy deficytu: cel kalorii jest na poziomie utrzymania. Zanim zaczniesz chudnąć, porozmawiaj z lekarzem.<p><button class="btn" data-mode="utrzymanie">Przejdź na utrzymanie</button></p></div>';const si=stageInfo(),done=si&&si.pct>=100,flat=flat3w();if(!done&&!flat)return '';return `<div class="note"><b>${done?'Etap 5% osiągnięty.':'Waga stoi od 3 tygodni.'}</b> Zamiast dokręcać dietę, przejdź na utrzymanie: cel bez deficytu, średnia waga w paśmie ±1 kg.<p><button class="btn" data-mode="utrzymanie">Przejdź na utrzymanie</button></p></div>`}
 // Przyrost masy: nadwyżka ok. 10% (dolna granica 10-20%) i przyrost 0,25-0,5% masy ciała tygodniowo (Iraki i in. 2019), białko 1,6 g/kg (ISSN 2017: 1,4-2,0)
 function masaHtml(){const w=kg();return `<p><b>Przyrost masy.</b> Cel kalorii ok. 10% powyżej zapotrzebowania (przegląd badań: 10-20%). Tempo: 0,25-0,5% masy ciała tygodniowo, czyli ok. ${fmt1(w*0.0025)}-${fmt1(w*0.005)} kg; szybszy przyrost to częściej tłuszcz. Białko ok. ${fmt(protTarget())} g dziennie i trening siłowy.</p>`+srcHtml(['iraki','issn'])+'<p><button class="btn ghost" data-mode="utrzymanie">Przejdź na utrzymanie</button></p>'}
 // Cel białka: 1,4 g/kg wagi docelowej w redukcji i utrzymaniu, 1,6 g/kg obecnej masy przy przyroście masy
@@ -1448,7 +1449,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='bk_file'|
 
 // ---------- Stan ----------
 const LS='talerz-trening-v1';
-const DEF={petNames:1,focus:false,still:false,frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
+const DEF={petNames:1,focus:false,still:false,frame:{wrist:'',ankle:''},kg:'70',cm:'165',age:'35',sex:'K',goal:'66,5',touched:{},wizyta:{hp:'brak'},sygSeen:{},wizList:[],suppTake:[],goalWay:'proc',goalRule:null,muscle:false,muscleAuto:true,muscleAutoLast:null,bmiCut:'auto',korekta:true,tab:'meals',
   f:{type:'obiad',chips:{},tags:{},minP:0,maxK:1000,maxC:130,carb:'auto',portion:1,sort:'p',noeq:[]},
   tr:{wmin:'',wk:'',cat:'silownia',opt:{silownia:'nogi',plywanie:'kraul1',inne:'nordic'},bMode:'marsz',speed:'5',grade:'3',sMode:'w',watts:'100',sClass:'spin',min:'45'},
   days:{},swaps:{},cel:null,modeKeep:'',mob:{done:{}},plan:{items:[],done:{}},insole:{days:{},pain:{}},gut:{},tmpPlan:{n:'',dose:'',days:[1,2,3,4,5,6,0]},hab:{},urges:{},meas:{},labs:[],labSel:'tsh',onb:false,introStep:0,reviews:{},pet:null,lite:false,unlock:[],unlockAt:'',unlockSnooze:'',body:false,once:false,toastLen:'std',pmLeft:false,vibr:true,ord:{dish:'sushi',sushi:12,kurczak:5,tofu:'1',alt:false,add:{}},prof:{cond:{},pill:''},tips:{},pain:{},cardsOk:{},discreet:false,consent:null,kopia:null,visit:null,petSeen:[],petCeleb:null,krok:null,guide:{hidden:false,dataOk:false,seenPet:false},legs:{},lip:false,mode:'redukcja',maintRef:0,maintSince:'',knee:{start:'',sessions:[],morning:{},days:[2,4,6],tmpPain:null,tmpCramp:null},wi:{snack:0,steps:0,train:0},chMode:'wspolpraca',bkNoHealth:false,lastBackup:'',prices:{twarog:{p:'',g:'250'},jajka:{p:'',g:'600'},skyr:{p:'',g:'150'},kurczak:{p:'',g:'1000'},soczewica:{p:'',g:'400'},tunczyk:{p:'',g:'120'},tofu:{p:'',g:'180'},wpc:{p:'',g:'700'}},shopDay:null,stores:[],promos:[],sosStep:'trig',sosTrig:'',ifthen:'Jeśli w pracy czuję stres i ochotę na przekąskę, to najpierw piję herbatę i wychodzę na 5 minut, a potem, jeśli dalej chcę, jem przygotowaną przekąskę białkową.'};
@@ -1476,12 +1477,16 @@ function bmiCut(){return S.bmiCut==='who'||S.bmiCut==='nhs'?S.bmiCut:bmiCutFor(t
 const bmiOf=kg=>num(kg)/Math.pow((num(S.cm)||165)/100,2);
 function bmiCat(b){const n=bmiCut()==='nhs',[o,ob]=n?[23,27.5]:[25,30];return b<18.5?'niedowaga':b<o?'norma':b<ob?'nadwaga':'otyłość'}
 const fmt2=x=>(Math.round(x*100)/100).toFixed(2).replace('.',',');
+// Talia do wzrostu (L13): w odległości do 0,01 od progu 0,5 trzy miejsca, żeby 0,497 nie wyglądało jak 0,50
+const whtrFmt=x=>Math.abs(x-0.5)<0.01?(Math.round(x*1000)/1000).toFixed(3).replace('.',','):fmt2(x);
 function lastM(key){const k=Object.keys(S.meas||{}).filter(x=>num(S.meas[x][key])>0).sort().pop();return k?num(S.meas[k][key]):0}
 const lastWaist=()=>lastM('waist');
-function wskTxt(){const b=bmiOf(S.kg),w=lastWaist();return `BMI ${fmt1(b)}: ${bmiCat(b)} (progi ${bmiCut()==='nhs'?'NHS: 23 i 27,5':'WHO: 25 i 30'})`+(w?`, talia do wzrostu ${fmt2(w/(num(S.cm)||165))} (cel poniżej 0,50)`:'')+'.'+(S.muscle?' BMI nie odróżnia mięśni od tłuszczu (NHS), więc przy dużej masie mięśniowej lepszą miarą jest talia.':'')+bodyCompTxt()}
+function wskTxt(){const b=bmiOf(S.kg),w=lastWaist();return `BMI ${fmt1(b)}: ${bmiCat(b)} (progi ${bmiCut()==='nhs'?'NHS: 23 i 27,5':'WHO: 25 i 30'})`+(w?`, talia do wzrostu ${whtrFmt(w/(num(S.cm)||165))} (cel poniżej 0,50)`:'')+'.'+(S.muscle?' BMI nie odróżnia mięśni od tłuszczu (NHS), więc przy dużej masie mięśniowej lepszą miarą jest talia.':'')+bodyCompTxt()}
 // Skład ciała z wagi BIA: FFMI z medianą odniesienia (Schutz 2002, 5635 osób), tłuszcz % jako trend, bo uznanych zakresów brak (Gallagher 2000)
 function bodyCompTxt(){const ffm=lastM('ffm'),fat=lastM('fat');if(!ffm&&!fat)return '';const h2=Math.pow((num(S.cm)||165)/100,2);
   return (ffm?` FFMI ${fmt1(ffm/h2)} (beztłuszczowa masa ciała na m²; mediana w wieku 18-34 lat: ${S.sex==='M'?'18,9 u mężczyzn':'15,4 u kobiet'}).`:'')+(fat?` Tłuszcz ${fmt1(fat)}%: pokazujemy jako trend, bo uznanych zakresów procentu tłuszczu brak.`:'')+srcHtml(['schutz','gallagher'])}
+// L17: w redukcji cel musi być niższy niż waga; komunikat przy celu z dwiema drogami
+function goalErrHtml(){if(S.mode!=='redukcja')return '';const w=num(S.kg),g=num(S.goal);if(!(w>0)||!(g>0)||g<w)return '';return `<div class="note"><b>${g>w?'Cel wyższy niż waga':'Cel równy wadze'}.</b> W redukcji cel jest niższy niż obecna waga. Popraw cel albo wybierz utrzymanie.<p><button class="btn ghost" data-mode="utrzymanie">Przejdź na utrzymanie</button></p></div>`}
 function goalWayHtml(){if(S.mode!=='redukcja')return '';const w=S.goalWay||'proc',h2=Math.pow((num(S.cm)||165)/100,2);
   let h='<p style="margin:12px 4px 4px"><b>Jak ustalić cel?</b></p>'+seg([['proc','5-10% mniej'],['bmi','Zdrowe BMI'],['talia','Obwód talii']],w,'goalway','','Sposób ustalenia celu');
   if(w==='proc')return h+goalHint()+goalPctHtml();
@@ -1546,7 +1551,9 @@ function fitHtml(){const head='<section id="sprawnosc"><h3>Sprawność</h3>',E='
     p+=`<p class="small muted">To szacunek, nie pomiar. ${mx} Badanie objęło tylko wytrenowanych mężczyzn, więc wzór jest sprawdzony tylko u nich.${S.sex!=='M'?' Dlatego wynik jest u Ciebie mniej pewny.':''} Wpisz VO2max z zegarka, a Miara użyje go zamiast szacunku.</p>`}
   p+=`<p class="small muted">Z wpisu z ${fmtDate(r.date)}.</p>`;
   return head+'<div class="panel" style="padding:12px 16px">'+p+srcHtml(est?['uth','tanaka','jette','kodama']:['jette','kodama'])+'</div>'+E}
-function muscleSync(){const r=muscleRec();if(S.muscleAuto===false||!r||S.muscleAutoLast===r.above)return '';S.muscleAutoLast=r.above;if(!!S.muscle===r.above)return '';S.muscle=r.above;
+// L2 (27.11.2026): automat wyłączony do czasu źródła z centylami FFMI; FFMI zostaje jako informacja, przełącznik ręczny działa
+const MUSCLE_AUTO=false;
+function muscleSync(){const r=muscleRec();if(!MUSCLE_AUTO||S.muscleAuto===false||!r||S.muscleAutoLast===r.above)return '';S.muscleAutoLast=r.above;if(!!S.muscle===r.above)return '';S.muscle=r.above;
   if(r.above){S.goalWay='talia';return 'Masa beztłuszczowa powyżej mediany: włączono „Dużo mięśni”, cel liczony z talii. Zmienisz to w Ustawieniach.'}
   return 'Masa beztłuszczowa poniżej mediany: wyłączono „Dużo mięśni”. Sposób liczenia celu sprawdź w Ustawieniach.'}
 function muscleToast(){const m=muscleSync();if(m)toast(m);return !!m}
@@ -1560,12 +1567,13 @@ function muscleHtml(){const r=muscleRec(),on=!!S.muscle,a=num(S.age);
   let h=`<div class="panel"><div class="field"><label for="muscle">Dużo mięśni: oceniaj cel talią, nie samym BMI</label><input type="checkbox" class="switch" id="muscle" data-k="muscle" ${on?'checked':''}></div><div style="padding:0 16px 12px">`;
   if(!r)return h+(lastM('ffm')>0&&isStart('cm')?'<p class="small muted">Brak wzrostu. Wpisz wzrost w Ustawieniach, a Miara podpowie ustawienie.</p>':'<p class="small muted">Brak pomiaru masy beztłuszczowej (FFM). Wpisz FFM z wagi składu ciała w Mój dzień, Skład ciała, a Miara podpowie ustawienie.</p>')+'</div></div>';
   const f=fmt1(r.ffmi)===fmt1(r.med)?fmt2:fmt1;
-  h+=`<p class="small muted">Twoje FFMI: ${f(r.ffmi)} kg/m² (masa beztłuszczowa na m² wzrostu). Mediana w badaniu dla ${S.sex==='M'?'mężczyzn':'kobiet'} 18-34 lat: ${f(r.med)}. Masz ${r.above?'więcej':'mniej'} niż połowa badanych, więc zalecamy: ${r.above?'włączone':'wyłączone'}. Reguła Miary: powyżej mediany = włączone.${a&&!isStart('age')&&(a<18||a>34)?' Mediana dotyczy wieku 18-34 lat; w badaniu u mężczyzn nie zmieniała się z wiekiem, u kobiet lekko rosła.':''}</p>`;
-  if(on!==r.above)h+='<p><button class="btn ghost small" data-musclerec="1">Ustaw zalecane</button></p>';
+  h+=`<p class="small muted">Twoje FFMI: ${f(r.ffmi)} kg/m² (masa beztłuszczowa na m² wzrostu). Mediana w badaniu dla ${S.sex==='M'?'mężczyzn':'kobiet'} 18-34 lat: ${f(r.med)}. Masz ${r.above?'więcej':'mniej'} niż połowa badanych. Mediana obejmuje połowę osób, więc Miara nie włącza tego sama: włącz, jeśli od lat trenujesz siłowo i talia mówi więcej niż BMI.${a&&!isStart('age')&&(a<18||a>34)?' Mediana dotyczy wieku 18-34 lat; w badaniu u mężczyzn nie zmieniała się z wiekiem, u kobiet lekko rosła.':''}</p>`;
   return h+srcHtml(['schutz'])+'</div></div>'}
 function goalHint(){return S.mode!=='redukcja'||!isStart('goal')?'':'<p class="small muted">Cel startowy: 5% mniej niż obecna waga. Specjaliści zalecają na początek 5-10% w około 6 miesięcy; ustaw własny albo wybierz niżej.</p>'}
 function fixTouched(o){if(o&&!o.touched)o.touched={kg:true,cm:true,age:true,goal:true};return o}
-function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(Math.round(num(S.kg)*0.95*2)/2,.5)}
+// S.goalRule = {pct} albo {bmi}: cel pochodny z wagi i wzrostu (L15, 27.11.2026); ręczna zmiana celu usuwa regułę
+function goalOfRule(r){return r.pct?goalOf(r.pct):Math.round(r.bmi*Math.pow((num(S.cm)||165)/100,2)*2)/2}
+function startSync(){const b=START[S.sex]||START.K;['kg','cm','age'].forEach(k=>{if(isStart(k))S[k]=String(b[k])});if(isStart('goal'))S.goal=stpFmt(lowBmi()?num(S.kg):Math.round(num(S.kg)*0.95*2)/2,.5);else if(S.goalRule&&(S.goalRule.pct||S.goalRule.bmi))S.goal=stpFmt(goalOfRule(S.goalRule),.5)}
 // Rodzaj zwierzaka z kopii: tylko znane gatunki (stare kaczka zostaje kaczuszką), nieznany to gąska
 function petFix(s){if(s&&s.pet&&typeof s.pet==='object'&&!PET.kinds().includes(s.pet.kind))s.pet.kind='gaska';return s}
 function syFix(s){s=petFix(suppFix(s));s=promoFix(s,todayKey());try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
@@ -2457,7 +2465,7 @@ function nextHtml(cur){const g=guideActive()?guideSteps().find(x=>!x.done):null,
   return `<p class="nextbar"><button class="btn" data-${a}="${v}">${t}</button></p>`}
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
-  let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+rwHtml('pf',['kg','cm','age','goal'])+RW_TIP+'</div>'+goalWayHtml()+bmiSetHtml();
+  let h='<h2 id="dane">Twoje dane</h2><div class="panel">'+rwHtml('pf',['kg','cm','age','goal'])+RW_TIP+'</div>'+goalErrHtml()+goalWayHtml()+bmiSetHtml();
   h+=seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex','','Płeć')+dataHtml();
   h+='<h2 id="wpisy">Wpisy</h2>'+seg([['prosty','Prosty'],['skup','Skupienie'],['cala','Cała Miara']],S.focus?'skup':S.lite?'prosty':'cala','view','','Mój dzień')+'<p class="small muted">Skupienie pokazuje jedną rzecz naraz, bez wskazówek i ruchu; dane zostają przy każdym widoku.</p>';
   h+=`<div class="panel"><div class="field"><label for="still">Bez ruchu</label><input type="checkbox" class="switch" id="still" data-k="still" ${S.still?'checked':''}></div></div><p class="small muted">Bez animacji w całej Miarze, a w Skupieniu zawsze.</p>`;
@@ -2794,8 +2802,8 @@ else if(d.krokrep){kStart(S.krok.step);toast('Powtarzasz krok od tego tygodnia')
   else if(d.imppaste){if(typeof navigator!=='undefined'&&navigator.clipboard&&navigator.clipboard.readText)navigator.clipboard.readText().then(t=>{S.imp=parseImport(t);S.tab='import';save();render()},()=>toast('Nie udało się odczytać schowka. Zezwól na wklejenie albo użyj adresu ze Skrótu.'));else toast('Ta przeglądarka nie pozwala odczytać schowka.');return}
   else if(d.goalway){S.goalWay=d.goalway}
   else if(d.bmicut){S.bmiCut=d.bmicut}
-  else if(d.goalbmi){S.goal=stpFmt(Math.round(+d.goalbmi*Math.pow((num(S.cm)||165)/100,2)*2)/2,.5);(S.touched=S.touched||{}).goal=true}
-  else if(d.goalpct){S.goal=stpFmt(goalOf(+d.goalpct),.5);(S.touched=S.touched||{}).goal=true}
+  else if(d.goalbmi){S.goalRule={bmi:+d.goalbmi};S.goal=stpFmt(goalOfRule(S.goalRule),.5);(S.touched=S.touched||{}).goal=true}
+  else if(d.goalpct){S.goalRule={pct:+d.goalpct};S.goal=stpFmt(goalOf(+d.goalpct),.5);(S.touched=S.touched||{}).goal=true}
   else if(d.kcalset){const [id,v]=d.kcalset.split(':'),el=document.getElementById(id);if(el){el.value=v;if(el.focus)el.focus()}return}
   else if(d.revsave){const g=id=>document.getElementById(id).value.trim();S.reviews=S.reviews||{};S.reviews[reviewKey()]={a:g('r_a'),b:g('r_b'),c:g('r_c'),d:todayKey()};S.tab='day';toast('Zapisano przegląd');window.scrollTo(0,0)}
   else if(d.mode){S.mode=d.mode;if(d.mode==='utrzymanie'){S.maintRef=Math.round((avg7()||kg())*10)/10;S.maintSince=todayKey()}else{S.maintSince=''}toast(d.mode==='utrzymanie'?'Tryb utrzymania':d.mode==='masa'?'Tryb przyrostu masy':'Tryb redukcji')}
@@ -2909,7 +2917,7 @@ document.addEventListener('input',e=>{
     el.setAttribute('aria-valuetext',rTxt(k,v));
     renderMealList();return}
   const k=el.dataset.k;if(!k)return;
-  if(START_K.includes(k))(S.touched=S.touched||{})[k]=true;
+  if(START_K.includes(k))(S.touched=S.touched||{})[k]=true;if(k==='goal')delete S.goalRule;
   if(el.type==='checkbox'){setPath(k,el.checked);if(k==='muscle'){S.muscleAuto=false;if(el.checked)S.goalWay='talia'}if(k==='body'&&el.checked)toast('Sylwetka pokazuje trend 4 tygodni. Pojedyncze pomiary się wahają.');save();render();return}
   let v=el.value;const im=el.getAttribute('inputmode');
   if(im==='decimal'||im==='numeric'){const c=checkNum(k,v);el.classList.toggle('bad',!!c.err);el.setAttribute('aria-invalid',c.err?'true':'false');el.title=c.err||'';fieldErr(el,c.err||'');if(c.err)return}

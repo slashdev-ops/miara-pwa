@@ -200,7 +200,7 @@ tryc('tryb demo: save() nie zapisuje', () => { let n = 0; const o = sandbox.loca
 
 // Poprawki po przeglądzie końcowym (I1-I5)
 const PETA = { kind: 'gaska', name: 'A', since: '2026-11-01' }, REV = { r: { a: 'x', d: '2026-11-01' } };
-const CLEAN = () => ({ days: {}, swaps: {}, meas: {}, hab: {}, urges: {}, gut: {}, reviews: {}, mode: 'redukcja', petCeleb: null, krok: null }), NOREV = SEEN_ALL.filter((x) => x !== 'review1');
+const CLEAN = () => ({ days: {}, swaps: {}, meas: {}, hab: {}, urges: {}, gut: {}, reviews: {}, mode: 'redukcja', petCeleb: null, krok: null, goalRule: null }), NOREV = SEEN_ALL.filter((x) => x !== 'review1');
 tryc('I1: świętowanie trwa do obejrzenia ekranu zwierzaka', () => {
   const d1 = view('day', { ...CLEAN(), pet: { ...PETA }, petSeen: [...NOREV], reviews: REV }), d2 = view('day');
   const p1 = view('pet'), d3 = view('day');
@@ -636,12 +636,12 @@ tryc('plan: 10 dni z lekiem w 30 dniach: ostrzeżenie o nadużywaniu leków z li
 tryc('plan: 4 dni z bólem w 30 dniach: pytanie o leczenie zapobiegawcze', () => { const pain = {}; for (let i = 0; i < 4; i++) pain[dk(i)] = {}; return planOf(view('health', BASE({ ...PROF(['mig'], ''), pain }))).includes('zapobiegawcze'); });
 tryc('plan: lipodemia: talia i uda osobno, kompresja', () => { const h = planOf(view('health', BASE(PROF(['lip'], '')))); return h.includes('kompresja') && h.includes('osobno'); });
 tryc('plan: każde działanie podaje siłę dowodów', () => { const h = planOf(view('health', BASE(PROF(['hashi', 'lip', 'mig', 'io'], 'yaz')))), n = (h.match(/<div class="act/g) || []).length, e = (h.match(/class="ev"/g) || []).length; return n >= 8 && n === e; });
-tryc('12 tygodni: tabela 12 tygodni z wagą w przedziale', () => { const h = view('health', BASE({ ...PROF(['hashi'], ''), kg: '80', goal: '70' })), m = h.match(/<table class="weeks"[\s\S]*?<\/table>/); return !!m && (m[0].match(/<tr class="wk"/g) || []).length === 12 && /7[0-9],[0-9]-7[0-9],[0-9] kg/.test(m[0]); });
+tryc('12 tygodni: tabela 12 tygodni z wagą w przedziale', () => { const h = view('health', BASE({ ...PROF(['hashi'], ''), kg: '80', cm: '170', goal: '70' })), m = h.match(/<table class="weeks"[\s\S]*?<\/table>/); return !!m && (m[0].match(/<tr class="wk"/g) || []).length === 12 && /7[0-9],[0-9]-7[0-9],[0-9] kg/.test(m[0]); });
 tryc('12 tygodni: bez prognoz wyników badań i samopoczucia', () => { const h = view('health', BASE({ ...PROF(['hashi', 'mig'], 'yaz'), kg: '80', goal: '70' })), m = (h.match(/<table class="weeks"[\s\S]*?<\/table>/) || [''])[0]; return !/TSH (spadnie|wyniesie)|samopoczucie (wzro|popraw)/.test(m) && h.includes('nie prognozuje'); });
 tryc('profil: kopia bez danych zdrowotnych usuwa profil', () => { Object.assign(T.S(), PROF(['hashi'], 'yaz')); const d = JSON.parse(T.bkBuild(true)).data; return !d.prof; });
 // Kopia bez danych o zdrowiu: lista tego, co zostaje (rada 09.11.2026, kopia bez danych o zdrowiu)
 const NH_KEEP = ['toastLen', 'tips', 'discreet', 'pet', 'prices', 'ord', 'shopDay', 'stores', 'promos', 'lite', 'unlock', 'unlockAt', 'unlockSnooze', 'pmLeft', 'vibr', 'petNames', 'focus', 'still'];
-const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'muscle', 'muscleAuto', 'muscleAutoLast', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'suppTake', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut', 'frame'];
+const NH_DROP = ['kg', 'cm', 'age', 'sex', 'goal', 'touched', 'goalWay', 'goalRule', 'muscle', 'muscleAuto', 'muscleAutoLast', 'bmiCut', 'korekta', 'tab', 'f', 'tr', 'days', 'hab', 'urges', 'meas', 'labs', 'labSel', 'onb', 'introStep', 'reviews', 'body', 'once', 'prof', 'cardsOk', 'pain', 'consent', 'kopia', 'visit', 'petSeen', 'petCeleb', 'krok', 'wizyta', 'sygSeen', 'wizList', 'suppTake', 'guide', 'legs', 'lip', 'mode', 'maintRef', 'maintSince', 'knee', 'wi', 'chMode', 'bkNoHealth', 'lastBackup', 'sosStep', 'sosTrig', 'ifthen', 'swaps', 'cel', 'modeKeep', 'mob', 'plan', 'insole', 'tmpPlan', 'gut', 'frame'];
 tryc('kopia bez zdrowia: każde pole stanu ma przypisanie (zostaje albo pomijane)', () => { const bad = Object.keys(T.DEF()).filter((k) => NH_KEEP.includes(k) === NH_DROP.includes(k)); if (bad.length) throw new Error('bez przypisania albo w obu: ' + bad.join(', ')); return JSON.stringify(T.nhKeep()) === JSON.stringify(NH_KEEP); });
 tryc('kopia bez zdrowia: tylko ustawienia i ceny, bez wagi, pomiarów, posiłków, kolana i odpowiedzi', () => {
   view('day', BASE({ kg: '90', age: '50', sex: 'M', muscle: true, bmiCut: 'nhs', meas: { [dk(0)]: { w: '90', steps: '8000', waist: '100' } }, days: { [dk(0)]: ML(1, 500, 30) }, krok: { step: 1, since: dk(3), ans: { why: 'zmeczenie' } }, knee: { start: dk(3), sessions: [{ d: dk(1), pain: 4 }], morning: {}, days: [2], tmpPain: null, tmpCramp: null } }));
@@ -897,23 +897,15 @@ tryc('mięśnie: muscleRec bez pomiaru FFM albo bez wzrostu daje null', () => { 
 tryc('mięśnie: mężczyzna, FFM 66 kg, 180 cm: FFMI około 20,4, mediana 18,9, powyżej', () => { view('set', GM({ sex: 'M', cm: '180', ...FFM('66') })); const r = T.muscleRec(); return Math.abs(r.ffmi - 20.37) < 0.01 && r.med === 18.9 && r.above === true; });
 tryc('mięśnie: kobieta, FFM 40 kg, 165 cm: FFMI około 14,7, mediana 15,4, poniżej', () => { view('set', GM({ sex: 'K', cm: '165', ...FFM('40') })); const r = T.muscleRec(); return Math.abs(r.ffmi - 14.69) < 0.01 && r.med === 15.4 && r.above === false; });
 tryc('mięśnie: domyślnie ocena automatyczna (DEF.muscleAuto), stare dane bez pola też', () => T.DEF().muscleAuto === true);
-tryc('mięśnie: automat włącza „Dużo mięśni” i cel talią, gdy FFMI powyżej mediany', () => { view('set', GM({ sex: 'M', cm: '180', muscle: false, goalWay: 'proc', ...FFM('66') })); T.muscleSync(); return T.S().muscle === true && T.S().goalWay === 'talia'; });
-tryc('mięśnie: automat wyłącza poniżej mediany, sposób celu bez zmian, komunikat raz', () => { view('set', GM({ sex: 'K', cm: '165', muscle: true, goalWay: 'bmi', ...FFM('40') })); const t1 = T.muscleSync(), t2 = T.muscleSync(); return T.S().muscle === false && T.S().goalWay === 'bmi' && t1 === 'Masa beztłuszczowa poniżej mediany: wyłączono „Dużo mięśni”. Sposób liczenia celu sprawdź w Ustawieniach.' && t2 === ''; });
 tryc('mięśnie: zmiana przełącznika ręcznie wyłącza automat i synchronizacja jej nie nadpisuje', () => { view('set', GM({ sex: 'M', cm: '180', muscle: true, ...FFM('66') })); (lis.input || []).forEach((f) => f({ target: chk(false) })); T.muscleSync(); return T.S().muscle === false && T.S().muscleAuto === false; });
-tryc('mięśnie: Ustawienia, mężczyzna z FFM: FFMI, mediana 18,9, zalecamy włączone, reguła i źródło', () => { const h = view('set', GM({ sex: 'M', cm: '180', age: '30', ...FFM('66') })); return h.includes('Dużo mięśni: oceniaj cel talią, nie samym BMI') && h.includes('Twoje FFMI: 20,4 kg/m² (masa beztłuszczowa na m² wzrostu). Mediana w badaniu dla mężczyzn 18-34 lat: 18,9. Masz więcej niż połowa badanych, więc zalecamy: włączone.') && h.includes('Reguła Miary: powyżej mediany = włączone.') && h.includes('pubmed.ncbi.nlm.nih.gov/12080449') && !h.includes('Mediana dotyczy wieku'); });
-tryc('mięśnie: Ustawienia, kobieta poniżej mediany: zalecamy wyłączone; wiek poza 18-34 z uwagą o wieku', () => { const h = view('set', GM({ sex: 'K', cm: '165', age: '40', ...FFM('40') })); return h.includes('Mediana w badaniu dla kobiet 18-34 lat: 15,4. Masz mniej niż połowa badanych, więc zalecamy: wyłączone.') && h.includes('Mediana dotyczy wieku 18-34 lat; w badaniu u mężczyzn nie zmieniała się z wiekiem, u kobiet lekko rosła.'); });
+tryc('mięśnie: Ustawienia, mężczyzna z FFM: FFMI, mediana 18,9, bez zalecenia (L2), źródło', () => { const h = view('set', GM({ sex: 'M', cm: '180', age: '30', ...FFM('66') })); return h.includes('Dużo mięśni: oceniaj cel talią, nie samym BMI') && h.includes('Twoje FFMI: 20,4 kg/m² (masa beztłuszczowa na m² wzrostu). Mediana w badaniu dla mężczyzn 18-34 lat: 18,9. Masz więcej niż połowa badanych.') && h.includes('Miara nie włącza tego sama') && h.includes('pubmed.ncbi.nlm.nih.gov/12080449') && !h.includes('Mediana dotyczy wieku'); });
+tryc('mięśnie: Ustawienia, kobieta poniżej mediany: bez zalecenia (L2); wiek poza 18-34 z uwagą o wieku', () => { const h = view('set', GM({ sex: 'K', cm: '165', age: '40', ...FFM('40') })); return h.includes('Mediana w badaniu dla kobiet 18-34 lat: 15,4. Masz mniej niż połowa badanych.') && h.includes('Mediana dotyczy wieku 18-34 lat; w badaniu u mężczyzn nie zmieniała się z wiekiem, u kobiet lekko rosła.'); });
 tryc('mięśnie: Ustawienia bez FFM: podpowiedź, gdzie wpisać FFM, bez progu', () => { const h = view('set', GM()); return h.includes('Brak pomiaru masy beztłuszczowej (FFM). Wpisz FFM z wagi składu ciała w Mój dzień, Skład ciała, a Miara podpowie ustawienie.') && !h.includes('zalecamy') && !h.includes('Ustaw zalecane'); });
-tryc('mięśnie: ręczne ustawienie inne niż zalecane: przycisk „Ustaw zalecane” przywraca zalecenie i automat', () => { const h = view('set', GM({ sex: 'M', cm: '180', muscle: false, muscleAuto: false, goalWay: 'proc', ...FFM('66') })); click({ musclerec: '1' }); return h.includes('Ustaw zalecane') && T.S().muscle === true && T.S().muscleAuto === true && T.S().goalWay === 'talia' && !mainHtml().includes('Ustaw zalecane'); });
 // Poprawki po przeglądzie (17.11.2026)
 tryc('mięśnie: wzrost startowy to nie dane: muscleRec null, przełącznik bez zmian, w Ustawieniach prośba o wzrost', () => { const h = view('set', GM({ sex: 'M', cm: '180', muscle: false, touched: { kg: true, age: true, goal: true }, ...FFM('66') })); const r = T.muscleRec(), m = T.muscleSync(); return r === null && m === '' && T.S().muscle === false && h.includes('Brak wzrostu. Wpisz wzrost w Ustawieniach, a Miara podpowie ustawienie.') && !h.includes('Brak pomiaru masy beztłuszczowej'); });
-tryc('mięśnie: odczyt startowy z Ustawień włącza „Dużo mięśni”', () => { const h = view('set', GM({ sex: 'K', muscle: false, meas: {} })); click({ preset: 'M' }); if (!/Wczytano odczyt/.test(els.toast.innerHTML)) return true; /* wersja publiczna nie ma odczytów startowych; w prywatnej regułę pilnuje sanitizer */ return T.S().muscle === true && T.S().goalWay === 'talia'; });
 tryc('mięśnie: stare dane bez muscleAuto: zapisane ręczne „włączone” zostaje ręczne, „wyłączone” albo brak to automat', () => { const a = T.muscleFix({ muscle: true }, { muscle: true }), b = T.muscleFix({ muscle: false }, { muscle: false }), c = T.muscleFix({}, { muscle: false }), d = T.muscleFix({ muscle: true, muscleAuto: true }, { muscle: true, muscleAuto: true }); return a.muscleAuto === false && b.muscleAuto === true && c.muscleAuto === true && d.muscleAuto === true; });
 tryc('mięśnie: kopia bez muscleAuto z ręcznym „włączone” zostaje ręczna', () => { view('set', GM()); T.setPending({ app: 'talerz-i-trening', v: 1, created: '2026-11-09T10:00:00Z', noHealth: false, data: { sex: 'K', cm: '165', touched: { ...TA4 }, muscle: true, meas: { [dk(1)]: { ffm: '40' } } } }); click({ bkapply: '1' }); return T.S().muscleAuto === false && T.S().muscle === true; });
-tryc('mięśnie: automat po włączeniu mówi o tym komunikatem (zmiana płci)', () => { view('set', GM({ sex: 'M', cm: '180', muscle: false, goalWay: 'proc', ...FFM('66') })); els.toast.innerHTML = ''; click({ sex: 'M' }); return T.S().muscle === true && els.toast.innerHTML.includes('Masa beztłuszczowa powyżej mediany: włączono „Dużo mięśni”, cel liczony z talii. Zmienisz to w Ustawieniach.'); });
-tryc('mięśnie: wczytanie kopii z automatem i niską FFM: komunikat kopii zawiera informację o wyłączeniu', () => { view('set', GM()); T.setPending({ app: 'talerz-i-trening', v: 1, created: '2026-11-09T10:00:00Z', noHealth: false, data: { sex: 'K', cm: '165', touched: { ...TA4 }, muscle: true, muscleAuto: true, meas: { [dk(1)]: { ffm: '40' } } } }); els.toast.innerHTML = ''; click({ bkapply: '1' }); const t = els.toast.innerHTML; return T.S().muscle === false && t.includes('Wczytano kopię') && t.includes('poniżej mediany') && t.includes('data-undo'); });
-tryc('mięśnie: import ze Skrótu z FFM: komunikat importu zawiera informację o zmianie', () => { view('set', GM({ sex: 'M', cm: '180', muscle: false, meas: {} })); T.S().imp = { date: dk(0), vals: { ffm: '66' } }; els.toast.innerHTML = ''; click({ impsave: '1' }); const t = els.toast.innerHTML; return T.S().muscle === true && t.includes('Zapisano dane ze Skrótu') && t.includes('powyżej mediany'); });
-tryc('mięśnie: ta sama rekomendacja drugi raz: jeden komunikat, sposób celu wybrany ręcznie zostaje', () => { view('set', GM({ sex: 'M', cm: '180', muscle: false, goalWay: 'proc', ...FFM('66') })); const m1 = T.muscleSync(); T.S().goalWay = 'bmi'; T.S().muscle = false; const m2 = T.muscleSync(); return m1.includes('powyżej mediany') && m2 === '' && T.S().goalWay === 'bmi' && T.S().muscleAutoLast === true; });
-tryc('mięśnie: wiek startowy bez uwagi o wieku', () => { const h = view('set', GM({ sex: 'K', cm: '165', age: '40', touched: { kg: true, cm: true, goal: true }, ...FFM('40') })); return h.includes('zalecamy: wyłączone') && !h.includes('Mediana dotyczy wieku'); });
+tryc('mięśnie: wiek startowy bez uwagi o wieku', () => { const h = view('set', GM({ sex: 'K', cm: '165', age: '40', touched: { kg: true, cm: true, goal: true }, ...FFM('40') })); return h.includes('Masz mniej niż połowa badanych.') && !h.includes('Mediana dotyczy wieku'); });
 tryc('mięśnie: FFMI i mediana równe po zaokrągleniu: obie liczby z dwoma miejscami', () => { const h = view('set', GM({ sex: 'M', cm: '180', ...FFM('61.3') })); return h.includes('Twoje FFMI: 18,92 kg/m²') && h.includes('18-34 lat: 18,90.'); });
 // Rada 09.11.2026 (integracja z Apple Zdrowie): dane ze Skrótu w adresie po „#” albo w schowku, zapis dopiero po potwierdzeniu
 tryc('import: adres w=80,1&kroki=8000&sen=7:15', () => { const r = T.parseImport('w=80,1&kroki=8000&sen=7:15'); return r.date === dk(0) && T.num(r.vals.w) === 80.1 && T.num(r.vals.steps) === 8000 && T.num(r.vals.sleep) === 7.25 && !r.bad.length; });
@@ -3594,6 +3586,50 @@ tryc('P4d składnik: ser żółty z Fridy (FoodID 161, ser półtwardy 45% tł. 
   const i = T.ING.ser_zolty, E = (id) => sandbox.eqOf(T.MEALS.find((m) => m.id === id));
   return i && i.k === 342.8 && i.p === 24.5 && i.f === 26.8 && i.c === 0 && i.fib === 0 && /ser_zolty 161/.test(code)
     && E('s45').includes('blender') && E('s50').includes('piekarnik') && E('s52').includes('płyta');
+});
+// U1 Ustawienia: logika celu i walidacja (27.11.2026, makieta v13 zaakceptowana; plan rada/plany/2026-11-27-ustawienia-analiza-logiki.md L2, L3, L8, L13, L15, L17, L18)
+const TCH = { kg: true, cm: true, age: true, goal: true };
+const U1 = (o) => BASE({ sex: 'K', kg: '80', cm: '170', age: '35', goal: '74,5', mode: 'redukcja', touched: { ...TCH }, meas: {}, days: {}, ...o });
+tryc('U1 L3: BMI poniżej 18,5 w redukcji: cel kalorii bez deficytu i komunikat o lekarzu', () => {
+  view('set', U1({ kg: '45', cm: '158', age: '22', goal: '43' }));
+  const R = sandbox.rmr(), k = sandbox.targetKcal(), h = sandbox.modeHtml();
+  view('set', U1()); const k2 = sandbox.targetKcal(), R2 = sandbox.rmr();
+  return Math.abs(k - R * 1.3) < 1 && /BMI poniżej 18,5/.test(h) && /lekarz/.test(h) && Math.abs(k2 - R2 * 1.3 * 0.8) < 1;
+});
+tryc('U1 L8: cel startowy przy BMI poniżej 18,5 równy wadze, inaczej 5% mniej', () => {
+  view('set', U1({ kg: '45', cm: '158', touched: { kg: true, cm: true, age: true } })); const a = T.S().goal;
+  view('set', U1({ kg: '80', cm: '170', touched: { kg: true, cm: true, age: true } })); const b = T.S().goal;
+  return a === '45' && b === '76';
+});
+tryc('U1 L15: cel z „7% mniej” przelicza się po zmianie wagi; ręczna zmiana celu odpina regułę', () => {
+  view('set', U1()); click({ goalpct: '7' }); const S = T.S(); if (S.goal !== '74,5' || !S.goalRule || S.goalRule.pct !== 7) return false;
+  S.kg = '75'; view('set'); if (S.goal !== '70') return false;
+  const el = { dataset: { k: 'goal' }, value: '71', type: 'text', getAttribute: (a) => (a === 'inputmode' ? 'decimal' : null), setAttribute() {}, classList: { toggle() {} } };
+  (lis.input || []).forEach((f) => f({ target: el })); S.kg = '74'; view('set');
+  return !S.goalRule && S.goal === '71';
+});
+tryc('U1 L15: cel z BMI też przelicza się po zmianie wzrostu', () => {
+  view('set', U1({ goalWay: 'bmi' })); click({ goalbmi: '24.9' }); const S = T.S(); const g0 = S.goal; S.cm = '180'; view('set');
+  return S.goalRule && S.goalRule.bmi === 24.9 && g0 === '72' && S.goal === '80,5';
+});
+tryc('U1 L17: redukcja z celem nie niższym niż waga: komunikat przy celu i plan od „Popraw cel”', () => {
+  const h = view('set', U1({ kg: '75', goal: '76' })), h2 = view('set', U1({ kg: '75', goal: '75' })), h3 = view('set', U1());
+  return /Cel wyższy niż waga/.test(h) && /Cel równy wadze/.test(h2) && !/Cel (wyższy niż|równy) wa/.test(h3);
+});
+tryc('U1 L18: porada o utrzymaniu bez „4-8 tygodni” (brak wiersza w mapie powiązań)', () => !/4-8 tygodni/.test(code));
+tryc('U1 L2: automat „Dużo mięśni” wyłączony do czasu źródła z centylami FFMI; informacja o FFMI zostaje', () => {
+  view('set', U1({ sex: 'M', cm: '180', muscle: false, muscleAuto: true, muscleAutoLast: null, meas: { [T.todayKey()]: { ffm: '70' } } }));
+  const msg = T.muscleSync(), h = view('set');
+  return msg === '' && T.S().muscle === false && /FFMI/.test(h);
+});
+tryc('U1 L2: sekcja „Dużo mięśni” bez „zalecamy” i bez „Ustaw zalecane”; FFMI z medianą jako informacja', () => {
+  const h = view('set', U1({ sex: 'M', cm: '180', muscle: false, meas: { [T.todayKey()]: { ffm: '70' } } }));
+  return /Twoje FFMI/.test(h) && !/zalecamy/.test(h) && !h.includes('data-musclerec') && /nie włącza tego sama/.test(h);
+});
+tryc('U1 L13: talia do wzrostu blisko 0,5 z trzema miejscami (86,5 cm na 174 cm to 0,497)', () => {
+  view('set', U1({ cm: '174', meas: { [T.todayKey()]: { waist: '86,5' } } })); const t = sandbox.wskTxt();
+  view('set', U1({ cm: '174', meas: { [T.todayKey()]: { waist: '80' } } })); const t2 = sandbox.wskTxt();
+  return /0,497/.test(t) && /0,46/.test(t2) && !/0,460/.test(t2);
 });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
