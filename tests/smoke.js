@@ -3520,11 +3520,10 @@ tryc('P4 składniki: Frida najpierw (mango 1859, kiwi 1858, maliny 1850, gruszka
     chia: [461.8, 18.2, 34.1, 0, 40.9], pistacje: [605.5, 21.6, 50.2, 12.3, 8.8], awokado: [155, 1.6, 15.1, 0.5, 5.5], losos_wedz: [169.9, 20.9, 8.9, 1.6, 0], pomidorki: [22, 1.1, 0.5, 3.6, 1.3], mozzarella: [257, 18.6, 20.3, 0, 0] };
   return Object.entries(E).every(([id, [k, p, f, c, fib]]) => { const i = T.ING[id]; return i && i.k === k && i.p === p && i.f === f && i.c === c && i.fib === fib; });
 });
-tryc('P4 lista: jedna karta na rodzinę; wariant z S.vsel, bez wyboru pierwszy w kolejności sortowania', () => {
+tryc('P4 lista: jedna karta na rodzinę; wariant z S.vsel', () => {
   view('meals', BASE({ f: { ...T.S().f, type: 'sniadanie', noeq: [] }, vsel: { nocna: 's12' } }));
-  const G = sandbox.famPick(sandbox.filtered()), fam = G.filter((o) => o.m.fam).map((o) => o.m.fam);
-  const noc = G.find((o) => o.m.fam === 'nocna'), chia = G.find((o) => o.m.fam === 'chia');
-  return fam.length === new Set(fam).size && noc.m.id === 's12' && noc.vs.length === FAMV('nocna').length && chia.m.id === sandbox.filtered().find((o) => o.m.fam === 'chia').m.id;
+  const G = sandbox.famPick(sandbox.filtered()), fam = G.filter((o) => o.m.fam).map((o) => o.m.fam), noc = G.find((o) => o.m.fam === 'nocna');
+  return fam.length === new Set(fam).size && noc.m.id === 's12' && noc.vs.length === FAMV('nocna').length;
 });
 tryc('P4 ekran: karta rodziny z nazwą, grupą wariantów (aria-pressed) i wszystkimi wariantami w stosie; nieaktywne ukryte dla czytnika; przepis wybranego', () => {
   const h = view('meals', BASE({ f: { ...T.S().f, type: 'sniadanie', noeq: [], minP: 0, maxK: 1000, maxC: 130 }, vsel: { omlet: 's22' }, seenNew: {} })), M = els.mlist.innerHTML;
@@ -3537,6 +3536,42 @@ tryc('P4 ekran: dotknięcie wariantu zapisuje wybór, przepis prowadzi do niego,
   view('meals', BASE({ f: { ...T.S().f, type: 'sniadanie', noeq: [] }, vsel: {}, seenNew: {} })); click({ vsel: 'szak:s26' });
   const S = T.S(), art = (els.mlist.innerHTML.split('<article').find((a) => a.includes('aria-label="Wariant: Szakszuka"')) || '');
   return S.vsel.szak === 's26' && S.seenNew.var === true && art.includes('data-recipe="s26"') && !/aria-label="Wariant: Szakszuka">[\s\S]*?NOWE/.test(art);
+});
+// P4b Polecanie według celu i problemów (27.11.2026, makieta v6; mapa powiązań: 13 białko w redukcji, 25 zaparcie, 29-30 błonnik; reguła „Przy IO”): punkty IO 3, jelita 2, redukcja 2, błonnik 1
+const RM = (id) => T.MEALS.find((m) => m.id === id), RX = (id) => T.macros(RM(id), 1, 1), REC = (id) => sandbox.recOf(RM(id), RX(id));
+tryc('P4b punkty: bez profilu i w utrzymaniu tylko błonnik (1 pkt za „Dużo błonnika”), poza tym 0', () => {
+  view('meals', BASE({ mode: 'utrzymanie', prof: { cond: {}, pill: '' } }));
+  return T.MEALS.every((m) => { const x = T.macros(m, 1, 1), r = sandbox.recOf(m, x), fr = x.fib / x.k * 100; return r.s === (fr >= 3 ? 1 : 0); });
+});
+tryc('P4b punkty: IO 3 (reguła Przy IO), redukcja 2 (co najmniej 30 g białka), jelita 2 (dużo błonnika albo kiwi); kolejność powodów: problem, cel, błonnik', () => {
+  view('meals', BASE({ mode: 'redukcja', prof: { cond: { io: true, gut: true }, pill: '' } }));
+  const m = T.MEALS.find((y) => { const x = T.macros(y, 1, 1); return T.ioFit(y, x) && x.p >= 30 && x.fib / x.k * 100 >= 3; });
+  if (!m) return false;
+  const r = sandbox.recOf(m, T.macros(m, 1, 1));
+  const k = sandbox.recOf(RM('s18'), RX('s18'));
+  return r.s === 3 + 2 + 2 && r.why[0] === 'Przy IO' && r.why.includes('Białko 30+ g') && r.why.includes('Dużo błonnika') && k.why.includes('Dużo błonnika') && k.s >= 2;
+});
+tryc('P4b powody bez nowych słów (Z10): białko w redukcji jako wyróżniona komórka B z opisem dla czytnika, „Kiwi” tylko przy profilu jelit (BDA 2025)', () => {
+  view('meals', BASE({ mode: 'redukcja', prof: { cond: { gut: true }, pill: '' }, f: { ...T.S().f, type: 'obiad', noeq: [] } }));
+  const a = els.mlist.innerHTML, kw = T.mealTags(RM('s18'), RX('s18')), tk = kw.find((t) => t[0] === 'Kiwi');
+  view('meals', BASE({ mode: 'utrzymanie', prof: { cond: {}, pill: '' }, f: { ...T.S().f, type: 'obiad', noeq: [] } }));
+  const b = els.mlist.innerHTML, kb = T.mealTags(RM('s18'), RX('s18'));
+  return /class="mc pw"[^>]*>B/.test(a) && a.includes('(powód polecenia: białko przy redukcji)') && !a.includes('Białko 30+ g') && !/class="mc pw"/.test(b) && !!tk && /BDA 2025/.test(tk[1]) && !kb.some((t) => t[0] === 'Kiwi');
+});
+tryc('P4b lista: „Polecane dla Ciebie” na górze według punktów, potem „Pozostałe dania”; powody wyróżnione w znacznikach', () => {
+  view('meals', BASE({ mode: 'redukcja', prof: { cond: { io: true }, pill: '' }, f: { ...T.S().f, type: 'sniadanie', noeq: [], minP: 0, maxK: 1000, maxC: 130 }, vsel: {} }));
+  const G = sandbox.recSort(sandbox.famPick(sandbox.filtered())), sc = G.map((o) => sandbox.recScore(o)), h = els.mlist.innerHTML;
+  const k = sc.findIndex((s) => !s), recN = k < 0 ? sc.length : k;
+  const sorted = sc.slice(0, recN).every((s, i) => !i || sc[i - 1] >= s) && sc.slice(recN).every((s) => !s);
+  const ia = h.indexOf('Polecane dla Ciebie'), ib = h.indexOf('Pozostałe dania'), first = h.indexOf('<article');
+  return recN > 0 && sorted && ia > 0 && ia < first && (recN === sc.length || ib > ia) && /class="mtag pw"[^>]*>Przy IO</.test(h);
+});
+tryc('P4b wariant domyślny: najlepszy dla profilu, dopóki osoba sama nie wybierze', () => {
+  view('meals', BASE({ mode: 'redukcja', prof: { cond: {}, pill: '' }, f: { ...T.S().f, type: 'sniadanie', noeq: [] }, vsel: {} }));
+  const G = sandbox.famPick(sandbox.filtered()), ch = G.find((o) => o.m.fam === 'chia'), best = Math.max(...ch.vs.map((v) => sandbox.recOf(v.m, v.x).s));
+  view('meals', BASE({ mode: 'redukcja', prof: { cond: {}, pill: '' }, f: { ...T.S().f, type: 'sniadanie', noeq: [] }, vsel: { chia: 's19' } }));
+  const G2 = sandbox.famPick(sandbox.filtered());
+  return sandbox.recOf(ch.m, ch.x).s === best && G2.find((o) => o.m.fam === 'chia').m.id === 's19';
 });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
