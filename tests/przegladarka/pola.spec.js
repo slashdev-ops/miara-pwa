@@ -108,8 +108,8 @@ for (const tab of ['labs', 'health']) {
   });
 }
 
-// Mięśnie z FFMI (15.11.2026): wpis FFM w Mój dzień ustawia „Dużo mięśni” według zalecenia; Ustawienia pokazują FFMI i zalecenie
-test('mięśnie: po wpisie FFM Ustawienia pokazują FFMI z liczbą, a przełącznik jest w stanie zalecanym', async ({ page }) => {
+// Mięśnie z FFMI (15.11.2026; L2 27.11.2026: bez automatu): wpis FFM w Mój dzień nie zmienia „Dużo mięśni”; Ustawienia pokazują FFMI z medianą bez zalecenia
+test('mięśnie: po wpisie FFM Ustawienia pokazują FFMI z liczbą, przełącznik bez zmiany, bez zalecenia', async ({ page }) => {
   const errors = await open(page);
   await page.evaluate(() => { S.tab = 'day'; S.sex = 'M'; S.cm = '180'; S.muscle = false; S.muscleAuto = true; SHEET = false; render(); });
   const det = page.locator('details:has(#m_ffm)');
@@ -122,8 +122,9 @@ test('mięśnie: po wpisie FFM Ustawienia pokazują FFMI z liczbą, a przełącz
   const p = page.locator('#main p', { hasText: 'Twoje FFMI:' });
   await expect(p).toBeVisible();
   await expect(p).toContainText(/Twoje FFMI: \d+,\d kg\/m²/);
-  await expect(p).toContainText('zalecamy: włączone');
-  await expect(page.locator('#muscle')).toBeChecked();
+  await expect(p).not.toContainText('zalecamy');
+  await expect(p).toContainText('Miara nie włącza tego sama');
+  await expect(page.locator('#muscle')).not.toBeChecked();
   await expect(page.locator('[data-musclerec]')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
