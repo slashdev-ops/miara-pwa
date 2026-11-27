@@ -949,7 +949,18 @@ function ekranHtml(inner){
   const an=ef('and','Android (Chrome)','<ol class="steps"><li>Otwórz tę stronę w Chrome.</li><li>Na prawo od paska adresu stuknij w Więcej (⋮), potem w „Zainstaluj i utwórz skrót”, a potem w „Zainstaluj”.</li><li>Postępuj zgodnie z instrukcjami na ekranie.</li></ol><p class="srcl">Źródło: <a href="https://support.google.com/chrome/answer/9658361?hl=pl&amp;co=GENIE.Platform%3DAndroid" target="_blank" rel="noopener">Pomoc Google Chrome</a></p>',and);
   return (inner?'':'<h2 id="ekran">Na ekran główny</h2>')+'<p class="small">Z ikony Miara otwiera się jak aplikacja i działa bez internetu. Otwieraj ją zawsze z ikony: ikona i przeglądarka mogą mieć osobne dane.</p>'+(and?an+ios:ios+an)+'<p class="small muted">Masz już dane w przeglądarce? Przenieś je plikiem kopii (Ustawienia, Kopia danych).</p>';
 }
+// Powitanie W1 (makieta „Pierwsze kroki”, zaakceptowana): 3 plansze przed danymi; Pomiń przechodzi do ostatniej, dane są drugim krokiem albo później
+const WEL=[['Miara podpowiada, co zjeść','Pokazuje posiłki pasujące do Twojego dnia i liczy kalorie z Twoich danych.','card'],
+  ['Dane zostają w tym telefonie','Kopię zrobisz w Ustawieniach jednym przyciskiem i przeniesiesz ją plikiem.','file'],
+  ['Zacznij od jednej rzeczy','Szybki wpis dnia zajmuje kilka sekund. Swoje dane ustawisz potem, kiedy zechcesz.','']];
+function welHtml(){const i=Math.max(0,Math.min(WEL.length-1,S.wel|0)),[t,p,a]=WEL[i],last=i===WEL.length-1;let art='';
+  if(a==='card'){const m=MEALS[0],x=macros(m,carbMult(),1,null);art=`<div class="welart entry prow" aria-hidden="true"><div class="prow2"><span class="pname">${m.n}</span><span class="pk"><b>${fmt(x.k)}</b> kcal</span></div>${macChips(x)}</div>`}
+  else if(a==='file')art='<div class="welart welfile" aria-hidden="true"><span class="wphn"></span><span class="warr"></span><span class="wdoc"></span></div>';
+  return `<div class="wel"><div class="weltop"><span class="dots" aria-hidden="true">${WEL.map((_,n)=>`<i${n<=i?' class="on"':''}></i>`).join('')}</span>${last?'':'<button class="btn ghost small" data-welskip="1">Pomiń</button>'}</div>`
+    +`<div role="group" aria-roledescription="plansza" aria-label="Plansza ${i+1} z ${WEL.length}">${art}<h2 id="wh" tabindex="-1">${t}</h2><p>${p}</p></div>`
+    +`<div class="welacts">${last?'<button class="btn" data-introdone="1">Zacznij od szybkiego wpisu</button><button class="btn ghost" data-weldane="1">Najpierw moje dane</button>':'<button class="btn" data-welnext="1">Dalej</button>'}</div></div>`}
 function renderIntro(){
+  if(S.wel!=null){document.getElementById('main').innerHTML=welHtml();return}
   let h='<h2 style="font-size:24px">Twoje dane</h2><p>Miara podpowiada, co zjeść, i liczy kalorie z Twoich danych. Dane zostają tylko w tym telefonie.</p>'+(S.lite?'<p><button class="btn" data-introdone="1">Zacznij od szybkiego wpisu</button></p>':'')+seg([['K','Kobieta'],['M','Mężczyzna']],S.sex,'sex','','Płeć')+'<div class="panel">'+rwHtml('pf',['kg','cm','age','goal'])+RW_TIP+'</div>'+goalHint()+goalPctHtml()+'<p class="small muted">Zmienisz je w każdej chwili w Ustawieniach.</p>'+'<p><button class="btn" data-introdone="ok">Zaczynam</button></p>';
   if(!isApp())h+=fold('ekranintro','Jak dodać Miarę do ekranu głównego',ekranHtml(true));
   if(!S.lite)h+='<p style="text-align:center"><button class="btn ghost" data-introdone="1">Pomiń</button></p>';
@@ -1607,7 +1618,7 @@ function startSync(){const b=START[S.sex]||START.K;['cm','age'].forEach(k=>{if(i
 // Rodzaj zwierzaka z kopii: tylko znane gatunki (stare kaczka zostaje kaczuszką), nieznany to gąska
 function petFix(s){if(s&&s.pet&&typeof s.pet==='object'&&!PET.kinds().includes(s.pet.kind))s.pet.kind='gaska';return s}
 function syFix(s){s=petFix(suppFix(s));s=promoFix(s,todayKey());try{return typeof SYG!=='undefined'?SYG.fix(s):s}catch(e){return s}}
-function load(){let r=null;try{r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(viewFix(o,petNameFix(o,muscleFix(o,merge(clone(DEF),fixTouched(o))))))}}catch(e){}const f=clone(DEF);if(!r)f.lite=true;return f}
+function load(){let r=null;try{r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);return syFix(viewFix(o,petNameFix(o,muscleFix(o,merge(clone(DEF),fixTouched(o))))))}}catch(e){}const f=clone(DEF);if(!r){f.lite=true;f.wel=0}return f}
 function save(){if(DEMO)return;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}try{chSync()}catch(e){}}
 // Tryb pokazowy (#demo): dane przykładowe w pamięci, bez zapisu; zwierzak co 3 s pokazuje kolejny stan
 // ---------- Scenariusze do sprawdzania: dane przykładowe pod #demo-<nazwa>, nic się nie zapisuje ----------
@@ -2504,6 +2515,34 @@ function nextHtml(cur){const g=guideActive()?guideSteps().find(x=>!x.done):null,
   if(g){if(cur==='set'&&g.id==='data'){a='goto';v='dane';t='Dalej: sprawdź i zapisz dane na górze'}else if(cur==='set'&&g.id==='pet'){a='goto';v='towarzysz';t='Dalej: wybierz towarzysza niżej'}else if(!(g.act==='tab'&&g.arg===cur)){a=g.act==='nav'?'nav':'tab';v=g.act==='goto'?'day':g.arg;t='Dalej: '+lc(g.label)}}
   else if(cur==='day')return '';
   return `<p class="nextbar"><button class="btn" data-${a}="${v}">${t}</button></p>`}
+// W3a (makieta „Pierwsze kroki”): powitanie, wskazówki, znaki NOWE i lista zmian w jednej zwiniętej sekcji (Z10)
+// W2 samouczek z latarką (makieta „Pierwsze kroki”, zaakceptowana): ekran przygasa, element podświetlony w swoim kształcie; tylko pełny widok na Posiłkach
+// (prosty widok nie ma paska dnia). Gotowe albo Escape kończy i oznacza pokazane funkcje jako poznane; fokus wraca na element.
+const TOUR_S={kcal:['#dbar .kcell','Liczba kcal da się dotknąć','Na wierzchu: ile zostaje do celu. Dotknięcie pokazuje, ile już zjedzone z celu; drugie wraca.'],
+  mac:['#dbar .mcells','Makra otwierają rachunek dnia','Dotknij makr w pasku: zobaczysz cel, zjedzone i ile zostaje, z gramami białka, tłuszczu, węglowodanów i błonnika.'],
+  dop:['#main .dopbtn','Dopasuj danie do siebie','Dotknij makr w karcie: kafelki i suwaki zmienią białko, węglowodany albo tłuszcz, a Miara sama przeliczy gramatury składników.'],
+  zjem:['#main [data-addmeal]','„Zjem” zapisuje posiłek','Napis na przycisku mówi, ile kcal zostanie po tym posiłku, zanim go zapiszesz.']};
+const TOUR_ALL=['kcal','mac','dop','zjem'],TOUR_NEW=['kcal','mac','dop'];
+let TOUR=null;
+const tourUnseen=()=>TOUR_NEW.filter(k=>!(S.seenNew||{})[k]);
+function nFun(n){return n===1?'1 nowa funkcja':(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?n+' nowe funkcje':n+' nowych funkcji'}
+function tourStart(keys){if(S.lite){toast('Samouczek pokazuje pasek dnia z pełnego widoku. Włączysz go w Ustawieniach: Wpisy, Cała Miara.');return}
+  toastHide();SHEET=false;DOP=null;TODAY=false;S.tab='meals';TOUR={k:keys.length?keys:TOUR_ALL,i:0};window.scrollTo(0,0);render();dopFocus('#tbh')}
+function tourEnd(){if(!TOUR)return;const sel=TOUR_S[TOUR.k[TOUR.i]][0],sn=Object.assign({},S.seenNew);TOUR.k.forEach(k=>{if(TOUR_NEW.includes(k))sn[k]=true});S.seenNew=sn;S.tourDone=true;TOUR=null;save();render();dopFocus(sel);
+  const sr=document.getElementById('sr');if(sr)sr.textContent='Samouczek zamknięty. Powtórzysz go w Ustawieniach, w sekcji Pierwsze kroki i co nowego.'}
+function tourHtml(){const k=TOUR.k[TOUR.i],[,h,p]=TOUR_S[k],n=TOUR.k.length,last=TOUR.i===n-1,nw=TOUR_NEW.includes(k)&&!(S.seenNew||{})[k]&&S.nowe!==false;
+  return `<div class="thole" id="thole">${nw?'<span class="ttag" aria-hidden="true">NOWE</span>':''}</div><div class="tbub" id="tbub" role="dialog" aria-modal="false" aria-labelledby="tbh"><button class="tclose" data-tourend="1" aria-label="Zamknij samouczek">×</button>`
+    +`<span class="small muted tcnt">${TOUR.i+1} z ${n}</span><h3 id="tbh" tabindex="-1">${h}</h3><p>${p}</p><div class="tbrow"><button class="btn" data-${last?'tourend':'tournext'}="1">${last?'Gotowe':'Dalej'}</button></div></div>`}
+function tourPlace(){const w=document.getElementById('tour');if(!TOUR||!w||typeof document.querySelector!=='function')return;const t=document.querySelector(TOUR_S[TOUR.k[TOUR.i]][0]),ho=document.getElementById('thole'),bu=document.getElementById('tbub');if(!ho||!bu||!ho.style)return;
+  if(!t||!t.getBoundingClientRect){ho.style.display='none';bu.style.top='30%';bu.style.bottom='auto';return}
+  const r0=t.getBoundingClientRect();if(r0.top<60||r0.bottom>window.innerHeight-60){t.scrollIntoView({block:'center'})}
+  const r=t.getBoundingClientRect(),ih=window.innerHeight;
+  Object.assign(ho.style,{display:'',left:(r.left-4)+'px',top:(r.top-4)+'px',width:(r.width+8)+'px',height:(r.height+8)+'px'});
+  if(r.top+r.height/2>ih/2){bu.style.bottom=(ih-r.top+(ho.firstChild?30:12))+'px';bu.style.top='auto'}else{bu.style.top=(r.bottom+18)+'px';bu.style.bottom='auto'}}
+// Po aktualizacji: raz komunikat o nowościach z „Pokaż” (samouczek tylko po nich); bez niego przy wyłączonych znakach NOWE i w prostym widoku
+function updToast(){if(!S.onb||S.lite||S.nowe===false||S.updToast||DEMO)return;const u=tourUnseen();if(!u.length)return;S.updToast=true;save();toast(nFun(u.length),{act:'tourstart',arg:'new',label:'Pokaż',ms:12000})}
+const NOWE_L=['Liczba kcal w pasku przełącza: zostaje albo zjedzone z celu.','Makra w pasku otwierają rachunek dnia.','Makra w karcie dania otwierają „Dopasuj danie”.','Dania mają warianty: jedna karta, kilka wersji.','„Mam tylko”: dania na sprzęt, który masz, i szybkie dania bez gotowania.','Ustawienia: wartości typowe w Polsce i „Plan na teraz”.','Powitanie w 3 planszach.'];
+function firstHtml(){return `<details class="fold" data-fold="pierwsze"${OPEN_F.has('pierwsze')?' open':''}><summary>Pierwsze kroki i co nowego</summary><div class="panel" style="padding:4px 16px 12px"><p><button class="btn ghost" data-intro="1">Pokaż powitanie</button></p><p><button class="btn ghost" data-tourstart="all">Przejdź samouczek</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><div class="field"><label for="nowe">Oznaczaj nowe funkcje znakiem NOWE</label><input type="checkbox" class="switch" id="nowe" data-k="nowe" ${S.nowe!==false?'checked':''}></div><h3>Co nowego</h3><ul>${NOWE_L.map(x=>'<li>'+x+'</li>').join('')}</ul></div></details>`}
 function renderSet(){
   const bmi=kg()/Math.pow((num(S.cm)||165)/100,2);
   let h='<div class="dhead"><h2 id="dane">Twoje dane</h2>'+seg([['K','K'],['M','M']],S.sex,'sex','dsex','Płeć: K kobieta, M mężczyzna')+'</div><div class="panel dcells">'+rwHtml('pfh',['age','cm'])+'</div>'
@@ -2528,7 +2567,7 @@ ${S.sex==='K'?`<div class="field"><label for="lip">Śledź objawy nóg (lipodemi
   <li><a href="https://fitmum.ku.dk/2011_Compendium_of_Physical_Activities.pdf" target="_blank" rel="noopener">2011 Compendium of Physical Activities</a>: ergometr wioślarski. Pływanie, nordic walking i orbitrek z wiedzy ogólnej, niesprawdzone.</li>
   <li>Równania metaboliczne ACSM dla marszu i biegu, wzór Mifflina-St Jeora, sprawność brutto jazdy na rowerze ok. 20%: wiedza ogólna, niesprawdzone w tej aplikacji ze źródłem.</li>
   <li>Wartości odżywcze: typowe wartości z tabel składu, orientacyjne.</li></ol>`)}
-  ${nextHtml('set')}<p><button class="btn ghost" data-intro="1">Pokaż wprowadzenie</button></p><p><button class="btn ghost" data-tipsreset="1">Pokaż wskazówki ponownie</button></p><p><button class="btn ghost" data-reset="1">Przywróć ustawienia domyślne</button></p>`;
+  ${nextHtml('set')}${firstHtml()}<p><button class="btn ghost" data-reset="1">Przywróć ustawienia domyślne</button></p>`;
   document.getElementById('main').innerHTML=h;
 }
 
@@ -2609,8 +2648,8 @@ function tileFit(root){if(!root||typeof root.querySelectorAll!=='function'||type
     if(mw<=inner+0.5)continue;const nc=Math.max(1,Math.floor((w+gap)/(mw+pad+1+gap)));if(nc<cols){g.style.setProperty('--cols',String(nc));g.dataset.fit='1'}}}
 // Po załadowaniu czcionek szerokość słów jest inna: kolumny kafelków liczone ponownie
 if(typeof document!=='undefined'&&document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>tileFit(document.getElementById('main'))).catch(()=>{});
-if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('resize',()=>tileFit(document.getElementById('main')));document.addEventListener('toggle',()=>tileFit(document.getElementById('main')),true)}
-function render(){if(S.tab!=='day'){LITE_UI.focus='';LITE_UI.say=''}if(S.tab!=='labs')LAB_KEEP=null;if(typeof document!=='undefined'&&document.documentElement&&document.documentElement.dataset){document.documentElement.dataset.pm=S.pmLeft?'l':'r';document.documentElement.dataset.still=(S.still||S.focus)?'1':''}if(S.focus&&typeof PET!=='undefined'&&PET.drop)PET.drop();startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():DOP?dopHtml():TODAY?todayHtml():'';const db=document.getElementById('dbar');if(db){const bh=barHtml();db.innerHTML=bh;if(document.body&&document.body.classList)document.body.classList.toggle('hasbar',!!bh);navH()}}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');if(S.focus){const mt=skupMain(S.tab);if(mt)SKUP.fold(document.getElementById('main'),mt,'skupmore-'+S.tab,OPEN_F.has('skupmore-'+S.tab),'Więcej na tym ekranie')}if(typeof WPISY!=='undefined')WPISY.mount(document.getElementById('main'),{done:id=>{save();renderKeep((id&&document.getElementById(id))||document.activeElement);liteAfter()},say:t=>{const sr=document.getElementById('sr');if(sr)sr.textContent=t}});tileLabels(document.getElementById('main'));tileLabels(document.getElementById('sheet'));PET.flush()}
+if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('resize',()=>{tileFit(document.getElementById('main'));if(TOUR)tourPlace()});document.addEventListener('toggle',()=>tileFit(document.getElementById('main')),true)}
+function render(){if(S.tab!=='day'){LITE_UI.focus='';LITE_UI.say=''}if(S.tab!=='labs')LAB_KEEP=null;if(typeof document!=='undefined'&&document.documentElement&&document.documentElement.dataset){document.documentElement.dataset.pm=S.pmLeft?'l':'r';document.documentElement.dataset.still=(S.still||S.focus)?'1':'';document.documentElement.dataset.nowe=S.nowe===false?'0':''}if(S.focus&&typeof PET!=='undefined'&&PET.drop)PET.drop();startSync();renderTabs();{const sh=document.getElementById('sheet');if(sh)sh.innerHTML=SHEET?sheetHtml():DOP?dopHtml():TODAY?todayHtml():'';const db=document.getElementById('dbar');if(db){const bh=barHtml();db.innerHTML=bh;if(document.body&&document.body.classList)document.body.classList.toggle('hasbar',!!bh);navH()}}({help:renderHelp,meals:renderMeals,train:renderTrain,day:renderDay,set:renderSet,sos:renderSos,health:renderHealth,labs:renderLabs,visit:renderVisit,intro:renderIntro,review:renderReview,krok:renderKrok,import:renderImport,recipe:renderRecipe,knee:renderKnee,mob:renderMob,impact:renderImpact,challenge:renderChallenge,pet:renderPet}[S.tab]||renderDay)();{const t=tipHtml(S.tab),el=document.getElementById('main');if(t)el.innerHTML=t+el.innerHTML}if(DEMO)document.getElementById('main').insertAdjacentHTML('afterbegin','<div class="note demo"><span>'+(DEMO_N?`<b>Scenariusz: ${SCEN[DEMO_N].t}.</b> Sprawdź: ${SCEN[DEMO_N].chk} Nic się nie zapisuje.`:'<b>Tryb pokazowy, dane przykładowe.</b> Zmiany się nie zapisują.')+'</span><button class="btn ghost small" data-demoexit="1">Wyjdź</button></div>');if(S.focus){const mt=skupMain(S.tab);if(mt)SKUP.fold(document.getElementById('main'),mt,'skupmore-'+S.tab,OPEN_F.has('skupmore-'+S.tab),'Więcej na tym ekranie')}if(typeof WPISY!=='undefined')WPISY.mount(document.getElementById('main'),{done:id=>{save();renderKeep((id&&document.getElementById(id))||document.activeElement);liteAfter()},say:t=>{const sr=document.getElementById('sr');if(sr)sr.textContent=t}});tileLabels(document.getElementById('main'));tileLabels(document.getElementById('sheet'));{const tw=document.getElementById('tour');if(tw){tw.innerHTML=TOUR?tourHtml():'';if(tw.classList&&tw.classList.toggle)tw.classList.toggle('on',!!TOUR);if(TOUR)tourPlace()}}PET.flush()}
 // Komunikat: czas z długości tekstu, 3-12 s, wydłużany albo wyłączany w Ustawieniach (WCAG 2.2.1); zawsze z zamknięciem.
 // Drugi argument: liczba (najkrótszy czas w ms) albo {act,arg,label} (przycisk przejścia), {focus} (pole do pokazania)
 function toastMs(t){const m={std:1,long:2,stay:0}[S.toastLen];return (m==null?1:m)*Math.min(12000,Math.max(3000,1500+String(t).length*60))}
@@ -2732,7 +2771,7 @@ function quickFromHash(h){const q=QUICK[String(h||'')];if(!q)return false;S.tab=
   try{if(typeof history!=='undefined'&&history.replaceState)history.replaceState(null,'',location.pathname+location.search)}catch(_){}return true}
 function quickFocus(){if(typeof document.querySelector!=='function')return;window.scrollTo(0,0);const el=QUICK_ID&&document.getElementById(QUICK_ID);
   if(el){if(el.scrollIntoView)el.scrollIntoView({block:'center'});focusEl(el)}else focusEl(document.querySelector('header h1'))}
-document.addEventListener('keydown',e=>{if(DOP&&e.key==='Escape'){dopClose();return}if(TODAY&&e.key==='Escape'){todayClose();return}if(!SHEET)return;if(e.key==='Escape'){SHEET=false;sheetPop();render();addFocus();return}
+document.addEventListener('keydown',e=>{if(TOUR&&e.key==='Escape'){tourEnd();return}if(DOP&&e.key==='Escape'){dopClose();return}if(TODAY&&e.key==='Escape'){todayClose();return}if(!SHEET)return;if(e.key==='Escape'){SHEET=false;sheetPop();render();addFocus();return}
   if(e.key==='Tab'){const bs=[...document.querySelectorAll('#sheet .sheetbox button')];if(!bs.length)return;const i=bs.indexOf(document.activeElement);
     if(e.shiftKey&&i<=0){e.preventDefault();bs[bs.length-1].focus()}else if(!e.shiftKey&&i===bs.length-1){e.preventDefault();bs[0].focus()}}});
 // Po akcji (przegląd ekranów 11.11.2026, WCAG 2.4.3): przed przerysowaniem zapamiętaj przycisk, jego miejsce na ekranie
@@ -2824,8 +2863,13 @@ document.addEventListener('click',e=>{
   else if(d.litedone){liteCollapse(todayKey())}
   else if(d.unlock){if(!UNLOCK.includes(d.unlock))return;S.unlock=S.unlock||[];if(!S.unlock.includes(d.unlock))S.unlock.push(d.unlock);S.unlockAt=todayKey();if(d.unlock==='cala')S.lite=false}
   else if(d.unlocklater){const t=new Date();t.setDate(t.getDate()+7);S.unlockAt=todayKey();S.unlockSnooze=keyOf(t)}
-  else if(d.introdone){const ok=d.introdone==='ok',st=['kg','cm','age'].filter(isStart);if(ok&&st.length){S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);save();render();const nm=st.map(k=>({kg:'waga',cm:'wzrost',age:'wiek'})[k]),lst=nm.length>1?nm.slice(0,-1).join(', ')+' i '+nm.at(-1):nm[0];toast(`${lst[0].toUpperCase()+lst.slice(1)} ${nm.length>1?'są':'jest'} na wartościach startowych. Ustaw swoje w Ustawieniach, żeby kalorie były liczone dla Ciebie.`,{act:'tab',arg:'set',label:'Ustawienia'});return}if(ok&&S.guide)S.guide.dataOk=true;S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);if(ok){save();render();toast(`Twój cel na start: ${fmt(targetKcal())} kcal dziennie.`+(S.pet?'':' W Moim dniu czeka jajko: wybierz, kto się z niego wykluje.'),S.pet?0:{act:'tab',arg:'pet',label:'Wybierz'});return}}
-  else if(d.intro){S.introStep=0;S.tab='intro';window.scrollTo(0,0)}
+  else if(d.welnext||d.welskip){S.wel=d.welskip?WEL.length-1:Math.min(WEL.length-1,(S.wel|0)+1);save();render();dopFocus('#wh');return}
+  else if(d.weldane){S.wel=null;save();render();dopFocus('#main h2');return}
+  else if(d.tourstart){tourStart(d.tourstart==='new'?tourUnseen():TOUR_ALL);return}
+  else if(d.tournext){if(TOUR){TOUR.i=Math.min(TOUR.k.length-1,TOUR.i+1);render();dopFocus('#tbh')}return}
+  else if(d.tourend){tourEnd();return}
+  else if(d.introdone){S.wel=null;const ok=d.introdone==='ok',st=['kg','cm','age'].filter(isStart);if(ok&&st.length){S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);save();render();const nm=st.map(k=>({kg:'waga',cm:'wzrost',age:'wiek'})[k]),lst=nm.length>1?nm.slice(0,-1).join(', ')+' i '+nm.at(-1):nm[0];toast(`${lst[0].toUpperCase()+lst.slice(1)} ${nm.length>1?'są':'jest'} na wartościach startowych. Ustaw swoje w Ustawieniach, żeby kalorie były liczone dla Ciebie.`,{act:'tab',arg:'set',label:'Ustawienia'});return}if(ok&&S.guide)S.guide.dataOk=true;S.onb=true;S.introStep=0;S.tab='day';window.scrollTo(0,0);if(ok){save();render();toast(`Twój cel na start: ${fmt(targetKcal())} kcal dziennie.`+(S.pet?'':' W Moim dniu czeka jajko: wybierz, kto się z niego wykluje.'),S.pet?0:{act:'tab',arg:'pet',label:'Wybierz'});return}}
+  else if(d.intro){S.introStep=0;S.wel=0;S.tab='intro';window.scrollTo(0,0)}
   else if(d.goto){const el=document.getElementById(d.goto);if(el){SKUP.reveal(el);if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.focus)el.focus({preventScroll:true})}return}
   else if(d.kq){const [q,v]=d.kq.split(':');S.krok=S.krok||{ans:{},eq:{},done:false,conf:false,zap:{}};S.krok.ans[q]=v}
   else if(d.keq){S.krok=S.krok||{ans:{},eq:{},done:false,conf:false,zap:{}};S.krok.eq[d.keq]=!S.krok.eq[d.keq]}
@@ -3025,6 +3069,7 @@ if(S.onb&&muscleToast())save();
 if(typeof location!=='undefined'&&S.onb&&!impFromHash(location.hash)&&quickFromHash(location.hash))QUICK_PENDING=true;
 if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('hashchange',()=>{if(!S.onb)return;if(impFromHash(location.hash))render();else if(quickFromHash(location.hash)){render();quickFocus()}});
 render();
+updToast();
 if(QUICK_PENDING){QUICK_PENDING=false;quickFocus()}
 if(!DEMO)chInit();
 // Automatyczna wysyłka kopii dla rady po starcie (bez blokowania widoku)
