@@ -2440,6 +2440,7 @@ document.addEventListener('click',e=>{
   if(d.addsheet){SHEET=true;sheetPush();render();sheetFocus();return}
   if(SHEET){SHEET=false;sheetPop();if(d.sheetclose){render();addFocus();return}}
   if(d.toastclose){toastHide();return}
+  if(d.odswiez){if(typeof location!=='undefined'&&location.reload)location.reload();return}
   if(d.undo){if(UNDO){const tab=S.tab;S=JSON.parse(UNDO);S.tab=tab;UNDO=null;save();render();toast('Przywrócono')}else toastHide();return}
   // Przycisk, który reaguje: w oknie „Cofnij” dotknięcie cofa ostatni zapis, drugie dotknięcie w 700 ms po zapisie nic nie robi
   if(d.ab&&AB[d.ab]){const r=actOf(d.ab);if(r.tap==='skip')return;if(r.tap==='undo'){actUndo(d.ab,at);return}}

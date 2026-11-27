@@ -3349,6 +3349,57 @@ tryc('9b: karta planu: nazwa i kcal w jednym wierszu, pod nimi makra W6, potem Z
 tryc('9b: Zjem pokazuje skutek przed zapisem: „zostanie X kcal” w napisie przycisku', () => { FIBF(); const ids = T.planIds(); return PROW9(view('meals', BASE())).every((r, i) => { const z = ZJEM9(r), x = T.macros(M(ids[i]), 1, 1), n = z && +z.replace(/\D/g, ''); return z && /^zostanie \d[\d ]* kcal$/.test(z) && Math.abs(n - (T.targetKcal() - x.k)) <= 1; }); });
 tryc('9b: po przekroczeniu celu Zjem mówi „razem X z Y kcal”, bez słów oceniających (Z6)', () => { FIBF(); const rs = PROW9(view('meals', BASE({ days: { [dk(0)]: [{ kind: 'm', label: 'a', k: 3000, p: 0, f: 0, c: 0 }] } }))); return rs.length > 0 && rs.every((r) => /^razem \d[\d ]* z \d[\d ]* kcal$/.test(ZJEM9(r) || '') && !/przekr|za dużo|ponad/.test(r)); });
 tryc('9b: zjedzony posiłek: bez Zmień i bez skutku, przycisk „Zjedzone · Cofnij” w karcie', () => { FIBF(); const id = T.planIds()[0]; const rs = PROW9(view('meals', BASE({ days: { [dk(0)]: [{ kind: 'm', id, label: 'a', k: 400, p: 0, f: 0, c: 0 }] } }))); return !rs[0].includes('data-swap=') && ZJEM9(rs[0]) === null && rs[0].includes('data-addmeal'); });
+// Start z pamięci (27.11.2026): service worker odpowiada od razu kopią z telefonu, sieć odświeża kopię w tle; nowa wersja app.js albo index.html = wiadomość do okien
+const swRun = () => {
+  const L = {}, store = new Map(), msgs = [], waits = [];
+  const key = (r) => (typeof r === 'string' ? new URL(r, 'https://m.test/').href : r.url);
+  const cache = { put: (r, res) => { store.set(key(r), res); return Promise.resolve(); }, match: (r) => Promise.resolve(store.get(key(r))), addAll: () => Promise.resolve() };
+  const sb = {
+    self: { addEventListener: (t, f) => { L[t] = f; }, location: { origin: 'https://m.test' }, skipWaiting: () => Promise.resolve(),
+      clients: { claim: () => Promise.resolve(), matchAll: () => Promise.resolve([{ postMessage: (m) => msgs.push(m) }]) } },
+    caches: { open: () => Promise.resolve(cache), match: (r) => cache.match(r), keys: () => Promise.resolve([]), delete: () => Promise.resolve(true) },
+    fetch: () => new Promise(() => {}), URL, Promise, setTimeout,
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'sw.js'), 'utf8'), sb);
+  const res = (body, etag, ok = true) => ({ ok, body, headers: { get: (k) => (/etag/i.test(k) ? etag : null) }, clone() { return res(body, etag, ok); } });
+  const go = (url) => { let out; const ev = { request: { method: 'GET', url: new URL(url, 'https://m.test/').href }, respondWith: (p) => { out = p; }, waitUntil: (p) => waits.push(p) }; L.fetch(ev); return out; };
+  const settle = () => new Promise((r) => setTimeout(r, 20)).then(() => Promise.all(waits));
+  return { sb, store, msgs, res, go, settle };
+};
+const within = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r('CZAS'), ms))]);
+tryAsync('start z pamięci: z kopią w telefonie odpowiedź od razu, nawet gdy sieć nie odpowiada', () => {
+  const t = swRun(); t.store.set('https://m.test/app.js', t.res('stara', '"a1"'));
+  return within(t.go('/app.js'), 100).then((r) => r !== 'CZAS' && r.body === 'stara');
+});
+tryAsync('start z pamięci: bez kopii odpowiedź z sieci, kopia zapisana', () => {
+  const t = swRun(); t.sb.fetch = () => Promise.resolve(t.res('nowa', '"b1"'));
+  return t.go('/app.js').then((r) => t.settle().then(() => r.body === 'nowa' && t.store.get('https://m.test/app.js').body === 'nowa'));
+});
+tryAsync('start z pamięci: nowa wersja app.js (inny ETag) odświeża kopię i wysyła do okien „nowa-wersja”', () => {
+  const t = swRun(); t.store.set('https://m.test/app.js', t.res('stara', '"a1"')); t.sb.fetch = () => Promise.resolve(t.res('nowa', '"a2"'));
+  return t.go('/app.js').then((r) => t.settle().then(() => r.body === 'stara' && t.store.get('https://m.test/app.js').body === 'nowa' && t.msgs.some((m) => m && m.type === 'nowa-wersja')));
+});
+tryAsync('start z pamięci: ten sam ETag i pliki inne niż app.js i index.html bez wiadomości', () => {
+  const t = swRun(); t.store.set('https://m.test/app.js', t.res('a', '"a1"')); t.store.set('https://m.test/pet.js', t.res('p', '"p1"'));
+  t.sb.fetch = (r) => Promise.resolve(/pet/.test(r.url) ? t.res('p2', '"p2"') : t.res('a', '"a1"'));
+  return Promise.all([t.go('/app.js'), t.go('/pet.js')]).then(() => t.settle()).then(() => t.msgs.length === 0);
+});
+tryAsync('start z pamięci: bez sieci i bez kopii strony strona główna z pamięci', () => {
+  const t = swRun(); t.store.set('https://m.test/index.html', t.res('index', '"i1"')); t.sb.fetch = () => Promise.reject(new Error('offline'));
+  return t.go('/?x=1').then((r) => r && r.body === 'index');
+});
+// Okno: wiadomość „nowa-wersja” pokazuje komunikat z przyciskiem Odśwież; przycisk przeładowuje stronę
+tryc('start z pamięci: sw-register pokazuje „Jest nowa wersja Miary” z przyciskiem Odśwież', () => {
+  let on = null, shown = null;
+  const sb = { navigator: { serviceWorker: { register: () => Promise.resolve(), addEventListener: (t, f) => { if (t === 'message') on = f; } } }, location: { hostname: 'localhost', protocol: 'https:' },
+    window: { addEventListener: () => {} }, toast: (t, o) => { shown = { t, o }; } };
+  sb.window = Object.assign(sb.window, { toast: sb.toast });
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'sw-register.js'), 'utf8'), sb);
+  if (!on) return false;
+  on({ data: { type: 'nowa-wersja' } });
+  return !!shown && /nowa wersja/i.test(shown.t) && shown.o && shown.o.act === 'odswiez' && shown.o.label === 'Odśwież';
+});
+tryc('start z pamięci: Odśwież przeładowuje stronę', () => { let n = 0; sandbox.location = { reload: () => { n++; } }; click({ odswiez: '1' }); delete sandbox.location; return n === 1; });
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
