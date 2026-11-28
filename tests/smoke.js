@@ -178,7 +178,7 @@ tryc('odznaka świętowana raz (petSeen)', () => {
 });
 tryc('wprowadzenie: 1 ekran danych, Zaczynam, bez kropek postępu i bez wyboru zwierzaka', () => { const a = view('intro', { introStep: 0, wel: null }); return a.includes('Twoje dane') && !a.includes('data-intronext') && a.includes('>Zaczynam<') && !a.includes('Krok 1 z') && !a.includes('data-petkind'); });
 const swSrc = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-check('sw.js: pet.js i krój pisma w pamięci podręcznej, CACHE miara-v5 (duże wydanie: wiersze wartości, suwaki z prędkością, przyciski, które reagują)', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v5'") && swSrc.includes("'./fonts/fraunces-latin-ext-600-normal.woff2'"));
+check('sw.js: pet.js i krój pisma w pamięci podręcznej, CACHE miara-v6 (duże wydanie: motyw A, sylwetka)', swSrc.includes("'./pet.js'") && swSrc.includes("'miara-v6'") && swSrc.includes("'./fonts/fraunces-latin-ext-600-normal.woff2'"));
 check('index.html: pet.js przed app.js', /pet\.js[\s\S]*app\.js/.test(html));
 
 // Zwierzak: sylwetka z pomiarów (opcjonalna)
@@ -514,12 +514,12 @@ tryc('wygląd: obramowanie pól i znaczników wyboru co najmniej 3:1 (WCAG 1.4.1
   return true;
 });
 tryc('wygląd: pola w kodzie aplikacji bez słabego obramowania (1.4.11)', () => { const bad = (code.match(/<(textarea|input|select)[^>]*>/g) || []).filter((t) => t.includes('var(--line)')); if (bad.length) throw new Error(bad.length + ' pól: ' + bad.map((t) => t.slice(0, 40)).join(' | ')); return true; });
-tryc('wygląd: Stan dziś jako zielona karta, tekst pomocniczy co najmniej 4,5:1 w obu motywach', () => {
+tryc('wygląd: Stan dziś jako karta wyniku (--hero), tekst pomocniczy co najmniej 4,5:1 w obu motywach', () => {
   const b = themeBlocks(), bad = [];
-  for (const [name, blk] of [['jasny', b.light], ['ciemny', b.dark]]) { const c = contrast(tok(blk, 'on-green-muted'), tok(blk, 'green')); if (c < 4.5) bad.push(`${name} ${c.toFixed(2)}`); }
+  for (const [name, blk] of [['jasny', b.light], ['ciemny', b.dark]]) { const c = contrast(tok(blk, 'on-hero-muted'), tok(blk, 'hero')); if (c < 4.5) bad.push(`${name} ${c.toFixed(2)}`); }
   const st = ruleOf('.stan');
-  if (!st.includes('background:var(--green)') || !st.includes('color:var(--on-green)')) bad.push('.stan');
-  for (const sel of ['.stan .stan-lab', '.stan .stan-src', '.stan .stan-val small']) if (!ruleOf(sel).includes('var(--on-green-muted)')) bad.push(sel);
+  if (!st.includes('background:var(--hero)') || !st.includes('color:var(--on-hero)')) bad.push('.stan');
+  for (const sel of ['.stan .stan-lab', '.stan .stan-src', '.stan .stan-val small']) if (!ruleOf(sel).includes('var(--on-hero-muted)')) bad.push(sel);
   if (bad.length) throw new Error(bad.join('; '));
   return true;
 });
@@ -3859,6 +3859,24 @@ tryc('motyw A: karta od tła co najmniej 1,15 (jasny) i 1,2 (ciemny); obrys „M
     for (const k of ['brass', 'edge']) { const c = contrast(tok(x, k), s); if (c < 3) bad.push(`${n} ${k}/surface ${c.toFixed(2)}`); } }
   if (bad.length) throw new Error(bad.join('; ')); return true;
 });
+// Przegląd motywu A, runda 2 (28.11.2026): zaznaczenie różni się od przycisku, panel wyniku nie świeci w ciemnym, nowa pamięć podręczna
+const cssRule = (sel) => { const i = sysCss.indexOf(sel + '{'); return i < 0 ? '' : sysCss.slice(i + sel.length + 1, sysCss.indexOf('}', i)); };
+tryc('motyw A: zaznaczony kafelek bez wypełnienia przycisku (tło --tint, obrys --green 2 px, pogrubienie)', () => {
+  const r = cssRule('.chip.inc,.seg button.on');
+  return /background:var\(--tint\)/.test(r) && /border-color:var\(--green\)/.test(r) && /inset 0 0 0 1px var\(--green\)/.test(r) && /font-weight:700/.test(r) && /color:var\(--ink\)/.test(r);
+});
+tryc('motyw A: panel wyniku (.readout, .stan) w tokenie --hero; w ciemnym ciemny (do 2:1 od tła), tekst i opis 7:1 w obu motywach', () => {
+  const b = themeBlocks(), bad = [];
+  if (!/background:var\(--hero\)/.test(cssRule('.readout')) || !/background:var\(--hero\)/.test(cssRule('.stan'))) bad.push('panel nie używa --hero');
+  for (const [n, x] of [['jasny', b.light], ['ciemny mq', b.darkMq], ['ciemny', b.dark]]) {
+    const h = tok(x, 'hero'); if (!h) { bad.push(`${n} brak --hero`); continue; }
+    for (const k of ['on-hero', 'on-hero-muted']) { const c = contrast(tok(x, k), h); if (!(c >= 7)) bad.push(`${n} ${k}/hero ${c.toFixed(2)}`); }
+    if (n !== 'jasny' && contrast(h, tok(x, 'bg')) > 2) bad.push(`${n} panel świeci ${contrast(h, tok(x, 'bg')).toFixed(2)}`);
+  }
+  if (bad.length) throw new Error(bad.join('; ')); return true;
+});
+tryc('motyw A: przycisk rozgrzewki zawija napis zamiast go ucinać', () => /white-space:normal/.test(cssRule('.warm-go .btn')));
+tryc('motyw A: nowa pamięć podręczna miara-v6 (nowe kolory i sylwetka.js u wszystkich przy pierwszym otwarciu)', () => /const CACHE = 'miara-v6'/.test(fs.readFileSync(path.join(root, 'sw.js'), 'utf8')));
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);

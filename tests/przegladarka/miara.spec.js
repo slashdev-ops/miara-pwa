@@ -335,9 +335,10 @@ test('każdy stan ma reakcję: dotknięcie, fokus z klawiatury w akcencie, wybra
   expect(f.style).not.toBe('none');
   const hex = (c) => { const m = c.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number); return '#' + m.map((x) => Math.round(x).toString(16).padStart(2, '0')).join(''); };
   expect(hex(f.c)).toBe(f.acc.toLowerCase());
-  // Wybrany: tło w kolorze lasu; wyłączony: przygaszony
-  const sel = await page.evaluate(() => { const b = document.querySelector('.seg button[aria-pressed="true"]'), g = getComputedStyle(document.documentElement).getPropertyValue('--green').trim(), cv = document.createElement('canvas').getContext('2d'); cv.fillStyle = g; const bg = getComputedStyle(b).backgroundColor.match(/\d+/g).slice(0, 3).map((x) => (+x).toString(16).padStart(2, '0')).join(''); return { bg: '#' + bg, g: cv.fillStyle.toLowerCase() }; });
-  expect(sel.bg).toBe(sel.g);
+  // Wybrany: jasne tło zieleni (--tint) i ramka w kolorze lasu, inaczej niż przycisk główny (przegląd motywu A, 28.11.2026); wyłączony: przygaszony
+  const sel = await page.evaluate(() => { const b = document.querySelector('.seg button[aria-pressed="true"]'), root = getComputedStyle(document.documentElement), cv = document.createElement('canvas').getContext('2d'), hex = (c) => '#' + c.match(/\d+/g).slice(0, 3).map((x) => (+x).toString(16).padStart(2, '0')).join(''), norm = (v) => { cv.fillStyle = v.trim(); return cv.fillStyle.toLowerCase(); }, s = getComputedStyle(b); return { bg: hex(s.backgroundColor), tint: norm(root.getPropertyValue('--tint')), bc: hex(s.borderTopColor), g: norm(root.getPropertyValue('--green')) }; });
+  expect(sel.bg).toBe(sel.tint);
+  expect(sel.bc).toBe(sel.g);
   const dis = await page.evaluate(() => { const b = document.createElement('button'); b.className = 'btn'; b.disabled = true; b.textContent = 'x'; document.getElementById('main').appendChild(b); return parseFloat(getComputedStyle(b).opacity); });
   expect(dis).toBeLessThan(1);
   expect(errors).toEqual([]);

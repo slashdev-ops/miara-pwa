@@ -102,10 +102,11 @@ for (const w of [320, 390]) for (const scheme of ['light', 'dark']) {
         const after = await b2.boundingBox();
         expect(Math.abs(after.width - before.width), sel + i).toBeLessThanOrEqual(1);
         expect(Math.abs(after.height - before.height), sel + i).toBeLessThanOrEqual(1);
-        const st = await b2.evaluate((e) => { const s = getComputedStyle(e); return { on: e.getAttribute('aria-pressed'), bs: s.boxShadow, fw: +s.fontWeight, bg: s.backgroundColor, green: getComputedStyle(document.documentElement).getPropertyValue('--green').trim() }; });
+        const st = await b2.evaluate((e) => { const s = getComputedStyle(e); return { on: e.getAttribute('aria-pressed'), bs: s.boxShadow, bw: parseFloat(s.borderTopWidth), fw: +s.fontWeight, bg: s.backgroundColor }; });
         expect(st.on).toBe('true');
-        expect(st.bs, 'obrys wewnętrzny 2 px').toMatch(/inset/);
-        expect(st.bs).toMatch(/2px/);
+        // Wybrany (przegląd motywu A, 28.11.2026): obrys w zieleni razem 2 px = ramka 1 px + cień wewnętrzny 1 px, bez zmiany rozmiaru
+        expect(st.bs, 'obrys wewnętrzny').toMatch(/inset/);
+        expect(st.bw + parseFloat((st.bs.match(/(\d+(?:\.\d+)?)px inset/) || [0, 0])[1]), 'obrys razem co najmniej 2 px').toBeGreaterThanOrEqual(2);
         expect(st.fw).toBeGreaterThanOrEqual(600);
       }
     }

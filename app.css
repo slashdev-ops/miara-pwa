@@ -7,7 +7,7 @@
 @font-face{font-family:"Fraunces";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/fraunces-latin-600-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 :root{
   --bg:#EFEBE3; --surface:#FFFFFF; --surface2:#E6E0D4; --ink:#1C2621; --muted:#3A433D; --line:#DDD7CA;--edge:#7F7967;--accent:#194F3E;--on-accent:#FFFFFF;--blob1:rgb(31 92 72 / .08);--blob2:rgb(168 68 31 / .07);--blob3:rgb(31 92 72 / .03); --field:#6A6F66;
-  --green:#194F3E; --on-green:#FFFFFF; --on-green-muted:#E4F1EA; --tint:#E4F1EA; --brass:#B07D22; --brass-ink:#57390B; --clay:#75341F;
+  --green:#194F3E; --on-green:#FFFFFF; --on-green-muted:#E4F1EA; --tint:#E4F1EA; --hero:#194F3E; --on-hero:#FFFFFF; --on-hero-muted:#E4F1EA; --brass:#B07D22; --brass-ink:#57390B; --clay:#75341F;
   --warn-ink:#663E00; --warn-bg:#FBF0DA;
   --shadow:0 1px 2px rgba(34,37,31,.06),0 8px 24px rgba(34,37,31,.05);
   --p:#1F5C48; --f:#C08A2E; --c:#5563B0; --duck:#F2D45C;
@@ -27,7 +27,7 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0D1210; --surface:#1D2622; --surface2:#28322D; --ink:#EDEBE5; --muted:#BFC2B9; --line:#323B36; --field:#7C8178; --edge:#6E7B72; --accent:#90CDB2; --on-accent:#0F1A15; --blob1:rgb(127 196 166 / .07); --blob2:rgb(240 138 93 / .06); --blob3:rgb(127 196 166 / .03);
-    --green:#90CDB2; --on-green:#0F1A15; --on-green-muted:#1F3A2E; --tint:#22302A; --brass:#E2AE55; --brass-ink:#E8B866; --clay:#E69F85;
+    --green:#90CDB2; --on-green:#0F1A15; --on-green-muted:#1F3A2E; --tint:#22302A; --hero:#1F3A2F; --on-hero:#EDEBE5; --on-hero-muted:#C9D6CE; --brass:#E2AE55; --brass-ink:#E8B866; --clay:#E69F85;
     --warn-ink:#F2C77E; --warn-bg:#3A2C14;
     --shadow:0 1px 2px rgba(0,0,0,.35);
     --p:#7FC4A6; --f:#E2AE55; --c:#93A0EE; --duck:#CDB04A;
@@ -41,7 +41,7 @@
 }
 :root[data-theme="dark"]{
     --bg:#0D1210; --surface:#1D2622; --surface2:#28322D; --ink:#EDEBE5; --muted:#BFC2B9; --line:#323B36; --field:#7C8178; --edge:#6E7B72; --accent:#90CDB2; --on-accent:#0F1A15; --blob1:rgb(127 196 166 / .07); --blob2:rgb(240 138 93 / .06); --blob3:rgb(127 196 166 / .03);
-    --green:#90CDB2; --on-green:#0F1A15; --on-green-muted:#1F3A2E; --tint:#22302A; --brass:#E2AE55; --brass-ink:#E8B866; --clay:#E69F85;
+    --green:#90CDB2; --on-green:#0F1A15; --on-green-muted:#1F3A2E; --tint:#22302A; --hero:#1F3A2F; --on-hero:#EDEBE5; --on-hero-muted:#C9D6CE; --brass:#E2AE55; --brass-ink:#E8B866; --clay:#E69F85;
     --warn-ink:#F2C77E; --warn-bg:#3A2C14;
     --shadow:0 1px 2px rgba(0,0,0,.35);
     --p:#7FC4A6; --f:#E2AE55; --c:#93A0EE; --duck:#CDB04A;
@@ -99,7 +99,8 @@ button{font:inherit;color:inherit}
 .switch:checked{background-color:var(--green)}
 .switch:checked::after{left:22px}
 
-.readout{background:var(--green);color:var(--on-green);border-radius:var(--r);padding:16px;margin:16px 0}
+/* Panel wyniku: w jasnym ciemna zieleń, w ciemnym przygaszona zieleń zamiast jasnej płyty (przegląd motywu A, 28.11.2026) */
+.readout{background:var(--hero);color:var(--on-hero);border-radius:var(--r);padding:16px;margin:16px 0}
 .readout h3{font-size:15px;font-weight:600;opacity:.95}
 .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .trio .cell{background:rgba(255,255,255,.13);border-radius:var(--r-s);padding:12px 8px;text-align:center}
@@ -122,7 +123,7 @@ main p > .btn.ab:not(.small){display:grid;grid-template-columns:minmax(0,1fr)}
 .act-z i::before{content:attr(data-l)}
 main p > .btn:not(.small) + .btn:not(.small){margin-top:8px}
 .why{font-size:15px;color:var(--muted);margin:0 8px 12px}
-.readout .btn{background:var(--on-green);color:var(--green)}
+.readout .btn{background:var(--on-hero);color:var(--hero)}
 .btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
 
 .note{border-radius:var(--r);padding:12px 16px;margin:12px 0;font-size:15px;background:var(--surface);box-shadow:var(--shadow)}
@@ -153,8 +154,8 @@ main p > .btn:not(.small) + .btn:not(.small){margin-top:8px}
 /* Bez obsługi :has(): kolumny dopasowane do liczby kafelków, bez pustej kolumny */
 @supports not selector(:has(*)){.chips,.seg{grid-template-columns:repeat(auto-fit,minmax(min(100%,88px),1fr))}}
 .chip.exc{background:transparent;color:var(--clay);border-color:var(--clay);text-decoration:line-through}
-/* Wybrany: wypełnienie, wewnętrzny obrys 2 px i pogrubienie; bez znaczka i bez zmiany rozmiaru (box-shadow nie zajmuje miejsca) */
-.chip.inc,.seg button.on{background:var(--green);color:var(--on-green);border-color:var(--green);font-weight:700;box-shadow:inset 0 0 0 2px var(--on-green)}
+/* Wybrany: jasne tło zieleni, obrys 2 px w zieleni (ramka 1 px + cień wewnętrzny 1 px) i pogrubienie; nie wygląda jak przycisk główny (przegląd motywu A, 28.11.2026); bez zmiany rozmiaru */
+.chip.inc,.seg button.on{background:var(--tint);color:var(--ink);border-color:var(--green);font-weight:700;box-shadow:inset 0 0 0 1px var(--green)}
 
 .slider{padding:8px 16px 12px}
 .slider + .slider{border-top:1px solid var(--line)}
@@ -338,13 +339,13 @@ details.fold .panel,details.fold .meal{margin:0;border-radius:0;box-shadow:none}
 .painrow{margin:8px 0}
 
 /* Stan dziś: punkt centralny Mojego dnia */
-.stan{padding:16px;background:var(--green);color:var(--on-green)}
+.stan{padding:16px;background:var(--hero);color:var(--on-hero)}
 .stan h2{margin:0 0 8px;padding-left:0}
 .stan h2::before{display:none}
-.stan .stan-row{border-top-color:color-mix(in srgb,var(--on-green) 25%,transparent)}
-.stan .stan-lab{color:var(--on-green-muted);font-weight:600}
-.stan .stan-src{color:var(--on-green-muted)}
-.stan .stan-val small{color:var(--on-green-muted)}
+.stan .stan-row{border-top-color:color-mix(in srgb,var(--on-hero) 25%,transparent)}
+.stan .stan-lab{color:var(--on-hero-muted);font-weight:600}
+.stan .stan-src{color:var(--on-hero-muted)}
+.stan .stan-val small{color:var(--on-hero-muted)}
 .stan-row{display:grid;grid-template-columns:96px 1fr;column-gap:12px;padding:8px 0;border-top:1px solid var(--line)}
 .stan-lab{grid-row:span 2;color:var(--muted);font-size:15px;padding-top:4px}
 .stan-val{font-family:var(--serif);font-size:20px;font-weight:600;line-height:1.3}
@@ -400,7 +401,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
 /* Wybór w lesie (nie samym kolorem: pogrubienie i aria-pressed) */
 /* Akcent tylko na głównym działaniu ekranu i na fokusie */
 .btn:not(.ghost):not(.small):not(.sos){background:var(--accent);color:var(--on-accent)}
-.readout .btn:not(.ghost):not(.small):not(.sos),.stan .btn:not(.ghost):not(.small):not(.sos){background:var(--on-green);color:var(--green)}
+.readout .btn:not(.ghost):not(.small):not(.sos),.stan .btn:not(.ghost):not(.small):not(.sos){background:var(--on-hero);color:var(--hero)}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 /* Reakcja każdego stanu: najechanie (tylko z myszą), dotknięcie, wyłączony */
 button,summary,.chip,.opt{transition:background-color .15s,border-color .15s,box-shadow .15s,transform .1s,filter .1s}
@@ -422,7 +423,7 @@ button:disabled{opacity:.55;cursor:not-allowed;filter:none;transform:none}
 /* Niewybrany kafelek w kafelku: obramowanie --edge, granica komponentu co najmniej 3:1 do karty (WCAG 1.4.11), nie ozdobna ramka */
 :is(.panel,.fold,.note,.petcard,.card) :is(.chip,.seg button):not(.inc):not(.exc):not(.on):not(#_){background:var(--surface2);border:1px solid var(--edge)}
 /* Wybrany kafelek w kafelku zachowuje wewnętrzny obrys (to nie ramka, tylko znak wyboru) */
-:is(.panel,.fold,.note,.petcard,.card) :is(.chip.inc,.seg button.on):not(#_){box-shadow:inset 0 0 0 2px var(--on-green);border:1px solid var(--green)}
+:is(.panel,.fold,.note,.petcard,.card) :is(.chip.inc,.seg button.on):not(#_){box-shadow:inset 0 0 0 1px var(--green);border:1px solid var(--green)}
 :is(.panel,.fold,.note,.petcard,.card) .chip.exc:not(#_){border:1px solid var(--clay)}
 
 /* Ścieżka kamieni (rada/2026-11-11_zwierzak-droga.md): kamienie z palety, skok tylko bez ograniczenia ruchu */
@@ -636,6 +637,7 @@ p>label:has(>input[type="checkbox"]){display:flex;align-items:center;gap:8px;min
 .warm-warn{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:15px}
 .warm-go{display:flex;gap:8px;margin-top:12px}
 .warm-go .btn:last-child{flex:1}
+.warm-go .btn{white-space:normal}
 .warm-ctl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .warm-ctl .btn:last-child{grid-column:1/-1}
 .warm-line{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:44px;padding-top:6px;padding-bottom:6px;font-weight:600}
