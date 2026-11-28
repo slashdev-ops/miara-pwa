@@ -3848,6 +3848,17 @@ tryc('U2c: „Zatrzymaj ruch” przełącza na dwie postacie i zapamiętuje wyb�
   view('set', BASE({ mode: 'redukcja', kg: '80', cm: '170', goal: '72', still: false, silAnim: true })); click({ silanim: '1' }); const h = mainHtml(); const v = T.S().silAnim;
   return v === false && h.includes('id="silNow"') && h.includes('Pokaż ruch');
 });
+// Motyw A „Szałwia” (makieta „Motywy Miary”, wybrana 28.11.2026): jeden kolor działania (zieleń marki), karty wyraźnie oddzielone od tła, obrys „Mam ochotę” 3:1
+tryc('motyw A: przycisk główny w zieleni marki w obu motywach (--accent = --green, napis jak na zieleni)', () => {
+  const b = themeBlocks(); return [b.light, b.dark].every((x) => tok(x, 'accent').toUpperCase() === tok(x, 'green').toUpperCase() && tok(x, 'on-accent').toUpperCase() === tok(x, 'on-green').toUpperCase());
+});
+tryc('motyw A: karta od tła co najmniej 1,15 (jasny) i 1,2 (ciemny); obrys „Mam ochotę” (--brass) i kontrolek (--edge) co najmniej 3:1 na karcie', () => {
+  const b = themeBlocks(), bad = [];
+  for (const [n, x, min] of [['jasny', b.light, 1.15], ['ciemny', b.dark, 1.2]]) {
+    const s = tok(x, 'surface'), sep = contrast(s, tok(x, 'bg')); if (sep < min) bad.push(`${n} karta/tło ${sep.toFixed(2)}`);
+    for (const k of ['brass', 'edge']) { const c = contrast(tok(x, k), s); if (c < 3) bad.push(`${n} ${k}/surface ${c.toFixed(2)}`); } }
+  if (bad.length) throw new Error(bad.join('; ')); return true;
+});
 chain.then(() => {
   console.log(`WYNIK: ${ok} OK, ${bad} BLAD`);
   process.exit(bad ? 1 : 0);
