@@ -3,7 +3,7 @@
 // app.js albo strony głównej (inny ETag), okna dostają wiadomość „nowa-wersja” (komunikat z przyciskiem Odśwież).
 // Wcześniej „najpierw sieć” bez limitu czasu: przy słabym zasięgu start czekał na serwer (czarny ekran).
 // Zmiana CACHE czyści stare kopie z pamięci podręcznej; zmieniaj ją przy większych wydaniach (patrz README).
-const CACHE = 'miara-v5';
+const CACHE = 'miara-v6';
 const ASSETS = [
   './',
   './index.html',
